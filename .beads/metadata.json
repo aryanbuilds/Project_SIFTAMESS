@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "Project_SIFTAMESS",
+  "project_id": "a82ddc03-9b4f-4703-bf28-5e2e8cd0e496"
+}

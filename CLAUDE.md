@@ -41,7 +41,8 @@ Build in this order:
 7. `siftmesh run` automation modes.
 8. CAO/agent adapter integration.
 9. Reports and replay.
-10. Optional Ratatui TUI last.
+10. Optional A2A Agent Card discovery/delegation (governed by SIFTMesh policy overlay).
+11. Optional Ratatui TUI last.
 ```
 
 Do not start TUI before the CLI is reliable.
@@ -53,12 +54,13 @@ CLI = source of truth.
 TUI = optional cockpit over CLI files.
 CAO = terminal-agent harness only.
 SIFTMesh = DFIR investigation controller.
-MCP = typed forensic tool boundary.
+MCP = typed forensic tool boundary (agent-to-tool).
+A2A = agent-to-agent interop boundary (optional; discovery/delegation; governed by the SIFTMesh policy overlay).
 Evidence vault = integrity boundary.
 Critic = claim validation boundary.
 ```
 
-CAO or any external orchestrator must never decide forensic truth, final report content, or evidence safety policy.
+CAO, A2A agents, or any external orchestrator must never decide forensic truth, final report content, or evidence safety policy. A2A Agent Cards advertise capabilities; SIFTMesh's `x_siftmesh` policy overlay governs permissions (remote agents untrusted by default).
 
 ## 4. Required CLI commands
 
@@ -461,3 +463,51 @@ siftmesh run ./case01 --evidence ./evidence --auto-human-loop
 ```
 
 Only use TUI in the demo if the CLI is already fully working.
+
+
+<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+## Beads Issue Tracker
+
+This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+
+### Quick Reference
+
+```bash
+bd ready              # Find available work
+bd show <id>          # View issue details
+bd update <id> --claim  # Claim work
+bd close <id>         # Complete work
+```
+
+### Rules
+
+- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Run `bd prime` for detailed command reference and session close protocol
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+
+## Session Completion
+
+**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+
+**MANDATORY WORKFLOW:**
+
+1. **File issues for remaining work** - Create issues for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **PUSH TO REMOTE** - This is MANDATORY:
+   ```bash
+   git pull --rebase
+   bd dolt push
+   git push
+   git status  # MUST show "up to date with origin"
+   ```
+5. **Clean up** - Clear stashes, prune remote branches
+6. **Verify** - All changes committed AND pushed
+7. **Hand off** - Provide context for next session
+
+**CRITICAL RULES:**
+- Work is NOT complete until `git push` succeeds
+- NEVER stop before pushing - that leaves work stranded locally
+- NEVER say "ready to push when you are" - YOU must push
+- If push fails, resolve and retry until it succeeds
+<!-- END BEADS INTEGRATION -->

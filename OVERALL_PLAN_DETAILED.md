@@ -1,0 +1,973 @@
+# OVERALL_PLAN_DETAILED.md
+
+# SIFTMesh Detailed Build Plan
+
+_Last updated: 2026-06-04_
+
+## 1. Final product definition
+
+SIFTMesh is a CLI-first control plane for autonomous digital forensics and incident response on SANS SIFT and Protocol SIFT.
+
+It combines:
+
+```text
+- autonomous/guided/manual CLI workflows
+- CAO-compatible terminal-agent orchestration
+- task contracts and context packets
+- evidence-safe typed SIFT MCP tools
+- evidence vault and hash manifest
+- claim ledger and contradiction ledger
+- critic validation and retry/escalation loop
+- human-review gates
+- reproducible reports and replay logs
+- optional TUI last
+```
+
+The project should be built as a practical hackathon product, not a research-only concept.
+
+## 2. Architectural layers
+
+### Layer 0: SANS SIFT / Protocol SIFT environment
+
+Purpose:
+
+```text
+Run real DFIR tools and provide the official hackathon-aligned environment.
+```
+
+Expected tools/artifacts:
+
+```text
+SIFT Workstation
+Protocol SIFT
+SleuthKit
+Plaso/log2timeline
+Volatility
+RegRipper
+EVTX parsing tools
+Prefetch/Amcache/Registry tools
+YARA
+bulk_extractor
+```
+
+### Layer 1: SIFT MCP Gateway / AegisSIFT runtime
+
+Purpose:
+
+```text
+Expose typed, evidence-safe forensic functions to agents.
+```
+
+MVP functions:
+
+```text
+compute_hash_manifest()
+create_readonly_evidence_vault()
+parse_evtx_security()
+parse_evtx_powershell()
+analyze_prefetch()
+extract_registry_run_keys()
+build_timeline()
+validate_claim_evidence()
+```
+
+Critical requirement:
+
+```text
+No generic raw shell tool.
+No destructive tools.
+No write access to original evidence.
+```
+
+### Layer 2: Filesystem investigation bus
+
+Purpose:
+
+```text
+Keep shared state out of chat history and inside inspectable artifacts.
+```
+
+Stores:
+
+```text
+context files
+task contracts
+agent results
+claim ledgers
+contradiction ledgers
+audit logs
+reports
+```
+
+### Layer 3: SIFTMesh orchestration core
+
+Purpose:
+
+```text
+Own the investigation state machine and automate or guide the workflow.
+```
+
+Components:
+
+```text
+Planner
+Deep Context Agent
+Ultraworker
+Executor Agents
+Critic / Advisor
+Evidence Manager
+Budget Router
+Prompt-Injection Guard
+```
+
+### Layer 4: Terminal-agent harness adapter
+
+Purpose:
+
+```text
+Run Claude Code, OpenCode, Codex, Gemini, Kimi, Hermes, or other agents.
+```
+
+Preferred harness:
+
+```text
+CAO, if integration is practical.
+```
+
+Fallback:
+
+```text
+Generic shell-agent adapter that writes task instructions and expects result files.
+```
+
+### Layer 5: CLI
+
+Purpose:
+
+```text
+User-facing source of truth.
+Manual, guided, and automatic operation.
+```
+
+### Layer 6: Optional TUI
+
+Purpose:
+
+```text
+Operator cockpit and demo visualization.
+```
+
+Status:
+
+```text
+Optional. Build last. Must not contain core logic.
+```
+
+## 3. Target repo structure
+
+```text
+siftmesh/
+  README.md
+  LICENSE
+  PROJECT_CONTEXT.md
+  GUIDELINES.md
+  CLAUDE.md
+  AGENTS.md
+  OVERALL_PLAN_DETAILED.md
+  pyproject.toml
+
+  docs/
+    architecture.md
+    threat_model.md
+    evidence_integrity.md
+    dataset_documentation.md
+    accuracy_report_template.md
+    judge_runbook.md
+    demo_script.md
+
+  siftmesh_core/
+    __init__.py
+    cli.py
+    config.py
+
+    orchestrator/
+      __init__.py
+      state_machine.py
+      planner.py
+      ultraworker.py
+      scheduler.py
+      critic.py
+      budget_router.py
+      workflow_runner.py
+      human_gate.py
+
+    schemas/
+      __init__.py
+      run.py
+      task.py
+      claim.py
+      audit.py
+      workflow.py
+      agent_profile.py
+      tool_result.py
+
+    evidence/
+      __init__.py
+      vault.py
+      manifest.py
+      readonly.py
+      hash_utils.py
+      path_policy.py
+
+    mcp_gateway/
+      __init__.py
+      server.py
+      tools/
+        evidence_tools.py
+        evtx_tools.py
+        prefetch_tools.py
+        registry_tools.py
+        timeline_tools.py
+        validation_tools.py
+
+    ledgers/
+      __init__.py
+      task_ledger.py
+      claim_ledger.py
+      contradiction_ledger.py
+      audit_log.py
+      injection_alerts.py
+
+    adapters/
+      __init__.py
+      cao_adapter.py
+      claude_adapter.py
+      opencode_adapter.py
+      generic_shell_adapter.py
+      hermes_config_generator.py
+
+    reports/
+      __init__.py
+      final_report.py
+      accuracy_report.py
+      replay.py
+      templates/
+        final_report.md.j2
+        accuracy_report.md.j2
+
+  workflows/
+    windows_initial_triage.yaml
+    windows_powershell_triage.yaml
+
+  skills/
+    claude/
+    opencode/
+    cursor/
+    codex/
+    hermes/
+
+  examples/
+    demo_case/
+      README.md
+      expected_findings.md
+      run_demo.sh
+
+  tests/
+    test_evidence_vault.py
+    test_task_contracts.py
+    test_claim_validation.py
+    test_critic.py
+    test_state_machine.py
+    test_cli_modes.py
+    test_path_policy.py
+
+  siftmesh_tui/
+    Cargo.toml
+    src/
+      main.rs
+      app.rs
+      panels/
+        agents.rs
+        tasks.rs
+        claims.rs
+        logs.rs
+        report.rs
+```
+
+## 4. CLI command design
+
+### Core commands
+
+```bash
+siftmesh init-case CASE_PATH --evidence EVIDENCE_PATH [--run-name NAME]
+siftmesh plan RUN_PATH
+siftmesh dispatch RUN_PATH [--task TASK_ID] [--agent-profile PROFILE]
+siftmesh collect RUN_PATH
+siftmesh critique RUN_PATH
+siftmesh report RUN_PATH
+siftmesh replay RUN_PATH
+```
+
+### Automation commands
+
+```bash
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --mode manual
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto-human-loop
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-iterations 3
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --review-only
+siftmesh resume RUN_PATH
+siftmesh status RUN_PATH
+```
+
+### Inspection commands
+
+```bash
+siftmesh tasks list RUN_PATH
+siftmesh tasks show RUN_PATH TASK-001
+siftmesh claims list RUN_PATH
+siftmesh claims show RUN_PATH CLAIM-001
+siftmesh audit tail RUN_PATH
+siftmesh retry RUN_PATH TASK-001
+siftmesh approve RUN_PATH --gate plan
+siftmesh reject RUN_PATH --gate retry
+```
+
+## 5. Workflow YAML design
+
+Example: `workflows/windows_initial_triage.yaml`
+
+```yaml
+workflow_id: windows-initial-triage
+mode: guided
+max_iterations: 3
+max_parallel_tasks: 3
+max_agent_tasks: 10
+max_tool_runtime_seconds: 300
+
+approval_gates:
+  plan: true
+  dispatch: true
+  retry: true
+  report: true
+
+safety:
+  evidence_mode: read_only
+  raw_shell: false
+  allow_destructive_tools: false
+  treat_evidence_as_hostile: true
+  restrict_writes_to_run_directory: true
+
+agents:
+  planner:
+    profile: claude_high_reasoning
+  deep_context:
+    profile: claude_sonnet_or_equivalent
+  default_executor:
+    profile: opencode_low_cost
+  critic:
+    profile: claude_high_reasoning
+
+retry_policy:
+  malformed_json: retry
+  missing_evidence_reference: retry
+  contradiction_detected: escalate
+  tool_failure: retry
+  max_attempts_per_task: 2
+
+steps:
+  - id: evidence_vault
+    type: deterministic
+    command: create_readonly_evidence_vault
+
+  - id: deep_context
+    role: deep_context_agent
+    output: context/context_pack.md
+
+  - id: plan
+    role: planner
+    output: context/investigation_plan.yaml
+
+  - id: evtx_security
+    role: executor
+    task_template: templates/evtx_security_task.yaml
+
+  - id: powershell_logs
+    role: executor
+    task_template: templates/powershell_task.yaml
+
+  - id: prefetch
+    role: executor
+    task_template: templates/prefetch_task.yaml
+
+  - id: registry_run_keys
+    role: executor
+    task_template: templates/registry_run_keys_task.yaml
+
+  - id: critique
+    role: critic
+
+  - id: report
+    type: deterministic
+    command: generate_report
+```
+
+## 6. Implementation phases
+
+## Phase 1: Project skeleton and config
+
+Goal:
+
+```text
+Create the minimal repo structure and runnable Python package.
+```
+
+Tasks:
+
+```text
+- Create pyproject.toml.
+- Add Apache 2.0 LICENSE.
+- Add CLI entrypoint.
+- Add config loader.
+- Add run directory generator.
+- Add base JSONL logger.
+- Add initial tests.
+```
+
+Acceptance:
+
+```bash
+siftmesh --help
+pytest
+```
+
+## Phase 2: Evidence vault and run directory
+
+Goal:
+
+```text
+Initialize a case safely and produce evidence manifest.
+```
+
+Tasks:
+
+```text
+- Implement init-case command.
+- Hash evidence files/directories.
+- Generate evidence_manifest.json.
+- Generate hashes.sha256.
+- Generate evidence_policy.md.
+- Create audit/orchestration_events.jsonl.
+- Enforce path policy.
+```
+
+Acceptance:
+
+```bash
+siftmesh init-case ./case01 --evidence ./evidence
+```
+
+Expected output:
+
+```text
+case_runs/RUN-*/evidence/evidence_manifest.json
+case_runs/RUN-*/evidence/hashes.sha256
+case_runs/RUN-*/audit/orchestration_events.jsonl
+```
+
+## Phase 3: Schemas and ledgers
+
+Goal:
+
+```text
+Make task, claim, contradiction, and audit schemas reliable.
+```
+
+Tasks:
+
+```text
+- Pydantic schema for TaskContract.
+- Pydantic schema for Claim.
+- Pydantic schema for ToolCall.
+- Pydantic schema for CriticVerdict.
+- JSONL append/read utilities.
+- Validation errors with useful messages.
+```
+
+Acceptance:
+
+```text
+Invalid claim without tool_call_id is rejected.
+Invalid task without safety_policy is rejected.
+```
+
+## Phase 4: Typed tool layer / MCP gateway MVP
+
+Goal:
+
+```text
+Expose safe deterministic functions.
+```
+
+Tasks:
+
+```text
+- compute_hash_manifest implementation.
+- create_readonly_evidence_vault implementation.
+- parse_evtx_security wrapper or structured placeholder.
+- parse_evtx_powershell wrapper or structured placeholder.
+- analyze_prefetch wrapper or structured placeholder.
+- extract_registry_run_keys wrapper or structured placeholder.
+- build_timeline wrapper or structured placeholder.
+- validate_claim_evidence implementation.
+```
+
+Acceptance:
+
+```text
+Every tool call writes tool_calls.jsonl.
+Every tool output includes source artifact/hash.
+No raw shell MCP tool exists.
+```
+
+## Phase 5: Planner and task generation
+
+Goal:
+
+```text
+Generate a useful initial investigation plan and tasks.
+```
+
+Tasks:
+
+```text
+- Implement plan command.
+- Generate context/case_brief.md.
+- Generate context/investigation_plan.yaml.
+- Generate initial TASK-*.yaml files.
+- Generate context/tool_map.md.
+- Support review-only mode.
+```
+
+Acceptance:
+
+```bash
+siftmesh plan case_runs/RUN-001
+```
+
+Expected output:
+
+```text
+context/investigation_plan.yaml
+tasks/TASK-001.yaml
+tasks/TASK-002.yaml
+```
+
+## Phase 6: Generic executor adapter
+
+Goal:
+
+```text
+Allow tasks to be executed by a local deterministic or shell-agent adapter before CAO is ready.
+```
+
+Tasks:
+
+```text
+- Implement generic_shell_adapter.
+- Implement deterministic mock executor for tests/demo.
+- Write TASK result JSON.
+- Append agent_calls.jsonl.
+- Support failure/malformed output simulation for self-correction demo.
+```
+
+Acceptance:
+
+```bash
+siftmesh dispatch case_runs/RUN-001 --task TASK-001
+siftmesh collect case_runs/RUN-001
+```
+
+## Phase 7: Critic and validation loop
+
+Goal:
+
+```text
+Reject unsupported claims and create retry/escalation recommendations.
+```
+
+Tasks:
+
+```text
+- Implement critique command.
+- Validate result JSON.
+- Validate claim evidence references.
+- Create unsupported_claims.jsonl.
+- Create contradiction_ledger.jsonl.
+- Create retry tasks when needed.
+```
+
+Acceptance:
+
+```text
+A result missing tool_call_id is rejected.
+A retry task is created.
+Critic verdict is logged.
+```
+
+## Phase 8: `siftmesh run` automation
+
+Goal:
+
+```text
+Run full pipeline automatically with modes.
+```
+
+Tasks:
+
+```text
+- Implement state machine.
+- Implement --mode manual.
+- Implement --review-only.
+- Implement --auto-human-loop.
+- Implement --auto.
+- Implement max iteration cap.
+- Implement approval gates.
+- Implement resume.
+```
+
+Acceptance:
+
+```bash
+siftmesh run ./case01 --evidence ./evidence --auto-human-loop
+siftmesh run ./case01 --evidence ./evidence --auto --max-iterations 3
+```
+
+## Phase 9: CAO and agent profiles
+
+Goal:
+
+```text
+Integrate external terminal agents through CAO or fallback adapters.
+```
+
+Tasks:
+
+```text
+- Add agent_profiles.yaml.
+- Add cao_adapter.
+- Add Claude Code profile.
+- Add OpenCode profile.
+- Add generic local profile.
+- Generate task prompts from task contracts.
+- Require executor output schema.
+```
+
+Acceptance:
+
+```text
+SIFTMesh can assign TASK-002 to an external agent profile.
+Agent output is collected from the expected result path.
+```
+
+## Phase 10: Reports and replay
+
+Goal:
+
+```text
+Generate judge-ready artifacts.
+```
+
+Tasks:
+
+```text
+- final_report.md generator.
+- accuracy_report.md generator.
+- dataset_documentation.md generator/template.
+- replay command.
+- tool execution appendix.
+- self-correction summary.
+```
+
+Acceptance:
+
+```bash
+siftmesh report case_runs/RUN-001
+siftmesh replay case_runs/RUN-001
+```
+
+## Phase 11: Demo case and self-correction
+
+Goal:
+
+```text
+Create a reliable demo showing autonomous correction.
+```
+
+Demo event:
+
+```text
+Executor produces a claim with missing evidence reference.
+Critic rejects it.
+Ultraworker creates retry task.
+Executor produces corrected claim.
+Final report includes corrected evidence-backed claim.
+```
+
+Optional prompt-injection event:
+
+```text
+Evidence contains instruction-like string.
+Prompt-Injection Guard flags it.
+Agent treats it as evidence only.
+```
+
+## Phase 12: Optional Ratatui TUI
+
+Goal:
+
+```text
+Only after CLI works, build a read-only or thin-control TUI.
+```
+
+Minimum panels:
+
+```text
+State machine status
+Current approval gate
+Agent sessions
+Task queue
+Claim ledger
+Critic feedback
+Audit log
+Token/budget usage
+Report preview
+```
+
+Acceptance:
+
+```bash
+siftmesh tui case_runs/RUN-001
+```
+
+TUI must read existing run files and optionally call CLI commands. It must not duplicate core logic.
+
+## 7. 12-day schedule
+
+### Day 1: Skeleton and docs
+
+Deliver:
+
+```text
+Repo structure
+Apache 2.0 license
+CLI package skeleton
+PROJECT_CONTEXT.md
+GUIDELINES.md
+CLAUDE.md
+OVERALL_PLAN_DETAILED.md
+```
+
+### Day 2: Evidence vault
+
+Deliver:
+
+```text
+init-case command
+evidence manifest
+hashes.sha256
+path policy
+audit logger
+```
+
+### Day 3: Schemas and ledgers
+
+Deliver:
+
+```text
+TaskContract schema
+Claim schema
+ToolCall schema
+CriticVerdict schema
+JSONL ledgers
+schema tests
+```
+
+### Day 4: Tool gateway MVP
+
+Deliver:
+
+```text
+hash tool
+evidence vault tool
+EVTX placeholder/wrapper
+Prefetch placeholder/wrapper
+Registry placeholder/wrapper
+tool call logging
+```
+
+### Day 5: Plan and task generation
+
+Deliver:
+
+```text
+plan command
+case brief
+investigation plan
+initial task contracts
+review-only mode foundation
+```
+
+### Day 6: Dispatch and collect
+
+Deliver:
+
+```text
+generic executor adapter
+dispatch command
+collect command
+agent_calls.jsonl
+result collection
+```
+
+### Day 7: Critic and retry
+
+Deliver:
+
+```text
+critique command
+unsupported claim rejection
+retry task generation
+contradiction ledger
+confidence downgrade
+```
+
+### Day 8: Full run automation
+
+Deliver:
+
+```text
+siftmesh run
+manual/guided/auto/review-only modes
+approval gates
+max iteration cap
+resume foundation
+```
+
+### Day 9: Agent/CAO integration
+
+Deliver:
+
+```text
+agent_profiles.yaml
+CAO adapter attempt
+Claude Code task instructions
+OpenCode task instructions
+fallback adapter if CAO integration is slow
+```
+
+### Day 10: Reports and replay
+
+Deliver:
+
+```text
+final_report.md
+accuracy_report.md
+dataset_documentation.md
+replay command
+self-correction summary
+```
+
+### Day 11: Demo hardening
+
+Deliver:
+
+```text
+stable demo case
+scripted self-correction
+prompt-injection alert optional
+clean install instructions
+```
+
+### Day 12: Polish and submission assets
+
+Deliver:
+
+```text
+README
+architecture diagram
+try-it-out guide
+execution logs sample
+demo video plan
+final license check
+```
+
+TUI only if the CLI and reports are already stable before Day 12.
+
+## 8. MVP acceptance criteria
+
+SIFTMesh MVP is successful if the following works:
+
+```bash
+siftmesh run ./examples/demo_case --evidence ./examples/demo_case/evidence --auto-human-loop
+```
+
+And produces:
+
+```text
+evidence_manifest.json
+tasks/TASK-*.yaml
+results/TASK-*.result.json
+claims/claim_ledger.jsonl
+claims/unsupported_claims.jsonl
+claims/contradiction_ledger.jsonl
+audit/agent_calls.jsonl
+audit/tool_calls.jsonl
+audit/retries.jsonl
+reports/final_report.md
+reports/accuracy_report.md
+```
+
+The run must show at least one self-correction sequence.
+
+## 9. Final demo narrative
+
+Narration:
+
+```text
+SIFTMesh starts by hashing and protecting evidence.
+It creates a compact context pack and investigation plan.
+The Ultraworker breaks the case into task contracts.
+Executor agents receive only narrow context, not the whole case.
+Typed SIFT MCP tools extract evidence safely.
+The Critic rejects unsupported claims.
+The Ultraworker retries or escalates.
+The final report includes only evidence-backed claims.
+Every action is replayable through JSONL audit logs.
+```
+
+Demo command:
+
+```bash
+siftmesh run ./examples/demo_case --evidence ./examples/demo_case/evidence --auto-human-loop
+```
+
+Optional TUI command:
+
+```bash
+siftmesh tui ./case_runs/RUN-001
+```
+
+## 10. Final non-negotiables
+
+```text
+CLI before TUI.
+Evidence safety before agent polish.
+Claim ledger before final report.
+Critic loop before demo polish.
+Typed MCP tools before raw tool access.
+Manual stages before full automation.
+Guided mode before full auto.
+Max iteration cap always.
+No destructive tools.
+No unsupported claim in final report as fact.
+```

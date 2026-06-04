@@ -63,6 +63,8 @@ siftmesh report ./case_runs/RUN-001
 siftmesh replay ./case_runs/RUN-001
 siftmesh run ./case01 --evidence ./evidence --auto-human-loop
 siftmesh doctor   # verify host + each tool backend; fails closed on missing deps
+siftmesh doctor --protocol-sift   # detect the ~/.claude Protocol SIFT layer
+siftmesh protocol-sift inspect    # inspect & govern Protocol SIFT (env-only; PLAN/09)
 ```
 
 ## Forbidden patterns
@@ -88,6 +90,7 @@ synthetic/fabricated evidence or tool output used to self-test or demo
 
 ```text
 evidence/evidence_manifest.json
+evidence/custody_log.jsonl
 tasks/TASK-*.yaml
 results/TASK-*.result.json
 claims/claim_ledger.jsonl

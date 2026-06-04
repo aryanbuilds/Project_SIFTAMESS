@@ -59,6 +59,8 @@ report
 
 **The self-correction is genuine & emergent** — the live agent investigates blind, makes a real unsupported/over-broad claim, the deterministic critic rejects it, `decide()` retries, the agent genuinely revises (PLAN/08 §6). No under-specified-contract trick. A **recorded-golden run** (real ledgers) is the regression/safety-net floor. **Also exercised: contradiction → escalate** (two real tools producing mutually contradictory rows → `escalation_required` → DECIDE escalate).
 
+**Two kinds of genuine self-correction (criterion 1 — "recognize gaps and adjust"):** (1) *claim-quality* — a real unsupported/over-broad claim → critic rejects/downgrades → **retry**; (2) *coverage/gap* — the deterministic critic detects a claim broader than its evidence, missing corroboration, or a manifest artifact family **not yet examined** → `decide()` creates a **follow-up task** (examine another artifact / gather corroboration), not just a retry. The critic **downgrades/labels rather than silently dropping**, so breadth/depth is not starved. (Epic G — **G9: gap-detection + follow-up-task generation**.)
+
 ---
 
 # EPIC E — Planner & Deep Context Agent

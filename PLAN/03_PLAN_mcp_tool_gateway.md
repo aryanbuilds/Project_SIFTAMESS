@@ -68,6 +68,8 @@ Every tool has an identical typed interface; backing is swappable behind a `Back
 
 **Result:** the demo shows **eight genuinely-real tools** running on real artifacts — directly answering "is this real?" for judges — with the audit trail never labeling anything a placeholder. The local real path is fully **in-process** (zero subprocess/shell), which strengthens criterion 4; only Plaso enrichment and real-evidence integration are gated.
 
+**MVP coverage vs. known gaps (honest scope):** in-process MVP = **EVTX (Security + PowerShell) / Prefetch / Registry Run-RunOnce / `$MFT`**; documented gaps = **Amcache, SRUDB, ShimCache/AppCompatCache, full Plaso super-timeline, memory (Volatility 3)** — reachable on the SANS host via the SIFT-lane (PLAN/08 "MVP coverage vs gaps"; PLAN/09 §3–§4). State the gaps in the dataset + accuracy docs; do not overclaim breadth.
+
 ---
 
 ## Mandatory provenance fields (every tool output)

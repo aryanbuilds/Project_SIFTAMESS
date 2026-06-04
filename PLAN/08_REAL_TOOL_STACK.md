@@ -45,6 +45,8 @@ The PLAN/03 design (FastMCP stdio server + allowlist-only registry + typed tools
 
 **The demo shows EIGHT genuinely-real tools** — directly answering "is this real?" for judges, with the audit trail never labeling anything a placeholder.
 
+**MVP coverage vs. known gaps (honest scope).** The in-process MVP covers **EVTX (Security + PowerShell), Prefetch, Registry Run/RunOnce, `$MFT`**. **Known gaps** — documented, not hidden — are **Amcache, SRUDB, ShimCache/AppCompatCache, full Plaso super-timeline, and memory forensics (Volatility 3)**: these are SIFT-lane / roadmap items, available on the SANS SIFT host behind the same typed interface (PLAN/09 §3–§4), not part of the in-process MVP. State this in the dataset/accuracy docs — "senior-analyst" positioning is earned by honesty about scope, not by overclaiming breadth.
+
 ## 4. Optional enrichment & the real-evidence gate
 
 | Item | Status on Linux | Notes |

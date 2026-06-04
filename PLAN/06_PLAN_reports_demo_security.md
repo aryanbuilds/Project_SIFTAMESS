@@ -11,7 +11,7 @@ _Phases 10–11 + the security workstream. Reports/replay generated deterministi
 2. The **live autonomous agent is core (never cut)** — it is the product's point; the recorded-golden run + deterministic governance is the reproducible safety-net floor, not a replacement.
 3. Reports (J) are **byte-deterministic** functions of the JSONL ledgers — both the snapshot-test backbone (Epic M) and the "replayable audit" differentiator (Epic L).
 
-**Cut-line invariant:** a cut is only legal if it preserves (a) all 8 submission artifacts, (b) the critic-reject → retry → corrected-claim self-correction sequence, and (c) the green bypass-test suite.
+**Cut-line invariant:** a cut is only legal if it preserves (a) all 8 submission artifacts, (b) **the live autonomous agent + its genuine self-correction** (claim rejected/downgraded → retry **or follow-up task** → corrected claim) **+ the chain-of-custody + claim ledgers**, and (c) the green bypass-test suite. **Governance gates quality, not quantity** — the agent must still surface multiple candidate findings; the critic downgrades/labels rather than silently dropping, so breadth/depth is not starved.
 
 ---
 

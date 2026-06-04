@@ -2,9 +2,13 @@
 
 _Plan set version 1.0 · authored 2026-06-04 · expands `OVERALL_PLAN_DETAILED.md` into a Plan → Epic → Task structure._
 
-> **Fact-hygiene note (read first).** The scope drivers below — submission deadline, the 6 judging criteria, the 8 mandatory artifacts, and the real tool list (tool/connector licenses are **not a blocker** — replaceable; see `PLAN/08 §0.1`) — come from research against `findevil.devpost.com` and primary tool/SDK sources. **Re-confirm the deadline, judging rubric, and artifact list against the live `findevil.devpost.com/rules` page before locking the schedule.** The claim "Protocol SIFT is a config/skill layer, not an MCP server" is our *best current understanding*; the chosen **hybrid** architecture is deliberately robust whether or not Protocol SIFT exposes MCP, so nothing in this plan breaks if that detail differs.
+> **Fact-hygiene note (read first).** The scope drivers below — submission deadline, the 6 judging criteria, the 8 mandatory artifacts, and the real tool list (tool/connector licenses are **not a blocker** — replaceable; see `PLAN/08 §0.1`) — come from research against `findevil.devpost.com` and primary tool/SDK sources. **Re-confirm the deadline, judging rubric, and artifact list against the live `findevil.devpost.com/rules` page before locking the schedule.** The claim "Protocol SIFT is a config/skill layer, not an MCP server" is **research-confirmed** (against `teamdfir/protocol-sift` — see `PLAN/09_PROTOCOL_SIFT_INTEGRATION.md`); the chosen **hybrid** architecture remains robust whether or not Protocol SIFT exposes MCP.
 >
 > **Real-only delivery (no mocks/placeholders): see `PLAN/08_REAL_TOOL_STACK.md` (authoritative, research-confirmed).**
+
+> **Current state: ZERO implementation.** This repo is **planning-only** — no package, CLI, tests, CI, or `LICENSE` yet. **Epic A is the only valid implementation scope now** (the bd `blocks` chain enforces it — `bd ready` shows only Epic A). Do not implement any later epic before Epic A closes.
+>
+> **Winning MVP (narrow but deep) — the non-cuttable spine:** `init-case` (hash + **custody**) → live agent plans tasks → typed **real** tools run → every claim cites `artifact` + `sha256` + `tool_call_id` → **deterministic critic rejects/downgrades unsupported claims** → **retry _or follow-up task_** for coverage gaps → final report (confirmed + labelled-inferred only) → **replayable chain-of-custody audit**. Cut TUI / A2A / extra tools / broad parsers **before** cutting the live agent, the critic, the evidence + claim + **custody** ledgers, or replay. Protocol SIFT integration → `PLAN/09`.
 
 ---
 

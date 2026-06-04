@@ -45,6 +45,7 @@ siftmesh critique ./case_runs/RUN-001
 siftmesh report ./case_runs/RUN-001
 siftmesh replay ./case_runs/RUN-001
 siftmesh doctor   # verify host + each tool backend; fails closed on missing deps
+siftmesh protocol-sift inspect   # inspect & govern the ~/.claude Protocol SIFT layer (env-only; PLAN/09)
 ```
 
 Then add high-level automation:

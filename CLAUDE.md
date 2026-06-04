@@ -126,6 +126,8 @@ siftmesh run ./case01 --evidence ./evidence --review-only
 siftmesh resume RUN-001
 siftmesh status RUN-001
 siftmesh doctor                                     # verify host + each tool backend; fails closed on missing deps
+siftmesh doctor --protocol-sift                     # detect the ~/.claude Protocol SIFT layer (Claude Code, skills, tools)
+siftmesh protocol-sift inspect                      # inspect & govern Protocol SIFT (env-only capability map; PLAN/09)
 ```
 
 Debug commands:
@@ -161,6 +163,7 @@ case_runs/RUN-YYYYMMDD-HHMMSS/
     hashes.sha256
     readonly_mounts.json
     derived_artifacts.json
+    custody_log.jsonl
 
   tasks/
     TASK-001.yaml

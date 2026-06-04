@@ -13,7 +13,8 @@ Priority 1: Make the CLI fully working.
 Priority 2: Make evidence vault, task contracts, claim ledger, critic loop, and reports reliable.
 Priority 3: Add CAO/agent adapter integration.
 Priority 4: Add guided and full automation modes.
-Priority 5: Add optional Ratatui TUI last.
+Priority 5: Add optional A2A Agent Card discovery and delegation (governed by the SIFTMesh policy overlay).
+Priority 6: Add optional Ratatui TUI last.
 ```
 
 The CLI is the source of truth. The TUI is optional and must be a thin reader/launcher over CLI state files.
@@ -148,7 +149,7 @@ The LLM may propose actions. The state machine decides whether those actions are
 
 ## 7. Typed MCP tool guidelines
 
-Expose typed forensic functions, not raw shell.
+Expose typed forensic functions, not raw shell. **Every tool is a real, working integration — no mock or placeholder backends (see §7a).**
 
 Allowed MVP tool names:
 
@@ -188,6 +189,16 @@ mount_rw()
 curl_arbitrary()
 scp_arbitrary()
 ```
+
+## 7a. Real-only tool integration (no mocks/placeholders) — FINAL RULE
+
+1. Everything delivered is **real and 100% working**, down to the basics. No mock tools, no placeholder backends, no synthetic/seeded outputs presented as real. Judges and the maintainer must see real forensic tools, real methods, and real command execution against real artifacts.
+2. The plan's "deterministic placeholder backend / mock executor / synthetic demo evidence" strategy is **rejected**; replace it with real tool integrations (e.g. EvtxECmd, PECmd, regipy, Plaso/log2timeline, MFTECmd, Volatility 3) — or honestly **gate** the environment-dependent ones on the real SIFT workstation (see §17).
+3. Research + confirm **every** tool, library, SDK, and the MCP/compatibility layer with **deepwiki + Tavily** (plus WebSearch/WebFetch) **before** integrating. Confirm the real API, flags, output shape, license, and cross-platform behavior yourself — **never hallucinate**. Pin versions.
+4. **No cost-cutting.** On any doubt about correctness, feasibility, scope, or whether something is "real enough", call the advisor or ask the maintainer directly. Never substitute a fake to pass a step.
+5. **Do not run or validate against forensic data autonomously.** When a phase needs real evidence or a real SANS SIFT workstation, STOP and request it from the maintainer, who provides the real workstation + real files at that stage.
+6. **Linux-first.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (the plan is authored on Windows, but code runs on Linux). CI primary runner = Ubuntu; keep `pathlib` as hygiene.
+7. **License is not a blocker.** Forensic tool/connector licenses (LGPL, VSL, etc.) are not a gating concern — components are replaceable; pick the best real backend. The only license constraint is the project's own **Apache-2.0** (submission requirement). See PLAN/08_REAL_TOOL_STACK.md §0.1.
 
 ## 8. Agent role guidelines
 
@@ -417,6 +428,34 @@ Do not let CAO decide:
 - destructive tool permissions
 ```
 
+## 13a. A2A interoperability guidelines
+
+A2A (Agent2Agent, Apache 2.0) is the agent-to-agent layer. It is optional, ranks above the TUI but below CAO (Priority 5), and complements — never replaces — SIFTMesh governance.
+
+```text
+MCP      = agent -> tool
+A2A      = agent -> agent (Agent Card discovery + delegation)
+CAO      = local terminal-agent harness
+SIFTMesh = DFIR control plane
+```
+
+Rules:
+
+```text
+1. Agent Card = advertised capabilities; SIFTMesh x_siftmesh policy overlay = governed permissions.
+2. Discover Agent Cards at /.well-known/agent-card.json; store the capability map under the run directory.
+3. Treat remote/opaque A2A agents as untrusted by default.
+4. Apply the policy overlay in code; never read trust/permissions as authoritative from the card.
+5. Require an output-schema conformance gate before an A2A agent is dispatched as an executor.
+6. All A2A agent output still passes spotlighting, the critic, and claim validation.
+7. A2A never decides evidence policy, final claim status, or final report content.
+8. A2A is not MVP-mandatory; cut it before it can threaten the self-correction demo.
+9. A2A replaces only remote-agent discovery and remote-agent messaging. It is the envelope; the SIFTMesh task contract is the payload. A2A transports contracts and results; it never defines, relaxes, or judges them.
+10. Build discovery first (agents discover/list/inspect, no remote dispatch); full A2A dispatch is stretch-only after the core pipeline is stable.
+```
+
+SDK reference: `a2a-sdk` (Apache 2.0, Python 3.10+; transports JSON-RPC / HTTP+JSON-REST / gRPC). Agent Card path `/.well-known/agent-card.json` (RFC 8615).
+
 ## 14. TUI guidelines
 
 TUI is optional and last.
@@ -503,6 +542,8 @@ test_auto_mode_stops_at_max_iterations
 test_guided_mode_requires_approval_at_plan_gate
 test_forbidden_tool_not_exposed
 ```
+
+**Test-execution gate (real-only).** Pure schema/safety unit tests that need **no** real evidence may be authored alongside the code, but **do not run or validate the pipeline against real forensic artifacts autonomously**, and never fabricate evidence/tool output to satisfy a test. Any test, validation, integration, or end-to-end phase that needs real evidence or a real SANS SIFT workstation is **human-gated**: STOP and tell the maintainer explicitly — they provide the real workstation + real files at that stage.
 
 ## 18. Demo guidelines
 

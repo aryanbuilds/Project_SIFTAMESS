@@ -10,6 +10,19 @@ Build SIFTMesh as a CLI-first autonomous DFIR control plane for SANS SIFT and Pr
 
 SIFTMesh coordinates agents through task contracts, evidence-safe tools, claim ledgers, critic validation, and audit logs.
 
+## Execution workflow (HARD RULES)
+
+These override default agent behavior. Non-negotiable.
+
+1. **bd is the only task tracker.** All work lives in **bd (beads)** as 16 Epics (A–P) with tasks and sub-tasks. No TodoWrite / TaskCreate / markdown TODO lists. Flow: `bd ready` → `bd update <id> --claim` → `bd close <id>`. New work → new bd issue. Insights → `bd remember`.
+2. **Strictly sequential epics — no jumping.** Fixed order via a `blocks` chain: `A→B→C→D→E→F→G→H→K→J→L→M→N→I→P→O` (must-have spine first; I/P/O stretch last). A blocked epic's tasks are hidden from `bd ready`, so only the current epic is workable. Work **only** the current epic — never start a later one.
+3. **HARD STOP after each epic (structural, not just a reminder).** When the current epic's last task closes, **STOP and leave the epic node OPEN** — do **not** close the epic node yourself. Report completion and hand off. **Only a human closes the epic node** (`bd close <epic-id>`); because the next epic `blocks`-depends on the current epic node, its tasks stay hidden from `bd ready` until that human close. So a fresh session physically cannot jump ahead. Never auto-start the next epic.
+4. **Sub-tasks per epic, on entry.** Only Epic A is pre-decomposed. On entering a new epic, first break its tasks into sub-tasks in bd (`bd create --parent <task-id> --type task`).
+5. **Research before implementation (deepwiki-first).** Before any task/sub-task, research with the **deepwiki** MCP tools (`ask_question`, `read_wiki_contents`, `read_wiki_structure`) on the relevant upstream repos, plus **WebSearch / WebFetch / Tavily** for current docs and versions. Confirm library APIs against primary sources and pin versions before writing code.
+6. **Real-only — NO mocks, NO placeholders (FINAL).** Everything shipped is real and 100% working: real forensic tools, real methods, real command execution against real artifacts. No mock tools, no placeholder backends, no synthetic/seeded "fake-real" outputs presented as real. The plan's mock-executor / placeholder-backend / synthetic-evidence strategy is **rejected** — replace it with real implementations (or honestly gate on the real environment). **Research + confirm every tool / SDK / MCP-compatibility layer with deepwiki + Tavily before integrating — never hallucinate an API.** No cost-cutting; on any doubt, call the advisor or ask the maintainer directly.
+7. **Never test/validate autonomously against forensic data.** Any phase needing real evidence, real artifacts, or a real SANS SIFT workstation → **STOP and tell the maintainer explicitly**; they provide the real workstation + real files at that stage. Never fabricate evidence or tool output to self-test.
+8. **Linux-first; license is not a blocker.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (don't gate work for it; CI primary = Ubuntu). **Tool/connector licenses are not a gating concern** — they're replaceable; pick the best real backend. The only license constraint is the project's own Apache-2.0 (submission requirement). See PLAN/08_REAL_TOOL_STACK.md §0.1.
+
 ## Build order
 
 ```text
@@ -22,7 +35,8 @@ SIFTMesh coordinates agents through task contracts, evidence-safe tools, claim l
 7. Automation modes
 8. CAO/agent adapters
 9. Reports/replay
-10. Optional TUI last
+10. Optional A2A interop (Agent Card discovery/delegation, governed by policy overlay)
+11. Optional TUI last
 ```
 
 ## Architecture rules
@@ -32,7 +46,8 @@ CLI is source of truth.
 TUI is optional and last.
 CAO is only a harness.
 SIFTMesh owns DFIR logic.
-MCP exposes typed tools only.
+MCP exposes typed tools only (agent-to-tool).
+A2A is optional agent-to-agent interop; Agent Cards advertise capabilities, the SIFTMesh policy overlay governs permissions (remote agents untrusted by default).
 Original evidence is never modified.
 Every claim must cite evidence and tool_call_id.
 Every automatic decision must be logged.
@@ -66,6 +81,8 @@ scp_arbitrary()
 unbounded autonomous loops
 TUI-first development
 unsupported claims in final report
+mock/placeholder tool backends presented as real
+synthetic/fabricated evidence or tool output used to self-test or demo
 ```
 
 ## Required run artifacts

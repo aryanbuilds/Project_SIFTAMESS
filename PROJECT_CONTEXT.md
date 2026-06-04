@@ -95,7 +95,8 @@ Priority 1: Fully working CLI engine.
 Priority 2: Evidence runtime, claim ledger, critic loop, and reports.
 Priority 3: CAO/agent adapter integration.
 Priority 4: Guided and full autonomous modes.
-Priority 5: Optional Ratatui TUI cockpit after CLI works.
+Priority 5: Optional A2A Agent Card discovery and delegation (governed by the SIFTMesh policy overlay).
+Priority 6: Optional Ratatui TUI cockpit after CLI works.
 ```
 
 The TUI is optional and last. It should never contain core investigation logic. The CLI must be the source of truth.
@@ -272,6 +273,40 @@ Critic validates result.
 
 CAO must not decide forensic truth, evidence policy, or final report content.
 
+## 9a. A2A role (agent-to-agent interoperability)
+
+A2A (Agent2Agent) is an open, Apache 2.0 standard (Linux Foundation / Google-originated) for agent-to-agent communication. It is **complementary to MCP and CAO**, not a replacement for SIFTMesh's orchestration or governance:
+
+```text
+MCP      = agent -> tool      (typed SIFT forensic tools)
+A2A      = agent -> agent     (Agent Card discovery + remote delegation)
+CAO      = local terminal-agent harness (Claude Code / OpenCode / Codex / Gemini / Kimi)
+SIFTMesh = DFIR control plane (policy, evidence, claims, retries, reports)
+```
+
+A2A agents publish an Agent Card at `/.well-known/agent-card.json` (name, skills, endpoint, version). SIFTMesh can discover them and build a capability map instead of hand-maintaining every agent profile.
+
+Governance rule:
+
+```text
+Agent Card = advertised capabilities.
+SIFTMesh x_siftmesh policy overlay = governed permissions.
+```
+
+An Agent Card does not enforce read-only evidence, no-raw-shell, the claim schema, the confidence model, contradiction rules, retry/escalation, chain of custody, or unsupported-claim rejection. SIFTMesh adds those via the policy overlay: remote/opaque A2A agents are **untrusted by default**, must pass a conformance gate, and their output still flows through spotlighting, the critic, and claim validation. A2A is optional and not MVP-mandatory (Priority 5, above the TUI).
+
+Boundary (what A2A does and does not replace):
+
+```text
+A2A replaces: custom remote-agent discovery + custom remote-worker API/messaging.
+A2A does NOT replace: task contracts, evidence vault, claim/contradiction ledgers,
+  critic, retry/escalation, human gates, the SIFT MCP gateway, or CAO local orchestration.
+Envelope/payload: A2A is the envelope; the SIFTMesh task contract is the payload.
+  SIFTMesh creates the contract -> A2A carries it -> SIFTMesh validates the result against it.
+```
+
+Verified vs a2a-protocol.org + the a2a-sdk README: package `a2a-sdk`, Apache 2.0, Python 3.10+, transports JSON-RPC / HTTP+JSON-REST / gRPC; Agent Card at `/.well-known/agent-card.json` per RFC 8615 (early A2A versions used `/.well-known/agent.json`).
+
 ## 10. MCP role
 
 MCP is the compatibility boundary between agents and tools. SIFTMesh should expose typed forensic functions rather than generic shell execution.
@@ -410,23 +445,24 @@ Minimum TUI panels:
 
 ## 14. License policy
 
-Preferred project license:
+Project license (the one constraint that remains — a hackathon submission requirement: public repo under MIT or Apache-2.0):
 
 ```text
 Apache 2.0
 ```
 
-Allowed dependency preference:
+Dependency / tool-backend license posture (see PLAN/08 §0.1):
 
 ```text
-MIT, Apache 2.0, BSD preferred.
-MPL 2.0 may be acceptable if isolated.
-LGPL only if necessary and handled carefully.
-Avoid AGPL, non-commercial, and unknown licenses.
-Avoid copying code from restricted projects.
+License is NOT a blocker. Tool and connector licenses (e.g. LGPL libscca,
+VSL Volatility 3, regipy[full], libyal/TSK in Plaso's tree) are replaceable
+and not a gating concern — depend on the best real backend at runtime, and
+swap later only if a license ever actually matters.
+Do NOT COPY source code from restrictive projects (code-reuse rule, distinct
+from depending on them at runtime).
 ```
 
-Conceptual inspiration is allowed, but code reuse must pass license review.
+Conceptual inspiration and runtime dependencies are fine; copying source code from another project must still pass license review.
 
 ## 15. Non-goals
 
@@ -455,4 +491,6 @@ Do not do these in the MVP:
 - AWS CLI Agent Orchestrator: https://github.com/awslabs/cli-agent-orchestrator
 - Microsoft Conductor: https://github.com/microsoft/conductor
 - mcp-agent: https://github.com/lastmile-ai/mcp-agent
+- A2A Protocol: https://a2a-protocol.org/
+- A2A GitHub (Linux Foundation / a2aproject): https://github.com/a2aproject/A2A
 - Ratatui: https://github.com/ratatui/ratatui

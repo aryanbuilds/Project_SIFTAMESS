@@ -4,6 +4,8 @@
 
 _Last updated: 2026-06-04_
 
+> **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
+
 ## 1. Final product definition
 
 SIFTMesh is a CLI-first control plane for autonomous digital forensics and incident response on SANS SIFT and Protocol SIFT.
@@ -140,6 +142,15 @@ Fallback:
 Generic shell-agent adapter that writes task instructions and expects result files.
 ```
 
+Agent interoperability (optional, stretch — Epic P in /PLAN):
+
+```text
+A2A (Agent2Agent, Apache 2.0) Agent Card discovery + remote delegation.
+Protocol stack: MCP = agent-to-tool; A2A = agent-to-agent; CAO = local terminal harness.
+A2A-discovered agents are untrusted by default and governed by the SIFTMesh
+x_siftmesh policy overlay; their output still passes the critic and claim validation.
+```
+
 ### Layer 5: CLI
 
 Purpose:
@@ -244,6 +255,7 @@ siftmesh/
       claude_adapter.py
       opencode_adapter.py
       generic_shell_adapter.py
+      a2a_adapter.py
       hermes_config_generator.py
 
     reports/
@@ -513,11 +525,11 @@ Tasks:
 ```text
 - compute_hash_manifest implementation.
 - create_readonly_evidence_vault implementation.
-- parse_evtx_security wrapper or structured placeholder.
-- parse_evtx_powershell wrapper or structured placeholder.
-- analyze_prefetch wrapper or structured placeholder.
-- extract_registry_run_keys wrapper or structured placeholder.
-- build_timeline wrapper or structured placeholder.
+- parse_evtx_security real backend: evtx (pyevtx-rs) in-process, pin evtx==0.11.1.
+- parse_evtx_powershell real backend: evtx (pyevtx-rs) in-process (4103/4104), pin evtx==0.11.1.
+- analyze_prefetch real backend: libscca-python (pyscca) in-process, pin 20250915.
+- extract_registry_run_keys real backend: regipy in-process, pin regipy==6.2.1 (`regipy[full]` is fine to add for shell-item parsing — license is not a blocker; see PLAN/08 §0.1, §3).
+- build_timeline real: own merge over real rows + $MFT via mft==0.7.0 (Plaso optional gated).
 - validate_claim_evidence implementation.
 ```
 
@@ -574,10 +586,10 @@ Tasks:
 
 ```text
 - Implement generic_shell_adapter.
-- Implement deterministic mock executor for tests/demo.
+- Implement deterministic real-tool executor (real in-process tools over real evidence; see PLAN/08) for tests/demo.
 - Write TASK result JSON.
 - Append agent_calls.jsonl.
-- Support failure/malformed output simulation for self-correction demo.
+- Drive self-correction by GENUINE causes (under-specified first-pass contract + recoverable real-tool errors), never simulated failures.
 ```
 
 Acceptance:
@@ -667,6 +679,35 @@ Acceptance:
 ```text
 SIFTMesh can assign TASK-002 to an external agent profile.
 Agent output is collected from the expected result path.
+```
+
+## Phase 9.5: A2A interoperability (optional / stretch — Epic P)
+
+Goal:
+
+```text
+Discover and govern agents via the A2A (Agent2Agent) standard, on top of the existing adapter seam.
+A2A replaces remote-agent discovery + the remote-worker API only. It is the envelope; the SIFTMesh
+task contract is the payload (SIFTMesh creates the contract, A2A carries it, SIFTMesh validates the result).
+SDK: a2a-sdk (Apache 2.0, Python 3.10+; JSON-RPC / HTTP+JSON-REST / gRPC). Agent Card at /.well-known/agent-card.json.
+NOT MVP-mandatory. Ranks above the TUI but below CAO. Never on the demo critical path.
+```
+
+Tasks:
+
+```text
+- Add a2a_adapter (fetch + validate Agent Card from /.well-known/agent-card.json).
+- Store discovered capabilities in context/agent_capabilities.json.
+- Add x_siftmesh policy overlay schema; merge into a hybrid registry (static + CAO + A2A).
+- Treat discovered agents as untrusted by default; require a conformance gate before dispatch.
+- CLI: `siftmesh agents discover --a2a <url>`; optional `siftmesh dispatch --via-a2a`.
+```
+
+Acceptance:
+
+```text
+A discovered A2A agent appears in the capability map with an untrusted-by-default policy overlay.
+Any A2A agent output still passes spotlighting, the critic, and claim validation (governance not bypassed).
 ```
 
 ## Phase 10: Reports and replay
@@ -799,9 +840,9 @@ Deliver:
 ```text
 hash tool
 evidence vault tool
-EVTX placeholder/wrapper
-Prefetch placeholder/wrapper
-Registry placeholder/wrapper
+EVTX real backend (evtx / pyevtx-rs, in-process)
+Prefetch real backend (libscca-python / pyscca, in-process)
+Registry real backend (regipy, in-process)
 tool call logging
 ```
 
@@ -882,8 +923,8 @@ self-correction summary
 Deliver:
 
 ```text
-stable demo case
-scripted self-correction
+stable demo case (real maintainer-provided evidence; integration-gated)
+real deterministic self-correction (under-specified contract -> retry -> corrected; PLAN/08 §6)
 prompt-injection alert optional
 clean install instructions
 ```
@@ -970,4 +1011,5 @@ Guided mode before full auto.
 Max iteration cap always.
 No destructive tools.
 No unsupported claim in final report as fact.
+A2A is optional and governed by the policy overlay; it never overrides SIFTMesh forensic decisions.
 ```

@@ -2,7 +2,11 @@
 
 _Companion to `00_INDEX_AND_ROADMAP.md`. Defines the realistic, build-in-11-days architecture and the extension points the product roadmap grows into._
 
-> **Real-only rule:** SIFTMesh ships **real tools — no mocks, no placeholder backends, no synthetic/seeded outputs, no scripted self-correction.** The MCP tool gateway has a `RealBackend` (in-process typed Python library calls) plus an optional gated `SiftLaneBackend` (fixed-argv CLIs on SANS SIFT) — there is **no `PlaceholderBackend`.** Confirmed tool/version/license facts and the in-process-vs-subprocess split are authoritative in **`PLAN/08_REAL_TOOL_STACK.md`** (research-confirmed); this document defers to it.
+> **Real-only rule (refined):** SIFTMesh ships **no mock forensic backends, no placeholder tool backends, no synthetic integration outputs, and no scripted self-correction.** Pure **unit tests MAY use fixtures / golden JSON** (schema, path-policy, forbidden-tool, claim-validation checks); any **integration/e2e** behaviour shown in the demo must use **real artifacts and real tool output**. A missing backend **fails closed** with a dependency error (`siftmesh doctor`) — it must **never** fall back to a fake backend (*missing backend = OK; fake backend = not OK*). The MCP tool gateway has a `RealBackend` (in-process typed Python library calls) plus an optional gated `SiftLaneBackend` (fixed-argv CLIs on SANS SIFT) — there is **no `PlaceholderBackend`.** Confirmed tool/version facts are authoritative in **`PLAN/08_REAL_TOOL_STACK.md`**; this document defers to it.
+>
+> **Purpose & autonomy (the point of the product):** SIFTMesh is a **genuinely autonomous DFIR investigator** — handed a *black-box* dataset it was never told about, it decides what to examine, runs the typed tools, forms evidence-anchored claims, and **catches and corrects its own mistakes**. *Autonomy lives in the agent* — a real LLM plans, investigates, and self-corrects **emergently**. *Determinism lives in the governance* — the critic, `decide()`, caps, evidence-safety, and replayable audit are hardcoded so **code decides truth and safety**. Ground truth is **held out**: used only to score the agent's findings in the accuracy report, **never shown to the agent**. The deterministic path is the product's **reliability floor + regression/replay harness** — a golden snapshot of a *real recorded* agent run (real ledgers, **not a mock**) — not a substitute for the agent's intelligence.
+>
+> **Build priority (P1 first; the autonomous agent is core / never cut):** **P1** CLI + run-dir + schemas + evidence vault + real typed tools + critic + report + the **autonomous executor loop**; **P2** CAO / local live-agent harness + the recorded-golden regression run; **P3** A2A Agent Card discovery/delegation; **P4** read-only TUI. First legal cuts (last → first to survive): **TUI → A2A → extra tools beyond the core**. The live autonomous agent and the deterministic governance are both non-cuttable.
 
 ---
 
@@ -16,14 +20,19 @@ The LLM proposes.  The deterministic code decides.
 
 Every action an agent suggests is validated by hardcoded policy before it executes; every finding becomes an evidence-anchored claim; every claim is critiqued; every state transition is logged and replayable. The CLI is the source of truth — all state lives in inspectable files under a run directory, not in chat history.
 
+The agent's **intelligence is genuine** — it investigates an unknown (black-box) dataset on its own, choosing what to examine and which tools to run, and **self-corrects emergently** when the critic rejects an unsupported or over-broad claim. Its **authority is bounded** — nothing it proposes becomes fact until deterministic code validates it. That split (genuine autonomy, bounded by deterministic governance) is the whole design.
+
 ### The hybrid decision (why this shape)
 
 Research established that Protocol SIFT is best understood as a Claude Code config + skill library + tool allowlist, and that SIFT Workstation already bundles 200+ forensic tools. Reimplementing parsers is wasteful; depending entirely on a *live* full SIFT environment makes the demo fragile if a specific tool/version is missing. So SIFTMesh is built **Linux-first** (dev + target = SANS SIFT / Ubuntu) in two layers that share **one typed interface**:
 
-- **Reliable spine** — a standalone, zero-LLM-capable Python core whose 8 MVP typed tools are **all real** via **in-process pure-Python library backends** (`hashlib`/stdlib + `evtx` + `regipy` + `pyscca` + `mft`) — no mock tools, no placeholder backends, no synthetic outputs (real-only rule, see PLAN/08_REAL_TOOL_STACK.md). This runs and demos natively on Linux (SANS SIFT / Ubuntu — the dev + target platform) with no keys and no network; every backend installs via pip wheels or sdist+gcc (PLAN/08 §0.1).
+- **Autonomous agent (the headline, core/never-cut)** — a real LLM agent plans and investigates the evidence *blind*, calls the typed tools, forms claims, and self-corrects emergently under the deterministic critic. This genuine autonomy is the product's core value; it requires an LLM/agent at run time.
+- **Deterministic governance + tool spine (the reliability floor)** — the typed forensic tools are an **internal Python typed service** (the FastMCP server is a *thin adapter* over it; the CLI calls the service **directly** for reliability, agents reach it via MCP). The spine **targets** in-process Python backends (`hashlib`/stdlib + `evtx` + `regipy` + `pyscca` + `mft`); `siftmesh doctor` verifies each on the active host and a **missing backend fails closed** with a dependency error — **never** a fake. A **golden snapshot of a real recorded agent run** (real ledgers, not a mock) is the reproducible regression + demo safety net. The critic / `decide()` / caps / evidence-safety run with no LLM, so governance is deterministic even though the agent is not.
 - **Optional SIFT lane** — on a SANS SIFT Workstation, the same typed tools swap their backends to orchestrate the real 200+ tools / Protocol SIFT skills. No interface change; a config flip.
 
 This is robust whether or not Protocol SIFT exposes MCP, and it aligns with the hackathon's "improve how agents use SIFT tools" framing without betting the demo on the environment.
+
+**Submission framing (keep Protocol SIFT central):** SIFTMesh **improves Protocol SIFT** — it wraps SIFT / Protocol-SIFT workflows in deterministic governance, typed evidence-safe execution, claim validation, and replayable audit, so an autonomous agent can use SIFT tools *safely and accountably*. The standalone spine exists for **reliability and reproducibility, not to avoid SIFT**; on a SANS SIFT host the SIFT lane drives the real toolset behind the same typed interface.
 
 ---
 
@@ -56,6 +65,8 @@ This is robust whether or not Protocol SIFT exposes MCP, and it aligns with the 
 ```
 
 **Boundary rule:** higher layers may call lower layers only through typed interfaces. The TUI (L6) never touches L1–L3 logic; it only reads L2 files. CAO (L4) never decides forensic truth (L3).
+
+**Layer 1 is an internal Python typed service first; MCP is a thin adapter over it.** The forensic tools are implemented as plain typed Python functions/service; the FastMCP server merely exposes those same functions to agents. The **CLI calls the Python service directly** (CLI-first — no MCP round-trip required for deterministic stages); **agent clients call them via MCP**. Build the Python service first, the MCP adapter second — so the CLI never blocks on MCP.
 
 ---
 
@@ -220,11 +231,11 @@ Mapped to Anthropic's "Building Effective Agents" patterns (research-confirmed):
 
 | Role | Pattern | Responsibility | MVP backing |
 |---|---|---|---|
-| Planner | prompt-chaining + orchestrator decomposition | plan + task graph; never executes tools | deterministic template (LLM optional) |
-| Deep-Context | single-shot summarizer | compact reusable context pack | deterministic template (LLM optional) |
-| Ultraworker | orchestrator-workers + state machine | task order, dispatch, retry/escalate/human, caps | deterministic engine (always) |
-| Executor | tool-use loop | one narrow task; extract/normalize; cite evidence; no final severity | deterministic real-tool adapter (reliable) / shell / live (upgrade) |
-| Critic | evaluator-optimizer | reject unsupported, find contradictions, drive retry | deterministic structural (always) + LLM (optional) |
+| Planner | prompt-chaining + orchestrator decomposition | plan + task graph; never executes tools | **LLM-driven planning (autonomous)** + deterministic template fallback |
+| Deep-Context | single-shot summarizer | compact reusable context pack | **LLM (autonomous)** + deterministic fallback |
+| Ultraworker | orchestrator-workers + state machine | task order, dispatch, retry/escalate/human, caps | deterministic engine (always — governance) |
+| Executor | tool-use loop | one narrow task; extract/normalize; cite evidence; no final severity | **live LLM agent (autonomous — PRIMARY)** + deterministic real-tool replay (regression floor) / shell |
+| Critic | evaluator-optimizer | reject unsupported, find contradictions, drive retry | deterministic structural (always) + **LLM adversarial (core for autonomy/depth)** |
 | Budget Router | routing | cheap-vs-strong selection; escalate on retry/contradiction | static map + escalate-on-retry |
 | Prompt-Injection Guard | — | spotlight + scan evidence; alert, never execute | deterministic scanner (always) |
 | Evidence Manager | — | hashes, read-only, derived registry, claim↔evidence map | always real |
@@ -246,9 +257,10 @@ Mapped to Anthropic's "Building Effective Agents" patterns (research-confirmed):
 | Workflows/tasks | YAML | task contracts, workflow specs |
 | Ledgers | JSONL | validate-before-write |
 | Testing | **pytest** (+ snapshot/golden), **ruff**, **mypy/pyright** | CI primary runner = `ubuntu-latest` (= SIFT target); Windows CI optional/not required |
+| Health check | **`siftmesh doctor`** | verifies Python/OS, each tool backend, run-dir writability, evidence readability, raw-shell disabled; **fails closed** on a missing backend (never a fake) |
 | TUI (optional) | Ratatui (Rust) or `textual` fallback | deferred; read-only |
 
-**License posture:** the **project itself = Apache 2.0** — the only license constraint that remains (hackathon submission requires a public MIT/Apache-2.0 repo; keep `LICENSE` Apache-2.0). **Tool/connector dependency licenses are not a blocker** — runtime deps (LGPL `libscca`, VSL Volatility 3, `regipy[full]`, libyal/TSK in Plaso's tree, etc.) are replaceable; use the best real backend and swap later only if a license ever matters (PLAN/08 §0.1, §5). The one rule that stays is a **code-reuse** rule, not a runtime-dependency rule: **do not COPY source** from restrictive projects (Hayabusa/Chainsaw are inspiration only); Sigma rules are reusable data (DRL). License audit before submission (Epic N6).
+**License posture:** the **project source stays Apache-2.0** (submission requires a public MIT/Apache-2.0 repo; keep `LICENSE` Apache-2.0). **Runtime dependency licenses are acceptable after review and must be documented in a dependency/license audit (NOTICE + SBOM, Epic N6)** — prefer MIT/Apache/BSD; **GPL/LGPL/VSL tools may be used as *external runtime tools* only when compatible with the distribution/Docker plan and recorded in NOTICE/SBOM.** Do **not** vendor or copy restrictive source (Hayabusa/Chainsaw = inspiration only; Sigma rules = reusable data, DRL). Licenses are **not a hard blocker** (tools are replaceable) but they are **tracked, not ignored** (PLAN/08 §0.1, §5).
 
 ---
 
@@ -303,8 +315,8 @@ The plan is authored on Windows, but **all code is built and run on Linux** (SAN
 |---|---|
 | Paths | `pathlib` everywhere; never string-concatenate paths; `safe_write_path` canonicalizes — kept as good hygiene. |
 | CI | GitHub Actions primary runner = `ubuntu-latest` (= SIFT target). Windows CI is **optional / not required**. |
-| Real tool availability | All 8 MVP backends are **real and in-process** on Linux — `evtx`/`regipy`/`pyscca`/`mft` install natively (pip wheels or sdist+gcc; PLAN/08 §3). EZ Tools (EvtxECmd/PECmd) and Plaso (native on Linux via pip / `apt install python3-plaso` / preinstalled on SIFT) are **optional gated enrichment** behind config (SIFT-lane / Docker), never the spine path — no placeholder backend exists. |
-| Demo reproducibility | guaranteed path is the deterministic real-tool executor over committed real artifacts — Linux-native, no keys, no network (PLAN/08 §6). |
+| Real tool availability | The MVP spine **targets** in-process Python backends (`evtx`/`regipy`/`pyscca`/`mft`); **`siftmesh doctor` verifies each on the active host** and a **missing backend fails closed** with a dependency error — never a placeholder (*missing = OK; fake = not OK*). EZ Tools / Plaso (native on Linux via pip / `apt install python3-plaso` / preinstalled on SIFT) are optional gated enrichment behind config (SIFT-lane / Docker). |
+| Demo reproducibility | the **live autonomous agent** is the demo headline (needs an LLM/agent at run time); a **recorded-golden run** (real ledgers, not a mock) is the reproducible regression + safety net — Linux-native (PLAN/08 §6). |
 | Final validation | Day 11a on a SANS SIFT VM (the native demo target; judges run on Linux/SIFT). The **only real gate is real evidence** (maintainer-provided EVTX / prefetch / registry hive / `$MFT`), not tool buildability — every backend installs on Linux now (PLAN/08 §0.1, §4). |
 
 ---

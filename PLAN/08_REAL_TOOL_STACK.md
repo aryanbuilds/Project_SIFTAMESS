@@ -4,12 +4,12 @@ _Authored 2026-06-04. **This file is authoritative for the real-only delivery ru
 
 ## 0. The rule this file enforces
 
-SIFTMesh ships **real, working forensic tools** — no mock tools, no placeholder backends, no synthetic/seeded "fake-real" outputs. Judges and the maintainer see real tools running on real artifacts. The "deterministic placeholder backend / mock executor / synthetic demo evidence" strategy from the original plan is **rejected**.
+SIFTMesh ships **real, working forensic tools** — **no mock forensic backends, no placeholder tool backends, no synthetic integration outputs, no scripted self-correction.** Judges and the maintainer see real tools running on real artifacts. (Pure **unit tests may use fixtures / golden JSON** for schema / path-policy / forbidden-tool / claim-validation checks — that is normal testing, not a mock backend.) A missing backend **fails closed** with a dependency error (`siftmesh doctor`), **never** a fake fallback (*missing = OK; fake = not OK*). The "deterministic placeholder backend / mock executor / synthetic demo evidence / scripted self-correction" strategy from the original plan is **rejected**.
 
 ## 0.1 Platform & license posture (read first)
 
 - **Linux-first.** The **development AND target platform is Linux (SANS SIFT / Ubuntu)** — *not* Windows. The plan is authored on Windows, but no code is built or run here; all development, tool installation, and execution happen on Linux. Windows is **not** a constraint. Earlier "buildable-on-Windows / dual-OS / WSL2 / pywin32 / MSVC-wheel" framing is **superseded** — on Linux every backend below installs natively (pip wheels or sdist+gcc; several are preinstalled on SANS SIFT). Keep `pathlib` discipline as good hygiene, but Linux is primary; CI primary runner = Ubuntu.
-- **License is not a blocker.** Tool/connector licenses (LGPL `libscca`, VSL Volatility 3, `regipy[full]`, libyal/TSK in Plaso's tree, etc.) are **not a gating concern — these components are replaceable.** Use whatever real backend works best; swap if a license ever matters. The **project itself stays Apache-2.0** (a hackathon submission requirement: public repo under MIT/Apache-2.0) — that is the only license constraint that remains.
+- **License: tracked, not a hard blocker.** Tool/connector licenses are not a *blocker* (components are replaceable), but they are **reviewed and recorded in a dependency/license audit — NOTICE + SBOM (Epic N6)**: prefer MIT/Apache/BSD; use GPL/LGPL/VSL tools (e.g. `libscca`, Volatility 3, `regipy[full]`, libyal/TSK in Plaso's tree) as *external runtime tools* only when compatible with the distribution/Docker plan. The **project stays Apache-2.0** (submission requirement); never copy restrictive source — depending on it at runtime, documented, is fine.
 
 ## 1. The biggest correction: the local real path is IN-PROCESS, not subprocess
 
@@ -55,21 +55,17 @@ The PLAN/03 design (FastMCP stdio server + allowlist-only registry + typed tools
 
 **The only real gate is real evidence** (not tool buildability) — every backend above installs on Linux now.
 
-## 5. License posture (not a blocker)
+## 5. License posture (tracked, not a hard blocker)
 
-Tool/connector licenses are **not a gating concern — components are replaceable.** Use the best real backend; swap later if any license ever matters. Notes for awareness only (no action required): `libscca-python` is LGPL, Volatility 3 is VSL, Plaso's dep tree includes libyal/TSK. The **project itself remains Apache-2.0** (hackathon submission requirement) — keep `LICENSE` Apache-2.0 and avoid *copying source* from restrictive projects, but depending on them at runtime is fine.
+Tool/connector licenses are not a *blocker* (components are replaceable) but they are **tracked, not ignored**: review each runtime dependency and record it in a **dependency/license audit — NOTICE + SBOM (Epic N6)**. Prefer MIT/Apache/BSD. GPL/LGPL/VSL tools (`libscca-python` LGPL, Volatility 3 VSL, `regipy[full]` LGPL, libyal/TSK in Plaso's tree) may be used as **external runtime tools** when compatible with the distribution/Docker plan and documented. The **project itself remains Apache-2.0** (submission requirement) — keep `LICENSE` Apache-2.0 and **never copy source** from restrictive projects; depending on them at runtime, documented, is fine.
 
-## 6. Self-correction (hero / tiebreaker) — real, deterministic, no scripted verbs
+## 6. Self-correction (the tiebreaker) — genuine & emergent, governed by deterministic code
 
-The mock scenario verbs (`emit_claim_missing_field`, `emit_malformed_json`, `emit_corrected_claim`, `emit_contradicting_claim`, `emit_valid`, `tool_failure`) are **deleted**. The hero is now a **deterministic engine over real tool output**:
+There is **no scripted self-correction** and **no engineered "under-specified contract" trick** (the old `emit_*` scenario verbs are deleted). Self-correction is **genuine**: the autonomous LLM agent investigates the real evidence *blind*, and when it makes an unsupported or over-broad claim, the **deterministic Critic** (Layer-1 structural validation — no LLM) rejects it, `decide()` issues a retry, and the agent **genuinely revises** its claim against the real tool output. The mistake and the fix are emergent, not staged.
 
-1. The first-pass task contract is **genuinely under-specified** (its `success_criteria` does not yet require binding `source_sha256` + `tool_call_id`).
-2. The real in-process tool runs over the real (committed) evidence and emits a **real claim** that genuinely lacks the required evidence binding.
-3. The deterministic Critic structural check (Layer 1) genuinely returns `retry_required`.
-4. DECIDE (pure fn) → retry with a **tightened** contract (`claim MUST include tool_call_id + source_sha256`).
-5. The **second real attempt** over the same real tools now passes → promoted to `claim_ledger.jsonl` (confirmed).
-
-Determinism survives because it comes from **real tools over fixed committed evidence with no LLM and no randomness** — reproducible ≥10/10. Integration-gated on K1 real evidence; the in-process tools are testable on the Linux dev box against any small committed real artifact.
+- **Autonomy = the agent** (a real LLM proposes / investigates / corrects). **Determinism = the governance** (critic, `decide()`, caps, evidence-safety, replayable audit — code decides what counts as fact). This is the literal meaning of "LLM proposes, code decides."
+- **Ground truth is held out** — used only to score the agent in the accuracy report; the agent never sees it. Handing it a black-box dataset and watching it figure things out is the point.
+- **Reproducibility (demote, don't delete):** the live agent is the headline — it needs an LLM at run time and may vary run-to-run (that variation *is* the proof it's real). For regression + a demo safety net, commit a **golden snapshot of a real *recorded* agent run** (its actual ledgers) — real artifacts, **not a mock**. Tests assert **properties** of a fresh live run (≥1 genuine self-correction occurred; all MVP artifacts present; no unsupported claim in the report's facts) and **byte-exact** equality only against the *recorded* golden. Live integration/e2e is gated on K1 real evidence (maintainer-provided).
 
 ## 7. a2a-sdk (Epic P, optional/stretch) — CONFIRMED
 

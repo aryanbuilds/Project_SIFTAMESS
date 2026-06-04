@@ -6,9 +6,9 @@ _Phases 10–11 + the security workstream. Reports/replay generated deterministi
 
 ## Foundational decision driving J/K/L
 
-**The zero-live-LLM, deterministic REAL-tool run is the SPINE of the submission.** Real in-process forensic tools run over real evidence, with zero live LLM and no API keys/network for the tools themselves (the real evidence is maintainer-provided; see PLAN/08_REAL_TOOL_STACK.md). Four of the eight mandatory artifacts — (2) demo video, (6) accuracy/FP report, (7) working software, (8) execution logs — require a *reproducible run to exist*. Consequences baked into J/K/L:
-1. Every artifact is producible with no API keys, no network, Linux-first (dev + target = SANS SIFT / Ubuntu; the plan is authored on Windows but all code is built/run on Linux — see PLAN/08 §0.1).
-2. "Cut live agents" is a non-loss because the deterministic real-tool executor is already the default.
+**The headline is the live autonomous agent run; a recorded-golden run (its real ledgers) is the reproducible spine.** The live agent investigates real evidence and self-corrects emergently (needs an LLM at run time). Four of the eight mandatory artifacts — (2) demo video, (6) accuracy/FP report, (7) working software, (8) execution logs — require a *reproducible run to exist*; so we **record one real agent run and commit its ledgers as the golden** (real artifacts, not a mock — the deterministic governance + report generation are byte-deterministic over those ledgers). Consequences baked into J/K/L:
+1. The committed artifacts (recorded-golden ledgers + generated reports) reproduce with **no API keys and no network**, Linux-first; a fresh *live* run needs an LLM/agent (dev + target = SANS SIFT / Ubuntu; see PLAN/08 §0.1, §6).
+2. The **live autonomous agent is core (never cut)** — it is the product's point; the recorded-golden run + deterministic governance is the reproducible safety-net floor, not a replacement.
 3. Reports (J) are **byte-deterministic** functions of the JSONL ledgers — both the snapshot-test backbone (Epic M) and the "replayable audit" differentiator (Epic L).
 
 **Cut-line invariant:** a cut is only legal if it preserves (a) all 8 submission artifacts, (b) the critic-reject → retry → corrected-claim self-correction sequence, and (c) the green bypass-test suite.

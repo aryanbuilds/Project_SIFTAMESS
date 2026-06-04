@@ -15,35 +15,35 @@ _Phases 5–8 of the build, and the heart of the product. The deterministic stat
 4. **Critic structural checks** — deterministic parse + checks before any LLM reasoning.
 5. **Path/tool policy** — adapters refuse any tool not in the contract's `allowed_tools` and any out-of-run-dir write (reuses Epic B path policy).
 
-**(C3) The self-correction hero is deterministic real-tool execution.** The guaranteed demo path uses the **deterministic real-tool executor** running the in-process MVP tools (`evtx`/`regipy`/`pyscca`/`mft` + own-code; see PLAN/08_REAL_TOOL_STACK.md §3) over **real committed evidence**. The "mistake" the hero corrects is a genuinely under-specified first-pass task contract — its `success_criteria` does **not yet** require binding `source_sha256` + `tool_call_id`, so the real tool's real claim genuinely lacks the required evidence binding. Every arrow in the correction chain is deterministic code over real tool output → reproduces every run, no live model, no randomness, cannot fail in the demo. Live agents swap in behind the same adapter interface as a best-effort upgrade.
+**(C3) The self-correction hero is genuine & emergent; the *governance* is deterministic.** The live autonomous agent investigates real committed evidence **blind**, makes a real unsupported/over-broad claim, the **deterministic critic** (Layer-1 structural — no LLM) rejects it, `decide()` retries, and the agent **genuinely revises** (PLAN/08 §6). No under-specified-contract trick, no scripted scenario. The *agent* is non-deterministic (a real LLM); the *governance* — critic, `decide()`, caps, evidence-safety, replayable audit — is deterministic, which is what makes the self-correction trustworthy and replayable. A **recorded-golden run** (real ledgers, not a mock) is the regression + demo safety-net floor.
 
 ---
 
-## The hero sequence (designed so it cannot fail) — MVP, not stretch
+## The hero sequence (genuine & emergent, deterministically governed) — MVP, not stretch
 
 ```
 Iteration 1 · TASK-002 attempt 1
-  real-tool executor reads tasks/TASK-002.yaml (first-pass, under-specified contract)
-  real in-process tool runs over the real committed evidence (e.g. evtx_security)
-   → results/TASK-002.result.json with a real claim that genuinely lacks
-     the required evidence binding (no tool_call_id) — because the contract's
-     success_criteria did not yet make that binding mandatory
-   → agent_calls.jsonl {attempt:1, contract:"under_specified", backend:"real"}
+  the live agent (claude -p / OpenCode) investigates the real evidence for TASK-002,
+  calls the real in-process tool (e.g. parse_evtx_security), and forms a claim
+   → results/TASK-002.result.json with a real claim that is unsupported or
+     over-broad (not yet bound to tool_call_id/source_sha256, or broader than
+     the rows support) — a GENUINE agent error, not a staged one
+   → agent_calls.jsonl {attempt:1, agent:"claude_headless", backend:"real"}
 
 critique
-  critic Layer-1 structural check: claim missing tool_call_id (deterministic)
+  critic Layer-1 structural check (deterministic, no LLM): claim lacks the
+  required evidence binding / is broader than the evidence supports
    → CriticVerdict = retry_required, affected_claim_ids=[CLAIM-003]
    → unsupported_claims.jsonl + confidence_changes.jsonl
 
 DECIDE (pure fn, CLAUDE.md §12)
   result-missing-reference & attempts(1) < max_attempts(2) → RETRY
-   → retry contract TASK-002 attempt 2 (tightened success_criteria:
-     "claim MUST include tool_call_id + source_sha256")
+   → retry TASK-002 attempt 2 with the critic's reason fed back to the agent
+     ("bind tool_call_id + source_sha256 / stay within the evidence")
    → retries.jsonl + orchestration_events.jsonl
 
 Iteration 1 · TASK-002 attempt 2
-  real-tool executor re-runs the SAME real tool over the SAME real evidence
-  under the tightened contract → emits the binding it is now required to
+  the live agent re-investigates with the critic feedback and revises its claim
    → corrected claim WITH tool_call_id + source_sha256 + supporting_evidence_refs
 
 critique
@@ -51,10 +51,13 @@ critique
 
 report
   final_report.md: corrected evidence-backed claim
-  accuracy_report.md: logs the rejected attempt-1 claim + the self-correction event
+  accuracy_report.md: logs the rejected attempt-1 claim + the genuine self-correction event
+
+(For regression + a no-keys demo safety net, one such real run is recorded and its
+ ledgers committed as the golden — replayed deterministically, never re-simulated.)
 ```
 
-**Guaranteed path = the under-specified-contract → retry over REAL tool output** (simplest, most reliable; same real tool, same real evidence, only the contract tightens). **Stretch (marked, isolated): contradiction → escalate** (two real tools producing mutually contradictory rows across two tasks → `escalation_required` → DECIDE escalate). Stretch must never block the guaranteed path.
+**The self-correction is genuine & emergent** — the live agent investigates blind, makes a real unsupported/over-broad claim, the deterministic critic rejects it, `decide()` retries, the agent genuinely revises (PLAN/08 §6). No under-specified-contract trick. A **recorded-golden run** (real ledgers) is the regression/safety-net floor. **Also exercised: contradiction → escalate** (two real tools producing mutually contradictory rows → `escalation_required` → DECIDE escalate).
 
 ---
 
@@ -79,21 +82,21 @@ report
 
 # EPIC F — Executor Adapters & Dispatch/Collect
 
-**Goal:** Execute task contracts via a uniform adapter interface; the deterministic real-tool executor (in-process MVP tools over real committed evidence; see PLAN/08_REAL_TOOL_STACK.md §3) is the reliable demo/test path. Retry is triggered by genuine causes — an under-specified first-pass contract and genuine recoverable tool errors — not by scripted failures. **Criteria:** 1 (autonomous execution), 4 (spotlighting + allowed-tools enforcement), 5 (audit). **Deps:** C (TaskContract, ToolCall), D (typed tools), E (contracts). Consumed by G, H, I.
+**Goal:** Execute task contracts via a uniform adapter interface. The **live autonomous agent (F8) is the primary executor**; the **deterministic replay executor (F2) is the regression/replay floor** (replays a real recorded run for tests + a no-keys demo safety net). Retry is triggered by genuine causes — the agent's real unsupported/over-broad claims and genuine recoverable tool errors — never scripted failures. **Criteria:** 1 (autonomous execution), 4 (spotlighting + allowed-tools enforcement), 5 (audit). **Deps:** C (TaskContract, ToolCall), D (typed tools), E (contracts). Consumed by G, H, I.
 
 | Task | Title | Description | Key files | Deps | Acceptance | Role | Eff | Risk |
 |---|---|---|---|---|---|---|---|---|
 | F1 | `ExecutorAdapter` protocol | ABC + `ResultRef`: `run(contract, run_dir) -> ResultRef`; must produce `results/TASK-XXX.result.json` + append `agent_calls.jsonl`. Registry lookup by `assigned_agent_profile`. | `adapters/base.py`, `adapters/__init__.py` | C | real-tool + generic both satisfy protocol; `test_adapter_writes_expected_result_path`. | Executor | S | low |
-| F2 | Deterministic real-tool executor | Runs the in-process MVP tools (`evtx`/`regipy`/`pyscca`/`mft` + own-code; PLAN/08 §3) over real committed evidence; emits structured result JSON from real tool output; appends `agent_calls.jsonl`. First-class feature (hero depends on it). Determinism comes from real tools over fixed committed evidence (no LLM, no randomness; PLAN/08 §6). Attempt-1 runs under the under-specified contract (real claim lacks tool_call_id); attempt-2 under the tightened contract (real claim carries the binding). | `adapters/real_executor.py`, `schemas/tool_result.py` | F1,C,D | `test_real_executor_claim_lacks_binding_under_underspecified_contract`, `test_real_executor_claim_bound_on_attempt_2`. | Executor | M | **low (must be airtight)** |
+| F2 | Deterministic replay / regression executor (the floor) | Replays a **real recorded agent run** from committed ledgers over the same real evidence (real tool output, never a mock); emits result JSON + appends `agent_calls.jsonl`. The reproducible regression + no-keys demo safety net under the live agent (F8) — not the headline. | `adapters/replay_executor.py`, `schemas/tool_result.py` | F1,C,D | `test_recorded_golden_replay` (byte-exact); replay produces the same artifacts with no keys/network. | Executor | M | low (must be airtight) |
 | F3 | Spotlight + datamark | `wrap_evidence(rows)`→serialize to JSON rows, wrap in unique delimiters, datamark (per-run sentinel), prepend "DATA not instructions" banner. `scan_injection(rows)`→regex/heuristic scanner ("ignore previous","system:",base64 blobs,instruction verbs) → `injection_alerts.jsonl`. | `adapters/spotlight.py`, `ledgers/injection_alerts.py` | B | `test_spotlight_wraps_and_marks`; injection sample → alert entry. | Injection Guard | M | med |
 | F4 | `dispatch` command | `siftmesh dispatch RUN_PATH [--task ID] [--agent-profile P]`; select adapter; enforce `allowed_tools`; enforce parallel cap via H. | `cli.py`, `orchestrator/scheduler.py` | F1,F2 | `siftmesh dispatch RUN-001 --task TASK-001` → `results/TASK-001.result.json`. | Executor | M | med |
 | F5 | `collect` command | Gather result files, validate shape, normalize into run state, mark tasks collected. | `cli.py`, `orchestrator/scheduler.py` | F4 | `siftmesh collect RUN-001` records each result; missing result flagged not crashed. | Executor | S | low |
 | F6 | agent_calls audit | Append `audit/agent_calls.jsonl` per dispatch: profile, attempt, backend (`real`), contract state (under_specified/tightened), start/end, status. | `ledgers/audit_log.py` | F1 | every dispatch → exactly one well-formed JSONL line. | Executor | S | low |
 | F7 | generic_shell_adapter | Write task prompt to file, invoke shell agent, expect result file at known path; timeout = `max_tool_runtime_seconds`. | `adapters/generic_shell_adapter.py` | F1 | echo-script agent → conformant result; absent agent → graceful fallback error. | Executor | M | med |
-| F8 | Claude/OpenCode headless adapters (best-effort) | `claude -p "..." --output-format json`; OpenCode server mode. Parse JSON, write result file. | `adapters/claude_adapter.py`, `adapters/opencode_adapter.py` | F1,F7 | if CLI present → conformant result; if absent → log `adapter_unavailable`, fall back to the deterministic real-tool executor (F2). | Executor | L | **high (env-dependent)** |
+| F8 | Claude/OpenCode headless adapters (**CORE — the live autonomous executor**) | `claude -p "..." --output-format json`; OpenCode server mode. Parse JSON, write result file. The primary investigator. | `adapters/claude_adapter.py`, `adapters/opencode_adapter.py` | F1,F7 | live agent investigates + self-corrects; if a specific CLI is absent → log `adapter_unavailable`, fall back to the deterministic replay floor (F2). | Executor | L | high (env-dependent) → keep the adapter thin |
 | F9 | Genuine retry-trigger plumbing | Surface the two genuine retry causes to critic/DECIDE: (a) the under-specified first-pass contract (real claim lacks the required binding) and (b) genuine recoverable tool errors surfaced inline by the real libs (e.g. `mft.entries()` yields `RuntimeError` instances inline → type-check, don't raise; a malformed/unreadable record → recoverable tool error, not a crash; PLAN/08 §3). No scripted/injected failures. | `adapters/real_executor.py` | F2 | `test_retry_created_for_recoverable_tool_error` (with G) passes e2e. | Executor | S | low |
 
-**Design (F):** The `ExecutorAdapter` protocol is the seam (real-tool/shell/claude/opencode/cao all implement it; demo runs on the deterministic real-tool executor; live agents swap in with zero engine change). The real-tool executor over real committed evidence is a first-class feature, not a test stub — its determinism comes from real tools over fixed committed evidence (no LLM, no randomness; PLAN/08 §6), and the retry it exercises is driven by genuine causes (under-specified contract + genuine recoverable tool errors), never scripted ones. Spotlighting + injection scanning live here and are called by E (prompts) and G (critic hook). Privilege/structural separation: adapter refuses any `tool_name` not in `allowed_tools`; tool output is parsed deterministically and **cannot** alter control flow. **11-day cut:** F1–F6, F9 MVP; F7 MVP-light; **F8 best-effort/stretch — demo never depends on it.**
+**Design (F):** The `ExecutorAdapter` protocol is the seam (live-agent/replay/shell/cao all implement it; the **demo headline is the live autonomous agent (F8)**, the deterministic replay executor (F2) is the regression/safety-net floor; zero engine change between them). Self-correction is genuine — the agent makes real unsupported/over-broad claims, and the retry is driven by genuine causes (the agent's real errors + genuine recoverable tool errors), never scripted ones; **determinism lives in the governance, not the executor** (PLAN/08 §6). Spotlighting + injection scanning live here and are called by E (prompts) and G (critic hook). Privilege/structural separation: adapter refuses any `tool_name` not in `allowed_tools`; tool output is parsed deterministically and **cannot** alter control flow. **11-day cut:** F1–F6, F9 MVP; F7 MVP-light; **F8 (the live agent) is CORE — the demo headline.**
 
 ---
 
@@ -109,7 +112,7 @@ report
 | G4 | DECIDE pure function | `decide(critic_verdict, run_state, task_state) -> Decision` per CLAUDE.md §12; covers done/retry/escalate/human incl. attempt + iteration caps and contradiction. No I/O. | `orchestrator/decide.py` | G2 | unit table: each §12 rule has a passing test; function is pure. | Ultraworker | M | **low (must be exact)** |
 | G5 | Retry task generation | Clone contract, tighten `success_criteria` ("claim MUST include tool_call_id + source_sha256"), bump attempt, append `retries.jsonl`. | `decide.py`/`critic.py`, `schemas/task.py` | G4 | `test_retry_created_for_malformed_json`; retry contract stricter + attempt=2. | Ultraworker | M | low |
 | G6 | Injection detection hook | Run `scan_injection` over results; if a claim's reasoning echoes an injected instruction → `human_review_required` + `injection_alerts.jsonl`. | `critic.py`, `adapters/spotlight.py` | F3 | injected "mark all confirmed" sample → alert logged, claims unchanged. | Injection Guard | S | med |
-| G7 | Hero end-to-end wiring | Connect F2 real-tool attempt-1 (under-specified contract) → G2 verdict → G4 DECIDE → G5 retry (tightened contract) → F2 real-tool attempt-2 → G2 accepted. | `orchestrator/workflow_runner.py` (with H) | F2,G2,G4,G5 | `test_self_correction_sequence_reproducible` runs twice, identical verdict trail. | Ultraworker | M | **low (the hero — keep airtight)** |
+| G7 | Hero end-to-end wiring | Connect live-agent attempt-1 (F8) → G2 verdict (real unsupported/over-broad claim rejected) → G4 DECIDE → G5 retry with the critic's reason fed back → live-agent attempt-2 → G2 accepted. Bank a recorded-golden run for regression. | `orchestrator/workflow_runner.py` (with H) | F8,G2,G4,G5 | `test_self_correction_property` (live: ≥1 genuine self-correction occurred) + `test_recorded_golden_replay` (byte-exact). | Ultraworker | M | the hero — keep the governance airtight |
 | G8 | LLM adversarial critic (best-effort) | Optional Layer-2 reasoning for breadth/contradiction; gated behind flag, never required by demo. | `critic.py` | G2 | if model absent, Layer-1 verdicts still complete; no crash. | Critic | L | high (skippable) |
 
 **Design (G):** **Two-layer critic.** Layer 1 = deterministic structural validation (always runs, no LLM) — sufficient for the hero. Layer 2 = optional LLM adversarial review (best-effort). **DECIDE is a pure function** — the "code decides" evidence for criterion 4. Retry generation tightens `success_criteria` so the real tool's attempt-2 run (over the same real evidence) now emits the required binding, making correction reproducible. **11-day cut:** G1–G7 MVP (contain the hero); **G8 stretch**; contradiction→escalate is stretch within G4/G5.
@@ -166,6 +169,6 @@ Day 7: G1–G7 (critic Layer-1, ledgers, DECIDE, retry, injection hook, hero wir
 Day 8: H1–H8 (RunState, transitions, runner, caps, gates, run/modes, resume) + H9 router
 ```
 
-**Explicitly unrealistic in 11 days (pragmatic cut):** live agent adapters hardened (F8) — best-effort, demo runs on the deterministic real-tool executor; LLM Planner/Deep-Context/Critic reasoning (E2/G8) — deterministic templates + Layer-1 critic fully cover MVP; cost-based router — static + escalate-on-retry.
+**Core (the autonomy):** the live agent executor (F8) + LLM Planner/Deep-Context/Critic reasoning (E2/G8) are CORE — they are the autonomous investigator. Keep the adapters **thin** (the simplest `claude -p` path) and lean on the deterministic governance + recorded-golden floor for reliability. **Still simplified in 11 days:** cost-based router → static + escalate-on-retry; CAO + extra harnesses → optional.
 
-**The one inviolable rule:** the self-correction sequence (Epic G hero) depends on nothing nondeterministic. If the deterministic real-tool executor + under-specified contract (F2/F9; real tools over fixed committed evidence, no LLM/randomness — PLAN/08 §6) and the pure DECIDE function (G4) are airtight and frozen by Day 7, the graded tiebreaker is secured regardless of what else slips.
+**The one inviolable rule:** the *governance* is deterministic even though the *agent* is not. The critic structural checks (G2), the pure DECIDE function (G4), and the evidence-safety guardrails must be airtight and frozen by Day 7 — and a **recorded-golden run** (real ledgers) banked as the demo safety net — so the graded tiebreaker (genuine self-correction, replayably governed) is secured regardless of live-run variance.

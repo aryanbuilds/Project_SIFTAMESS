@@ -44,6 +44,7 @@ siftmesh collect ./case_runs/RUN-001
 siftmesh critique ./case_runs/RUN-001
 siftmesh report ./case_runs/RUN-001
 siftmesh replay ./case_runs/RUN-001
+siftmesh doctor   # verify host + each tool backend; fails closed on missing deps
 ```
 
 Then add high-level automation:
@@ -192,13 +193,13 @@ scp_arbitrary()
 
 ## 7a. Real-only tool integration (no mocks/placeholders) — FINAL RULE
 
-1. Everything delivered is **real and 100% working**, down to the basics. No mock tools, no placeholder backends, no synthetic/seeded outputs presented as real. Judges and the maintainer must see real forensic tools, real methods, and real command execution against real artifacts.
+1. Everything delivered is **real and working**: no mock FORENSIC backends, no placeholder tool backends, no synthetic INTEGRATION outputs, no scripted self-correction. **Pure unit tests MAY use fixtures / golden JSON** (schema / path-policy / forbidden-tool / claim checks) — normal testing, not a mock. A missing backend **fails closed** (`siftmesh doctor`), never a fake (*missing = OK; fake = not OK*). **The product is a genuinely autonomous investigator** — a real LLM agent investigates a *black-box* dataset blind (never sees ground truth), forms claims, and **self-corrects emergently** under the deterministic critic: *autonomy in the agent, determinism in the governance*. The live agent is core/never-cut; a recorded-golden run (real ledgers, not a mock) is the regression + demo safety-net floor (PLAN/08 §6, PLAN/01).
 2. The plan's "deterministic placeholder backend / mock executor / synthetic demo evidence" strategy is **rejected**; replace it with real tool integrations (e.g. EvtxECmd, PECmd, regipy, Plaso/log2timeline, MFTECmd, Volatility 3) — or honestly **gate** the environment-dependent ones on the real SIFT workstation (see §17).
 3. Research + confirm **every** tool, library, SDK, and the MCP/compatibility layer with **deepwiki + Tavily** (plus WebSearch/WebFetch) **before** integrating. Confirm the real API, flags, output shape, license, and cross-platform behavior yourself — **never hallucinate**. Pin versions.
 4. **No cost-cutting.** On any doubt about correctness, feasibility, scope, or whether something is "real enough", call the advisor or ask the maintainer directly. Never substitute a fake to pass a step.
 5. **Do not run or validate against forensic data autonomously.** When a phase needs real evidence or a real SANS SIFT workstation, STOP and request it from the maintainer, who provides the real workstation + real files at that stage.
 6. **Linux-first.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (the plan is authored on Windows, but code runs on Linux). CI primary runner = Ubuntu; keep `pathlib` as hygiene.
-7. **License is not a blocker.** Forensic tool/connector licenses (LGPL, VSL, etc.) are not a gating concern — components are replaceable; pick the best real backend. The only license constraint is the project's own **Apache-2.0** (submission requirement). See PLAN/08_REAL_TOOL_STACK.md §0.1.
+7. **License: tracked, not a hard blocker.** Don't gate work over tool/connector licenses (replaceable), but **review + record each runtime dependency in NOTICE + an SBOM (Epic N6)**: prefer MIT/Apache/BSD; use GPL/LGPL/VSL tools as *external runtime tools* when compatible with the distribution/Docker plan. The project's own license stays **Apache-2.0**; never copy restrictive source. See PLAN/08_REAL_TOOL_STACK.md §0.1/§5.
 
 ## 8. Agent role guidelines
 

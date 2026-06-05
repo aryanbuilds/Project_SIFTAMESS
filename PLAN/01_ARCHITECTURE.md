@@ -251,6 +251,7 @@ Mapped to Anthropic's "Building Effective Agents" patterns (research-confirmed):
 | Concern | Choice | Note |
 |---|---|---|
 | Language | Python 3.11+ | Linux-first (dev + target = SANS SIFT / Ubuntu); SIFT-native |
+| Packaging / deps | **uv** (Astral) | env + lockfile (`uv.lock`) + `uv run`; CI via `astral-sh/setup-uv`; **not** pip/venv |
 | CLI | **Typer** | type-hint driven, low boilerplate, built on Click |
 | Schemas | **Pydantic v2** | validation + `model_json_schema()` export for agent contracts |
 | MCP server | **MCP Python SDK / FastMCP**, **stdio** transport | local forensic gateway; typed tools |
@@ -319,7 +320,7 @@ The plan is authored on Windows, but **all code is built and run on Linux** (SAN
 |---|---|
 | Paths | `pathlib` everywhere; never string-concatenate paths; `safe_write_path` canonicalizes — kept as good hygiene. |
 | CI | GitHub Actions primary runner = `ubuntu-latest` (= SIFT target). Windows CI is **optional / not required**. |
-| Real tool availability | The MVP spine **targets** in-process Python backends (`evtx`/`regipy`/`pyscca`/`mft`); **`siftmesh doctor` verifies each on the active host** and a **missing backend fails closed** with a dependency error — never a placeholder (*missing = OK; fake = not OK*). EZ Tools / Plaso (native on Linux via pip / `apt install python3-plaso` / preinstalled on SIFT) are optional gated enrichment behind config (SIFT-lane / Docker). |
+| Real tool availability | The MVP spine **targets** in-process Python backends (`evtx`/`regipy`/`pyscca`/`mft`); **`siftmesh doctor` verifies each on the active host** and a **missing backend fails closed** with a dependency error — never a placeholder (*missing = OK; fake = not OK*). EZ Tools / Plaso (native on Linux via `uv pip` / `apt install python3-plaso` / preinstalled on SIFT) are optional gated enrichment behind config (SIFT-lane / Docker). |
 | Demo reproducibility | the **live autonomous agent** is the demo headline (needs an LLM/agent at run time); a **recorded-golden run** (real ledgers, not a mock) is the reproducible regression + safety net — Linux-native (PLAN/08 §6). |
 | Final validation | Day 11a on a SANS SIFT VM (the native demo target; judges run on Linux/SIFT). The **only real gate is real evidence** (maintainer-provided EVTX / prefetch / registry hive / `$MFT`), not tool buildability — every backend installs on Linux now (PLAN/08 §0.1, §4). |
 

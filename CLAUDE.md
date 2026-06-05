@@ -416,6 +416,7 @@ Preferred implementation stack:
 
 ```text
 Python for CLI/core.
+uv (Astral) for env / dependency management / packaging / running (NOT pip/venv); commit uv.lock.
 Typer or Click for CLI.
 Pydantic for schemas.
 YAML for workflows/tasks.

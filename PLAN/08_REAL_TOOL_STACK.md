@@ -51,7 +51,7 @@ The PLAN/03 design (FastMCP stdio server + allowlist-only registry + typed tools
 
 | Item | Status on Linux | Notes |
 |---|---|---|
-| **Plaso / log2timeline** super-timeline (optional, on top of the in-process merge) | **Native on Linux** — `pip install plaso`, `apt install python3-plaso`, or preinstalled on SANS SIFT. Not build-gated. | Drive via `log2timeline.py` / `psteal.py` / `psort.py` (subprocess, shell=False) or Docker. Apache-2.0 |
+| **Plaso / log2timeline** super-timeline (optional, on top of the in-process merge) | **Native on Linux** — `uv pip install plaso`, `apt install python3-plaso`, or preinstalled on SANS SIFT. Not build-gated. | Drive via `log2timeline.py` / `psteal.py` / `psort.py` (subprocess, shell=False) or Docker. Apache-2.0 |
 | **SIFT-lane CLIs** EvtxECmd / PECmd / MFTECmd / Volatility 3 | Optional alternates to the in-process libs (.NET runs on Linux; Volatility 3 is pure-Python) | Optional `SiftLaneBackend` behind the **same typed interface**; fixed-argv `subprocess.run(shell=False)`. Not the demo path |
 | **Real demo evidence (K1)** + integration/e2e (K3, K6, M3, M5) | **Gated on the maintainer providing real files** | The tools build/run on the Linux dev box; producing/validating a real timeline needs real artifacts (EVTX / prefetch / registry hive / `$MFT`). **STOP and ask the maintainer for the real SANS SIFT workstation + real files — do not fabricate.** |
 

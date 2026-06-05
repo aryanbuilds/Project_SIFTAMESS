@@ -3,3 +3,23 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# uv / virtualenv (uv.lock IS committed; .venv is not)
+.venv/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# SIFTMesh run output (case runs are generated, never committed)
+case_runs/

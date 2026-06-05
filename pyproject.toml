@@ -1,0 +1,112 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "siftmesh"
+version = "0.1.0"
+description = "CLI-first, evidence-safe, agent-agnostic DFIR orchestration for SANS SIFT and Protocol SIFT."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "SIFTMesh" }]
+keywords = ["dfir", "forensics", "cli", "orchestration", "mcp", "sift"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "typer>=0.26,<1",
+    "pydantic>=2.13,<3",
+    "pydantic-settings>=2.14,<3",
+    "structlog>=25.4,<26",
+    "pyyaml>=6.0,<7",
+    "jinja2>=3.1,<4",
+    "mcp>=1.27,<2",
+    "regipy==6.2.1",
+]
+
+[project.optional-dependencies]
+# Opt-in forensic backends. NOT installed by `uv sync` (use --extra/--all-extras).
+# A missing backend fails closed in `siftmesh doctor`, never a fake fallback.
+sift = [
+    "evtx==0.11.1",
+    # Cap below 20260527: that release is sdist-only (no wheels) and breaks a
+    # plain install; 20250915 ships wheels. See PLAN/08 §3 + bd memory.
+    "libscca-python>=20250915,<20260527",
+    "mft==0.7.0",
+]
+# Optional agent-to-agent interop (A2A). Opt-in only.
+a2a = [
+    "a2a-sdk==1.1.0",
+]
+
+[project.scripts]
+siftmesh = "siftmesh_core.cli:app"
+
+# PEP 735 dev group — installed BY DEFAULT by `uv sync` (dev is special-cased),
+# so `uv run ruff/mypy/pytest` work after a single `uv sync`.
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "pytest>=8.0,<10",
+    "types-pyyaml>=6.0",
+]
+
+# REQUIRED for the flat layout: package dir `siftmesh_core` != project name
+# `siftmesh`, so hatchling auto-discovery would fail without this.
+[tool.hatch.build.targets.wheel]
+packages = ["siftmesh_core"]
+
+# ── Ruff ──────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["siftmesh_core", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "PTH",  # flake8-use-pathlib (enforce pathlib over os.path)
+    "RUF",  # ruff-specific
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
+
+# ── mypy ──────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+packages = ["siftmesh_core"]
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+# Forensic/optional backends without stubs; do not block on missing types.
+module = ["regipy.*", "evtx.*", "pyscca.*", "mft.*", "a2a.*"]
+ignore_missing_imports = true
+
+# ── pytest ────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers --strict-config"
+pythonpath = ["."]
+filterwarnings = ["error"]

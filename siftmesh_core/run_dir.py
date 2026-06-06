@@ -68,9 +68,29 @@ class RunPaths:
         return self.evidence / "evidence_manifest.json"
 
     @property
+    def hashes_sha256(self) -> Path:
+        """``sha256sum -c``-compatible checksum file (B4)."""
+        return self.evidence / "hashes.sha256"
+
+    @property
+    def readonly_mounts(self) -> Path:
+        """Read-only *posture* record (B3). Posture-only, not OS RO-mount."""
+        return self.evidence / "readonly_mounts.json"
+
+    @property
+    def derived_artifacts(self) -> Path:
+        """Append-only registry of derived files → source + hash + producer (B5)."""
+        return self.evidence / "derived_artifacts.json"
+
+    @property
     def custody_log(self) -> Path:
         """Chain-of-custody ledger (B9). One CustodyEvent per line."""
         return self.evidence / "custody_log.jsonl"
+
+    @property
+    def evidence_policy(self) -> Path:
+        """Generated evidence-handling policy doc (B6)."""
+        return self.context / "evidence_policy.md"
 
     @property
     def claim_ledger(self) -> Path:

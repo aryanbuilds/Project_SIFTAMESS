@@ -4,8 +4,8 @@
     siftmesh = "siftmesh_core.cli:app"
 Typer instances are directly callable, so no `main()` wrapper is required.
 
-These commands are Epic-A stubs that establish the CLI surface (CLI = source of
-truth). Real behaviour is wired in later epics.
+`init-case` is real Epic B evidence-vault behavior. The remaining investigation
+commands keep the frozen CLI surface until their epics wire the real workflows.
 """
 
 from __future__ import annotations
@@ -16,6 +16,9 @@ import typer
 
 from siftmesh_core import __version__
 from siftmesh_core.doctor import run_doctor
+from siftmesh_core.evidence.path_policy import PathPolicyViolation
+from siftmesh_core.evidence.vault import EvidenceModifiedError
+from siftmesh_core.evidence.vault import init_case as vault_init_case
 from siftmesh_core.protocol_sift import PROTOCOL_SIFT_SKILLS, detect_protocol_sift
 
 # Root app: no args -> show help (Click "no command" exits with code 2).
@@ -69,9 +72,32 @@ def main(
 def init_case(
     case_dir: str,
     evidence: Annotated[str, typer.Option(help="Path to read-only evidence.")],
+    run_name: Annotated[str | None, typer.Option(help="Override the generated RUN-* id.")] = None,
+    verify_after: Annotated[
+        bool,
+        typer.Option(
+            "--verify-after",
+            help="Re-hash originals at end of run (off by default; costly for huge data).",
+        ),
+    ] = False,
 ) -> None:
-    """Initialize a case directory and read-only evidence vault."""
-    print(f"init-case {case_dir} --evidence {evidence}")
+    """Hash + seal evidence into a new run dir (manifest, custody, policy)."""
+    try:
+        run = vault_init_case(
+            case_dir, evidence, run_name=run_name, verify_after=verify_after, show_progress=True
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        EvidenceModifiedError,
+    ) as exc:
+        typer.echo(f"init-case failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"init-case complete: {run.root}")
+    typer.echo(f"  run id   : {run.run_id}")
+    typer.echo(f"  manifest : {run.evidence_manifest}")
+    typer.echo(f"  custody  : {run.custody_log}")
 
 
 @app.command()

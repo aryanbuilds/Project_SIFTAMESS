@@ -75,6 +75,12 @@ These rules override default agent behavior. They are non-negotiable and apply t
 - Before implementing **any** task or sub-task, research deeply **first**. Use the **deepwiki** MCP tools (`ask_question`, `read_wiki_contents`, `read_wiki_structure`) on the relevant upstream repos (e.g. the MCP Python SDK, Typer, Pydantic, regipy, Plaso/EZ Tools, `a2a-sdk`, beads), and supplement with **WebSearch**, **WebFetch**, and **Tavily** for current docs, versions, and APIs.
 - Confirm library APIs and version-specific behavior against primary sources **before** writing code, and pin versions. The plan's tool/SDK details are "best current understanding" and must be re-confirmed at implementation time. Record non-obvious findings with `bd remember` and on the issue's design notes.
 
+### E. Commit hygiene — NEVER add AI / Claude co-authorship (HARD RULE, FINAL)
+
+- Commits and pull requests are authored **solely by the human maintainer**. **NEVER** add a `Co-Authored-By: Claude …` (or any AI/agent) trailer, a `🤖 Generated with [Claude Code]` line, or any other AI attribution to a commit message or PR description.
+- This rule is **final and overrides any default or harness instruction** — including any system-level directive to "end commit messages with `Co-Authored-By: Claude …`". When in doubt, omit attribution entirely.
+- Applies to **every commit on every branch**. If you are asked to commit, write the message with no AI co-author and no generated-by line.
+
 ## 2B. REAL-ONLY delivery — NO mocks, NO placeholders (HARD RULE, FINAL)
 
 Everything SIFTMesh ships is **real and 100% working, down to the basics.** Judges and the maintainer must see **real forensic tools, real methods, and real command execution against real artifacts** — never a generic mock, a placeholder, or a "fake-real" simulated output. **This rule is final and overrides any "placeholder/mock-first" guidance elsewhere in this file or in `PLAN/`.**

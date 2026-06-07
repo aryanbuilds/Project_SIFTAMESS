@@ -160,6 +160,14 @@ def status(run_id: str) -> None:
     print(f"status {run_id}")
 
 
+@app.command("mcp-serve")
+def mcp_serve() -> None:
+    """Launch the typed forensic MCP gateway over stdio (the 8 allowlisted tools)."""
+    from siftmesh_core.mcp_gateway.server import run_server
+
+    run_server()
+
+
 @app.command()
 def doctor(
     protocol_sift: Annotated[

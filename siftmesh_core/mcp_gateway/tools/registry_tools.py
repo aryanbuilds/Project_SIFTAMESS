@@ -1,8 +1,9 @@
 """Registry tool (D7) — autostart Run/RunOnce keys (real, in-process, real-on-both).
 
 Wraps ``regipy`` via the backend's ``extract_run_keys`` over an offline registry
-hive (NTUSER.DAT for HKCU, SOFTWARE for HKLM). Pure-Python; works identically on the
-real and SIFT-lane backends. Logs a provenance line in ``audit/tool_calls.jsonl``.
+hive (NTUSER.DAT for HKCU, SOFTWARE for HKLM). Pure-Python on the real backend; the
+SIFT-lane backend keeps the same typed seam and fails closed until D12. Logs a
+provenance line in ``audit/tool_calls.jsonl``.
 """
 
 from __future__ import annotations

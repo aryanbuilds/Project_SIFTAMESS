@@ -121,7 +121,7 @@ class RealBackend:
                 break
             if value is None:
                 break
-            last_run_times.append(str(value))
+            last_run_times.append(value.isoformat() if hasattr(value, "isoformat") else str(value))
         volumes: list[dict[str, Any]] = []
         for index in range(scca.number_of_volumes):
             vol = scca.get_volume_information(index)
@@ -154,16 +154,31 @@ class RealBackend:
             if isinstance(entry, RuntimeError):
                 continue
             record = json.loads(entry)
+            header = record.get("header", {})
+            std_info: dict[str, Any] = {}
+            file_name: dict[str, Any] = {}
+            for attr in record.get("attributes", []):
+                type_code = attr.get("header", {}).get("type_code")
+                data = attr.get("data")
+                if not isinstance(data, dict):
+                    continue
+                if type_code == "StandardInformation" and not std_info:
+                    std_info = data
+                # Prefer the longer (Win32) FileName over the 8.3 short name.
+                elif type_code == "FileName" and len(str(data.get("name", ""))) > len(
+                    str(file_name.get("name", ""))
+                ):
+                    file_name = data
+            flags = str(header.get("flags", ""))
             rows.append(
                 {
-                    "entry": record.get("entry"),
-                    "full_path": record.get("full_path"),
-                    "file_size": record.get("file_size"),
-                    "is_directory": record.get("is_a_directory"),
-                    "standard_info": record.get("standard_info_flags")
-                    or record.get("standard_info"),
-                    "created": record.get("created"),
-                    "modified": record.get("modified"),
+                    "record_number": header.get("record_number"),
+                    "name": file_name.get("name"),
+                    "logical_size": file_name.get("logical_size"),
+                    "is_directory": "INDEX" in flags or "DIRECTORY" in flags.upper(),
+                    "si_created": std_info.get("created"),
+                    "si_modified": std_info.get("modified"),
+                    "si_accessed": std_info.get("accessed"),
                 }
             )
         return rows

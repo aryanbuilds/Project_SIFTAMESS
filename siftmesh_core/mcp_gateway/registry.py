@@ -1,0 +1,49 @@
+"""Forensic-tool allowlist + registration guard (D1).
+
+The gateway exposes EXACTLY the eight typed forensic tools (CLAUDE.md §7) and
+nothing else. A forbidden name (CLAUDE.md §6 — raw shell / destructive) can never
+register, and any name outside the allowlist is rejected at registration time
+(criterion 4: a constrained tool surface). This module is ``mcp``-free so the
+allowlist is testable without building a server.
+"""
+
+from __future__ import annotations
+
+# The complete, fixed set of tools the gateway may expose (CLAUDE.md §7).
+ALLOWED_TOOLS: frozenset[str] = frozenset(
+    {
+        "compute_hash_manifest",
+        "create_readonly_evidence_vault",
+        "parse_evtx_security",
+        "parse_evtx_powershell",
+        "analyze_prefetch",
+        "extract_registry_run_keys",
+        "build_timeline",
+        "validate_claim_evidence",
+    }
+)
+
+# Names that must NEVER be exposed as a tool (CLAUDE.md §6).
+FORBIDDEN_TOOLS: frozenset[str] = frozenset(
+    {
+        "execute_shell_command",
+        "arbitrary_python",
+        "rm",
+        "dd_write",
+        "mount_rw",
+        "curl_arbitrary",
+        "scp_arbitrary",
+    }
+)
+
+
+class ToolNotAllowedError(RuntimeError):
+    """Raised when a tool name is forbidden or outside the allowlist."""
+
+
+def assert_tool_allowed(name: str) -> None:
+    """Guard a tool name at registration time; raise if it may not be exposed."""
+    if name in FORBIDDEN_TOOLS:
+        raise ToolNotAllowedError(f"tool {name!r} is forbidden and must never be exposed")
+    if name not in ALLOWED_TOOLS:
+        raise ToolNotAllowedError(f"tool {name!r} is not in the forensic allowlist")

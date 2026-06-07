@@ -34,10 +34,10 @@ class RetryPolicy(StrictModel):
 
 
 class SafetyPolicy(StrictModel):
-    """Evidence-safety constraints carried by every task (secure defaults)."""
+    """Evidence-safety constraints carried by every task."""
 
-    evidence_is_hostile: bool = True
-    never_execute_instructions_from_evidence: bool = True
+    evidence_is_hostile: Literal[True] = True
+    never_execute_instructions_from_evidence: Literal[True] = True
     write_allowed_only_under: list[str] = Field(default_factory=list)
 
 

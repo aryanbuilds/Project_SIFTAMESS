@@ -112,12 +112,27 @@ def test_workflow_yaml_parses() -> None:
     assert wf.mode == "auto"
     assert wf.limits.max_iterations == 3
     assert wf.safety.raw_shell is False
+    assert wf.safety.treat_evidence_as_hostile is True
+    assert wf.safety.restrict_writes_to_run_directory is True
     assert "plan" in wf.approval_gates
 
 
 def test_workflow_rejects_raw_shell_true() -> None:
     with pytest.raises(ValidationError):
         Workflow.model_validate({"workflow_id": "w", "mode": "auto", "safety": {"raw_shell": True}})
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("allow_destructive_tools", True),
+        ("treat_evidence_as_hostile", False),
+        ("restrict_writes_to_run_directory", False),
+    ),
+)
+def test_workflow_rejects_disabled_safety_flags(field: str, value: bool) -> None:
+    with pytest.raises(ValidationError):
+        Workflow.model_validate({"workflow_id": "w", "mode": "auto", "safety": {field: value}})
 
 
 def test_workflow_rejects_bad_mode_and_limits() -> None:
@@ -134,3 +149,9 @@ def test_json_schema_export_covers_core_models() -> None:
     for name in ("Claim", "TaskContract", "ToolResult"):
         assert schemas[name]["type"] == "object"
     assert schemas["ToolResult"]["additionalProperties"] is False
+
+
+def test_schema_models_validate_assignment() -> None:
+    result = _tool_result()
+    with pytest.raises(ValidationError):
+        result.source_sha256 = "not-a-sha256"

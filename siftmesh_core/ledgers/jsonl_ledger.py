@@ -2,8 +2,9 @@
 
 Append one validated Pydantic model per line through the path policy, and stream
 records back as typed objects. A model is constructed (validated) before it can be
-written, so a malformed record can never reach disk; a corrupt line on read raises
-a clear error rather than being silently skipped (audit integrity, criterion 5).
+written, so a malformed record can never reach disk; a corrupt or blank line on
+read raises a clear error rather than being silently skipped (audit integrity,
+criterion 5).
 """
 
 from __future__ import annotations
@@ -48,7 +49,7 @@ def read_records(path: Path | str, model_cls: type[ModelT]) -> Iterator[ModelT]:
         for lineno, raw in enumerate(handle, start=1):
             line = raw.strip()
             if not line:
-                continue
+                raise LedgerCorruptionError(f"{source}:{lineno}: blank line is not valid JSONL")
             try:
                 yield model_cls.model_validate_json(line)
             except ValidationError as exc:

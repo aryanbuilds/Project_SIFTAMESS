@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
-from siftmesh_core.schemas.task import TaskContract
+from siftmesh_core.schemas.task import SafetyPolicy, TaskContract
 from siftmesh_core.schemas.yaml_io import dump_yaml_model, load_yaml_model
 
 _HASH = "a" * 64
@@ -64,3 +64,12 @@ def test_task_contract_yaml_round_trip() -> None:
 def test_input_artifact_rejects_rw_mode() -> None:
     with pytest.raises(ValidationError):
         load_yaml_model(TaskContract, _TASK_YAML.replace("mode: read_only", "mode: read_write"))
+
+
+@pytest.mark.parametrize(
+    "field",
+    ("evidence_is_hostile", "never_execute_instructions_from_evidence"),
+)
+def test_task_safety_policy_rejects_disabled_guards(field: str) -> None:
+    with pytest.raises(ValidationError):
+        SafetyPolicy.model_validate({field: False})

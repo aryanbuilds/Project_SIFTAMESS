@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for Epic A tests."""
+"""Shared pytest fixtures."""
 
 from __future__ import annotations
 

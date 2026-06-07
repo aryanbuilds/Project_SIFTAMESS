@@ -2,9 +2,9 @@
 
 A :class:`Workflow` declares how a run executes: its mode, hard caps, active
 approval gates, evidence-safety posture, agent roster, and stage order. Safety is
-encoded in the types — ``raw_shell`` and ``allow_destructive_tools`` are
-``Literal[False]``, so a workflow that tries to enable them cannot be constructed.
-Schema only; the state machine that runs it is Epic H.
+encoded in the types: evidence stays hostile/read-only, writes stay run-scoped,
+and raw/destructive tooling cannot be enabled. Schema only; the state machine
+that runs it is Epic H.
 """
 
 from __future__ import annotations
@@ -44,6 +44,8 @@ class WorkflowSafety(StrictModel):
     evidence_mode: Literal["read_only"] = "read_only"
     raw_shell: Literal[False] = False
     allow_destructive_tools: Literal[False] = False
+    treat_evidence_as_hostile: Literal[True] = True
+    restrict_writes_to_run_directory: Literal[True] = True
 
 
 class Workflow(StrictModel):

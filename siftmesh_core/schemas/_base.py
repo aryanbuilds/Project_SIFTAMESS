@@ -4,8 +4,8 @@
 (D4 — UTC everywhere) regardless of the input timezone, while keeping the
 in-memory value a real ``datetime``. ``Sha256`` is the validated lowercase-hex
 digest type reused as the evidence anchor across every schema. ``StrictModel``
-fails closed on unknown fields (D5 — a model that fails validation is never
-written to disk).
+fails closed on unknown fields and invalid reassignment (D5 — a model that fails
+validation is never written to disk).
 """
 
 from __future__ import annotations
@@ -39,6 +39,6 @@ Sha256 = Annotated[str, Field(pattern=SHA256_RE)]
 
 
 class StrictModel(BaseModel):
-    """Base model: reject unknown fields (fail-closed)."""
+    """Base model: reject unknown fields and invalid reassignment."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)

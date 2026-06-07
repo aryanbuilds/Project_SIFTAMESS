@@ -62,6 +62,14 @@ def test_corrupt_line_raises_not_skipped(tmp_path: Path) -> None:
         list(read_records(target, Claim))
 
 
+def test_blank_line_raises_not_skipped(tmp_path: Path) -> None:
+    target = tmp_path / "claims" / "claim_ledger.jsonl"
+    target.parent.mkdir(parents=True)
+    target.write_text("\n", encoding="utf-8")
+    with pytest.raises(LedgerCorruptionError):
+        list(read_records(target, Claim))
+
+
 def test_claim_routing_unsupported_isolated(tmp_path: Path) -> None:
     append_claim(tmp_path, _claim("CLAIM-1", "confirmed"))
     append_claim(tmp_path, _claim("CLAIM-9", "unsupported"))

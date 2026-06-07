@@ -9,16 +9,14 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from siftmesh_core.schemas._base import StrictModel, UtcDateTime
-
-_SHA256_RE = r"^[0-9a-f]{64}$"
+from siftmesh_core.schemas._base import Sha256, StrictModel, UtcDateTime
 
 
 class EvidenceFile(StrictModel):
     """One ingested artifact's integrity facts (relative to the evidence root)."""
 
     path: str
-    sha256: str = Field(pattern=_SHA256_RE)
+    sha256: Sha256
     size_bytes: int = Field(ge=0)
     mtime_utc: UtcDateTime
     evidence_type: str

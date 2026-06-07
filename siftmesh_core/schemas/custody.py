@@ -11,9 +11,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
-
-from siftmesh_core.schemas._base import StrictModel, UtcDateTime
+from siftmesh_core.schemas._base import Sha256, StrictModel, UtcDateTime
 
 CustodyEventType = Literal[
     "evidence_ingested",
@@ -23,8 +21,6 @@ CustodyEventType = Literal[
     "custody_transfer",
 ]
 
-_SHA256_RE = r"^[0-9a-f]{64}$"
-
 
 class CustodyEvent(StrictModel):
     """One immutable chain-of-custody record."""
@@ -32,7 +28,7 @@ class CustodyEvent(StrictModel):
     event_type: CustodyEventType
     run_id: str
     artifact: str
-    source_sha256: str = Field(pattern=_SHA256_RE)
+    source_sha256: Sha256
     action: str
     actor: str
     tool_name: str

@@ -36,9 +36,6 @@ def case(tmp_path: Path) -> tuple[RunPaths, Path]:
     return run, evidence
 
 
-# ── D5: EVTX ────────────────────────────────────────────────────────────────
-
-
 def test_parse_evtx_security_returns_real_records(case: tuple[RunPaths, Path]) -> None:
     run, evidence = case
     result = parse_evtx_security(run.root, source_artifact="Security.evtx", evidence_root=evidence)
@@ -51,9 +48,23 @@ def test_parse_evtx_security_returns_real_records(case: tuple[RunPaths, Path]) -
 def test_evtx_event_id_filter_is_real(case: tuple[RunPaths, Path]) -> None:
     _run, evidence = case
     backend = get_backend("real")
-    rows = backend.parse_evtx(evidence / "Security.evtx", event_id_filter=frozenset({4625}))
+    rows = backend.parse_evtx(
+        evidence / "Security.evtx",
+        event_id_filter=frozenset({4625}),
+        channel_filter=frozenset({"Security"}),
+    )
     assert rows  # the filter keeps real matching records...
     assert all(r["event_id"] == 4625 for r in rows)  # ...and excludes everything else
+
+
+def test_evtx_channel_filter_excludes_other_channels(case: tuple[RunPaths, Path]) -> None:
+    _run, evidence = case
+    backend = get_backend("real")
+    rows = backend.parse_evtx(
+        evidence / "Security.evtx",
+        channel_filter=frozenset({"Microsoft-Windows-PowerShell/Operational"}),
+    )
+    assert rows == []
 
 
 def test_parse_evtx_powershell_excludes_non_powershell(case: tuple[RunPaths, Path]) -> None:
@@ -64,9 +75,6 @@ def test_parse_evtx_powershell_excludes_non_powershell(case: tuple[RunPaths, Pat
     )
     assert result.status == "success"
     assert result.event_count == 0
-
-
-# ── D6: prefetch ────────────────────────────────────────────────────────────
 
 
 def test_analyze_prefetch_real(case: tuple[RunPaths, Path]) -> None:
@@ -80,9 +88,6 @@ def test_analyze_prefetch_real(case: tuple[RunPaths, Path]) -> None:
     assert result.last_run_times  # at least one real run timestamp
 
 
-# ── D7: registry ────────────────────────────────────────────────────────────
-
-
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:
     run, evidence = case
     result = extract_registry_run_keys(
@@ -91,9 +96,6 @@ def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:
     assert result.status == "success"
     assert result.run_key_count >= 1
     assert "Sidebar" in {row["name"] for row in result.run_keys}  # real autostart value
-
-
-# ── D8: timeline ────────────────────────────────────────────────────────────
 
 
 def test_build_timeline_merges_and_orders(case: tuple[RunPaths, Path]) -> None:
@@ -124,9 +126,6 @@ def test_build_timeline_rejects_unknown_kind(case: tuple[RunPaths, Path]) -> Non
             inputs=[{"artifact": "Security.evtx", "kind": "pcap"}],
             evidence_root=evidence,
         )
-
-
-# ── provenance + fail-closed across the parser tools ────────────────────────
 
 
 def test_parser_logs_provenance_line(case: tuple[RunPaths, Path]) -> None:

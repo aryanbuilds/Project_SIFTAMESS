@@ -19,6 +19,9 @@ from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_back
 from siftmesh_core.mcp_gateway.tools._common import resolved_source
 from siftmesh_core.schemas.tool_result import ToolResult
 
+SECURITY_CHANNELS: frozenset[str] = frozenset({"Security"})
+POWERSHELL_CHANNELS: frozenset[str] = frozenset({"Microsoft-Windows-PowerShell/Operational"})
+
 # PowerShell script-block (4104) + module logging (4103) — the high-signal IDs.
 POWERSHELL_EVENT_IDS: frozenset[int] = frozenset({4103, 4104})
 
@@ -38,13 +41,16 @@ def _parse_evtx(
     evidence_root: Path | str,
     backend_mode: str,
     event_id_filter: frozenset[int] | None,
+    channel_filter: frozenset[str] | None,
 ) -> EvtxParseResult:
     backend = get_backend(backend_mode)
     path, sha = resolved_source(evidence_root, source_artifact)
 
     def produce() -> dict[str, Any]:
         try:
-            rows = backend.parse_evtx(path, event_id_filter=event_id_filter)
+            rows = backend.parse_evtx(
+                path, event_id_filter=event_id_filter, channel_filter=channel_filter
+            )
         except BackendUnavailableError:
             raise
         except Exception as exc:  # real parse failure -> recoverable (logged status=error)
@@ -79,6 +85,7 @@ def parse_evtx_security(
         evidence_root=evidence_root,
         backend_mode=backend_mode,
         event_id_filter=None,
+        channel_filter=SECURITY_CHANNELS,
     )
 
 
@@ -97,4 +104,5 @@ def parse_evtx_powershell(
         evidence_root=evidence_root,
         backend_mode=backend_mode,
         event_id_filter=POWERSHELL_EVENT_IDS,
+        channel_filter=POWERSHELL_CHANNELS,
     )

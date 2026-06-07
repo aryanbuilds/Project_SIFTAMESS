@@ -1,6 +1,6 @@
 """Forensic backend abstraction (D3) — real (in-process) vs SIFT-lane (host).
 
-Two real backends behind one typed interface, selected by config — no placeholder,
+Two backend modes behind one typed interface, selected by config — no placeholder,
 no fake fallback (REAL-ONLY, CLAUDE.md §2B):
 
 * :class:`~siftmesh_core.mcp_gateway.backends.real.RealBackend` — in-process Python
@@ -30,7 +30,11 @@ class Backend(Protocol):
     name: str
 
     def parse_evtx(
-        self, path: Path, *, event_id_filter: frozenset[int] | None = None
+        self,
+        path: Path,
+        *,
+        event_id_filter: frozenset[int] | None = None,
+        channel_filter: frozenset[str] | None = None,
     ) -> list[dict[str, Any]]: ...
 
     def analyze_prefetch(self, path: Path) -> dict[str, Any]: ...

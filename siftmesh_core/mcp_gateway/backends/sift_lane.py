@@ -25,7 +25,11 @@ class SiftLaneBackend:
         )
 
     def parse_evtx(
-        self, path: Path, *, event_id_filter: frozenset[int] | None = None
+        self,
+        path: Path,
+        *,
+        event_id_filter: frozenset[int] | None = None,
+        channel_filter: frozenset[str] | None = None,
     ) -> list[dict[str, Any]]:
         self._unavailable("parse_evtx")
 

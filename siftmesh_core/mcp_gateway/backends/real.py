@@ -39,7 +39,11 @@ class RealBackend:
     name = "real"
 
     def parse_evtx(
-        self, path: Path, *, event_id_filter: frozenset[int] | None = None
+        self,
+        path: Path,
+        *,
+        event_id_filter: frozenset[int] | None = None,
+        channel_filter: frozenset[str] | None = None,
     ) -> list[dict[str, Any]]:
         try:
             from evtx import PyEvtxParser
@@ -59,6 +63,9 @@ class RealBackend:
                 event_id = None
             if event_id_filter is not None and event_id not in event_id_filter:
                 continue
+            channel = _system_field(data, "Channel")
+            if channel_filter is not None and channel not in channel_filter:
+                continue
             time_created = data.get("Event", {}).get("System", {}).get("TimeCreated", {})
             timestamp = record.get("timestamp")
             if not timestamp and isinstance(time_created, dict):
@@ -67,7 +74,7 @@ class RealBackend:
                 {
                     "event_record_id": record.get("event_record_id"),
                     "event_id": event_id,
-                    "channel": _system_field(data, "Channel"),
+                    "channel": channel,
                     "computer": _system_field(data, "Computer"),
                     "timestamp_utc": timestamp,
                     "provider": data.get("Event", {})

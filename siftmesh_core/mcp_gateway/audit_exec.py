@@ -94,16 +94,17 @@ def run_tool(
         status, error_code = "error", exc.code
     end = datetime.now(UTC)
 
-    structured_path: str | None = None
-    if status == "success" and write_structured:
-        structured_path = _write_structured(
-            run_root, tool_call_id, payload, evidence_root=evidence_root
-        )
+    structured_path: str | None = (
+        (Path("results") / f"{tool_call_id}.structured.json").as_posix()
+        if status == "success" and write_structured
+        else None
+    )
 
     # Provenance (base ToolResult) is what lands in audit/tool_calls.jsonl; the
     # structured payload lives in the structured_result_path file it points to.
     provenance: dict[str, Any] = {
         "tool_call_id": tool_call_id,
+        "tool_name": tool_name,
         "source_artifact": source_artifact,
         "source_sha256": source_sha256,
         "start_time_utc": start,
@@ -114,8 +115,12 @@ def run_tool(
         "structured_result_path": structured_path,
         "error_code": error_code,
     }
-    append_tool_result(run_root, ToolResult(**provenance), evidence_root=evidence_root)
     result = result_cls(**provenance, **(payload if status == "success" else {}))
+
+    if structured_path is not None:
+        _write_structured(run_root, tool_call_id, payload, evidence_root=evidence_root)
+
+    append_tool_result(run_root, ToolResult(**provenance), evidence_root=evidence_root)
 
     append_event(
         run_root,

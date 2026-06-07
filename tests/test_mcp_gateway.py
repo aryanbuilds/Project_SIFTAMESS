@@ -6,8 +6,10 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from siftmesh_core.evidence.manifest import build_manifest_from_dir, write_manifest
 from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
+from siftmesh_core.mcp_gateway.audit_exec import run_tool
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_backend
 from siftmesh_core.mcp_gateway.registry import (
     ALLOWED_TOOLS,
@@ -16,6 +18,7 @@ from siftmesh_core.mcp_gateway.registry import (
     assert_tool_allowed,
 )
 from siftmesh_core.mcp_gateway.tools.evidence_tools import (
+    HashManifestResult,
     compute_hash_manifest,
     create_readonly_evidence_vault,
 )
@@ -27,12 +30,9 @@ from siftmesh_core.schemas.claim import Claim
 def _case(tmp_path: Path) -> tuple[RunPaths, Path]:
     evidence = tmp_path / "evidence"
     evidence.mkdir()
-    (evidence / "a.evtx").write_bytes(b"real-bytes-not-fabricated-evidence")
+    (evidence / "a.evtx").write_bytes(b"unit-test-fixture-bytes")
     run = new_run_dir(base=tmp_path / "case_runs")
     return run, evidence
-
-
-# ── D1: allowlist registry ──────────────────────────────────────────────────
 
 
 def test_allowlist_is_exactly_the_eight_tools() -> None:
@@ -52,9 +52,6 @@ def test_unknown_tool_rejected() -> None:
         assert_tool_allowed("definitely_not_a_real_tool")
 
 
-# ── D3: backend abstraction ─────────────────────────────────────────────────
-
-
 def test_real_backend_selected_by_default() -> None:
     assert get_backend("real").name == "real"
     assert get_backend("auto").name == "real"
@@ -70,9 +67,6 @@ def test_sift_lane_backend_fails_closed() -> None:
 def test_unknown_backend_mode_rejected() -> None:
     with pytest.raises(ValueError, match="unknown backend mode"):
         get_backend("nope")
-
-
-# ── D2 + D4: audited execution provenance via the evidence tools ─────────────
 
 
 def test_tool_call_logged_with_full_provenance(tmp_path: Path) -> None:
@@ -119,7 +113,21 @@ def test_deterministic_sequential_tool_ids(tmp_path: Path) -> None:
     assert (run.root / "evidence" / "readonly_mounts.json").is_file()
 
 
-# ── D9: validate_claim_evidence ─────────────────────────────────────────────
+def test_invalid_structured_payload_is_not_persisted(tmp_path: Path) -> None:
+    run, evidence = _case(tmp_path)
+    with pytest.raises(ValidationError):
+        run_tool(
+            run.root,
+            result_cls=HashManifestResult,
+            tool_name="compute_hash_manifest",
+            source_artifact=".",
+            source_sha256="0" * 64,
+            backend="real",
+            produce=lambda: {"unexpected": True},
+            evidence_root=evidence,
+        )
+    assert not (run.root / "audit" / "tool_calls.jsonl").exists()
+    assert not (run.root / "results" / "TOOL-001.structured.json").exists()
 
 
 def _manifest(run: RunPaths, evidence: Path) -> str:
@@ -152,7 +160,7 @@ def test_validate_claim_evidence_accepts_anchored_claim(tmp_path: Path) -> None:
 
 def test_validate_claim_evidence_rejects_bad_hash(tmp_path: Path) -> None:
     run, evidence = _case(tmp_path)
-    sha = _manifest(run, evidence)
+    _manifest(run, evidence)
     compute_hash_manifest(run.root, evidence_root=evidence)
     claim = Claim(
         claim_id="CLAIM-2",
@@ -162,10 +170,10 @@ def test_validate_claim_evidence_rejects_bad_hash(tmp_path: Path) -> None:
         confidence=0.5,
         evidence_type="event_log",
         source_artifact="a.evtx",
-        source_sha256=sha,
+        source_sha256="f" * 64,
         tool_name="t",
         tool_call_id="TOOL-001",
-    ).model_copy(update={"source_sha256": "f" * 64})
+    )
     result = validate_claim_evidence(run.root, claim, evidence_root=evidence)
     assert result.valid is False
     assert any("mismatch" in p for p in result.problems)

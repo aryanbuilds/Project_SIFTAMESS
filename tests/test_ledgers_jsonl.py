@@ -83,6 +83,7 @@ def test_claim_routing_unsupported_isolated(tmp_path: Path) -> None:
 def test_tool_call_ledger_round_trip(tmp_path: Path) -> None:
     result = ToolResult(
         tool_call_id="TOOL-1",
+        tool_name="parse_evtx_security",
         source_artifact="evidence/a.evtx",
         source_sha256=_HASH,
         start_time_utc=datetime(2026, 1, 1, tzinfo=UTC),

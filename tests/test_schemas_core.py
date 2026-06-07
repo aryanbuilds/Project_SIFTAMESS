@@ -24,6 +24,7 @@ _HASH = "b" * 64
 def _tool_result(**over: object) -> ToolResult:
     base: dict[str, object] = {
         "tool_call_id": "TOOL-001",
+        "tool_name": "parse_evtx_security",
         "source_artifact": "evidence/Security.evtx",
         "source_sha256": _HASH,
         "start_time_utc": datetime(2026, 1, 1, tzinfo=UTC),

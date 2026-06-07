@@ -19,6 +19,7 @@ class ToolResult(StrictModel):
     """Provenance every tool return carries (subclass to add structured rows)."""
 
     tool_call_id: str
+    tool_name: str
     source_artifact: str
     source_sha256: Sha256
     start_time_utc: UtcDateTime

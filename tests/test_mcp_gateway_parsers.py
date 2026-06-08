@@ -36,6 +36,28 @@ def case(tmp_path: Path) -> tuple[RunPaths, Path]:
     return run, evidence
 
 
+def test_real_backend_is_in_process(
+    case: tuple[RunPaths, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Criterion 4: the local real backend is 100% in-process — it spawns no subprocess."""
+    import subprocess
+
+    _run, evidence = case
+
+    def _no_subprocess(*a: object, **k: object) -> object:
+        raise AssertionError("RealBackend must not spawn a subprocess (in-process only)")
+
+    monkeypatch.setattr(subprocess, "run", _no_subprocess)
+    monkeypatch.setattr(subprocess, "Popen", _no_subprocess)
+
+    backend = get_backend("real")
+    assert backend.name == "real"
+    assert len(backend.parse_evtx(evidence / "Security.evtx")) == 7
+    assert backend.analyze_prefetch(evidence / "CMD.EXE-89305D47.pf")["run_count"] is not None
+    assert isinstance(backend.extract_run_keys(evidence / "NTUSER.DAT"), list)
+    assert isinstance(backend.parse_mft(evidence / "$MFT"), list)
+
+
 def test_parse_evtx_security_returns_real_records(case: tuple[RunPaths, Path]) -> None:
     run, evidence = case
     result = parse_evtx_security(run.root, source_artifact="Security.evtx", evidence_root=evidence)

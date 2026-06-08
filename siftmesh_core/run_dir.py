@@ -93,6 +93,11 @@ class RunPaths:
         return self.context / "evidence_policy.md"
 
     @property
+    def protocol_sift_capabilities(self) -> Path:
+        """Validated Protocol SIFT capability map (D11)."""
+        return self.context / "protocol_sift_capabilities.json"
+
+    @property
     def claim_ledger(self) -> Path:
         return self.claims / "claim_ledger.jsonl"
 

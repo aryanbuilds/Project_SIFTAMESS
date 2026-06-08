@@ -18,6 +18,7 @@ from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType, ToolCa
 from siftmesh_core.schemas.claim import Claim, ClaimStatus, validate_claim_evidence
 from siftmesh_core.schemas.custody import CustodyEvent, CustodyEventType
 from siftmesh_core.schemas.evidence import EvidenceFile, EvidenceManifest
+from siftmesh_core.schemas.protocol_sift import CapabilityCheck, ProtocolSiftCapabilityMap
 from siftmesh_core.schemas.run import GateName, GateStatus, RunState, RunStateName
 from siftmesh_core.schemas.task import (
     ArtifactMode,
@@ -53,6 +54,8 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     EvidenceFile,
     EvidenceManifest,
     CustodyEvent,
+    ProtocolSiftCapabilityMap,
+    CapabilityCheck,
 )
 
 
@@ -76,6 +79,7 @@ def write_json_schemas(out_dir: Path | str) -> list[Path]:
 __all__ = [
     "AgentProfile",
     "ArtifactMode",
+    "CapabilityCheck",
     "Claim",
     "ClaimStatus",
     "CostClass",
@@ -89,6 +93,7 @@ __all__ = [
     "GateStatus",
     "InputArtifact",
     "ModelTier",
+    "ProtocolSiftCapabilityMap",
     "RetryPolicy",
     "RunState",
     "RunStateName",

@@ -32,7 +32,7 @@ def extract_registry_run_keys(
     *,
     source_artifact: str,
     evidence_root: Path | str,
-    backend_mode: str = "real",
+    backend_mode: str | None = None,
 ) -> RunKeysResult:
     """Extract Run/RunOnce autostart entries from an offline registry hive."""
     backend = get_backend(backend_mode)

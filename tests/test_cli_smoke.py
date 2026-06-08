@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import types
+from pathlib import Path
+
 import pytest
 import typer
 from siftmesh_core.protocol_sift import PROTOCOL_SIFT_SKILLS
+from siftmesh_core.run_dir import new_run_dir
 from typer.testing import CliRunner
 
 EXPECTED_COMMANDS = [
@@ -26,6 +30,9 @@ EXPECTED_COMMANDS = [
     "claims",
     "audit",
     "protocol-sift",
+    "extract-artifacts",
+    "analyze-memory",
+    "mcp-serve",
 ]
 
 COMMAND_SMOKE_CASES = [
@@ -95,3 +102,59 @@ def test_protocol_sift_skills_list_outputs_registered_skills(
     assert result.exit_code == 0
     for skill in PROTOCOL_SIFT_SKILLS:
         assert skill in result.output
+
+
+def test_protocol_sift_inspect_writes_capability_map(
+    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+) -> None:
+    run = new_run_dir(base=tmp_path / "case_runs")
+    result = runner.invoke(cli_app, ["protocol-sift", "inspect", "--run-dir", str(run.root)])
+    assert result.exit_code == 0
+    assert "capability map written" in result.output
+    assert run.protocol_sift_capabilities.is_file()
+
+
+def test_extract_artifacts_cli_wired(
+    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fake = types.SimpleNamespace(
+        status="success",
+        extracted_count=3,
+        failed_count=1,
+        tool_call_id="TOOL-001",
+        partition_offset=0,
+    )
+    monkeypatch.setattr(
+        "siftmesh_core.mcp_gateway.tools.image_tools.extract_artifacts_from_image",
+        lambda *a, **k: fake,
+    )
+    result = runner.invoke(
+        cli_app,
+        [
+            "extract-artifacts",
+            str(tmp_path / "run"),
+            "--evidence",
+            str(tmp_path),
+            "--image",
+            "x.e01",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "extract-artifacts: status=success extracted=3 failed=1" in result.output
+
+
+def test_analyze_memory_cli_fails_closed_message(
+    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
+
+    def boom(*a: object, **k: object) -> object:
+        raise BackendUnavailableError("vol not found")
+
+    monkeypatch.setattr("siftmesh_core.mcp_gateway.tools.memory_tools.analyze_memory", boom)
+    result = runner.invoke(
+        cli_app,
+        ["analyze-memory", str(tmp_path / "run"), "--evidence", str(tmp_path), "--memory", "m.raw"],
+    )
+    assert result.exit_code == 1
+    assert "analyze-memory failed" in result.output

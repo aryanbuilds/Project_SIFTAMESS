@@ -35,7 +35,7 @@ def analyze_prefetch(
     *,
     source_artifact: str,
     evidence_root: Path | str,
-    backend_mode: str = "real",
+    backend_mode: str | None = None,
 ) -> PrefetchResult:
     """Parse a Windows prefetch (``.pf``) artifact for execution evidence."""
     backend = get_backend(backend_mode)

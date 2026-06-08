@@ -39,7 +39,7 @@ def _parse_evtx(
     tool_name: str,
     source_artifact: str,
     evidence_root: Path | str,
-    backend_mode: str,
+    backend_mode: str | None,
     event_id_filter: frozenset[int] | None,
     channel_filter: frozenset[str] | None,
 ) -> EvtxParseResult:
@@ -75,7 +75,7 @@ def parse_evtx_security(
     *,
     source_artifact: str,
     evidence_root: Path | str,
-    backend_mode: str = "real",
+    backend_mode: str | None = None,
 ) -> EvtxParseResult:
     """Parse every Security-channel record from a ``.evtx`` artifact."""
     return _parse_evtx(
@@ -94,7 +94,7 @@ def parse_evtx_powershell(
     *,
     source_artifact: str,
     evidence_root: Path | str,
-    backend_mode: str = "real",
+    backend_mode: str | None = None,
 ) -> EvtxParseResult:
     """Parse PowerShell script-block / module-logging events (4103/4104)."""
     return _parse_evtx(

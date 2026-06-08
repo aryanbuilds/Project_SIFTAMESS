@@ -73,10 +73,25 @@ modification to `resolved_source` or `path_policy` was needed. The two new tools
 | libewf (via TSK) | EWF read | LGPL-3+ | external; not a project dependency |
 | 7-Zip / p7zip (`7z`) | memory decompress | LGPL | external CLI only |
 | Volatility 3 (`vol`) | memory triage | **VSL v1.0** | **external subprocess only; never imported** |
+| EZ Tools (`EvtxECmd`/`MFTECmd`/`RECmd`) | SIFT-lane (D12) | MIT (EricZimmerman) | external `dotnet <dll>` subprocess only |
+| .NET runtime (`dotnet`) | EZ Tools runtime | MIT | external; host runtime |
 | evtx / regipy / pyscca / mft | in-process parsers | MIT/GPL/LGPL/Apache | existing `sift` extra |
 
 Project license stays **Apache-2.0**; no restrictive source is copied. None of the above are added
-to `pyproject.toml` (they are host runtime tools, discovered via PATH / `config.vol_path`).
+to `pyproject.toml` (they are host runtime tools, discovered via PATH / `config.vol_path` /
+`config.ez_tools_dir`).
+
+## D11/D12 done (2026-06-08)
+- **D11** — `protocol-sift inspect [--run-dir]` writes a typed `ProtocolSiftCapabilityMap` to
+  `context/protocol_sift_capabilities.json`; multi-candidate tool detection fixed PLAN/09's stale
+  paths (vol `/opt/volatility3/bin/vol`; `yara` honestly absent). The Protocol SIFT *skill layer*
+  is not installed on this host and is reported absent while the underlying tools are present.
+- **D12** — `SiftLaneBackend` drives EZ Tools (`dotnet <dll>`, fixed-argv) and normalizes to the
+  exact `RealBackend` row shapes; **config flip** `real ↔ sift_lane` via `SIFTMESH_BACKEND_MODE`.
+  RECmd needs `--nl true` for dirty hives; **PECmd is absent → prefetch fails closed**. Validated on
+  the real ROCBA artifacts (EvtxECmd 2512 == in-process 2512; RECmd finds `SecurityHealth`).
+- **P2 hardening** (per-access re-hash, stream-parse, OS RO-mount, resumable ingest) moved to the
+  backlog epic `Project_SIFTAMESS-b2m` (not on the must-have spine) so Epic D could close.
 
 ## Deferred (new bd issues under Epic D `5ds`, not this pass)
 - Plaso super-timeline (`log2timeline`/`psort`) as an optional heavyweight enrichment lane.

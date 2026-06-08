@@ -74,7 +74,7 @@ def build_timeline(
     *,
     inputs: list[dict[str, str]],
     evidence_root: Path | str,
-    backend_mode: str = "real",
+    backend_mode: str | None = None,
 ) -> TimelineResult:
     """Merge EVTX / prefetch / ``$MFT`` rows from ``inputs`` into one sorted timeline.
 

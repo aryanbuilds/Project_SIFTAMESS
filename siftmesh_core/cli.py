@@ -19,6 +19,7 @@ from siftmesh_core.doctor import run_doctor
 from siftmesh_core.evidence.path_policy import PathPolicyViolation
 from siftmesh_core.evidence.vault import EvidenceModifiedError
 from siftmesh_core.evidence.vault import init_case as vault_init_case
+from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 from siftmesh_core.protocol_sift import PROTOCOL_SIFT_SKILLS, detect_protocol_sift
 
 # Root app: no args -> show help (Click "no command" exits with code 2).
@@ -162,10 +163,71 @@ def status(run_id: str) -> None:
 
 @app.command("mcp-serve")
 def mcp_serve() -> None:
-    """Launch the typed forensic MCP gateway over stdio (the 8 allowlisted tools)."""
+    """Launch the typed forensic MCP gateway over stdio (the 10 allowlisted tools)."""
     from siftmesh_core.mcp_gateway.server import run_server
 
     run_server()
+
+
+@app.command("extract-artifacts")
+def extract_artifacts(
+    run_dir: str,
+    evidence: Annotated[str, typer.Option(help="Evidence root (the originals dir).")],
+    image: Annotated[
+        str, typer.Option(help="Disk image artifact, evidence-relative (e.g. rocba-cdrive.e01).")
+    ],
+    keys: Annotated[
+        list[str] | None,
+        typer.Option(help="Artifact keys to extract (repeatable); default = all curated."),
+    ] = None,
+) -> None:
+    """Extract Windows artifacts from a disk image into the run dir (Sleuthkit; audited)."""
+    from siftmesh_core.mcp_gateway.tools.image_tools import extract_artifacts_from_image
+
+    try:
+        result = extract_artifacts_from_image(
+            run_dir, image_artifact=image, evidence_root=evidence, keys=keys
+        )
+    except (FileNotFoundError, ValueError, PathPolicyViolation, BackendUnavailableError) as exc:
+        typer.echo(f"extract-artifacts failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        f"extract-artifacts: status={result.status} extracted={result.extracted_count} "
+        f"failed={result.failed_count} (tool_call {result.tool_call_id}, "
+        f"offset {result.partition_offset})"
+    )
+
+
+@app.command("analyze-memory")
+def analyze_memory_cmd(
+    run_dir: str,
+    evidence: Annotated[str, typer.Option(help="Root dir containing the memory image.")],
+    memory: Annotated[str, typer.Option(help="Memory image, relative to --evidence.")],
+    plugins: Annotated[
+        list[str] | None, typer.Option(help="vol plugins (repeatable); default = triage set.")
+    ] = None,
+    symbol_dirs: Annotated[
+        str | None, typer.Option(help="Writable Volatility 3 symbol cache dir.")
+    ] = None,
+) -> None:
+    """Triage a memory image with Volatility 3 (subprocess; audited)."""
+    from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
+
+    try:
+        result = analyze_memory(
+            run_dir,
+            memory_artifact=memory,
+            evidence_root=evidence,
+            plugins=plugins,
+            symbol_dirs=symbol_dirs,
+        )
+    except (FileNotFoundError, ValueError, PathPolicyViolation, BackendUnavailableError) as exc:
+        typer.echo(f"analyze-memory failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        f"analyze-memory: status={result.status} procs={result.process_count} "
+        f"suspicious={len(result.suspicious)} (tool_call {result.tool_call_id})"
+    )
 
 
 @app.command()
@@ -234,8 +296,18 @@ def audit_tail(run_id: str) -> None:
 
 
 @protocol_sift_app.command("inspect")
-def protocol_sift_inspect() -> None:
-    """Inspect the ~/.claude Protocol SIFT layer (env-only; PLAN/09)."""
+def protocol_sift_inspect(
+    run_dir: Annotated[
+        str | None,
+        typer.Option(
+            "--run-dir", help="Also write the validated capability map under this run dir."
+        ),
+    ] = None,
+) -> None:
+    """Inspect the ~/.claude Protocol SIFT layer (env-only; PLAN/09).
+
+    With ``--run-dir``, also write ``context/protocol_sift_capabilities.json`` (D11).
+    """
     status = detect_protocol_sift()
     typer.echo(f"Protocol SIFT installed : {status.protocol_sift_installed}")
     typer.echo(f"Claude Code installed   : {status.claude_code_installed}")
@@ -243,6 +315,16 @@ def protocol_sift_inspect() -> None:
     typer.echo(f"case template present   : {status.case_template_present}")
     typer.echo(f"skills present          : {', '.join(status.skills_present) or 'none'}")
     typer.echo(f"SIFT tools present      : {', '.join(status.tools_present) or 'none'}")
+    typer.echo(f"SIFT tools absent       : {', '.join(status.tools_absent) or 'none'}")
+    if run_dir is not None:
+        from siftmesh_core.protocol_sift import write_protocol_sift_capability_map
+
+        try:
+            path = write_protocol_sift_capability_map(run_dir)
+        except (FileNotFoundError, PathPolicyViolation) as exc:
+            typer.echo(f"capability map write failed: {exc}", err=True)
+            raise typer.Exit(code=1) from exc
+        typer.echo(f"capability map written  : {path}")
 
 
 @skills_app.command("list")

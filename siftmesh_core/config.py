@@ -61,6 +61,9 @@ class SiftmeshSettings(BaseSettings):
     # Writable Volatility 3 symbol cache (its install dir is usually read-only, so vol
     # cannot cache downloaded PDB symbols there). None => vol uses its own default.
     vol_symbol_dirs: str | None = None
+    # EZ Tools install dir for the SIFT-lane backend (D12); EvtxECmd/MFTECmd/RECmd .dlls
+    # run via `dotnet <dll>`. Missing tool fails closed when sift_lane is actually used.
+    ez_tools_dir: str = "/opt/zimmermantools"
 
     @classmethod
     def settings_customise_sources(

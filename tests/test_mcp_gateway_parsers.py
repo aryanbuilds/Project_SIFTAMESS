@@ -146,8 +146,13 @@ def test_missing_artifact_raises(case: tuple[RunPaths, Path]) -> None:
         parse_evtx_security(run.root, source_artifact="nope.evtx", evidence_root=evidence)
 
 
-def test_sift_lane_backend_fails_closed_and_is_audited(case: tuple[RunPaths, Path]) -> None:
+def test_sift_lane_backend_fails_closed_and_is_audited(
+    case: tuple[RunPaths, Path], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     run, evidence = case
+    # D12 wires sift_lane to EZ Tools; with the EZ Tools dir absent it fails closed (no fake)
+    # and the attempt is still audited as an error (config flip via SIFTMESH_EZ_TOOLS_DIR).
+    monkeypatch.setenv("SIFTMESH_EZ_TOOLS_DIR", str(tmp_path / "no_ez_tools"))
     with pytest.raises(BackendUnavailableError):
         parse_evtx_security(
             run.root,
@@ -155,7 +160,6 @@ def test_sift_lane_backend_fails_closed_and_is_audited(case: tuple[RunPaths, Pat
             evidence_root=evidence,
             backend_mode="sift_lane",
         )
-    # Fails closed, but the attempt is still audited as an error.
     ledger = read_tool_results(run.root)
     assert ledger and ledger[-1].status == "error"
     assert ledger[-1].error_code == "backend_unavailable"

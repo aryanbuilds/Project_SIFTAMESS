@@ -59,11 +59,30 @@ def test_real_backend_selected_by_default() -> None:
     assert get_backend("auto").name == "real"
 
 
-def test_sift_lane_backend_fails_closed() -> None:
-    backend = get_backend("sift_lane")
-    assert backend.name == "sift_lane"
+def test_sift_lane_backend_selected() -> None:
+    assert get_backend("sift_lane").name == "sift_lane"
+
+
+def test_sift_lane_fails_closed_when_ez_tools_absent(tmp_path: Path) -> None:
+    # D12 is wired, but a missing EZ Tool DLL still fails closed (never fakes).
+    from siftmesh_core.mcp_gateway.backends.sift_lane import SiftLaneBackend
+
+    backend = SiftLaneBackend(ez_tools_dir=tmp_path / "no_ez_tools")
+    for call in (
+        lambda: backend.parse_evtx(Path("x.evtx")),
+        lambda: backend.parse_mft(Path("x")),
+        lambda: backend.extract_run_keys(Path("x")),
+    ):
+        with pytest.raises(BackendUnavailableError):
+            call()
+
+
+def test_sift_lane_prefetch_always_fails_closed() -> None:
+    # PECmd is not part of the EZ Tools set — prefetch fails closed regardless of host.
+    from siftmesh_core.mcp_gateway.backends.sift_lane import SiftLaneBackend
+
     with pytest.raises(BackendUnavailableError):
-        backend.parse_evtx(Path("x.evtx"))
+        SiftLaneBackend().analyze_prefetch(Path("x.pf"))
 
 
 def test_unknown_backend_mode_rejected() -> None:

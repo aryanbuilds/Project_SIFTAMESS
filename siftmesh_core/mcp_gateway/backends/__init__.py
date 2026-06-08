@@ -44,8 +44,17 @@ class Backend(Protocol):
     def parse_mft(self, path: Path) -> list[dict[str, Any]]: ...
 
 
-def get_backend(mode: str = "real") -> Backend:
-    """Return the configured backend. ``auto`` resolves to the in-process real one."""
+def get_backend(mode: str | None = None) -> Backend:
+    """Return the configured backend (the ``real`` ↔ ``sift_lane`` config flip, D12).
+
+    ``None`` resolves from ``SiftmeshSettings.backend_mode`` (env/toml/default), so a single
+    config knob switches every typed tool between in-process libs and the SIFT-host EZ Tools.
+    ``auto`` resolves to the in-process real backend.
+    """
+    if mode is None:
+        from siftmesh_core.config import load_settings
+
+        mode = load_settings().backend_mode
     if mode in ("real", "auto"):
         from siftmesh_core.mcp_gateway.backends.real import RealBackend
 

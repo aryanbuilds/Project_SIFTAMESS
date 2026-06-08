@@ -10,6 +10,7 @@ commands keep the frozen CLI surface until their epics wire the real workflows.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -102,9 +103,41 @@ def init_case(
 
 
 @app.command()
-def plan(run_dir: str) -> None:
-    """Generate the investigation plan for a run."""
-    print(f"plan {run_dir}")
+def plan(
+    run_dir: str,
+    review_only: Annotated[
+        bool,
+        typer.Option("--review-only", help="Emit recommendations only; no dispatch."),
+    ] = False,
+) -> None:
+    """Generate the deterministic investigation plan + task contracts for a run."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.orchestrator.planner import generate_plan
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        run = RunPaths(root=Path(run_dir))
+        if not run.evidence_manifest.is_file():
+            raise FileNotFoundError(f"no evidence manifest at {run.evidence_manifest}")
+        result = generate_plan(run, settings=load_settings(), review_only=review_only)
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+    ) as exc:
+        typer.echo(f"plan failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"plan complete: {result.run.root}")
+    typer.echo(f"  context files : {len(result.context_files)}")
+    typer.echo(f"  task contracts: {len(result.task_files)}")
+    typer.echo(f"  plan          : {result.run.investigation_plan}")
+    if result.review_only:
+        typer.echo("  mode          : review-only (recommendations only, no dispatch)")
+    elif not result.task_files:
+        typer.echo("  note          : nothing to plan (manifest has no actionable artifacts)")
 
 
 @app.command()

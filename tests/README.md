@@ -11,6 +11,7 @@ Test modules live under `EPIC_<X>_TESTS/`, matching the epic that owns the code 
 | `EPIC_B_TESTS/` | B | evidence vault: hashing, path policy, manifest, derived, custody, init-case, audit log |
 | `EPIC_C_TESTS/` | C | schemas (ToolResult/Claim/Task), claim firewall, JSONL ledgers |
 | `EPIC_D_TESTS/` | D | typed MCP gateway, backends (real + sift_lane EZ Tools), evtx/prefetch/registry/timeline, image + memory access, protocol-sift, validation, no-volatility-import guard |
+| `EPIC_E_TESTS/` | E | deterministic planner: artifact router, investigation-plan schema, context pack + datamark, case brief/assumptions, tool map, task contracts, `plan` CLI, review-only, byte-stability |
 
 ## Running
 

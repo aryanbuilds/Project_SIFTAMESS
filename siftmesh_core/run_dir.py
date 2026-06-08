@@ -98,6 +98,31 @@ class RunPaths:
         return self.context / "protocol_sift_capabilities.json"
 
     @property
+    def case_brief(self) -> Path:
+        """Planner-written scope/objective/constraints brief (E3)."""
+        return self.context / "case_brief.md"
+
+    @property
+    def context_pack(self) -> Path:
+        """Deep-context pack: artifact families + per-family tool guidance (E2)."""
+        return self.context / "context_pack.md"
+
+    @property
+    def investigation_plan(self) -> Path:
+        """Ordered investigation step graph (E4)."""
+        return self.context / "investigation_plan.yaml"
+
+    @property
+    def tool_map(self) -> Path:
+        """Artifact-family -> allowed typed-tool map (E5)."""
+        return self.context / "tool_map.md"
+
+    @property
+    def assumptions(self) -> Path:
+        """Explicit planning assumptions, e.g. timezone (E3)."""
+        return self.context / "assumptions.md"
+
+    @property
     def claim_ledger(self) -> Path:
         return self.claims / "claim_ledger.jsonl"
 

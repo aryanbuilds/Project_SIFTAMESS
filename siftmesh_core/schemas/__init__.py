@@ -18,6 +18,7 @@ from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType, ToolCa
 from siftmesh_core.schemas.claim import Claim, ClaimStatus, validate_claim_evidence
 from siftmesh_core.schemas.custody import CustodyEvent, CustodyEventType
 from siftmesh_core.schemas.evidence import EvidenceFile, EvidenceManifest
+from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
 from siftmesh_core.schemas.protocol_sift import CapabilityCheck, ProtocolSiftCapabilityMap
 from siftmesh_core.schemas.run import GateName, GateStatus, RunState, RunStateName
 from siftmesh_core.schemas.task import (
@@ -56,6 +57,8 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     CustodyEvent,
     ProtocolSiftCapabilityMap,
     CapabilityCheck,
+    InvestigationPlan,
+    PlanStep,
 )
 
 
@@ -92,7 +95,10 @@ __all__ = [
     "GateName",
     "GateStatus",
     "InputArtifact",
+    "InvestigationPlan",
     "ModelTier",
+    "PlanStep",
+    "PlanStepKind",
     "ProtocolSiftCapabilityMap",
     "RetryPolicy",
     "RunState",

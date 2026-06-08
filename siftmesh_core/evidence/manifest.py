@@ -39,13 +39,17 @@ _TYPE_BY_SUFFIX = {
     ".mem": "memory_image",
     ".vmem": "memory_image",
 }
-_REGISTRY_NAMES = {"ntuser.dat", "usrclass.dat", "system", "software", "sam", "security"}
+# Windows registry hive basenames (lowercased). Public so the planner's artifact
+# router (Epic E) shares one source of truth and never drifts from triage typing.
+REGISTRY_HIVE_NAMES = frozenset(
+    {"ntuser.dat", "usrclass.dat", "system", "software", "sam", "security"}
+)
 
 
 def guess_evidence_type(rel_path: str) -> str:
     """Best-effort evidence-type label from name/extension (string only)."""
     name = Path(rel_path).name.lower()
-    if name in _REGISTRY_NAMES:
+    if name in REGISTRY_HIVE_NAMES:
         return "registry"
     return _TYPE_BY_SUFFIX.get(Path(rel_path).suffix.lower(), "unknown")
 

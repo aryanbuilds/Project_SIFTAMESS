@@ -36,9 +36,8 @@ EXPECTED_COMMANDS = [
 ]
 
 COMMAND_SMOKE_CASES = [
-    # init-case is no longer a stub (real behaviour lands in Epic B) — see
-    # tests/test_init_case_integration.py.
-    (("plan", "RUN-001"), "plan RUN-001"),
+    # init-case (Epic B) and plan (Epic E) are no longer stubs — they have real
+    # behaviour covered by tests/EPIC_B_TESTS and tests/EPIC_E_TESTS respectively.
     (("dispatch", "RUN-001"), "dispatch RUN-001"),
     (("collect", "RUN-001"), "collect RUN-001"),
     (("critique", "RUN-001"), "critique RUN-001"),

@@ -26,6 +26,8 @@ def decide(
     unsupported_affects_report: bool = False,
     injection_affected: bool = False,
     evidence_mismatch: bool = False,
+    coverage_gap: bool = False,
+    needs_corroboration: bool = False,
 ) -> Decision:
     """Map (verdict, run/task facts) → a Decision. Pure; CLAUDE §12.
 
@@ -49,6 +51,12 @@ def decide(
         return Decision(
             action="human_review", reason="unsupported claim would affect the final report"
         )
+
+    # 4b: coverage/corroboration gap on an otherwise-accepted task → do MORE work, not "done"
+    # (G9 — "recognize gaps and adjust": examine another artifact / gather corroboration).
+    if (coverage_gap or needs_corroboration) and verdict in ("accepted", "accepted_with_downgrade"):
+        reason = "examine another artifact" if coverage_gap else "gather corroboration"
+        return Decision(action="follow_up", reason=reason)
 
     # 5: done (CLAUDE §12 "Mark task done if").
     if verdict in ("accepted", "accepted_with_downgrade"):

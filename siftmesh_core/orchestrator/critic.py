@@ -38,6 +38,7 @@ from siftmesh_core.ledgers.confidence_changes import (
 )
 from siftmesh_core.ledgers.contradiction_ledger import append_contradiction, read_contradictions
 from siftmesh_core.ledgers.critic_verdicts import append_critic_verdict, next_verdict_id
+from siftmesh_core.ledgers.followups import append_followup, next_followup_id
 from siftmesh_core.ledgers.injection_alerts import (
     append_injection_alert,
     next_alert_id,
@@ -45,14 +46,22 @@ from siftmesh_core.ledgers.injection_alerts import (
 )
 from siftmesh_core.ledgers.retries import append_retry, next_retry_id
 from siftmesh_core.mcp_gateway.tools.validation_tools import grade_claim_against_run
+from siftmesh_core.orchestrator.artifact_router import RoutedArtifact, route_manifest
+from siftmesh_core.orchestrator.planner import executor_contract
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType
 from siftmesh_core.schemas.claim import Claim
-from siftmesh_core.schemas.critic_records import ConfidenceChange, ContradictionRecord, RetryRecord
+from siftmesh_core.schemas.critic_records import (
+    ConfidenceChange,
+    ContradictionRecord,
+    FollowupRecord,
+    RetryRecord,
+)
+from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
-from siftmesh_core.schemas.yaml_io import dump_yaml_model
+from siftmesh_core.schemas.yaml_io import dump_yaml_model, read_yaml_model
 
 # Per-claim outcomes (the verdict is derived from these + cross-cutting flags).
 _ACCEPT, _DOWNGRADE, _UNSUPPORTED, _REJECT, _HUMAN = (
@@ -175,7 +184,11 @@ def _task_verdict(
 
 
 def critique_run(
-    run: RunPaths, *, settings: SiftmeshSettings, evidence_root: Path | str | None = None
+    run: RunPaths,
+    *,
+    settings: SiftmeshSettings,
+    evidence_root: Path | str | None = None,
+    generate_followups: bool = True,
 ) -> list[CriticVerdict]:
     """Critique every collected task result; persist verdicts + records; return verdicts."""
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
@@ -275,9 +288,113 @@ def critique_run(
             )
         )
 
+    # G9 — coverage/corroboration gaps ("recognize gaps and adjust").
+    _record_corroboration_gaps(run, all_claims, evidence_root=evidence_root, audit=audit)
+    if generate_followups:
+        generate_followup_tasks(run, evidence_root=evidence_root, audit=audit)
+
     if settings.llm_critic_enabled:
         verdicts = llm_adversarial_review(verdicts, settings=settings)
     return verdicts
+
+
+# G9 — gap detection + follow-up generation ----------------------------------------
+
+
+def _covered_artifact_paths(run: RunPaths) -> set[str]:
+    """Every evidence path already covered by a task contract's input_artifacts."""
+    covered: set[str] = set()
+    for path in sorted(run.tasks.glob("TASK-*.yaml")):
+        contract = read_yaml_model(TaskContract, path)
+        covered.update(ia.path for ia in contract.input_artifacts)
+    return covered
+
+
+def _max_task_number(run: RunPaths) -> int:
+    """Highest TASK-NNN number under tasks/ (0 if none)."""
+    numbers = []
+    for path in run.tasks.glob("TASK-*.yaml"):
+        stem = path.stem  # "TASK-001"
+        try:
+            numbers.append(int(stem.split("-")[1]))
+        except (IndexError, ValueError):
+            continue
+    return max(numbers, default=0)
+
+
+def detect_coverage_gaps(run: RunPaths) -> list[RoutedArtifact]:
+    """Actionable manifest artifacts not covered by any task (a coverage gap, G9)."""
+    if not run.evidence_manifest.is_file():
+        return []
+    manifest = EvidenceManifest.model_validate_json(
+        run.evidence_manifest.read_text(encoding="utf-8")
+    )
+    covered = _covered_artifact_paths(run)
+    return [a for a in route_manifest(manifest) if a.actionable and a.path not in covered]
+
+
+def generate_followup_tasks(
+    run: RunPaths, *, evidence_root: Path | str | None, audit: FilteringBoundLogger
+) -> list[Path]:
+    """Create one follow-up task contract per coverage gap (idempotent — the new task
+    covers the gap, so a second pass finds none)."""
+    gaps = detect_coverage_gaps(run)
+    written: list[Path] = []
+    n = _max_task_number(run)
+    for art in gaps:
+        n += 1
+        task_id = f"TASK-{n:03d}"
+        contract = executor_contract(task_id, art)
+        target = safe_write_path(run.root, f"tasks/{task_id}.yaml", evidence_root=evidence_root)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(dump_yaml_model(contract), encoding="utf-8")
+        append_followup(
+            run.root,
+            FollowupRecord(
+                followup_id=next_followup_id(run.root),
+                task_id=task_id,
+                reason="coverage_gap",
+                artifact=art.path,
+                family=art.family,
+                tool=art.tool,
+                created_utc=_now(),
+            ),
+            evidence_root=evidence_root,
+        )
+        log_event(
+            audit, "followup_task_created", task_id=task_id, artifact=art.path, gap="coverage"
+        )
+        written.append(target)
+    return written
+
+
+def _record_corroboration_gaps(
+    run: RunPaths,
+    claims: list[Claim],
+    *,
+    evidence_root: Path | str | None,
+    audit: FilteringBoundLogger,
+) -> None:
+    """Label high-risk single-source claims as needing corroboration (G9; never dropped)."""
+    for claim in claims:
+        high_risk = bool(_SEVERITY.search(claim.claim))
+        if claim.status == "confirmed" and high_risk and len(claim.supporting_evidence_refs) <= 1:
+            append_followup(
+                run.root,
+                FollowupRecord(
+                    followup_id=next_followup_id(run.root),
+                    task_id=claim.task_id,
+                    reason="corroboration_gap",
+                    artifact=claim.source_artifact or "",
+                    family=claim.evidence_type,
+                    origin_claim_id=claim.claim_id,
+                    created_utc=_now(),
+                ),
+                evidence_root=evidence_root,
+            )
+            log_event(
+                audit, "corroboration_gap_detected", task_id=claim.task_id, claim_id=claim.claim_id
+            )
 
 
 def _persist_verdict(

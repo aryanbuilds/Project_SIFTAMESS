@@ -11,7 +11,7 @@ from typing import Literal
 
 from siftmesh_core.schemas._base import StrictModel
 
-DecisionAction = Literal["done", "retry", "escalate", "human_review"]
+DecisionAction = Literal["done", "retry", "escalate", "human_review", "follow_up"]
 
 
 class Decision(StrictModel):

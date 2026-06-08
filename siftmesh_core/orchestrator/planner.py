@@ -83,8 +83,11 @@ def _retry() -> RetryPolicy:
     return RetryPolicy(max_attempts=2, retry_on=["malformed_json", "result_missing_reference"])
 
 
-def _executor_contract(task_id: str, art: RoutedArtifact) -> TaskContract:
-    """One TaskContract for an actionable artifact (E6/E7) — exactly one tool."""
+def executor_contract(task_id: str, art: RoutedArtifact) -> TaskContract:
+    """One TaskContract for an actionable artifact (E6/E7) — exactly one tool.
+
+    Public so the critic's G9 follow-up generator reuses the exact contract shape.
+    """
     assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
     return TaskContract(
         task_id=task_id,
@@ -150,7 +153,7 @@ def _build_contracts(routed: list[RoutedArtifact]) -> list[_PlannedTask]:
         planned.append(
             _PlannedTask(
                 task_id=task_id,
-                contract=_executor_contract(task_id, art),
+                contract=executor_contract(task_id, art),
                 kind="executor",
                 tool=art.tool,
                 input_paths=[art.path],

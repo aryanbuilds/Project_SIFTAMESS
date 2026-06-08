@@ -223,11 +223,19 @@ def critique(
     evidence: Annotated[
         str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
     ] = None,
+    followups: Annotated[
+        bool,
+        typer.Option(
+            "--followups/--no-followups",
+            help="Generate follow-up tasks for unexamined manifest artifacts (G9).",
+        ),
+    ] = True,
 ) -> None:
     """Validate collected claims; emit one critic verdict per task; write ledgers."""
     from pydantic import ValidationError
 
     from siftmesh_core.config import load_settings
+    from siftmesh_core.ledgers.followups import read_followups
     from siftmesh_core.ledgers.jsonl_ledger import LedgerCorruptionError
     from siftmesh_core.orchestrator.critic import critique_run
     from siftmesh_core.run_dir import RunPaths
@@ -236,9 +244,11 @@ def critique(
         root = Path(run_dir)
         if not root.is_dir():
             raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
         verdicts = critique_run(
-            RunPaths(root=root), settings=load_settings(), evidence_root=evidence
+            run, settings=load_settings(), evidence_root=evidence, generate_followups=followups
         )
+        followup_count = len(read_followups(run.root))
     except (
         FileNotFoundError,
         NotADirectoryError,
@@ -251,6 +261,8 @@ def critique(
     typer.echo(f"critique complete: {len(verdicts)} verdict(s)")
     for v in verdicts:
         typer.echo(f"  {v.task_id}: {v.verdict} ({len(v.affected_claim_ids)} claim(s))")
+    if followup_count:
+        typer.echo(f"  follow-ups : {followup_count} gap(s) raised (audit/followups.jsonl)")
 
 
 @app.command()
@@ -394,7 +406,9 @@ def retry(run_dir: str, task_id: str) -> None:
             raise FileNotFoundError(f"no result for {task_id} at {result_path}")
         result = TaskResult.model_validate_json(result_path.read_text(encoding="utf-8"))
         contract = read_yaml_model(TaskContract, run.tasks / f"{task_id}.yaml")
-        verdicts = {v.task_id: v for v in critique_run(run, settings=settings)}
+        verdicts = {
+            v.task_id: v for v in critique_run(run, settings=settings, generate_followups=False)
+        }
         verdict = verdicts.get(task_id)
         if verdict is None:
             raise FileNotFoundError(f"no critic verdict for {task_id}")

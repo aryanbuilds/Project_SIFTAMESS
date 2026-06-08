@@ -166,6 +166,11 @@ class RunPaths:
         return self.audit / "critic_verdicts.jsonl"
 
     @property
+    def followups(self) -> Path:
+        """Coverage/corroboration follow-ups the critic raised (G9). One per line."""
+        return self.audit / "followups.jsonl"
+
+    @property
     def orchestration_events(self) -> Path:
         return self.audit / "orchestration_events.jsonl"
 

@@ -21,6 +21,7 @@ from siftmesh_core.schemas.critic_records import (
     ConfidenceChange,
     ContradictionRecord,
     ContradictionRule,
+    FollowupRecord,
     RetryRecord,
 )
 from siftmesh_core.schemas.custody import CustodyEvent, CustodyEventType
@@ -75,6 +76,7 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     ContradictionRecord,
     ConfidenceChange,
     RetryRecord,
+    FollowupRecord,
     Decision,
 )
 
@@ -116,6 +118,7 @@ __all__ = [
     "DecisionAction",
     "EvidenceFile",
     "EvidenceManifest",
+    "FollowupRecord",
     "GateName",
     "GateStatus",
     "InjectionAlert",

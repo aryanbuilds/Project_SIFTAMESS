@@ -52,3 +52,19 @@ class RetryRecord(StrictModel):
     cause: str  # the decide()/verdict reason
     tightened_criteria: list[str] = Field(default_factory=list)
     decided_utc: UtcDateTime
+
+
+FollowupReason = Literal["coverage_gap", "corroboration_gap"]
+
+
+class FollowupRecord(StrictModel):
+    """A coverage/corroboration follow-up the critic raised (G9, "recognize gaps and adjust")."""
+
+    followup_id: str  # deterministic FOLLOWUP-NNN
+    task_id: str  # the new follow-up task (coverage) or the gap's origin task (corroboration)
+    reason: FollowupReason
+    artifact: str  # the manifest artifact that was unexamined / under-corroborated
+    family: str
+    tool: str | None = None  # the follow-up's tool (coverage); None for corroboration
+    origin_claim_id: str | None = None  # the single-source claim (corroboration)
+    created_utc: UtcDateTime

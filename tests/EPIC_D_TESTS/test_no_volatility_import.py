@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-_PKG = Path(__file__).resolve().parent.parent / "siftmesh_core"
+_PKG = Path(__file__).resolve().parent.parent.parent / "siftmesh_core"
 _IMPORT = re.compile(r"^\s*(?:import|from)\s+volatility", re.MULTILINE)
 
 

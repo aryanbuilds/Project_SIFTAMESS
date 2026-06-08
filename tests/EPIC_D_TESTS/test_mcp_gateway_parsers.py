@@ -19,7 +19,7 @@ from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.run_dir import RunPaths, new_run_dir
 
-FIXTURES = Path(__file__).parent / "fixtures" / "forensic"
+FIXTURES = Path(__file__).parent.parent / "fixtures" / "forensic"
 
 
 @pytest.fixture

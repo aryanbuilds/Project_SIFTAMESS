@@ -144,15 +144,77 @@ def plan(
 
 
 @app.command()
-def dispatch(run_dir: str) -> None:
-    """Dispatch tasks to agents."""
-    print(f"dispatch {run_dir}")
+def dispatch(
+    run_dir: str,
+    task: Annotated[str | None, typer.Option(help="Dispatch only this TASK-ID.")] = None,
+    agent_profile: Annotated[
+        str | None, typer.Option("--agent-profile", help="Override the contract's agent profile.")
+    ] = None,
+    evidence: Annotated[
+        str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
+    ] = None,
+) -> None:
+    """Execute the run's task contracts via their adapters; write results + audit."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
+    from siftmesh_core.orchestrator.scheduler import CapError, PolicyError, dispatch_run
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
+        refs = dispatch_run(
+            run,
+            settings=load_settings(),
+            evidence_override=evidence,
+            task_id=task,
+            agent_profile=agent_profile,
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+        BackendUnavailableError,
+        PolicyError,
+        CapError,
+    ) as exc:
+        typer.echo(f"dispatch failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"dispatch complete: {len(refs)} task(s)")
+    for ref in refs:
+        typer.echo(f"  {ref.task_id}: {ref.status} -> {ref.result_path}")
 
 
 @app.command()
-def collect(run_dir: str) -> None:
-    """Collect agent/tool results into the run."""
-    print(f"collect {run_dir}")
+def collect(
+    run_dir: str,
+    task: Annotated[str | None, typer.Option(help="Collect only this TASK-ID.")] = None,
+) -> None:
+    """Validate task result envelopes; report missing/malformed without crashing."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.orchestrator.scheduler import collect_run
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        report = collect_run(RunPaths(root=root), task_id=task)
+    except (FileNotFoundError, NotADirectoryError, PathPolicyViolation, ValidationError) as exc:
+        typer.echo(f"collect failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    for row in report.rows:
+        typer.echo(f"  {row.task_id}: {row.status} ({len(row.claim_ids)} claim(s))")
+    if report.missing:
+        typer.echo(f"  missing: {', '.join(report.missing)}", err=True)
+    if report.malformed:
+        typer.echo(f"  malformed: {', '.join(report.malformed)}", err=True)
 
 
 @app.command()

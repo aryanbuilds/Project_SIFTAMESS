@@ -127,12 +127,31 @@ class RunPaths:
         return self.claims / "claim_ledger.jsonl"
 
     @property
+    def injection_alerts(self) -> Path:
+        """Prompt-injection alerts (F3). One InjectionAlert per line."""
+        return self.claims / "injection_alerts.jsonl"
+
+    @property
     def tool_calls(self) -> Path:
         return self.audit / "tool_calls.jsonl"
 
     @property
+    def agent_calls(self) -> Path:
+        """Per-dispatch agent-call audit (F6). One AgentCall per line."""
+        return self.audit / "agent_calls.jsonl"
+
+    @property
+    def retries(self) -> Path:
+        """Retry history ledger (written by Epic G; accessor added in F)."""
+        return self.audit / "retries.jsonl"
+
+    @property
     def orchestration_events(self) -> Path:
         return self.audit / "orchestration_events.jsonl"
+
+    def result_path(self, task_id: str) -> Path:
+        """Per-task executor result envelope, ``results/TASK-XXX.result.json`` (F)."""
+        return self.results / f"{task_id}.result.json"
 
     def subdirs(self) -> list[Path]:
         return [self.root / name for name in RUN_SUBDIRS]

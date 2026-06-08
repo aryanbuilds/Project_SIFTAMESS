@@ -173,6 +173,16 @@ def route_manifest(manifest: EvidenceManifest) -> list[RoutedArtifact]:
     return [route_artifact(ef) for ef in manifest.files]
 
 
+def timeline_kind_for(path: str) -> str | None:
+    """Return the build_timeline ``kind`` for an artifact path, or None if not timeline-capable.
+
+    Used by the executor (Epic F) to reconstruct ``build_timeline``'s ``inputs`` from a
+    timeline task's ``input_artifacts`` without importing private router internals.
+    """
+    p = Path(path)
+    return _FAMILY_TIMELINE_KIND.get(_classify(p.name.lower(), p.suffix.lower()))
+
+
 def _guard_family_tools() -> None:
     """Fail import if any mapped tool is forbidden/unknown (E5 can't drift)."""
     for tool in FAMILY_TOOL_MAP.values():

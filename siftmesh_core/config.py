@@ -65,6 +65,19 @@ class SiftmeshSettings(BaseSettings):
     # run via `dotnet <dll>`. Missing tool fails closed when sift_lane is actually used.
     ez_tools_dir: str = "/opt/zimmermantools"
 
+    # Executor adapters (Epic F). The deterministic floor is the safe default so CI and
+    # the no-keys demo never need an agent CLI/key. `executor_selection`: "deterministic"
+    # = always the floor; "live" = prefer the live agent (fall closed to the floor when
+    # absent); "auto" = live when available else floor.
+    executor_selection: Literal["deterministic", "live", "auto"] = "deterministic"
+    default_agent_profile: str = "deterministic_executor"
+    claude_cli_path: str = "claude"
+    opencode_cli_path: str = "opencode"
+    # Fixed-argv command for the generic shell adapter (F7); None => unavailable.
+    generic_agent_cmd: str | None = None
+    # Whole-agent-invocation wall-clock (F7/F8); distinct from caps.max_tool_runtime_seconds.
+    agent_timeout_seconds: int = 300
+
     @classmethod
     def settings_customise_sources(
         cls,

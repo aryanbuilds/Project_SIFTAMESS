@@ -13,11 +13,13 @@ from pathlib import Path
 from typing import Any
 
 from siftmesh_core.schemas._base import StrictModel
+from siftmesh_core.schemas.agent_call import AgentCall, AgentCallStatus
 from siftmesh_core.schemas.agent_profile import AgentProfile, CostClass, ModelTier
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType, ToolCall
 from siftmesh_core.schemas.claim import Claim, ClaimStatus, validate_claim_evidence
 from siftmesh_core.schemas.custody import CustodyEvent, CustodyEventType
 from siftmesh_core.schemas.evidence import EvidenceFile, EvidenceManifest
+from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
 from siftmesh_core.schemas.protocol_sift import CapabilityCheck, ProtocolSiftCapabilityMap
 from siftmesh_core.schemas.run import GateName, GateStatus, RunState, RunStateName
@@ -28,6 +30,7 @@ from siftmesh_core.schemas.task import (
     SafetyPolicy,
     TaskContract,
 )
+from siftmesh_core.schemas.task_result import TaskResult, TaskResultStatus
 from siftmesh_core.schemas.tool_result import ToolResult, ToolStatus
 from siftmesh_core.schemas.workflow import (
     StageName,
@@ -59,6 +62,9 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     CapabilityCheck,
     InvestigationPlan,
     PlanStep,
+    TaskResult,
+    AgentCall,
+    InjectionAlert,
 )
 
 
@@ -80,6 +86,8 @@ def write_json_schemas(out_dir: Path | str) -> list[Path]:
 
 
 __all__ = [
+    "AgentCall",
+    "AgentCallStatus",
     "AgentProfile",
     "ArtifactMode",
     "CapabilityCheck",
@@ -94,6 +102,7 @@ __all__ = [
     "EvidenceManifest",
     "GateName",
     "GateStatus",
+    "InjectionAlert",
     "InputArtifact",
     "InvestigationPlan",
     "ModelTier",
@@ -106,6 +115,8 @@ __all__ = [
     "SafetyPolicy",
     "StageName",
     "TaskContract",
+    "TaskResult",
+    "TaskResultStatus",
     "ToolCall",
     "ToolResult",
     "ToolStatus",

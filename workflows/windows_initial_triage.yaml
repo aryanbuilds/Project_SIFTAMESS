@@ -1,0 +1,36 @@
+# Canonical Windows initial-triage workflow (validates against the Epic-C Workflow
+# schema, siftmesh_core/schemas/workflow.py). This is the high-level run recipe —
+# mode, caps, gates, safety posture, and coarse stage order. The per-run, per-artifact
+# task graph is generated separately by `siftmesh plan` (context/investigation_plan.yaml).
+# Epic H's state-machine runner will load this file; Epic E ships it as the reference.
+workflow_id: windows_initial_triage
+mode: guided
+limits:
+  max_iterations: 3
+  max_agent_tasks: 10
+  max_parallel_tasks: 3
+  max_tool_runtime_seconds: 300
+safety:
+  evidence_mode: read_only
+  raw_shell: false
+  allow_destructive_tools: false
+  treat_evidence_as_hostile: true
+  restrict_writes_to_run_directory: true
+approval_gates:
+  - plan
+  - dispatch
+  - retry
+  - report
+agents: []
+retry_policy:
+  max_attempts: 2
+  retry_on:
+    - malformed_json
+    - result_missing_reference
+steps:
+  - init_case
+  - plan
+  - dispatch
+  - collect
+  - critique
+  - report

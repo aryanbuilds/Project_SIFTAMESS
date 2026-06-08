@@ -118,7 +118,10 @@ def plan(
     from siftmesh_core.run_dir import RunPaths
 
     try:
-        run = RunPaths(root=Path(run_dir))
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
         if not run.evidence_manifest.is_file():
             raise FileNotFoundError(f"no evidence manifest at {run.evidence_manifest}")
         result = generate_plan(run, settings=load_settings(), review_only=review_only)

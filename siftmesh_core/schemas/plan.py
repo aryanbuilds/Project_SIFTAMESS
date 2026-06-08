@@ -36,7 +36,9 @@ class PlanStep(StrictModel):
     depends_on: list[str] = Field(default_factory=list)
     task_id: str | None = None
     tool: str | None = None
-    input_artifact: str | None = None
+    # Manifest-relative artifact paths the step's tool consumes (one for an executor,
+    # all timeline-capable artifacts for a timeline step; empty for non-bound kinds).
+    input_artifacts: list[str] = Field(default_factory=list)
 
 
 class InvestigationPlan(StrictModel):
@@ -51,23 +53,32 @@ class InvestigationPlan(StrictModel):
 
     @model_validator(mode="after")
     def _check_graph(self) -> Self:
-        """Unique ids, resolvable deps, and kind-correct artifact binding."""
+        """Unique ids, acyclic deps, and kind-correct artifact binding.
+
+        Dependencies must reference an *earlier* step (already ``seen``), which
+        enforces a topological order and so forbids both forward references and
+        cycles for free — the "ordered step graph" the docstring promises.
+        """
         ids = [s.step_id for s in self.steps]
         if len(ids) != len(set(ids)):
             raise ValueError("investigation plan has duplicate step_id(s)")
-        known = set(ids)
+        seen: set[str] = set()
         for step in self.steps:
             for dep in step.depends_on:
-                if dep not in known:
-                    raise ValueError(f"step {step.step_id!r} depends on unknown step {dep!r}")
+                if dep not in seen:
+                    raise ValueError(
+                        f"step {step.step_id!r} depends on {dep!r} which is not an earlier "
+                        f"step (forward reference or cycle)"
+                    )
             bound = step.kind in _BOUND_KINDS
-            has_binding = bool(step.task_id and step.tool and step.input_artifact)
+            has_binding = bool(step.task_id and step.tool and step.input_artifacts)
             if bound and not has_binding:
                 raise ValueError(
-                    f"{step.kind} step {step.step_id!r} must set task_id + tool + input_artifact"
+                    f"{step.kind} step {step.step_id!r} must set task_id + tool + input_artifacts"
                 )
-            if not bound and (step.task_id or step.tool or step.input_artifact):
+            if not bound and (step.task_id or step.tool or step.input_artifacts):
                 raise ValueError(
-                    f"{step.kind} step {step.step_id!r} must not set task_id/tool/input_artifact"
+                    f"{step.kind} step {step.step_id!r} must not set task_id/tool/input_artifacts"
                 )
+            seen.add(step.step_id)
         return self

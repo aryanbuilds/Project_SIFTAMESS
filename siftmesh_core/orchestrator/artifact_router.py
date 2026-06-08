@@ -163,7 +163,7 @@ def route_artifact(ef: EvidenceFile) -> RoutedArtifact:
         family=family,
         tool=tool,
         timeline_kind=_FAMILY_TIMELINE_KIND.get(family),
-        objective=_FAMILY_OBJECTIVE.get(family, "No automated triage tool for this artifact."),
+        objective=_FAMILY_OBJECTIVE[family],
         actionable=tool is not None,
     )
 

@@ -75,10 +75,29 @@ report
 | E4 | Investigation plan YAML | `context/investigation_plan.yaml` — ordered step graph (deep_context, executor tasks per artifact, critique, report). | `planner.py`, `workflows/windows_initial_triage.yaml` | B,C | YAML parses; unique step ids; every executor step maps to a manifest artifact. | Planner | M | low |
 | E5 | Tool map | `context/tool_map.md` mapping artifact families → allowed typed MCP tools (no raw shell). | `planner.py` | D | every tool listed is in the gateway allowlist; no forbidden tool. | Planner | S | low |
 | E6 | Task contract generation | Emit `tasks/TASK-*.yaml` from template; each with all required fields, `allowed_tools` scoped per task, `safety_policy.evidence_is_hostile:true`, `write_allowed_only_under` run-dir paths. | `planner.py`, `schemas/task.py` | C | each `TASK-*.yaml` validates; missing `safety_policy` rejected at write. | Planner | M | low |
-| E7 | Deterministic template `windows_initial_triage` | Fixed mapping: Security.evtx→evtx_security; powershell logs→evtx_powershell; Prefetch→prefetch; Run keys→registry. Zero-LLM. | `planner.py`, template data | C | with sample evidence, produces TASK-001..004 deterministically (byte-stable per manifest). | Planner | M | low |
+| E7 | Deterministic template `windows_initial_triage` | Fixed mapping: Security.evtx→evtx_security; powershell logs→evtx_powershell; Prefetch→prefetch; Run keys→registry. Zero-LLM. | `planner.py`, `orchestrator/artifact_router.py` | C | with sample evidence, produces TASK-001..004 deterministically (byte-stable per manifest). | Planner | M | low |
 | E8 | Review-only gate hook | `--review-only` sets `RunConfig.dispatch_reachable=false`; planner emits recommendations; engine stops after PLAN. | `planner.py`, `state_machine.py` | H1 | `test_review_only_stops_after_plan`: no `results/`; state ends at PLAN/DONE. | Planner | S | low (dep on H) |
 
 **Design (E):** Deterministic templates per case type are the MVP path; an optional LLM Planner is a *post-processor* that may reorder/annotate but **cannot** add tools outside the allowed set or invent artifacts not in the manifest (privilege separation enforced in code). Spotlighting starts here (evidence summaries normalized to JSON rows + datamarked before any LLM sees them; function lives in F). `plan` is terminal for review-only mode. **11-day cut:** E1, E3–E7 MVP; E2 LLM enrichment best-effort; E8 after H1.
+
+## EPIC E DONE (2026-06-08)
+
+`siftmesh plan RUN_DIR [--review-only]` is real (no stub) and reads **only** manifest metadata
+(never evidence bytes / never executes a tool — privilege separation). All deterministic, byte-stable
+per manifest.
+
+- **New:** `schemas/plan.py` (`InvestigationPlan` + `PlanStep`; validator enforces unique ids, an
+  acyclic DAG, and per-kind artifact binding). `orchestrator/artifact_router.py` is the DRY
+  family→tool source of truth for E2/E5/E7 (allowlist-guarded at import). `orchestrator/deep_context.py`
+  (context pack + filename/case-id datamarking; LLM seam = identity, deferred to F8).
+  `orchestrator/planner.py` (`generate_plan`). `workflows/windows_initial_triage.yaml` (canonical
+  `Workflow`-schema doc; consumed by Epic H).
+- **Template (E7) is in-code** in `planner.py` + `artifact_router.py` (not a separate template file);
+  `workflows/windows_initial_triage.yaml` carries the high-level run recipe (mode/caps/gates/stages).
+- **E8 partial:** `--review-only` flag + plan-side behavior shipped; the engine-stop enforcement
+  (`RunConfig.dispatch_reachable=false`, `test_review_only_stops_after_plan`) needs the state machine
+  and is tracked under Epic H (`Project_SIFTAMESS-hth.1`, discovered-from `asa`).
+- Tests in `tests/EPIC_E_TESTS/`. Post-close audit fixes tracked at `Project_SIFTAMESS-7zc`.
 
 ---
 

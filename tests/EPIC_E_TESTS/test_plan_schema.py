@@ -32,8 +32,35 @@ def test_duplicate_step_ids_rejected() -> None:
 
 
 def test_unknown_dependency_rejected() -> None:
-    with pytest.raises(ValidationError, match="unknown step"):
+    with pytest.raises(ValidationError, match="not an earlier step"):
         _plan([PlanStep(step_id="step-001", kind="report", description="r", depends_on=["nope"])])
+
+
+def test_forward_reference_rejected() -> None:
+    # step-001 depends on step-002 which is declared later -> not yet seen.
+    with pytest.raises(ValidationError, match="forward reference or cycle"):
+        _plan(
+            [
+                PlanStep(
+                    step_id="step-001",
+                    kind="deep_context",
+                    description="a",
+                    depends_on=["step-002"],
+                ),
+                PlanStep(step_id="step-002", kind="critique", description="b"),
+            ]
+        )
+
+
+def test_dependency_cycle_rejected() -> None:
+    # s1 <-> s2 mutual dependency: whichever is validated first lacks its dep in `seen`.
+    with pytest.raises(ValidationError, match="forward reference or cycle"):
+        _plan(
+            [
+                PlanStep(step_id="s1", kind="deep_context", description="a", depends_on=["s2"]),
+                PlanStep(step_id="s2", kind="critique", description="b", depends_on=["s1"]),
+            ]
+        )
 
 
 def test_executor_step_requires_binding() -> None:

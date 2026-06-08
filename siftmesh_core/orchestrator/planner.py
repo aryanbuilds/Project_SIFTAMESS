@@ -26,10 +26,14 @@ from siftmesh_core.orchestrator.artifact_router import (
     RoutedArtifact,
     route_manifest,
 )
-from siftmesh_core.orchestrator.deep_context import build_context_pack, enrich_context_pack
+from siftmesh_core.orchestrator.deep_context import (
+    build_context_pack,
+    datamark_filename,
+    enrich_context_pack,
+)
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.evidence import EvidenceManifest
-from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep
+from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
 from siftmesh_core.schemas.task import InputArtifact, RetryPolicy, SafetyPolicy, TaskContract
 from siftmesh_core.schemas.yaml_io import dump_yaml_model
 
@@ -121,33 +125,62 @@ def _timeline_contract(task_id: str, timeline_arts: list[RoutedArtifact]) -> Tas
     )
 
 
-def _build_contracts(
-    routed: list[RoutedArtifact],
-) -> tuple[list[tuple[str, TaskContract]], list[RoutedArtifact]]:
-    """Build (task_id, contract) pairs in manifest order; return timeline inputs too."""
-    contracts: list[tuple[str, TaskContract]] = []
+@dataclass(frozen=True)
+class _PlannedTask:
+    """A minted task contract + everything the plan step needs (no later re-derivation)."""
+
+    task_id: str
+    contract: TaskContract
+    kind: PlanStepKind  # "executor" | "timeline"
+    tool: str
+    input_paths: list[str]
+    description: str
+
+
+def _build_contracts(routed: list[RoutedArtifact]) -> list[_PlannedTask]:
+    """Mint one task per actionable artifact (+ a timeline task) in manifest order."""
+    planned: list[_PlannedTask] = []
     n = 0
     for art in routed:
         if not art.actionable:
             continue
+        assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
         n += 1
-        contracts.append((f"TASK-{n:03d}", _executor_contract(f"TASK-{n:03d}", art)))
+        task_id = f"TASK-{n:03d}"
+        planned.append(
+            _PlannedTask(
+                task_id=task_id,
+                contract=_executor_contract(task_id, art),
+                kind="executor",
+                tool=art.tool,
+                input_paths=[art.path],
+                description=art.objective,
+            )
+        )
     timeline_arts = [a for a in routed if a.timeline_kind]
     if timeline_arts:
         n += 1
-        contracts.append((f"TASK-{n:03d}", _timeline_contract(f"TASK-{n:03d}", timeline_arts)))
-    return contracts, timeline_arts
+        task_id = f"TASK-{n:03d}"
+        planned.append(
+            _PlannedTask(
+                task_id=task_id,
+                contract=_timeline_contract(task_id, timeline_arts),
+                kind="timeline",
+                tool=TIMELINE_TOOL,
+                input_paths=[a.path for a in timeline_arts],
+                description="Merge timeline-capable artifacts into one chronology.",
+            )
+        )
+    return planned
 
 
 def _build_plan(
     manifest: EvidenceManifest,
-    routed: list[RoutedArtifact],
-    contracts: list[tuple[str, TaskContract]],
-    timeline_arts: list[RoutedArtifact],
+    planned: list[_PlannedTask],
     *,
     review_only: bool,
 ) -> InvestigationPlan:
-    """Assemble the ordered step graph (E4) from the minted contracts."""
+    """Assemble the ordered step graph (E4) directly from the minted tasks."""
     steps: list[PlanStep] = []
     sid = 0
 
@@ -161,50 +194,29 @@ def _build_plan(
         PlanStep(step_id=dc, kind="deep_context", description="Build the deep-context pack.")
     )
 
-    # Map artifact path -> the actionable routed artifact, to recover tool/path per task.
-    actionable = {a.path: a for a in routed if a.actionable}
-    exec_step_ids: list[str] = []
-    timeline_step_id: str | None = None
-    for task_id, contract in contracts:
-        if contract.role == "timeline_executor":
-            timeline_step_id = next_id()
-            steps.append(
-                PlanStep(
-                    step_id=timeline_step_id,
-                    kind="timeline",
-                    description="Merge timeline-capable artifacts into one chronology.",
-                    depends_on=[dc],
-                    task_id=task_id,
-                    tool=TIMELINE_TOOL,
-                    input_artifact=timeline_arts[0].path,
-                )
-            )
-            continue
-        art = actionable[contract.input_artifacts[0].path]
+    task_step_ids: list[str] = []
+    for task in planned:
         step_id = next_id()
-        exec_step_ids.append(step_id)
+        task_step_ids.append(step_id)
         steps.append(
             PlanStep(
                 step_id=step_id,
-                kind="executor",
-                description=art.objective,
+                kind=task.kind,
+                description=task.description,
                 depends_on=[dc],
-                task_id=task_id,
-                tool=art.tool,
-                input_artifact=art.path,
+                task_id=task.task_id,
+                tool=task.tool,
+                input_artifacts=list(task.input_paths),
             )
         )
 
-    downstream = [*exec_step_ids]
-    if timeline_step_id:
-        downstream.append(timeline_step_id)
     crit = next_id()
     steps.append(
         PlanStep(
             step_id=crit,
             kind="critique",
             description="Validate every claim's evidence binding; reject unsupported claims.",
-            depends_on=downstream or [dc],
+            depends_on=task_step_ids or [dc],
         )
     )
     rep = next_id()
@@ -236,7 +248,7 @@ def _build_case_brief(
     lines = [
         "# Case Brief",
         "",
-        f"- Case: {manifest.case_id}",
+        f"- Case: {datamark_filename(manifest.case_id)}",
         f"- Run: {manifest.run_id}",
         f"- Template: {TEMPLATE}",
         f"- Mode: {mode}",
@@ -293,12 +305,9 @@ def _build_tool_map(routed: list[RoutedArtifact]) -> str:
         "| Family | Tool |",
         "| --- | --- |",
     ]
-    seen: set[str] = set()
     for family in FAMILY_ORDER:
-        members = [a for a in routed if a.family == family]
-        if not members or family in seen:
+        if not any(a.family == family for a in routed):
             continue
-        seen.add(family)
         tool = FAMILY_TOOL_MAP[family]
         cell = f"`{tool}`" if tool else "_context-only (no dedicated tool)_"
         lines.append(f"| {FAMILY_LABEL[family]} | {cell} |")
@@ -338,13 +347,14 @@ def generate_plan(
     ]
 
     # E6/E7 task contracts.
-    contracts, timeline_arts = _build_contracts(routed)
-    task_files: list[Path] = []
-    for task_id, contract in contracts:
-        task_files.append(_write(run, f"tasks/{task_id}.yaml", dump_yaml_model(contract)))
+    planned = _build_contracts(routed)
+    task_files: list[Path] = [
+        _write(run, f"tasks/{task.task_id}.yaml", dump_yaml_model(task.contract))
+        for task in planned
+    ]
 
     # E4 investigation plan (written last so context_files count is the 5 above + this).
-    plan = _build_plan(manifest, routed, contracts, timeline_arts, review_only=review_only)
+    plan = _build_plan(manifest, planned, review_only=review_only)
     context_files.append(_write(run, "context/investigation_plan.yaml", dump_yaml_model(plan)))
 
     log_event(

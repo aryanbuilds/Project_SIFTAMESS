@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-04_
+_Last updated: 2026-06-08 (Epics A–E complete; planner shipped)_
 
 ## 1. Project identity
 
@@ -224,13 +224,13 @@ The LLM can recommend actions, but the deterministic Ultraworker state machine d
 
 ## 8. Agent roles
 
-### Planner
+### Planner ✅ (Epic E, shipped 2026-06-08)
 
-Creates the investigation strategy, scope, constraints, expected artifacts, initial task graph, and evidence policy.
+Creates the investigation strategy, scope, constraints, expected artifacts, initial task graph, and evidence policy. Implemented deterministically in `siftmesh_core/orchestrator/planner.py` (+ `artifact_router.py`): `siftmesh plan` writes `context/{case_brief,context_pack,investigation_plan,tool_map,assumptions}` and `tasks/TASK-*.yaml` from manifest metadata only — it proposes, it never executes.
 
-### Deep Context Agent
+### Deep Context Agent ✅ (Epic E, deterministic)
 
-Runs once near the beginning. Creates a compact context pack that explains the case type, relevant artifact families, tool usage guidelines, and likely investigation angles.
+Runs once near the beginning. Creates a compact context pack that explains the case type, relevant artifact families, tool usage guidelines, and likely investigation angles. Deterministic builder in `orchestrator/deep_context.py`; an optional LLM enrichment pass is deferred to the Epic F agent adapter.
 
 ### Ultraworker
 

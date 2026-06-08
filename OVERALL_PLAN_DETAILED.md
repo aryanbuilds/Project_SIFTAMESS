@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-04_
+_Last updated: 2026-06-08 (Phases 1–5 / Epics A–E complete)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -846,17 +846,21 @@ Registry real backend (regipy, in-process)
 tool call logging
 ```
 
-### Day 5: Plan and task generation
+### Day 5: Plan and task generation ✅ COMPLETE (Epic E, 2026-06-08)
 
 Deliver:
 
 ```text
-plan command
-case brief
-investigation plan
-initial task contracts
-review-only mode foundation
+plan command                  # siftmesh plan RUN_DIR [--review-only] (real, deterministic)
+case brief                    # context/case_brief.md
+investigation plan            # context/investigation_plan.yaml (typed InvestigationPlan)
+initial task contracts        # tasks/TASK-*.yaml (one per actionable artifact + timeline)
+review-only mode foundation   # --review-only flag (engine-stop enforcement -> Epic H)
 ```
+
+Also delivered: `context/{context_pack,tool_map,assumptions}.md`, `orchestrator/artifact_router.py`
+(family→tool router), `workflows/windows_initial_triage.yaml`. Planner reads only manifest metadata
+(privilege separation). See PLAN/04 "EPIC E DONE".
 
 ### Day 6: Dispatch and collect
 

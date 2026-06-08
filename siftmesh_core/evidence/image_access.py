@@ -69,6 +69,15 @@ class ExtractedFile:
     size_bytes: int
 
 
+@dataclass(frozen=True)
+class ExtractionFailure:
+    """One artifact that could not be extracted (e.g. corrupt NTFS compression in image)."""
+
+    key: str
+    ntfs_path: str
+    error: str
+
+
 def _require(tool: str) -> str:
     """Resolve a TSK binary on PATH or fail closed."""
     found = shutil.which(tool)
@@ -182,6 +191,7 @@ def extract_inode(
         )
     if proc.returncode != 0:
         err = proc.stderr.decode("utf-8", "replace").strip()
+        dest.unlink(missing_ok=True)  # drop the partial/corrupt output — never keep garbage
         raise RuntimeError(f"icat failed for inode {inode}: {err or 'non-zero exit'}")
     return dest
 
@@ -200,44 +210,57 @@ def _record(key: str, ntfs_path: str, inode: str, dest: Path) -> ExtractedFile:
     )
 
 
+def _extract_one(
+    image: Path, offset: int, key: str, ntfs_path: str, inode: str, dest: Path
+) -> tuple[ExtractedFile | None, ExtractionFailure | None]:
+    """Extract one known-inode file. A corrupt file is recorded as a failure, never fatal."""
+    try:
+        extract_inode(image, offset, inode, dest)
+    except RuntimeError as exc:
+        return None, ExtractionFailure(key=key, ntfs_path=ntfs_path, error=str(exc))
+    return _record(key, ntfs_path, inode, dest), None
+
+
 def _extract_file(
     image: Path, offset: int, key: str, ntfs_path: str, dest_dir: Path
-) -> ExtractedFile | None:
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
     inode = find_inode(image, offset, ntfs_path)
     if inode is None:
-        return None
-    dest = dest_dir / _safe_name(ntfs_path)
-    extract_inode(image, offset, inode, dest)
-    return _record(key, ntfs_path, inode, dest)
+        return [], []
+    ok, fail = _extract_one(image, offset, key, ntfs_path, inode, dest_dir / _safe_name(ntfs_path))
+    return ([ok] if ok else []), ([fail] if fail else [])
 
 
 def _extract_glob(
     image: Path, offset: int, key: str, dir_path: str, dest_dir: Path
-) -> list[ExtractedFile]:
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
     dir_inode = find_inode(image, offset, dir_path)
     if dir_inode is None:
-        return []
-    out: list[ExtractedFile] = []
+        return [], []
+    ok: list[ExtractedFile] = []
+    failed: list[ExtractionFailure] = []
     sub = dest_dir / _safe_name(Path(dir_path).name)
     for kind, name, inode in list_dir(image, offset, dir_inode):
         if kind != "r" or not name.lower().endswith(".pf"):
             continue
-        dest = sub / _safe_name(name)
-        try:
-            extract_inode(image, offset, inode, dest)
-        except RuntimeError:
-            continue
-        out.append(_record(key, f"{dir_path}/{name}", inode, dest))
-    return out
+        one, fail = _extract_one(
+            image, offset, key, f"{dir_path}/{name}", inode, sub / _safe_name(name)
+        )
+        if one:
+            ok.append(one)
+        if fail:
+            failed.append(fail)
+    return ok, failed
 
 
 def _extract_user_hives(
     image: Path, offset: int, key: str, users_dir: str, dest_dir: Path
-) -> list[ExtractedFile]:
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
     users_inode = find_inode(image, offset, users_dir)
     if users_inode is None:
-        return []
-    out: list[ExtractedFile] = []
+        return [], []
+    ok: list[ExtractedFile] = []
+    failed: list[ExtractionFailure] = []
     sub = dest_dir / "user_hives"
     for kind, name, _inode in list_dir(image, offset, users_inode):
         if kind != "d" or name in (".", "..", "Public", "Default", "All Users"):
@@ -246,13 +269,14 @@ def _extract_user_hives(
         hive_inode = find_inode(image, offset, hive_path)
         if hive_inode is None:
             continue
-        dest = sub / f"{_safe_name(name)}_NTUSER.DAT"
-        try:
-            extract_inode(image, offset, hive_inode, dest)
-        except RuntimeError:
-            continue
-        out.append(_record(key, hive_path, hive_inode, dest))
-    return out
+        one, fail = _extract_one(
+            image, offset, key, hive_path, hive_inode, sub / f"{_safe_name(name)}_NTUSER.DAT"
+        )
+        if one:
+            ok.append(one)
+        if fail:
+            failed.append(fail)
+    return ok, failed
 
 
 def extract_artifacts(
@@ -261,30 +285,35 @@ def extract_artifacts(
     dest_dir: Path,
     offset: int | None = None,
     keys: frozenset[str] | None = None,
-) -> list[ExtractedFile]:
-    """Extract the curated artifacts (or a subset by ``keys``) from ``image`` into ``dest_dir``.
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
+    """Extract the curated artifacts (or a subset) from ``image`` into ``dest_dir``.
 
+    Returns ``(extracted, failed)``. A single unreadable artifact — e.g. an NTFS-compressed
+    file that is corrupt in the image (LZNT1 decompression fails identically across TSK,
+    ntfs-3g, and libfsntfs) — is recorded in ``failed`` and never aborts the whole run.
+    Missing artifacts are skipped; a missing TSK binary fails closed via the primitives.
     ``dest_dir`` must already be a path the caller validated with ``safe_write_path``.
-    Missing artifacts are skipped (a Windows box may lack a PowerShell-Operational log);
-    a missing TSK binary fails closed via the primitives above.
     """
     image = Path(image)
     dest_dir.mkdir(parents=True, exist_ok=True)
     off = offset if offset is not None else resolve_offset(image)
     results: list[ExtractedFile] = []
+    failures: list[ExtractionFailure] = []
     for key, kind, path in ARTIFACT_MAP:
         if keys is not None and key not in keys:
             continue
         if kind == "file":
-            one = _extract_file(image, off, key, path, dest_dir)
-            if one is not None:
-                results.append(one)
+            ok, fail = _extract_file(image, off, key, path, dest_dir)
         elif kind == "glob":
-            results.extend(_extract_glob(image, off, key, path, dest_dir))
+            ok, fail = _extract_glob(image, off, key, path, dest_dir)
         elif kind == "userhive":
-            results.extend(_extract_user_hives(image, off, key, path, dest_dir))
+            ok, fail = _extract_user_hives(image, off, key, path, dest_dir)
         elif kind == "mft":
-            dest = dest_dir / "MFT"
-            extract_inode(image, off, path, dest)
-            results.append(_record(key, "/$MFT", path, dest))
-    return results
+            one, one_fail = _extract_one(image, off, key, "/$MFT", path, dest_dir / "MFT")
+            ok = [one] if one else []
+            fail = [one_fail] if one_fail else []
+        else:
+            ok, fail = [], []
+        results.extend(ok)
+        failures.extend(fail)
+    return results, failures

@@ -92,14 +92,43 @@ def test_extract_artifacts_orchestration(monkeypatch: pytest.MonkeyPatch, tmp_pa
     monkeypatch.setattr(image_access, "extract_inode", fake_extract_inode)
     monkeypatch.setattr(image_access, "list_dir", lambda *a, **k: [])
 
-    files = image_access.extract_artifacts(Path("/rocba.e01"), dest_dir=dest, offset=0)
+    files, failed = image_access.extract_artifacts(Path("/rocba.e01"), dest_dir=dest, offset=0)
     keys = {f.key for f in files}
     assert "security_evtx" in keys  # single-file path
     assert "mft" in keys  # $MFT (inode 0) always extracted
+    assert failed == []
     for f in files:
         assert f.dest.is_file()
         assert len(f.sha256) == 64
         assert f.size_bytes > 0
+
+
+def test_extract_artifacts_records_failures_and_continues(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A corrupt file (icat error) is recorded in `failed`; other artifacts still extract."""
+    dest = tmp_path / "extracted"
+    monkeypatch.setattr(image_access, "resolve_offset", lambda image: 0)
+    monkeypatch.setattr(
+        image_access,
+        "find_inode",
+        lambda image, offset, path, **kw: "65-128-1" if path.endswith("Security.evtx") else None,
+    )
+    monkeypatch.setattr(image_access, "list_dir", lambda *a, **k: [])
+
+    def flaky_extract(image: Path, offset: int, inode: str, dest_path: Path, **kw: object) -> Path:
+        # $MFT (inode "0") succeeds; the compressed Security.evtx "fails" like real corruption.
+        if inode == "0":
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            dest_path.write_bytes(b"MFTDATA")
+            return dest_path
+        raise RuntimeError("icat failed: ntfs_uncompress_compunit corrupt")
+
+    monkeypatch.setattr(image_access, "extract_inode", flaky_extract)
+    files, failed = image_access.extract_artifacts(Path("/rocba.e01"), dest_dir=dest, offset=0)
+    assert {f.key for f in files} == {"mft"}  # MFT survived
+    assert [f.key for f in failed] == ["security_evtx"]  # the corrupt file was recorded
+    assert "corrupt" in failed[0].error
 
 
 def test_fixed_argv_uses_no_shell(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

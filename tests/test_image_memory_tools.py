@@ -55,11 +55,13 @@ def test_extract_artifacts_from_image_audited(
     monkeypatch.setattr(image_access, "resolve_offset", lambda image: 0)
     monkeypatch.setattr(image_access, "list_partitions", lambda image: [])
 
-    def fake_extract(image: Path, *, dest_dir: Path, offset: int, keys: object) -> list[object]:
+    def fake_extract(
+        image: Path, *, dest_dir: Path, offset: int, keys: object
+    ) -> tuple[list[object], list[object]]:
         dest_dir.mkdir(parents=True, exist_ok=True)
         out = dest_dir / "Security.evtx"
         out.write_bytes(b"REAL-EXTRACTED-EVTX")
-        return [
+        files = [
             image_access.ExtractedFile(
                 key="security_evtx",
                 ntfs_path="/Windows/System32/winevt/Logs/Security.evtx",
@@ -69,6 +71,14 @@ def test_extract_artifacts_from_image_audited(
                 size_bytes=out.stat().st_size,
             )
         ]
+        failures = [
+            image_access.ExtractionFailure(
+                key="system_evtx",
+                ntfs_path="/Windows/System32/winevt/Logs/System.evtx",
+                error="icat failed: corrupt",
+            )
+        ]
+        return files, failures
 
     monkeypatch.setattr(image_access, "extract_artifacts", fake_extract)
 
@@ -77,6 +87,8 @@ def test_extract_artifacts_from_image_audited(
     )
     assert result.status == "success"
     assert result.extracted_count == 1
+    assert result.failed_count == 1  # a corrupt artifact is reported, not silently dropped
+    assert result.failed[0]["key"] == "system_evtx"
     assert result.backend == "sift_lane"
     assert result.tool_name == "extract_artifacts_from_image"
 
@@ -189,3 +201,31 @@ def test_analyze_memory_symbol_failure_is_error_not_fake(
     assert result.status == "error"
     assert result.error_code == "vol_symbol_resolution_failed"
     assert result.process_count == 0  # no fabricated rows
+
+
+def test_analyze_memory_passes_symbol_dirs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    evidence = tmp_path / "extracted"
+    evidence.mkdir()
+    (evidence / "rocba.mem").write_bytes(b"PAGEDU64" + b"\x00" * 64)
+    run = new_run_dir(base=tmp_path / "case_runs")
+    seen: list[list[str]] = []
+    monkeypatch.setattr(memory_tools.shutil, "which", lambda name: "/bin/sh")
+
+    class _P:
+        def __init__(self, returncode: int, stdout: str) -> None:
+            self.returncode, self.stdout, self.stderr = returncode, stdout, ""
+
+    def fake_run(argv: list[str], **kwargs: object) -> _P:
+        seen.append(argv)
+        return _P(0, json.dumps(_VOL_ROWS.get(argv[-1], [])))
+
+    monkeypatch.setattr(memory_tools.subprocess, "run", fake_run)
+    analyze_memory(
+        run.root,
+        memory_artifact="rocba.mem",
+        evidence_root=evidence,
+        plugins=["pslist"],
+        symbol_dirs="/tmp/symcache",
+    )
+    # Every vol invocation carries the writable symbol cache (fixed-argv pair).
+    assert all("--symbol-dirs" in argv and "/tmp/symcache" in argv for argv in seen)

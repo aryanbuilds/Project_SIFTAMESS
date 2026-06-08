@@ -58,6 +58,9 @@ class SiftmeshSettings(BaseSettings):
     # closed when actually used — never faked.
     extraction_tools_enabled: bool = False
     vol_path: str = "/opt/volatility3/bin/vol"
+    # Writable Volatility 3 symbol cache (its install dir is usually read-only, so vol
+    # cannot cache downloaded PDB symbols there). None => vol uses its own default.
+    vol_symbol_dirs: str | None = None
 
     @classmethod
     def settings_customise_sources(

@@ -35,6 +35,8 @@ class ImageExtractionResult(ToolResult):
     partition_count: int = 0
     extracted_count: int = 0
     extracted: list[dict[str, Any]] = Field(default_factory=list)
+    failed_count: int = 0
+    failed: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def extract_artifacts_from_image(
@@ -61,7 +63,7 @@ def extract_artifacts_from_image(
         offset = image_access.resolve_offset(image_path)
         partitions = image_access.list_partitions(image_path)
         try:
-            files = image_access.extract_artifacts(
+            files, failures = image_access.extract_artifacts(
                 image_path, dest_dir=dest_dir, offset=offset, keys=key_filter
             )
         except BackendUnavailableError:
@@ -85,6 +87,10 @@ def extract_artifacts_from_image(
                     "size_bytes": f.size_bytes,
                 }
                 for f in files
+            ],
+            "failed_count": len(failures),
+            "failed": [
+                {"key": f.key, "ntfs_path": f.ntfs_path, "error": f.error} for f in failures
             ],
         }
 

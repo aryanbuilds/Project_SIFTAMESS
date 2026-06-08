@@ -81,10 +81,18 @@ def _vol_binary(vol_path: str | None) -> str:
 
 
 def _run_plugin(
-    vol_exe: str, memory: Path, plugin: str, *, offline: bool, timeout: int
+    vol_exe: str,
+    memory: Path,
+    plugin: str,
+    *,
+    offline: bool,
+    timeout: int,
+    symbol_dirs: str | None = None,
 ) -> tuple[list[dict[str, Any]] | None, str]:
     """Run one vol plugin with the JSON renderer → (rows, raw_stdout). rows None on failure."""
     argv = [vol_exe, "-r", "json", "-f", str(memory)]
+    if symbol_dirs:  # a writable symbol cache (vol can't write its read-only install dir)
+        argv += ["--symbol-dirs", symbol_dirs]
     if offline:
         argv.append("--offline")
     argv.append(plugin)
@@ -153,6 +161,7 @@ def analyze_memory(
     evidence_root: Path | str,
     plugins: list[str] | None = None,
     vol_path: str | None = None,
+    symbol_dirs: str | None = None,
     offline: bool = False,
     timeout: int = _DEFAULT_TIMEOUT,
     backend_mode: str = "sift_lane",
@@ -169,7 +178,12 @@ def analyze_memory(
         vol_exe = _vol_binary(vol_path)
         # Symbol gate: windows.info must succeed, else nothing can be analysed — fail closed.
         info_rows, _info_raw = _run_plugin(
-            vol_exe, memory_path, "windows.info", offline=offline, timeout=timeout
+            vol_exe,
+            memory_path,
+            "windows.info",
+            offline=offline,
+            timeout=timeout,
+            symbol_dirs=symbol_dirs,
         )
         if info_rows is None:
             raise RecoverableToolError(
@@ -190,7 +204,12 @@ def analyze_memory(
             if plugin == "windows.info":
                 continue
             rows, plugin_raw = _run_plugin(
-                vol_exe, memory_path, plugin, offline=offline, timeout=timeout
+                vol_exe,
+                memory_path,
+                plugin,
+                offline=offline,
+                timeout=timeout,
+                symbol_dirs=symbol_dirs,
             )
             if rows is None:
                 failed.append(plugin)

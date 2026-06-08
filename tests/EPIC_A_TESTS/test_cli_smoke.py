@@ -36,15 +36,13 @@ EXPECTED_COMMANDS = [
 ]
 
 COMMAND_SMOKE_CASES = [
-    # init-case (Epic B), plan (Epic E), and dispatch/collect (Epic F) are no longer
-    # stubs — they have real behaviour covered by their per-epic test folders.
-    (("critique", "RUN-001"), "critique RUN-001"),
+    # init-case (B), plan (E), dispatch/collect (F), and critique/retry (G) are no
+    # longer stubs — they have real behaviour covered by their per-epic test folders.
     (("report", "RUN-001"), "report RUN-001"),
     (("replay", "RUN-001"), "replay RUN-001"),
     (("run", "case01", "--evidence", "evidence"), "run case01"),
     (("resume", "RUN-001"), "resume RUN-001"),
     (("status", "RUN-001"), "status RUN-001"),
-    (("retry", "TASK-001"), "retry TASK-001"),
     (("approve", "RUN-001", "--gate", "plan"), "approve RUN-001"),
     (("reject", "RUN-001", "--gate", "retry"), "reject RUN-001"),
     (("tasks", "list", "RUN-001"), "tasks list RUN-001"),

@@ -39,3 +39,8 @@ class CriticVerdict(StrictModel):
     verdict: CriticVerdictType
     reasons: list[str] = Field(default_factory=list)
     affected_claim_ids: list[str] = Field(default_factory=list)
+    # Epic G persistence — optional so the bare (verdict + reasons) form still validates.
+    # The critic fills all three when it writes a verdict to audit/critic_verdicts.jsonl.
+    task_id: str | None = None
+    verdict_id: str | None = None  # deterministic VERDICT-NNN from ledger length
+    decided_utc: UtcDateTime | None = None

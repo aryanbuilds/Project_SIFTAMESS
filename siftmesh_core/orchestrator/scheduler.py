@@ -123,6 +123,8 @@ def dispatch_run(
     evidence_override: Path | str | None = None,
     task_id: str | None = None,
     agent_profile: str | None = None,
+    attempt: int = 1,
+    critic_feedback: tuple[str, ...] = (),
 ) -> list[ResultRef]:
     """Execute the run's task contracts (or one) sequentially; return their ResultRefs."""
     evidence_root = Path(evidence_override) if evidence_override else recover_evidence_root(run)
@@ -144,7 +146,12 @@ def dispatch_run(
         profile = agent_profile or contract.assigned_agent_profile
         adapter = get_adapter(profile, settings=settings)
         ctx = AdapterContext(
-            run=run, evidence_root=evidence_root, settings=settings, requested_profile=profile
+            run=run,
+            evidence_root=evidence_root,
+            settings=settings,
+            requested_profile=profile,
+            attempt=attempt,
+            critic_feedback=critic_feedback,
         )
         try:
             ref = adapter.run(contract, ctx)

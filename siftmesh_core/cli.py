@@ -218,9 +218,39 @@ def collect(
 
 
 @app.command()
-def critique(run_dir: str) -> None:
-    """Run the critic over collected claims."""
-    print(f"critique {run_dir}")
+def critique(
+    run_dir: str,
+    evidence: Annotated[
+        str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
+    ] = None,
+) -> None:
+    """Validate collected claims; emit one critic verdict per task; write ledgers."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.ledgers.jsonl_ledger import LedgerCorruptionError
+    from siftmesh_core.orchestrator.critic import critique_run
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        verdicts = critique_run(
+            RunPaths(root=root), settings=load_settings(), evidence_root=evidence
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+        LedgerCorruptionError,
+    ) as exc:
+        typer.echo(f"critique failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"critique complete: {len(verdicts)} verdict(s)")
+    for v in verdicts:
+        typer.echo(f"  {v.task_id}: {v.verdict} ({len(v.affected_claim_ids)} claim(s))")
 
 
 @app.command()
@@ -340,9 +370,60 @@ def doctor(
 
 
 @app.command()
-def retry(task_id: str) -> None:
-    """Retry a task -> `siftmesh retry TASK-003`."""
-    print(f"retry {task_id}")
+def retry(run_dir: str, task_id: str) -> None:
+    """Re-critique one task; if DECIDE says retry, tighten its contract + re-dispatch."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.orchestrator.critic import critique_run, write_retry
+    from siftmesh_core.orchestrator.decide import decide
+    from siftmesh_core.orchestrator.scheduler import dispatch_run
+    from siftmesh_core.run_dir import RunPaths
+    from siftmesh_core.schemas.task import TaskContract
+    from siftmesh_core.schemas.task_result import TaskResult
+    from siftmesh_core.schemas.yaml_io import read_yaml_model
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
+        settings = load_settings()
+        result_path = run.result_path(task_id)
+        if not result_path.is_file():
+            raise FileNotFoundError(f"no result for {task_id} at {result_path}")
+        result = TaskResult.model_validate_json(result_path.read_text(encoding="utf-8"))
+        contract = read_yaml_model(TaskContract, run.tasks / f"{task_id}.yaml")
+        verdicts = {v.task_id: v for v in critique_run(run, settings=settings)}
+        verdict = verdicts.get(task_id)
+        if verdict is None:
+            raise FileNotFoundError(f"no critic verdict for {task_id}")
+        decision = decide(
+            verdict.verdict,
+            attempt=result.attempt,
+            max_attempts=contract.retry_policy.max_attempts,
+            max_iterations=settings.caps.max_iterations,
+        )
+        if decision.action != "retry":
+            typer.echo(f"retry refused for {task_id}: decide={decision.action} — {decision.reason}")
+            raise typer.Exit(code=1)
+        write_retry(run, contract, from_attempt=result.attempt, cause=verdict.verdict)
+        refs = dispatch_run(
+            run,
+            settings=settings,
+            task_id=task_id,
+            attempt=result.attempt + 1,
+            critic_feedback=tuple(verdict.reasons),
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+    ) as exc:
+        typer.echo(f"retry failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"retry complete: {task_id} attempt {result.attempt + 1} -> {refs[0].status}")
 
 
 @app.command()

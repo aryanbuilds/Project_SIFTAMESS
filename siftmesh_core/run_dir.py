@@ -132,6 +132,21 @@ class RunPaths:
         return self.claims / "injection_alerts.jsonl"
 
     @property
+    def unsupported_claims(self) -> Path:
+        """Unsupported-claim ledger (mirrors claim_ledger's internal path)."""
+        return self.claims / "unsupported_claims.jsonl"
+
+    @property
+    def contradiction_ledger(self) -> Path:
+        """Contradiction records the critic detected (G3)."""
+        return self.claims / "contradiction_ledger.jsonl"
+
+    @property
+    def confidence_changes(self) -> Path:
+        """Audited confidence downgrades (G3). One ConfidenceChange per line."""
+        return self.claims / "confidence_changes.jsonl"
+
+    @property
     def tool_calls(self) -> Path:
         return self.audit / "tool_calls.jsonl"
 
@@ -142,8 +157,13 @@ class RunPaths:
 
     @property
     def retries(self) -> Path:
-        """Retry history ledger (written by Epic G; accessor added in F)."""
+        """Retry history ledger (G5). One RetryRecord per line."""
         return self.audit / "retries.jsonl"
+
+    @property
+    def critic_verdicts(self) -> Path:
+        """Per-task critic verdicts (G1). One CriticVerdict per line."""
+        return self.audit / "critic_verdicts.jsonl"
 
     @property
     def orchestration_events(self) -> Path:

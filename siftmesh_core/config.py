@@ -78,6 +78,10 @@ class SiftmeshSettings(BaseSettings):
     # Whole-agent-invocation wall-clock (F7/F8); distinct from caps.max_tool_runtime_seconds.
     agent_timeout_seconds: int = 300
 
+    # Optional Layer-2 LLM adversarial critic (Epic G8). Off by default; the Layer-1
+    # deterministic critic is always sufficient. The real pass needs the F8 agent.
+    llm_critic_enabled: bool = False
+
     @classmethod
     def settings_customise_sources(
         cls,

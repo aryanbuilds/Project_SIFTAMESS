@@ -13,6 +13,7 @@ Test modules live under `EPIC_<X>_TESTS/`, matching the epic that owns the code 
 | `EPIC_D_TESTS/` | D | typed MCP gateway, backends (real + sift_lane EZ Tools), evtx/prefetch/registry/timeline, image + memory access, protocol-sift, validation, no-volatility-import guard |
 | `EPIC_E_TESTS/` | E | deterministic planner: artifact router, investigation-plan schema, context pack + datamark, case brief/assumptions, tool map, task contracts, `plan` CLI, review-only, byte-stability |
 | `EPIC_F_TESTS/` | F | executor adapters: deterministic real-tool executor (real-fixture claims), spotlight + injection alerts, `dispatch`/`collect`, agent_calls audit, generic-shell + claude/opencode adapters (mocked), genuine retry triggers |
+| `EPIC_G_TESTS/` | G | critic & self-correction: pure `decide()` truth table, grade-claim refactor, structural verdicts + ledgers, contradiction/confidence/injection consequence, `critique`/`retry` CLI, governance self-correction sequence (crafted; live human-gated) |
 
 ## Running
 

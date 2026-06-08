@@ -17,7 +17,14 @@ from siftmesh_core.schemas.agent_call import AgentCall, AgentCallStatus
 from siftmesh_core.schemas.agent_profile import AgentProfile, CostClass, ModelTier
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType, ToolCall
 from siftmesh_core.schemas.claim import Claim, ClaimStatus, validate_claim_evidence
+from siftmesh_core.schemas.critic_records import (
+    ConfidenceChange,
+    ContradictionRecord,
+    ContradictionRule,
+    RetryRecord,
+)
 from siftmesh_core.schemas.custody import CustodyEvent, CustodyEventType
+from siftmesh_core.schemas.decision import Decision, DecisionAction
 from siftmesh_core.schemas.evidence import EvidenceFile, EvidenceManifest
 from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
@@ -65,6 +72,10 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     TaskResult,
     AgentCall,
     InjectionAlert,
+    ContradictionRecord,
+    ConfidenceChange,
+    RetryRecord,
+    Decision,
 )
 
 
@@ -93,11 +104,16 @@ __all__ = [
     "CapabilityCheck",
     "Claim",
     "ClaimStatus",
+    "ConfidenceChange",
+    "ContradictionRecord",
+    "ContradictionRule",
     "CostClass",
     "CriticVerdict",
     "CriticVerdictType",
     "CustodyEvent",
     "CustodyEventType",
+    "Decision",
+    "DecisionAction",
     "EvidenceFile",
     "EvidenceManifest",
     "GateName",
@@ -110,6 +126,7 @@ __all__ = [
     "PlanStepKind",
     "ProtocolSiftCapabilityMap",
     "RetryPolicy",
+    "RetryRecord",
     "RunState",
     "RunStateName",
     "SafetyPolicy",

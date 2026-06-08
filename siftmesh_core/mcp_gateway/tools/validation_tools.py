@@ -50,6 +50,49 @@ def _field(claim: Claim | Mapping[str, Any], name: str) -> Any:
     return getattr(claim, name) if isinstance(claim, Claim) else claim.get(name)
 
 
+def grade_claim_against_run(
+    run_root: Path | str,
+    claim: Claim | Mapping[str, Any],
+    *,
+    evidence_root: Path | str | None = None,
+) -> list[str]:
+    """Evidence-discipline violations for a claim vs the run's manifest + tool ledger.
+
+    Empty list = clean. This is the **non-audited** core the D9 tool wraps — the
+    Critic (Epic G) calls it directly per claim so grading does NOT spam
+    ``tool_calls.jsonl`` with a TOOL-NNN per claim. ``evidence_root`` is accepted for
+    signature parity (the manifest already lives under the run dir).
+    """
+    problems = list(grade_claim_schema(claim))  # C2 grader: accepts Claim or mapping
+    if _field(claim, "status") != "unsupported":
+        hashes = _manifest_hashes(run_root)
+        results = {r.tool_call_id: r for r in read_tool_results(run_root)}
+        artifact = _field(claim, "source_artifact")
+        source_sha256 = _field(claim, "source_sha256")
+        tool_call_id = _field(claim, "tool_call_id")
+        if artifact is not None:
+            if artifact in hashes:
+                # chain of custody to an original evidence artifact
+                if source_sha256 and hashes[artifact] != source_sha256:
+                    problems.append(f"source_sha256 mismatch for {artifact}")
+            else:
+                # a derived/aggregate source (e.g. build_timeline's "timeline") must match
+                # the provenance recorded by its own audited tool call.
+                tr = results.get(tool_call_id) if tool_call_id is not None else None
+                if tr is None:
+                    problems.append(f"source_artifact not in evidence manifest: {artifact}")
+                elif artifact != tr.source_artifact:
+                    problems.append(
+                        f"source_artifact {artifact!r} not in manifest and not produced "
+                        f"by {tool_call_id}"
+                    )
+                elif source_sha256 and tr.source_sha256 != source_sha256:
+                    problems.append(f"source_sha256 mismatch for derived {artifact}")
+        if tool_call_id is not None and tool_call_id not in results:
+            problems.append(f"tool_call_id not found in audit: {tool_call_id}")
+    return problems
+
+
 def validate_claim_evidence(
     run_root: Path | str,
     claim: Claim | Mapping[str, Any],
@@ -65,21 +108,7 @@ def validate_claim_evidence(
     claim_id = _field(claim, "claim_id") or "<unknown>"
 
     def produce() -> dict[str, Any]:
-        problems = list(grade_claim_schema(claim))  # C2 grader: accepts Claim or mapping
-        if _field(claim, "status") != "unsupported":
-            hashes = _manifest_hashes(run_root)
-            artifact = _field(claim, "source_artifact")
-            source_sha256 = _field(claim, "source_sha256")
-            if artifact is not None:
-                if artifact not in hashes:
-                    problems.append(f"source_artifact not in evidence manifest: {artifact}")
-                elif source_sha256 and hashes[artifact] != source_sha256:
-                    problems.append(f"source_sha256 mismatch for {artifact}")
-            tool_call_id = _field(claim, "tool_call_id")
-            if tool_call_id is not None:
-                known = {r.tool_call_id for r in read_tool_results(run_root)}
-                if tool_call_id not in known:
-                    problems.append(f"tool_call_id not found in audit: {tool_call_id}")
+        problems = grade_claim_against_run(run_root, claim, evidence_root=evidence_root)
         return {"checked_claim_id": claim_id, "valid": not problems, "problems": problems}
 
     return run_tool(

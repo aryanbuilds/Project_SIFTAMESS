@@ -24,6 +24,11 @@ class DerivedArtifact:
     source_sha256: str
     tool_call_id: str
     derived_sha256: str | None = None
+    # Optional provenance when the derived file was extracted from inside a disk
+    # image (Epic D deepening). Defaulting to None keeps older records loadable.
+    extraction_source_path: str | None = None  # NTFS path inside the image
+    extraction_inode: str | None = None  # TSK metadata address (e.g. "65-128-1")
+    extraction_method: str | None = None  # e.g. "sleuthkit_icat"
 
 
 def _registry_path(run_root: Path | str, evidence_root: Path | str | None = None) -> Path:

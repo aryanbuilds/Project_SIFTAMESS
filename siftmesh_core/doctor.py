@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 import platform
+import shutil
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -41,6 +42,16 @@ FORENSIC_DEPS: tuple[tuple[str, str], ...] = (
     ("evtx", "EVTX (pyevtx-rs)"),
     ("pyscca", "Prefetch (libscca)"),
     ("mft", "MFT (pymft-rs)"),
+)
+
+# Optional SIFT-lane host CLIs (Epic D deepening: disk-image extraction + memory
+# triage). Missing => WARN, not a failure; the tool that needs one fails closed.
+SIFT_LANE_TOOLS: tuple[tuple[str, str], ...] = (
+    ("mmls", "Sleuthkit mmls (partitions)"),
+    ("fls", "Sleuthkit fls (dir walk)"),
+    ("icat", "Sleuthkit icat (file extract)"),
+    ("ifind", "Sleuthkit ifind (path→inode)"),
+    ("7z", "7-Zip (memory decompress)"),
 )
 
 
@@ -100,12 +111,27 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
 
-    allowlist_ok = len(ALLOWED_TOOLS) == 8 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
+    allowlist_ok = len(ALLOWED_TOOLS) == 10 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
     checks.append(
         Check(
             OK if allowlist_ok else FAIL,
             "gateway tool allowlist",
             f"{len(ALLOWED_TOOLS)} tools, no forbidden",
+        )
+    )
+    # SIFT-lane host CLIs (WARN-only): present on a SANS SIFT host, absent on a clean
+    # dev/CI box. The image/memory tools fail closed if one is actually missing.
+    for binary, human in SIFT_LANE_TOOLS:
+        present = shutil.which(binary) is not None
+        checks.append(
+            Check(OK if present else WARN, f"sift-lane: {human}", binary if present else "absent")
+        )
+    vol_present = shutil.which("vol") is not None or Path(settings.vol_path).exists()
+    checks.append(
+        Check(
+            OK if vol_present else WARN,
+            "sift-lane: Volatility 3 (vol)",
+            settings.vol_path if vol_present else "absent (subprocess-only, never imported)",
         )
     )
     # Safety posture (CLAUDE.md §11) read from config.

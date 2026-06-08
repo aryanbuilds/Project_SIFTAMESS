@@ -9,7 +9,9 @@ allowlist is testable without building a server.
 
 from __future__ import annotations
 
-# The complete, fixed set of tools the gateway may expose (CLAUDE.md §7).
+# The complete, fixed set of tools the gateway may expose (CLAUDE.md §7). The last
+# two were added by a governed expansion (Epic D deepening) for real disk-image
+# evidence access and memory triage — both real-tool backed, audited, fail-closed.
 ALLOWED_TOOLS: frozenset[str] = frozenset(
     {
         "compute_hash_manifest",
@@ -20,6 +22,8 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "extract_registry_run_keys",
         "build_timeline",
         "validate_claim_evidence",
+        "extract_artifacts_from_image",
+        "analyze_memory",
     }
 )
 

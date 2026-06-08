@@ -26,6 +26,11 @@ from siftmesh_core.mcp_gateway.tools.evtx_tools import (
     parse_evtx_powershell,
     parse_evtx_security,
 )
+from siftmesh_core.mcp_gateway.tools.image_tools import (
+    ImageExtractionResult,
+    extract_artifacts_from_image,
+)
+from siftmesh_core.mcp_gateway.tools.memory_tools import MemoryAnalysisResult, analyze_memory
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
@@ -85,6 +90,25 @@ def _validate_claim_evidence(
     return validate_claim_evidence(run_root, claim, evidence_root=evidence_root)
 
 
+def _extract_artifacts_from_image(
+    run_root: str, image_artifact: str, evidence_root: str, keys: list[str] | None = None
+) -> ImageExtractionResult:
+    return extract_artifacts_from_image(
+        run_root, image_artifact=image_artifact, evidence_root=evidence_root, keys=keys
+    )
+
+
+def _analyze_memory(
+    run_root: str,
+    memory_artifact: str,
+    evidence_root: str,
+    plugins: list[str] | None = None,
+) -> MemoryAnalysisResult:
+    return analyze_memory(
+        run_root, memory_artifact=memory_artifact, evidence_root=evidence_root, plugins=plugins
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -96,6 +120,8 @@ def tool_adapters() -> dict[str, Any]:
         "extract_registry_run_keys": _extract_registry_run_keys,
         "build_timeline": _build_timeline,
         "validate_claim_evidence": _validate_claim_evidence,
+        "extract_artifacts_from_image": _extract_artifacts_from_image,
+        "analyze_memory": _analyze_memory,
     }
 
 

@@ -32,6 +32,13 @@ from siftmesh_core.schemas.tool_result import ToolResult, ToolStatus
 
 ToolResultT = TypeVar("ToolResultT", bound=ToolResult)
 
+# Sentinel keys a ``produce()`` may put in its returned payload to emit a raw
+# byte/text artifact (e.g. a wrapped CLI's native JSON) alongside the structured
+# rows. They travel out via the payload so the ``produce()`` signature stays
+# uniform across every tool; ``run_tool`` pops them before building the result.
+_RAW_OUTPUT_KEY = "_raw_output"  # value: bytes | str
+_RAW_SUFFIX_KEY = "_raw_suffix"  # value: str, default "raw.json"
+
 
 class RecoverableToolError(RuntimeError):
     """A recoverable tool failure (logged as status=error; orchestrator may retry)."""
@@ -59,6 +66,22 @@ def _write_structured(
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
     return rel.as_posix()
+
+
+def _write_raw(
+    run_root: Path | str,
+    raw_rel: str,
+    raw: bytes | str,
+    *,
+    evidence_root: Path | str | None,
+) -> None:
+    """Write a tool's raw output (a wrapped CLI's native bytes/text) under ``results/``."""
+    target = safe_write_path(run_root, raw_rel, evidence_root=evidence_root)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(raw, bytes):
+        target.write_bytes(raw)
+    else:
+        target.write_text(raw, encoding="utf-8")
 
 
 def run_tool(
@@ -94,9 +117,27 @@ def run_tool(
         status, error_code = "error", exc.code
     end = datetime.now(UTC)
 
+    # A tool may emit a raw byte/text artifact (e.g. a wrapped CLI's native JSON)
+    # via sentinel keys in its payload; pop them before the payload becomes result
+    # fields so they never leak into the typed model.
+    raw_output: bytes | str | None = None
+    raw_suffix = "raw.json"
+    if status == "success":
+        raw_value = payload.pop(_RAW_OUTPUT_KEY, None)
+        if raw_value is not None:
+            raw_output = raw_value
+            raw_suffix = str(payload.pop(_RAW_SUFFIX_KEY, raw_suffix))
+        else:
+            payload.pop(_RAW_SUFFIX_KEY, None)
+
     structured_path: str | None = (
         (Path("results") / f"{tool_call_id}.structured.json").as_posix()
         if status == "success" and write_structured
+        else None
+    )
+    raw_path: str | None = (
+        (Path("results") / f"{tool_call_id}.{raw_suffix}").as_posix()
+        if raw_output is not None
         else None
     )
 
@@ -113,12 +154,15 @@ def run_tool(
         "backend": backend,
         "tool_version": tool_version,
         "structured_result_path": structured_path,
+        "raw_output_path": raw_path,
         "error_code": error_code,
     }
     result = result_cls(**provenance, **(payload if status == "success" else {}))
 
     if structured_path is not None:
         _write_structured(run_root, tool_call_id, payload, evidence_root=evidence_root)
+    if raw_path is not None and raw_output is not None:
+        _write_raw(run_root, raw_path, raw_output, evidence_root=evidence_root)
 
     append_tool_result(run_root, ToolResult(**provenance), evidence_root=evidence_root)
 
@@ -140,12 +184,12 @@ def run_tool(
         evidence_root=evidence_root,
     )
 
-    if structured_path is not None:
-        written = safe_write_path(run_root, structured_path, evidence_root=evidence_root)
+    for derived_rel in (p for p in (structured_path, raw_path) if p is not None):
+        written = safe_write_path(run_root, derived_rel, evidence_root=evidence_root)
         append_derived(
             run_root,
             DerivedArtifact(
-                derived_path=structured_path,
+                derived_path=derived_rel,
                 source_artifact=source_artifact,
                 source_sha256=source_sha256,
                 tool_call_id=tool_call_id,

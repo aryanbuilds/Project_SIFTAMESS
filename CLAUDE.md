@@ -242,6 +242,19 @@ build_timeline()
 validate_claim_evidence()
 ```
 
+Governed allowlist expansion (Epic D deepening, maintainer-approved 2026-06-08) — two
+real-tool, audited, fail-closed SIFT-lane tools for real disk-image + memory evidence:
+
+```text
+extract_artifacts_from_image()   # Sleuthkit (mmls/ifind/icat/fls) on .E01/raw, fixed-argv
+analyze_memory()                 # Volatility 3 via fixed-argv subprocess (VSL: never imported)
+```
+
+The allowlist is now **exactly 10**. Adding any further tool stays a governed change
+(maintainer sign-off + this list + `registry.ALLOWED_TOOLS` + `doctor` self-check, in
+lockstep). Volatility 3 is **VSL-licensed → invoked only as an external subprocess, never
+imported** (enforced by a guard test).
+
 Every tool call must log to:
 
 ```text

@@ -53,6 +53,12 @@ class SiftmeshSettings(BaseSettings):
     allow_destructive_tools: bool = False
     caps: Caps = Field(default_factory=Caps)
 
+    # SIFT-lane host tools (Epic D deepening). Off by default; enabled for real-image
+    # runs on a SANS SIFT host. Missing tools are reported by `doctor` (WARN) and fail
+    # closed when actually used — never faked.
+    extraction_tools_enabled: bool = False
+    vol_path: str = "/opt/volatility3/bin/vol"
+
     @classmethod
     def settings_customise_sources(
         cls,

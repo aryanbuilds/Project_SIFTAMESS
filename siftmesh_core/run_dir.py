@@ -174,6 +174,16 @@ class RunPaths:
     def orchestration_events(self) -> Path:
         return self.audit / "orchestration_events.jsonl"
 
+    @property
+    def run_state(self) -> Path:
+        """Durable state-machine snapshot (H1). Overwritten atomically each transition."""
+        return self.root / "run_state.json"
+
+    @property
+    def token_budget(self) -> Path:
+        """Budget-router routing decisions (H9). One record per line."""
+        return self.audit / "token_budget.jsonl"
+
     def result_path(self, task_id: str) -> Path:
         """Per-task executor result envelope, ``results/TASK-XXX.result.json`` (F)."""
         return self.results / f"{task_id}.result.json"

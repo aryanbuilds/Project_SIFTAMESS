@@ -156,6 +156,8 @@ Required structure:
 
 ```text
 case_runs/RUN-YYYYMMDD-HHMMSS/
+  run_state.json            # Epic H: durable state-machine snapshot (atomic temp+rename)
+
   context/
     case_brief.md
     context_pack.md

@@ -30,7 +30,14 @@ from siftmesh_core.schemas.evidence import EvidenceFile, EvidenceManifest
 from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
 from siftmesh_core.schemas.protocol_sift import CapabilityCheck, ProtocolSiftCapabilityMap
-from siftmesh_core.schemas.run import GateName, GateStatus, RunState, RunStateName
+from siftmesh_core.schemas.run import (
+    GateName,
+    GateStatus,
+    PerTaskState,
+    RunMode,
+    RunState,
+    RunStateName,
+)
 from siftmesh_core.schemas.task import (
     ArtifactMode,
     InputArtifact,
@@ -59,6 +66,7 @@ _EXPORTED_MODELS: tuple[type[StrictModel], ...] = (
     ToolCall,
     CriticVerdict,
     RunState,
+    PerTaskState,
     AgentProfile,
     Workflow,
     WorkflowLimits,
@@ -125,11 +133,13 @@ __all__ = [
     "InputArtifact",
     "InvestigationPlan",
     "ModelTier",
+    "PerTaskState",
     "PlanStep",
     "PlanStepKind",
     "ProtocolSiftCapabilityMap",
     "RetryPolicy",
     "RetryRecord",
+    "RunMode",
     "RunState",
     "RunStateName",
     "SafetyPolicy",

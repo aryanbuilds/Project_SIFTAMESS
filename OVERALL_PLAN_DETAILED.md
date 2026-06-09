@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-08 (Phases 1–5 / Epics A–E complete)_
+_Last updated: 2026-06-09 (Epics A–H complete; Phase 8 `siftmesh run` state machine shipped)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -886,17 +886,21 @@ contradiction ledger
 confidence downgrade
 ```
 
-### Day 8: Full run automation
+### Day 8: Full run automation ✅ COMPLETE (Epic H, 2026-06-09)
 
 Deliver:
 
 ```text
-siftmesh run
+siftmesh run                  # one deterministic engine, four modes
 manual/guided/auto/review-only modes
-approval gates
-max iteration cap
-resume foundation
+approval gates                # plan/dispatch/retry/report + approve/reject CLI
+max iteration cap             # global iteration vs per-task attempt (distinct counters)
+resume foundation             # RunState persisted atomically -> resume/status
 ```
+
+Also delivered: `orchestrator/{state_machine,workflow_runner,ultraworker,human_gate,budget_router,run_state_store}.py`,
+`run_state.json` durable snapshot, orchestration transition audit, static budget router (H9). The REPORT
+state is the Epic-J seam (forensic report deferred). `hth.2` (derived re-ingest) remains open.
 
 ### Day 9: Agent/CAO integration
 

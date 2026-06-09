@@ -11,7 +11,7 @@ commands keep the frozen CLI surface until their epics wire the real workflows.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 import typer
 
@@ -22,6 +22,10 @@ from siftmesh_core.evidence.vault import EvidenceModifiedError
 from siftmesh_core.evidence.vault import init_case as vault_init_case
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 from siftmesh_core.protocol_sift import PROTOCOL_SIFT_SKILLS, detect_protocol_sift
+
+if TYPE_CHECKING:
+    from siftmesh_core.run_dir import RunPaths
+    from siftmesh_core.schemas.run import GateStatus, RunMode, RunState
 
 # Root app: no args -> show help (Click "no command" exits with code 2).
 app = typer.Typer(
@@ -277,6 +281,44 @@ def replay(run_dir: str) -> None:
     print(f"replay {run_dir}")
 
 
+_RUN_MODES = ("manual", "review_only", "auto_human_loop", "auto")
+
+
+def _resolve_mode(
+    mode: str, *, review_only: bool, auto_human_loop: bool, auto: bool
+) -> RunMode | None:
+    """Resolve the engine mode from the CLAUDE §4 flags (flags win over --mode)."""
+    if auto:
+        return "auto"
+    if auto_human_loop:
+        return "auto_human_loop"
+    if review_only:
+        return "review_only"
+    norm = mode.replace("-", "_")
+    return cast("RunMode", norm) if norm in _RUN_MODES else None
+
+
+def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
+    typer.echo(f"run: {run_paths.root}")
+    typer.echo(f"  run id : {run_paths.run_id}")
+    typer.echo(
+        f"  state  : {state.state} "
+        f"(mode={state.mode}, iteration={state.iteration}/{state.max_iterations})"
+    )
+    if state.state == "done":
+        typer.echo("  status : complete")
+        typer.echo("  report : run `siftmesh report` for the forensic report (Epic J)")
+    elif state.terminal:
+        typer.echo(f"  status : halted ({state.blocked_gate or 'rejected'})")
+    elif state.blocked_gate:
+        typer.echo(
+            f"  gate   : awaiting approval -> "
+            f"siftmesh approve {run_paths.root} --gate {state.blocked_gate}"
+        )
+    else:
+        typer.echo(f"  status : paused -> siftmesh resume {run_paths.root}")
+
+
 @app.command()
 def run(
     case_dir: str,
@@ -284,21 +326,131 @@ def run(
     mode: Annotated[
         str, typer.Option(help="manual | review-only | auto-human-loop | auto")
     ] = "manual",
+    review_only: Annotated[
+        bool, typer.Option("--review-only", help="Plan + recommendations only; no dispatch.")
+    ] = False,
+    auto_human_loop: Annotated[
+        bool, typer.Option("--auto-human-loop", help="Run until a meaningful approval gate.")
+    ] = False,
+    auto: Annotated[
+        bool, typer.Option("--auto", help="Run to completion; enforce caps; no gates.")
+    ] = False,
+    max_iterations: Annotated[
+        int | None, typer.Option("--max-iterations", help="Override the self-correction cap.")
+    ] = None,
 ) -> None:
-    """High-level orchestration from init through report."""
-    print(f"run {case_dir} --evidence {evidence} --mode {mode}")
+    """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.orchestrator.run_state_store import write_run_state
+    from siftmesh_core.orchestrator.scheduler import CapError, PolicyError
+    from siftmesh_core.orchestrator.state_machine import IllegalTransitionError
+    from siftmesh_core.orchestrator.workflow_runner import run_engine
+    from siftmesh_core.schemas.run import RunState
+
+    resolved = _resolve_mode(
+        mode, review_only=review_only, auto_human_loop=auto_human_loop, auto=auto
+    )
+    if resolved is None:
+        typer.echo(f"run failed: unknown mode {mode!r} (use {', '.join(_RUN_MODES)})", err=True)
+        raise typer.Exit(code=1)
+    settings = load_settings()
+    try:
+        run_paths = vault_init_case(case_dir, evidence, show_progress=True)
+        state = RunState(
+            run_id=run_paths.run_id,
+            mode=resolved,
+            max_iterations=max_iterations or settings.caps.max_iterations,
+        )
+        write_run_state(run_paths, state)
+        state = run_engine(
+            run_paths,
+            settings=settings,
+            evidence_root=evidence,
+            single_step=(resolved == "manual"),
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        EvidenceModifiedError,
+        BackendUnavailableError,
+        ValidationError,
+        PolicyError,
+        CapError,
+        IllegalTransitionError,
+    ) as exc:
+        typer.echo(f"run failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    _echo_run_state(run_paths, state)
 
 
 @app.command()
-def resume(run_id: str) -> None:
-    """Resume an interrupted run."""
-    print(f"resume {run_id}")
+def resume(run_dir: str) -> None:
+    """Resume an interrupted run from its persisted RunState."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.orchestrator.run_state_store import read_run_state
+    from siftmesh_core.orchestrator.scheduler import CapError, PolicyError
+    from siftmesh_core.orchestrator.state_machine import IllegalTransitionError
+    from siftmesh_core.orchestrator.workflow_runner import run_engine
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run_paths = RunPaths(root=root)
+        state = read_run_state(run_paths)
+        state = run_engine(
+            run_paths, settings=load_settings(), single_step=(state.mode == "manual")
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        BackendUnavailableError,
+        ValidationError,
+        PolicyError,
+        CapError,
+        IllegalTransitionError,
+    ) as exc:
+        typer.echo(f"resume failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    _echo_run_state(run_paths, state)
 
 
 @app.command()
-def status(run_id: str) -> None:
-    """Show status for a run."""
-    print(f"status {run_id}")
+def status(run_dir: str) -> None:
+    """Show a run's state-machine status (state, mode, gates, caps, per-task attempts)."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.orchestrator.run_state_store import read_run_state
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        state = read_run_state(RunPaths(root=root))
+    except (FileNotFoundError, NotADirectoryError, ValidationError) as exc:
+        typer.echo(f"status failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"status: {root}")
+    typer.echo(f"  state     : {state.state}{' (terminal)' if state.terminal else ''}")
+    typer.echo(f"  mode      : {state.mode}")
+    typer.echo(f"  iteration : {state.iteration}/{state.max_iterations}")
+    typer.echo(f"  agent tasks completed: {state.agent_tasks_completed}")
+    if state.blocked_gate:
+        typer.echo(f"  blocked on gate: {state.blocked_gate}")
+    if state.gates:
+        typer.echo(f"  gates     : {', '.join(f'{g}={s}' for g, s in state.gates.items())}")
+    for task_id, per_task in sorted(state.per_task.items()):
+        typer.echo(
+            f"  {task_id}: attempt {per_task.attempt}/{per_task.max_attempts} ({per_task.status})"
+        )
 
 
 @app.command("mcp-serve")
@@ -484,22 +636,65 @@ def retry(run_dir: str, task_id: str) -> None:
     typer.echo(f"retry complete: {task_id} attempt {result.attempt + 1} -> {refs[0].status}")
 
 
+def _resolve_gate(run_dir: str, gate: str, *, approve: bool) -> None:
+    """Record an approve/reject gate decision; on approve, resume the engine."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.orchestrator.human_gate import GATES, set_gate
+    from siftmesh_core.orchestrator.scheduler import CapError, PolicyError
+    from siftmesh_core.orchestrator.state_machine import IllegalTransitionError
+    from siftmesh_core.orchestrator.workflow_runner import run_engine
+    from siftmesh_core.run_dir import RunPaths
+
+    verb = "approve" if approve else "reject"
+    matched = next((g for g in GATES if g == gate), None)
+    if matched is None:
+        typer.echo(f"{verb} failed: unknown gate {gate!r} (use {', '.join(GATES)})", err=True)
+        raise typer.Exit(code=1)
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run_paths = RunPaths(root=root)
+        status: GateStatus = "approved" if approve else "rejected"
+        state = set_gate(run_paths, matched, status)
+        if approve:
+            state = run_engine(
+                run_paths, settings=load_settings(), single_step=(state.mode == "manual")
+            )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        BackendUnavailableError,
+        ValidationError,
+        PolicyError,
+        CapError,
+        IllegalTransitionError,
+    ) as exc:
+        typer.echo(f"{verb} failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"{verb}d gate {gate}")
+    _echo_run_state(run_paths, state)
+
+
 @app.command()
 def approve(
-    run_id: str,
+    run_dir: str,
     gate: Annotated[str, typer.Option(help="plan | dispatch | retry | report")],
 ) -> None:
-    """Approve a blocked gate -> `siftmesh approve RUN-001 --gate plan`."""
-    print(f"approve {run_id} --gate {gate}")
+    """Approve a blocked gate and resume the engine."""
+    _resolve_gate(run_dir, gate, approve=True)
 
 
 @app.command()
 def reject(
-    run_id: str,
+    run_dir: str,
     gate: Annotated[str, typer.Option(help="plan | dispatch | retry | report")],
 ) -> None:
-    """Reject a blocked gate -> `siftmesh reject RUN-001 --gate retry`."""
-    print(f"reject {run_id} --gate {gate}")
+    """Reject a blocked gate; the run halts cleanly on its next entry."""
+    _resolve_gate(run_dir, gate, approve=False)
 
 
 @tasks_app.command("list")

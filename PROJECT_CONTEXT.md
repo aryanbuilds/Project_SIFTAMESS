@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-08 (Epics A–E complete; planner shipped)_
+_Last updated: 2026-06-09 (Epics A–H complete; deterministic state machine + `siftmesh run`/resume/status/approve/reject shipped)_
 
 ## 1. Project identity
 
@@ -232,9 +232,9 @@ Creates the investigation strategy, scope, constraints, expected artifacts, init
 
 Runs once near the beginning. Creates a compact context pack that explains the case type, relevant artifact families, tool usage guidelines, and likely investigation angles. Deterministic builder in `orchestrator/deep_context.py`; an optional LLM enrichment pass is deferred to the Epic F agent adapter.
 
-### Ultraworker
+### Ultraworker ✅ (Epic H, shipped 2026-06-09)
 
-The main controller. Chooses next task, chooses agent/tool, handles retries, tracks token budget, reads critic advice, and decides whether to mark done, retry, escalate, or request human review.
+The main controller. Chooses next task, chooses agent/tool, handles retries, tracks token budget, reads critic advice, and decides whether to mark done, retry, escalate, or request human review. Implemented as a deterministic state machine in `orchestrator/{state_machine,workflow_runner,ultraworker,human_gate,budget_router,run_state_store}.py`: a frozen transition table + pure `step()`, `RunState` persisted atomically (temp+fsync+rename) to `run_state.json` for crash-safe `resume`, caps enforced in the loop (global `iteration` vs per-task `attempt`), and the four `siftmesh run` modes (manual/review-only/auto-human-loop/auto) over one engine. The forensic report (REPORT state) is the Epic-J seam.
 
 ### Executor Agents
 
@@ -356,6 +356,8 @@ case_runs/
       hashes.sha256
       readonly_mounts.json
       derived_artifacts.json
+
+    run_state.json            # Epic H: durable state-machine snapshot (atomic temp+rename)
 
     tasks/
       TASK-001.yaml

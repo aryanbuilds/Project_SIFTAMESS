@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-09 (Epics A–H complete + Epic I core; live-agent profiles/adapters + spotlighted prompt builder shipped)_
+_Last updated: 2026-06-09 (Epics A–I complete + Epic K core; multi-agent selection/fallback + live self-correction loop shipped)_
 
 ## 1. Project identity
 
@@ -239,6 +239,12 @@ The main controller. Chooses next task, chooses agent/tool, handles retries, tra
 ### Executor Agents ✅ (Epics F + I, deterministic floor + live agents)
 
 Do narrow artifact-specific work. They must not produce broad incident conclusions or final severity. They only extract, normalize, and summarize evidence for assigned tasks. Selected by `assigned_agent_profile` (Epic I: `adapters/profiles.py` + `agent_profiles.yaml`); each gets a spotlighted prompt from its task contract (`adapters/prompt_builder.py` — no raw evidence dump). The deterministic real-tool floor is the always-available default + fall-back; the live claude/opencode headless adapters are human-gated (CLI + key), and the registry audits an `adapter_unavailable` event whenever it falls closed.
+
+**Multi-agent selection + fallback chain (Epic I).** `resolve_profile(role, settings, cli_override)` picks the profile to attempt first — precedence: explicit `--agent` override → `executor_selection=deterministic` (the **default** → floor) → a per-role pin (`role_profiles`) → the head of `agent_preference` when live/auto. `get_adapter` then walks the chain (requested → rest of `agent_preference` → floor) and returns the first `available()`, auditing each skip. Each adapter pins its **model** from `agent_profiles.yaml` (claude/opencode `--model`). Claude supports **both auth modes** — subscription token (`claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN`/`ANTHROPIC_AUTH_TOKEN`) or `ANTHROPIC_API_KEY`. End-user entry point: `siftmesh run … --agent claude|opencode|deterministic` (reorders the chain; live is opt-in). Each agent uses **its own native CLI + auth** — the Claude subscription only ever drives the real `claude` binary; it is never proxied to another client.
+
+### Live self-correction loop ✅ (Epic K, K3)
+
+The hero loop, **emergent not scripted**. The live adapter drives the agent to investigate via the typed MCP tools and respond with a JSON `{claims:[…]}` payload citing the `tool_call_id` + `source_sha256` each tool returned (`adapters/agent_result.parse_agent_result`). Two honesty rules: an **under-anchored claim is recorded `unsupported`** (never fabricate an anchor → it lands in `unsupported_claims.jsonl`), and **unparseable/empty output → `retry_required`**. The deterministic critic rejects the unsupported claim; the rejection reasons flow into the retry prompt (`build_task_prompt(critic_feedback=…)`); the agent revises against the real tool output and the corrected, anchored claim is promoted to the findings ledger. Claim IDs are **attempt-scoped** (`…-A{attempt}-CLAIM-NNN`) so a correction never collides with the claim it replaces. The MCP server is **run-scoped**: its agent-facing tools read `SIFTMESH_RUN_ROOT`/`SIFTMESH_EVIDENCE_ROOT` from the adapter-set environment (the agent cannot choose a root; missing env fails closed). The live run is human-gated (CLI + token); CI always mocks the agent subprocess and exercises the loop against the **real** critic + a **real** seeded tool call.
 
 ### Advisor / Critic
 

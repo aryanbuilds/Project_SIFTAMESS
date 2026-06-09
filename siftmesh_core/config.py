@@ -78,6 +78,16 @@ class SiftmeshSettings(BaseSettings):
     # Whole-agent-invocation wall-clock (F7/F8); distinct from caps.max_tool_runtime_seconds.
     agent_timeout_seconds: int = 300
 
+    # Multi-agent layer (Epic I). When live is selected, profiles are tried in this order and the
+    # first available() wins; the deterministic floor is always the final fall-back. role_profiles
+    # optionally pins a profile per task role (overrides the chain head). claude_permission_mode is
+    # the non-interactive headless permission value (re-verify `claude --help` on the box).
+    agent_preference: list[str] = Field(
+        default_factory=lambda: ["claude_headless", "opencode_headless", "deterministic_executor"]
+    )
+    role_profiles: dict[str, str] = Field(default_factory=dict)
+    claude_permission_mode: str = "acceptEdits"
+
     # Optional Layer-2 LLM adversarial critic (Epic G8). Off by default; the Layer-1
     # deterministic critic is always sufficient. The real pass needs the F8 agent.
     llm_critic_enabled: bool = False

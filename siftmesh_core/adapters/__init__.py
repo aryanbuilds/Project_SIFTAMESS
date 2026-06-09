@@ -20,6 +20,7 @@ from siftmesh_core.adapters.base import (
     ResultRef,
     get_adapter,
     register,
+    resolve_profile,
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "ResultRef",
     "get_adapter",
     "register",
+    "resolve_profile",
 ]

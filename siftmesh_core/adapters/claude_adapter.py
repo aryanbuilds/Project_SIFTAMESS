@@ -3,9 +3,9 @@
 Thin wrapper around ``claude -p`` in non-interactive JSON mode. The agent is
 constrained to SIFTMesh's typed tools by pointing it at the FastMCP server
 (``siftmesh mcp-serve``, the 10 allowlisted tools — no raw shell) and narrowing
-``--allowedTools`` to the contract's single tool. When the CLI or
-``ANTHROPIC_API_KEY`` is absent the adapter is unavailable and the registry falls
-closed to the deterministic floor.
+``--allowedTools`` to the contract's single tool. When the CLI or all auth
+(subscription token / OAuth bearer / API key) is absent the adapter is unavailable
+and the registry falls closed to the deterministic floor.
 
 HARD GATES (CLAUDE §2A/§2B):
 * The exact CLI flags are UNVERIFIED — they are isolated in ``_build_claude_argv``
@@ -24,6 +24,7 @@ import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
+from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
 from siftmesh_core.adapters.spotlight import scan_injection
@@ -34,24 +35,29 @@ from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 
 _MCP_TOOL_PREFIX = "mcp__siftmesh__"
-# Non-interactive permission mode (Epic I6). The agent surface is already constrained to the 10
-# read-only typed tools via --mcp-config + --allowedTools (no Bash/Write/Edit), so this only makes
-# the already-safe headless run non-blocking. Re-confirm the value via `claude --help` on the box.
-_PERMISSION_MODE = "acceptEdits"
+# Env vars that authenticate `claude -p`: a subscription token (claude setup-token) OR an OAuth
+# bearer OR the commercial API key. Any one present => the adapter is usable (dual auth).
+_AUTH_ENV = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
 
 def _build_claude_argv(
-    cli_path: str, prompt: str, mcp_config: Path, allowed_tools: list[str]
+    cli_path: str,
+    prompt: str,
+    mcp_config: Path,
+    allowed_tools: list[str],
+    *,
+    model: str | None = None,
+    permission_mode: str = "acceptEdits",
 ) -> list[str]:
     """Build the headless ``claude -p`` argv (flags isolated here; Epic-I6 research-grounded).
 
     Flags confirmed via the claude-code docs (deepwiki) but **re-confirm `claude --help` before any
     live run** — the single place to correct them. ``--mcp-config`` constrains the agent to the
     typed tools; ``--allowedTools`` narrows to the contract's tool(s); ``--permission-mode`` is
-    non-interactive.
+    non-interactive; ``--model`` (when set) pins the model.
     """
     tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
-    return [
+    argv = [
         cli_path,
         "-p",
         prompt,
@@ -62,8 +68,11 @@ def _build_claude_argv(
         "--allowedTools",
         tools,
         "--permission-mode",
-        _PERMISSION_MODE,
+        permission_mode,
     ]
+    if model:
+        argv += ["--model", model]
+    return argv
 
 
 @register
@@ -74,17 +83,25 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
     backend_label = "claude_headless"
 
     def available(self) -> bool:
-        return shutil.which(self.settings.claude_cli_path) is not None and bool(
-            os.environ.get("ANTHROPIC_API_KEY")
-        )
+        # CLI present AND some auth: subscription token OR OAuth bearer OR API key (dual auth).
+        has_cli = shutil.which(self.settings.claude_cli_path) is not None
+        has_auth = any(os.environ.get(var) for var in _AUTH_ENV)
+        return has_cli and has_auth
 
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
-        profile = ctx.requested_profile or self.profile_id
-        prompt = build_task_prompt(contract, run_id=ctx.run.run_id)
+        prompt = build_task_prompt(
+            contract, run_id=ctx.run.run_id, critic_feedback=ctx.critic_feedback
+        )
         mcp_config = self._write_mcp_config(ctx)
+        prof = self.profile()
         argv = _build_claude_argv(
-            self.settings.claude_cli_path, prompt, mcp_config, contract.allowed_tools
+            self.settings.claude_cli_path,
+            prompt,
+            mcp_config,
+            contract.allowed_tools,
+            model=prof.model if prof else None,
+            permission_mode=self.settings.claude_permission_mode,
         )
         try:
             proc = subprocess.run(
@@ -101,20 +118,19 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
             envelope = json.loads(proc.stdout)
         except json.JSONDecodeError:
             return self._error(contract, ctx, started, "agent_bad_json")
-        self._scan(ctx, contract, str(envelope.get("result", "")))
-        status = "success" if not envelope.get("is_error", proc.returncode != 0) else "error"
-        # Claims are produced by the agent calling the typed MCP tools (audited to
-        # tool_calls.jsonl); structured claim extraction is finalized in Epic G. The
-        # envelope is captured honestly here — no synthetic claims are fabricated.
-        return TaskResult(
-            task_id=contract.task_id,
-            profile=profile,
-            adapter=self.profile_id,
-            attempt=ctx.attempt,
-            status=status,
-            started_utc=started,
-            ended_utc=datetime.now(UTC),
-            errors=[] if status == "success" else [str(envelope.get("subtype", "agent_error"))],
+        result_text = str(envelope.get("result", ""))
+        self._scan(ctx, contract, result_text)  # injection scan on the agent's final message
+        if envelope.get("is_error", proc.returncode != 0):
+            return self._error(contract, ctx, started, str(envelope.get("subtype", "agent_error")))
+        # K3: capture the agent's claims from its final message. Under-anchored claims land as
+        # 'unsupported' (never fabricated) so the deterministic critic drives a retry-with-feedback.
+        return parse_agent_result(
+            result_text,
+            contract=contract,
+            ctx=ctx,
+            adapter_id=self.profile_id,
+            started=started,
+            ended=datetime.now(UTC),
         )
 
     def _write_mcp_config(self, ctx: AdapterContext) -> Path:

@@ -10,6 +10,7 @@ functions the CLI calls directly (CLI-first). Returns are ``ToolResult`` subclas
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -39,71 +40,89 @@ from siftmesh_core.mcp_gateway.tools.validation_tools import (
     validate_claim_evidence,
 )
 
-# ── Thin MCP adapters (primitive args -> service functions) ─────────────────
+# ── Run scoping (K3) ────────────────────────────────────────────────────────
+# The agent NEVER chooses the run/evidence roots — the dispatching adapter scopes the server to the
+# active run via SIFTMESH_RUN_ROOT / SIFTMESH_EVIDENCE_ROOT (set by claude_adapter's mcp_config).
+# The agent-facing tools below therefore take only artifact-specific args, removing the confused-
+# deputy surface (a hostile prompt can't redirect a tool at another run/evidence tree). Missing env
+# => fail closed: refuse to run an unscoped forensic tool rather than guess a root.
+
+_RUN_ROOT_ENV = "SIFTMESH_RUN_ROOT"
+_EVIDENCE_ROOT_ENV = "SIFTMESH_EVIDENCE_ROOT"
 
 
-def _compute_hash_manifest(run_root: str, evidence_root: str) -> HashManifestResult:
+def _run_scope() -> tuple[str, str]:
+    """The (run_root, evidence_root) the adapter scoped this server to; fail closed if unset."""
+    run_root = os.environ.get(_RUN_ROOT_ENV)
+    evidence_root = os.environ.get(_EVIDENCE_ROOT_ENV)
+    if not run_root or not evidence_root:
+        raise RuntimeError(
+            f"{_RUN_ROOT_ENV} and {_EVIDENCE_ROOT_ENV} must be set by the dispatching adapter; "
+            "refusing to run an unscoped forensic tool."
+        )
+    return run_root, evidence_root
+
+
+# ── Thin MCP adapters (artifact-specific args -> service functions; roots from env) ──
+
+
+def _compute_hash_manifest() -> HashManifestResult:
+    run_root, evidence_root = _run_scope()
     return compute_hash_manifest(run_root, evidence_root=evidence_root)
 
 
-def _create_readonly_evidence_vault(run_root: str, evidence_root: str) -> ReadonlyVaultResult:
+def _create_readonly_evidence_vault() -> ReadonlyVaultResult:
+    run_root, evidence_root = _run_scope()
     return create_readonly_evidence_vault(run_root, evidence_root=evidence_root)
 
 
-def _parse_evtx_security(
-    run_root: str, source_artifact: str, evidence_root: str
-) -> EvtxParseResult:
+def _parse_evtx_security(source_artifact: str) -> EvtxParseResult:
+    run_root, evidence_root = _run_scope()
     return parse_evtx_security(
         run_root, source_artifact=source_artifact, evidence_root=evidence_root
     )
 
 
-def _parse_evtx_powershell(
-    run_root: str, source_artifact: str, evidence_root: str
-) -> EvtxParseResult:
+def _parse_evtx_powershell(source_artifact: str) -> EvtxParseResult:
+    run_root, evidence_root = _run_scope()
     return parse_evtx_powershell(
         run_root, source_artifact=source_artifact, evidence_root=evidence_root
     )
 
 
-def _analyze_prefetch(run_root: str, source_artifact: str, evidence_root: str) -> PrefetchResult:
+def _analyze_prefetch(source_artifact: str) -> PrefetchResult:
+    run_root, evidence_root = _run_scope()
     return analyze_prefetch(run_root, source_artifact=source_artifact, evidence_root=evidence_root)
 
 
-def _extract_registry_run_keys(
-    run_root: str, source_artifact: str, evidence_root: str
-) -> RunKeysResult:
+def _extract_registry_run_keys(source_artifact: str) -> RunKeysResult:
+    run_root, evidence_root = _run_scope()
     return extract_registry_run_keys(
         run_root, source_artifact=source_artifact, evidence_root=evidence_root
     )
 
 
-def _build_timeline(
-    run_root: str, inputs: list[dict[str, str]], evidence_root: str
-) -> TimelineResult:
+def _build_timeline(inputs: list[dict[str, str]]) -> TimelineResult:
+    run_root, evidence_root = _run_scope()
     return build_timeline(run_root, inputs=inputs, evidence_root=evidence_root)
 
 
-def _validate_claim_evidence(
-    run_root: str, claim: dict[str, Any], evidence_root: str
-) -> ClaimValidationResult:
+def _validate_claim_evidence(claim: dict[str, Any]) -> ClaimValidationResult:
+    run_root, evidence_root = _run_scope()
     return validate_claim_evidence(run_root, claim, evidence_root=evidence_root)
 
 
 def _extract_artifacts_from_image(
-    run_root: str, image_artifact: str, evidence_root: str, keys: list[str] | None = None
+    image_artifact: str, keys: list[str] | None = None
 ) -> ImageExtractionResult:
+    run_root, evidence_root = _run_scope()
     return extract_artifacts_from_image(
         run_root, image_artifact=image_artifact, evidence_root=evidence_root, keys=keys
     )
 
 
-def _analyze_memory(
-    run_root: str,
-    memory_artifact: str,
-    evidence_root: str,
-    plugins: list[str] | None = None,
-) -> MemoryAnalysisResult:
+def _analyze_memory(memory_artifact: str, plugins: list[str] | None = None) -> MemoryAnalysisResult:
+    run_root, evidence_root = _run_scope()
     return analyze_memory(
         run_root, memory_artifact=memory_artifact, evidence_root=evidence_root, plugins=plugins
     )

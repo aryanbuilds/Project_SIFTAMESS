@@ -298,6 +298,32 @@ def _resolve_mode(
     return cast("RunMode", norm) if norm in _RUN_MODES else None
 
 
+_AGENT_ALIASES = {
+    "claude": "claude_headless",
+    "opencode": "opencode_headless",
+    "deterministic": "deterministic_executor",
+    "floor": "deterministic_executor",
+}
+
+
+def _agent_overrides(agent: str | None) -> dict[str, object]:
+    """Translate a friendly --agent choice into settings overrides (opt into the live chain).
+
+    ``claude``/``opencode`` put that agent first in the preference chain (the other stays a
+    fallback, floor last) and flip executor_selection to ``auto``. ``deterministic`` pins the floor.
+    """
+    if not agent:
+        return {}
+    profile = _AGENT_ALIASES.get(agent, agent)  # passthrough if already a full profile_id
+    if profile == "deterministic_executor":
+        return {"executor_selection": "deterministic"}
+    others = [p for p in ("claude_headless", "opencode_headless") if p != profile]
+    return {
+        "executor_selection": "auto",
+        "agent_preference": [profile, *others, "deterministic_executor"],
+    }
+
+
 def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
     typer.echo(f"run: {run_paths.root}")
     typer.echo(f"  run id : {run_paths.run_id}")
@@ -338,6 +364,10 @@ def run(
     max_iterations: Annotated[
         int | None, typer.Option("--max-iterations", help="Override the self-correction cap.")
     ] = None,
+    agent: Annotated[
+        str | None,
+        typer.Option("--agent", help="Opt into a live agent: claude | opencode | deterministic."),
+    ] = None,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -355,7 +385,7 @@ def run(
     if resolved is None:
         typer.echo(f"run failed: unknown mode {mode!r} (use {', '.join(_RUN_MODES)})", err=True)
         raise typer.Exit(code=1)
-    settings = load_settings()
+    settings = load_settings(**_agent_overrides(agent))
     try:
         run_paths = vault_init_case(case_dir, evidence, show_progress=True)
         state = RunState(

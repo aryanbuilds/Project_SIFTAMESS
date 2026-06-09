@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from siftmesh_core.adapters import AdapterContext, ResultRef, get_adapter
+from siftmesh_core.adapters import AdapterContext, ResultRef, get_adapter, resolve_profile
 from siftmesh_core.adapters.base import write_task_result
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.path_policy import assert_run_outside_evidence
@@ -143,7 +143,7 @@ def dispatch_run(
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
     refs: list[ResultRef] = []
     for contract in contracts:
-        profile = agent_profile or contract.assigned_agent_profile
+        profile = resolve_profile(contract.role, settings=settings, cli_override=agent_profile)
         adapter = get_adapter(profile, settings=settings, run=run)
         ctx = AdapterContext(
             run=run,

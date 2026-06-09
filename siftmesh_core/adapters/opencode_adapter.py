@@ -13,8 +13,12 @@ import shutil
 import subprocess
 from datetime import UTC, datetime
 
+from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
+from siftmesh_core.adapters.spotlight import scan_injection
+from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
+from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 
@@ -32,6 +36,33 @@ def _build_opencode_argv(cli_path: str, prompt: str, model: str) -> list[str]:
     return [cli_path, "run", prompt, "--model", model, "--format", "json"]
 
 
+def _collect_text(stdout: str) -> str:
+    """Concatenate the agent's text from OpenCode's line-delimited JSON events (best-effort).
+
+    OpenCode streams ``{type, ...}`` events; the assistant's answer arrives as ``text`` events.
+    Tolerant of shape drift (re-confirm at live time): any line with a ``text`` (or ``part.text``)
+    field contributes; if nothing parses as line-JSON, the raw stdout is used as the message.
+    """
+    parts: list[str] = []
+    for raw_line in stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        if not isinstance(event, dict):
+            continue
+        text = event.get("text")
+        if not isinstance(text, str):
+            part = event.get("part")
+            text = part.get("text") if isinstance(part, dict) else None
+        if isinstance(text, str):
+            parts.append(text)
+    return "".join(parts) if parts else stdout
+
+
 @register
 class OpenCodeHeadlessAdapter(ExecutorAdapter):
     """Run the live OpenCode agent headlessly (secondary; no MCP constraint)."""
@@ -44,9 +75,12 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
 
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
-        profile = ctx.requested_profile or self.profile_id
-        prompt = build_task_prompt(contract, run_id=ctx.run.run_id)
-        argv = _build_opencode_argv(self.settings.opencode_cli_path, prompt, _DEFAULT_MODEL)
+        prompt = build_task_prompt(
+            contract, run_id=ctx.run.run_id, critic_feedback=ctx.critic_feedback
+        )
+        prof = self.profile()
+        model = prof.model if (prof and prof.model) else _DEFAULT_MODEL
+        argv = _build_opencode_argv(self.settings.opencode_cli_path, prompt, model)
         try:
             proc = subprocess.run(
                 argv,
@@ -56,20 +90,48 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
                 shell=False,
                 check=False,
             )
-            envelope = json.loads(proc.stdout)
-            status = "success" if not envelope.get("is_error", proc.returncode != 0) else "error"
-            code = None if status == "success" else str(envelope.get("subtype", "agent_error"))
         except (FileNotFoundError, subprocess.TimeoutExpired):
-            status, code = "error", "agent_failed_or_timeout"
-        except json.JSONDecodeError:
-            status, code = "error", "agent_bad_json"
+            return self._error(contract, ctx, started, "agent_failed_or_timeout")
+        text = _collect_text(proc.stdout)
+        self._scan(ctx, contract, text)  # injection scan on the agent's output
+        if proc.returncode != 0 and not text.strip():
+            return self._error(contract, ctx, started, "agent_error")
+        # K3: capture the agent's claims; under-anchored claims land as 'unsupported' (never
+        # fabricated) so the critic drives a retry-with-feedback.
+        return parse_agent_result(
+            text,
+            contract=contract,
+            ctx=ctx,
+            adapter_id=self.profile_id,
+            started=started,
+            ended=datetime.now(UTC),
+        )
+
+    def _error(
+        self, contract: TaskContract, ctx: AdapterContext, started: datetime, code: str
+    ) -> TaskResult:
         return TaskResult(
             task_id=contract.task_id,
-            profile=profile,
+            profile=ctx.requested_profile or self.profile_id,
             adapter=self.profile_id,
             attempt=ctx.attempt,
-            status=status,
+            status="error",
             started_utc=started,
             ended_utc=datetime.now(UTC),
-            errors=[] if status == "success" else [code or "agent_error"],
+            errors=[code],
         )
+
+    def _scan(self, ctx: AdapterContext, contract: TaskContract, text: str) -> None:
+        for m in scan_injection(text):
+            append_injection_alert(
+                ctx.run.root,
+                InjectionAlert(
+                    alert_id=next_alert_id(ctx.run.root),
+                    source="agent_result",
+                    signature=m.signature,
+                    snippet=m.snippet,
+                    detected_utc=datetime.now(UTC),
+                    task_id=contract.task_id,
+                ),
+                evidence_root=ctx.evidence_root,
+            )

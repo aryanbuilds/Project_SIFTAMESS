@@ -39,24 +39,46 @@ def test_claude_argv_built_correctly(tmp_path: Path) -> None:
     assert any("mcp__siftmesh__parse_evtx_security" in a for a in argv)
 
 
+_AUTH_VARS = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
+
+
 def test_claude_absent_cli_falls_to_floor(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    # No claude CLI / key in CI → registry must hand back the deterministic floor.
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # No claude CLI / auth in CI → registry must hand back the deterministic floor.
+    for var in _AUTH_VARS:
+        monkeypatch.delenv(var, raising=False)
     adapter = get_adapter("claude_headless", settings=load_settings())
     assert adapter.profile_id == "deterministic_executor"
 
 
 def test_claude_adapter_unavailable_without_key(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    for var in _AUTH_VARS:
+        monkeypatch.delenv(var, raising=False)
     assert ClaudeHeadlessAdapter(settings=load_settings()).available() is False
 
 
-def test_claude_execute_parses_json_envelope(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_claude_execute_captures_anchored_claims(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     run, evidence = real_case()
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "sub-token")  # subscription auth path
+    claims_payload = json.dumps(
+        {
+            "claims": [
+                {
+                    "claim": "PowerShell EncodedCommand executed",
+                    "status": "confirmed",
+                    "confidence": 0.9,
+                    "evidence_type": "evtx",
+                    "source_artifact": "Security.evtx",
+                    "source_sha256": "a" * 64,
+                    "tool_name": "parse_evtx_security",
+                    "tool_call_id": "TOOL-001",
+                    "supporting_evidence_refs": ["TOOL-001"],
+                }
+            ]
+        }
+    )
 
     def fake_run(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        payload = json.dumps({"result": "done", "is_error": False, "session_id": "s1"})
+        payload = json.dumps({"result": claims_payload, "is_error": False, "session_id": "s1"})
         return subprocess.CompletedProcess(args=[], returncode=0, stdout=payload, stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -65,6 +87,9 @@ def test_claude_execute_parses_json_envelope(real_case: RealCase, monkeypatch) -
     result = adapter._execute(_contract(), ctx)
     assert isinstance(result, TaskResult)
     assert result.status == "success"
+    assert len(result.claims) == 1
+    assert result.claims[0].status == "confirmed"
+    assert result.claims[0].tool_call_id == "TOOL-001"  # the real anchor the tool returned
 
 
 def test_generic_shell_echo_agent_roundtrip(real_case: RealCase, tmp_path: Path) -> None:

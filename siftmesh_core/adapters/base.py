@@ -25,6 +25,7 @@ from siftmesh_core.ledgers.audit_log import log_event, open_orchestration_log
 from siftmesh_core.mcp_gateway.registry import assert_tool_allowed
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.agent_call import AgentCall, AgentCallStatus
+from siftmesh_core.schemas.agent_profile import AgentProfile
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 
@@ -99,6 +100,12 @@ class ExecutorAdapter(ABC):
         """Whether this adapter can run here (CLI/key present). Floor is always True."""
         return True
 
+    def profile(self) -> AgentProfile | None:
+        """This adapter's declarative profile from ``agent_profiles.yaml`` (model/tier), if any."""
+        from siftmesh_core.adapters.profiles import load_profiles
+
+        return load_profiles().get(self.profile_id)
+
     @staticmethod
     def _assert_allowed_tools(contract: TaskContract) -> None:
         for tool in contract.allowed_tools:
@@ -143,29 +150,58 @@ def register(cls: type[ExecutorAdapter]) -> type[ExecutorAdapter]:
     return cls
 
 
+def resolve_profile(
+    role: str, *, settings: SiftmeshSettings, cli_override: str | None = None
+) -> str:
+    """The profile to attempt first for a task with this role (Epic I).
+
+    Precedence: explicit ``--agent`` override > deterministic default (the floor) > a per-role pin
+    (``role_profiles``) > the head of the preference chain (live/auto). A plain run uses the floor;
+    ``--agent claude`` or ``executor_selection=live/auto`` opts into the live chain.
+    """
+    if cli_override:
+        return cli_override
+    if settings.executor_selection == "deterministic":
+        return DEFAULT_PROFILE
+    if role in settings.role_profiles:
+        return settings.role_profiles[role]
+    return settings.agent_preference[0] if settings.agent_preference else DEFAULT_PROFILE
+
+
 def get_adapter(
     profile_id: str, *, settings: SiftmeshSettings, run: RunPaths | None = None
 ) -> ExecutorAdapter:
-    """Resolve an adapter by profile; fall closed to the deterministic floor (I2).
+    """Resolve an adapter, walking the fallback chain to the first available; floor is final (I2).
 
-    Falls back when the profile is unknown, or when the resolved adapter's CLI/key is absent
-    (``available()`` is False) — so CI and the no-keys demo always get a working executor. When a
-    ``run`` is given, a fall-back is audited as an ``adapter_unavailable`` orchestration event.
+    Candidate order = the requested profile, then the rest of ``settings.agent_preference``, then
+    the deterministic floor (always registered + available). Each skipped (unknown/unavailable)
+    candidate is audited as an ``adapter_unavailable`` orchestration event when a ``run`` is given —
+    so a no-keys run records *why* it fell to the floor (e.g. claude→opencode→floor).
     """
-    reason: str | None = None
-    cls = _REGISTRY.get(profile_id)
-    if cls is None:
-        reason, cls = "unknown_profile", _REGISTRY[DEFAULT_PROFILE]
-    adapter = cls(settings=settings)
-    if not adapter.available():
-        reason = "cli_or_key_absent"
-        adapter = _REGISTRY[DEFAULT_PROFILE](settings=settings)
-    if reason is not None and run is not None and profile_id != DEFAULT_PROFILE:
-        log_event(
-            open_orchestration_log(run.orchestration_events, run.run_id),
-            "adapter_unavailable",
-            requested=profile_id,
-            reason=reason,
-            fell_back_to=DEFAULT_PROFILE,
-        )
-    return adapter
+    chain: list[str] = [profile_id]
+    chain += [p for p in settings.agent_preference if p not in chain]
+    if DEFAULT_PROFILE not in chain:
+        chain.append(DEFAULT_PROFILE)
+
+    for candidate in chain:
+        cls = _REGISTRY.get(candidate)
+        if cls is None:
+            _audit_unavailable(run, candidate, "unknown_profile")
+            continue
+        adapter = cls(settings=settings)
+        if adapter.available():
+            return adapter
+        _audit_unavailable(run, candidate, "cli_or_key_absent")
+    return _REGISTRY[DEFAULT_PROFILE](settings=settings)  # defensive (floor is always available)
+
+
+def _audit_unavailable(run: RunPaths | None, requested: str, reason: str) -> None:
+    if run is None or requested == DEFAULT_PROFILE:
+        return  # the floor never "falls back"; nothing to audit
+    log_event(
+        open_orchestration_log(run.orchestration_events, run.run_id),
+        "adapter_unavailable",
+        requested=requested,
+        reason=reason,
+        fell_back_to=DEFAULT_PROFILE,
+    )

@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
@@ -237,10 +238,18 @@ def _claims_memory(result: Any, task_id: str) -> list[Claim]:
     return claims
 
 
+def _input_root(c: TaskContract, ctx: AdapterContext) -> Path | str:
+    """Root the first input resolves against: the run dir for a derived (carved/decompressed)
+    artifact (hth.2), else the original evidence root."""
+    if c.input_artifacts and c.input_artifacts[0].origin == "derived":
+        return ctx.run.root
+    return ctx.evidence_root
+
+
 def _single_source_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
     return {
         "source_artifact": c.input_artifacts[0].path,
-        "evidence_root": ctx.evidence_root,
+        "evidence_root": _input_root(c, ctx),
         "backend_mode": ctx.settings.backend_mode,
     }
 
@@ -248,7 +257,7 @@ def _single_source_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any
 def _image_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
     return {
         "image_artifact": c.input_artifacts[0].path,
-        "evidence_root": ctx.evidence_root,
+        "evidence_root": _input_root(c, ctx),
         "keys": None,
         "backend_mode": "sift_lane",
     }
@@ -257,7 +266,7 @@ def _image_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
 def _memory_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
     return {
         "memory_artifact": c.input_artifacts[0].path,
-        "evidence_root": ctx.evidence_root,
+        "evidence_root": _input_root(c, ctx),
         "plugins": None,
         "vol_path": ctx.settings.vol_path,
         "symbol_dirs": ctx.settings.vol_symbol_dirs,

@@ -25,6 +25,7 @@ from structlog.typing import FilteringBoundLogger
 
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.config import SiftmeshSettings
+from siftmesh_core.evidence.derived import read_derived
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.audit_log import log_event, open_orchestration_log
 from siftmesh_core.ledgers.claim_ledger import (
@@ -46,7 +47,12 @@ from siftmesh_core.ledgers.injection_alerts import (
 )
 from siftmesh_core.ledgers.retries import append_retry, next_retry_id
 from siftmesh_core.mcp_gateway.tools.validation_tools import grade_claim_against_run
-from siftmesh_core.orchestrator.artifact_router import RoutedArtifact, route_manifest
+from siftmesh_core.orchestrator.artifact_router import (
+    FineFamily,
+    RoutedArtifact,
+    route_manifest,
+    route_path,
+)
 from siftmesh_core.orchestrator.planner import executor_contract
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType
@@ -54,12 +60,13 @@ from siftmesh_core.schemas.claim import Claim
 from siftmesh_core.schemas.critic_records import (
     ConfidenceChange,
     ContradictionRecord,
+    FollowupReason,
     FollowupRecord,
     RetryRecord,
 )
 from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.injection_alert import InjectionAlert
-from siftmesh_core.schemas.task import TaskContract
+from siftmesh_core.schemas.task import ArtifactOrigin, TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 from siftmesh_core.schemas.yaml_io import dump_yaml_model, read_yaml_model
 
@@ -333,38 +340,125 @@ def detect_coverage_gaps(run: RunPaths) -> list[RoutedArtifact]:
     return [a for a in route_manifest(manifest) if a.actionable and a.path not in covered]
 
 
+def detect_derived_gaps(run: RunPaths) -> list[RoutedArtifact]:
+    """Actionable DERIVED (carved/decompressed) artifacts not covered by any task (hth.2).
+
+    Reads ``evidence/derived_artifacts.json`` and routes each derived file by its basename — but a
+    ``decompress``-produced image (``DECOMP-`` id) is forced to ``memory_image`` because a ``.raw``
+    suffix would otherwise route to ``disk_image``. The intake manifest is never consulted/mutated.
+    """
+    covered = _covered_artifact_paths(run)
+    gaps: list[RoutedArtifact] = []
+    for rec in read_derived(run.root):
+        if rec.derived_sha256 is None or rec.derived_path in covered:
+            continue
+        force: FineFamily | None = (
+            "memory_image" if rec.tool_call_id.startswith("DECOMP-") else None
+        )
+        art = route_path(rec.derived_path, rec.derived_sha256, force_family=force)
+        if art.actionable:
+            gaps.append(art)
+    return gaps
+
+
+def _write_followup_task(
+    run: RunPaths,
+    art: RoutedArtifact,
+    *,
+    n: int,
+    origin: ArtifactOrigin,
+    reason: FollowupReason,
+    evidence_root: Path | str | None,
+    audit: FilteringBoundLogger,
+) -> Path:
+    """Mint TASK-{n:03d} for a gap artifact, write its contract + a FollowupRecord, and log."""
+    task_id = f"TASK-{n:03d}"
+    contract = executor_contract(task_id, art, origin=origin)
+    target = safe_write_path(run.root, f"tasks/{task_id}.yaml", evidence_root=evidence_root)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(dump_yaml_model(contract), encoding="utf-8")
+    append_followup(
+        run.root,
+        FollowupRecord(
+            followup_id=next_followup_id(run.root),
+            task_id=task_id,
+            reason=reason,
+            artifact=art.path,
+            family=art.family,
+            tool=art.tool,
+            created_utc=_now(),
+        ),
+        evidence_root=evidence_root,
+    )
+    log_event(audit, "followup_task_created", task_id=task_id, artifact=art.path, gap=reason)
+    return target
+
+
 def generate_followup_tasks(
     run: RunPaths, *, evidence_root: Path | str | None, audit: FilteringBoundLogger
 ) -> list[Path]:
-    """Create one follow-up task contract per coverage gap (idempotent — the new task
-    covers the gap, so a second pass finds none)."""
-    gaps = detect_coverage_gaps(run)
+    """Create one follow-up task per coverage gap (manifest) AND per derived gap (hth.2).
+
+    Idempotent — each new task's input path covers its gap, so a second pass finds none.
+    """
     written: list[Path] = []
     n = _max_task_number(run)
-    for art in gaps:
+    for art in detect_coverage_gaps(run):
         n += 1
-        task_id = f"TASK-{n:03d}"
-        contract = executor_contract(task_id, art)
-        target = safe_write_path(run.root, f"tasks/{task_id}.yaml", evidence_root=evidence_root)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(dump_yaml_model(contract), encoding="utf-8")
-        append_followup(
-            run.root,
-            FollowupRecord(
-                followup_id=next_followup_id(run.root),
-                task_id=task_id,
+        written.append(
+            _write_followup_task(
+                run,
+                art,
+                n=n,
+                origin="evidence",
                 reason="coverage_gap",
-                artifact=art.path,
-                family=art.family,
-                tool=art.tool,
-                created_utc=_now(),
-            ),
-            evidence_root=evidence_root,
+                evidence_root=evidence_root,
+                audit=audit,
+            )
         )
-        log_event(
-            audit, "followup_task_created", task_id=task_id, artifact=art.path, gap="coverage"
+    for art in detect_derived_gaps(run):
+        n += 1
+        written.append(
+            _write_followup_task(
+                run,
+                art,
+                n=n,
+                origin="derived",
+                reason="derived_gap",
+                evidence_root=evidence_root,
+                audit=audit,
+            )
         )
-        written.append(target)
+    return written
+
+
+def ingest_derived(
+    run: RunPaths,
+    *,
+    evidence_root: Path | str | None = None,
+    audit: FilteringBoundLogger | None = None,
+) -> list[Path]:
+    """Explicit hth.2 primitive — create a derived task per uncovered actionable derived artifact.
+
+    Same effect as the G9 derived-gap path, runnable on demand (the ``ingest-derived`` CLI) before
+    the first critique. Idempotent; never touches ``evidence_manifest.json``.
+    """
+    log = audit or open_orchestration_log(run.orchestration_events, run.run_id)
+    written: list[Path] = []
+    n = _max_task_number(run)
+    for art in detect_derived_gaps(run):
+        n += 1
+        written.append(
+            _write_followup_task(
+                run,
+                art,
+                n=n,
+                origin="derived",
+                reason="derived_gap",
+                evidence_root=evidence_root,
+                audit=log,
+            )
+        )
     return written
 
 

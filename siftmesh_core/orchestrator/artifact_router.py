@@ -152,20 +152,30 @@ def _classify(name: str, suffix: str) -> FineFamily:
     return "other"
 
 
-def route_artifact(ef: EvidenceFile) -> RoutedArtifact:
-    """Classify one evidence file (metadata only — never opens it)."""
-    p = Path(ef.path)
-    family = _classify(p.name.lower(), p.suffix.lower())
+def route_path(path: str, sha256: str, *, force_family: FineFamily | None = None) -> RoutedArtifact:
+    """Classify a ``(path, sha256)`` pair (metadata only — never opens it).
+
+    ``force_family`` overrides classification — used for derived artifacts whose extension is
+    ambiguous (e.g. a decompressed ``.raw`` memory image, which by suffix would look like a disk
+    image; hth.2 forces ``memory_image``).
+    """
+    p = Path(path)
+    family = force_family or _classify(p.name.lower(), p.suffix.lower())
     tool = FAMILY_TOOL_MAP[family]
     return RoutedArtifact(
-        path=ef.path,
-        sha256=ef.sha256,
+        path=path,
+        sha256=sha256,
         family=family,
         tool=tool,
         timeline_kind=_FAMILY_TIMELINE_KIND.get(family),
         objective=_FAMILY_OBJECTIVE[family],
         actionable=tool is not None,
     )
+
+
+def route_artifact(ef: EvidenceFile) -> RoutedArtifact:
+    """Classify one evidence file (metadata only — never opens it)."""
+    return route_path(ef.path, ef.sha256)
 
 
 def route_manifest(manifest: EvidenceManifest) -> list[RoutedArtifact]:

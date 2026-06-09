@@ -34,7 +34,13 @@ from siftmesh_core.orchestrator.deep_context import (
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.plan import InvestigationPlan, PlanStep, PlanStepKind
-from siftmesh_core.schemas.task import InputArtifact, RetryPolicy, SafetyPolicy, TaskContract
+from siftmesh_core.schemas.task import (
+    ArtifactOrigin,
+    InputArtifact,
+    RetryPolicy,
+    SafetyPolicy,
+    TaskContract,
+)
 from siftmesh_core.schemas.yaml_io import dump_yaml_model
 
 TEMPLATE = "windows_initial_triage"
@@ -83,10 +89,14 @@ def _retry() -> RetryPolicy:
     return RetryPolicy(max_attempts=2, retry_on=["malformed_json", "result_missing_reference"])
 
 
-def executor_contract(task_id: str, art: RoutedArtifact) -> TaskContract:
+def executor_contract(
+    task_id: str, art: RoutedArtifact, *, origin: ArtifactOrigin = "evidence"
+) -> TaskContract:
     """One TaskContract for an actionable artifact (E6/E7) — exactly one tool.
 
-    Public so the critic's G9 follow-up generator reuses the exact contract shape.
+    Public so the critic's G9 follow-up generator + the hth.2 derived-ingest reuse the exact
+    contract shape. ``origin="derived"`` marks a carved/decompressed input (it resolves under the
+    run dir, not the evidence root).
     """
     assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
     return TaskContract(
@@ -95,7 +105,7 @@ def executor_contract(task_id: str, art: RoutedArtifact) -> TaskContract:
         objective=art.objective,
         assigned_agent_profile=DEFAULT_AGENT_PROFILE,
         allowed_tools=[art.tool],
-        input_artifacts=[InputArtifact(path=art.path, sha256=art.sha256)],
+        input_artifacts=[InputArtifact(path=art.path, sha256=art.sha256, origin=origin)],
         context_packet=list(_CONTEXT_PACKET),
         output_required=[f"results/{task_id}.result.json"],
         success_criteria=[

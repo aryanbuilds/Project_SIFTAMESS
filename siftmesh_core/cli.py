@@ -566,6 +566,35 @@ def decompress(
     )
 
 
+@app.command("ingest-derived")
+def ingest_derived_cmd(
+    run_dir: str,
+    evidence: Annotated[
+        str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
+    ] = None,
+) -> None:
+    """Make extracted/decompressed derived artifacts plannable — one derived task each (hth.2)."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.orchestrator.critic import ingest_derived
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
+        created = ingest_derived(run, evidence_root=evidence)
+    except (FileNotFoundError, NotADirectoryError, PathPolicyViolation, ValidationError) as exc:
+        typer.echo(f"ingest-derived failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"ingest-derived: {len(created)} derived task(s) created")
+    for path in created:
+        typer.echo(f"  {path.stem}")
+    if created:
+        typer.echo(f"  next: siftmesh dispatch {run.root}")
+
+
 @app.command()
 def doctor(
     protocol_sift: Annotated[

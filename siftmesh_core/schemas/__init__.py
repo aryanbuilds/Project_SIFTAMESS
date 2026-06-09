@@ -40,6 +40,7 @@ from siftmesh_core.schemas.run import (
 )
 from siftmesh_core.schemas.task import (
     ArtifactMode,
+    ArtifactOrigin,
     InputArtifact,
     RetryPolicy,
     SafetyPolicy,
@@ -111,6 +112,7 @@ __all__ = [
     "AgentCallStatus",
     "AgentProfile",
     "ArtifactMode",
+    "ArtifactOrigin",
     "CapabilityCheck",
     "Claim",
     "ClaimStatus",

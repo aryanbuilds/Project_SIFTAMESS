@@ -53,6 +53,23 @@ def _next_tool_call_id(run_root: Path | str) -> str:
     return f"TOOL-{len(read_tool_results(run_root)) + 1:03d}"
 
 
+def _write_exclusion_root(
+    run_root: Path | str, evidence_root: Path | str | None
+) -> Path | str | None:
+    """The root to exclude from writes — the EXTERNAL original-evidence tree.
+
+    A derived-artifact task (hth.2) resolves its source *under the run dir*, so its
+    ``evidence_root`` is the run dir itself. There is then no external evidence to protect, and the
+    tool must be able to write its own outputs under the run — so return None (``safe_write_path``
+    still enforces run-dir containment). For a normal task (external evidence dir) it is unchanged.
+    """
+    if evidence_root is None:
+        return None
+    run_r = Path(run_root).resolve()
+    ev_r = Path(evidence_root).resolve()
+    return None if run_r == ev_r or run_r.is_relative_to(ev_r) else evidence_root
+
+
 def _write_structured(
     run_root: Path | str,
     tool_call_id: str,
@@ -104,6 +121,10 @@ def run_tool(
     recoverable error an empty ``status=error`` result is logged and returned.
     """
     tool_call_id = _next_tool_call_id(run_root)
+    # Normalise the write-exclusion root: a derived task's evidence_root IS the run dir, which would
+    # otherwise block the tool from writing its own outputs (hth.2). Source resolution already
+    # happened in the tool wrapper; here evidence_root governs writes only.
+    evidence_root = _write_exclusion_root(run_root, evidence_root)
     start = datetime.now(UTC)
     status: ToolStatus = "success"
     error_code: str | None = None

@@ -54,7 +54,10 @@ class RetryRecord(StrictModel):
     decided_utc: UtcDateTime
 
 
-FollowupReason = Literal["coverage_gap", "corroboration_gap"]
+# coverage_gap — an actionable *manifest* artifact with no task.
+# derived_gap  — an actionable *derived* (carved/decompressed) artifact with no task (hth.2).
+# corroboration_gap — a high-risk single-source claim (labelled, not dropped).
+FollowupReason = Literal["coverage_gap", "derived_gap", "corroboration_gap"]
 
 
 class FollowupRecord(StrictModel):
@@ -63,7 +66,7 @@ class FollowupRecord(StrictModel):
     followup_id: str  # deterministic FOLLOWUP-NNN
     task_id: str  # the new follow-up task (coverage) or the gap's origin task (corroboration)
     reason: FollowupReason
-    artifact: str  # the manifest artifact that was unexamined / under-corroborated
+    artifact: str  # the manifest/derived artifact that was unexamined / under-corroborated
     family: str
     tool: str | None = None  # the follow-up's tool (coverage); None for corroboration
     origin_claim_id: str | None = None  # the single-source claim (corroboration)

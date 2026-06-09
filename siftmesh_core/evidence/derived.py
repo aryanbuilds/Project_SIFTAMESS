@@ -58,3 +58,12 @@ def append_derived(
     data["derived"].append(asdict(artifact))
     target.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return target
+
+
+def read_derived(run_root: Path | str) -> list[DerivedArtifact]:
+    """Read the derived-artifacts registry (empty list if absent). Symmetric with append_derived."""
+    target = Path(run_root) / "evidence" / "derived_artifacts.json"
+    if not target.is_file():
+        return []
+    data = json.loads(target.read_text(encoding="utf-8"))
+    return [DerivedArtifact(**record) for record in data.get("derived", [])]

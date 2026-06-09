@@ -33,6 +33,7 @@ EXPECTED_COMMANDS = [
     "extract-artifacts",
     "analyze-memory",
     "decompress",
+    "ingest-derived",
     "mcp-serve",
 ]
 

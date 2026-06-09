@@ -7,12 +7,11 @@ Machine & `siftmesh run` automation). Builds on [`work_till_epicd.md`](work_till
 [`epic_f_feature_sofar.md`](epic_f_feature_sofar.md) (Epic F), and
 [`epic_g_feature_sofar.md`](epic_g_feature_sofar.md) (Epic G — the deterministic critic); adds Epic H.
 
-> **Status:** Epics **A, B, C, D, E, F, G** are complete and human-closed. **Epic H** core is complete
-> — **H1–H9 + review-only enforcement (`hth.1`) closed**; one child, **`hth.2` (derived re-ingest, P2),
-> remains open**, and the epic node **`hth` is left OPEN for the human** (only a human closes an epic
-> node). **331 tests pass; ruff/format/mypy clean (89 source files); `siftmesh doctor` ok (tool
-> allowlist = exactly 10).** Build spine: `A → B → C → D → E → F → G → H → K → J → L → M → N → I → P → O`
-> (strictly sequential).
+> **Status:** Epics **A, B, C, D, E, F, G** are complete and human-closed. **Epic H is fully complete**
+> — **all children closed** (H1–H9 + review-only enforcement `hth.1` + derived re-ingest `hth.2`); the
+> epic node **`hth` is left OPEN for the human** (only a human closes an epic node). **339 tests pass;
+> ruff/format/mypy clean (89 source files); `siftmesh doctor` ok (tool allowlist = exactly 10).**
+> Build spine: `A → B → C → D → E → F → G → H → K → J → L → M → N → I → P → O` (strictly sequential).
 
 ---
 
@@ -91,6 +90,7 @@ workflows/    windows_initial_triage.yaml
 | `critique RUN_DIR [--evidence DIR] [--followups/--no-followups]` | **real (G)** | One critic verdict per task; routes claims; contradictions; downgrades; injection consequence; coverage-gap follow-ups. |
 | `retry RUN_DIR TASK-ID` | **real (G)** | Re-critique one task → `decide()`; if retry, tighten the contract + re-dispatch at attempt+1. |
 | `decompress RUN_DIR --archive REL [--evidence DIR]` | **real (D-H, `b2m.1`)** | Decompress a memory archive (zip/7z) → `evidence/extracted/` derived image (custody-tracked). |
+| `ingest-derived RUN_DIR [--evidence DIR]` | **real (H, `hth.2`)** | Make carved/decompressed derived artifacts plannable — one derived task each (resolves under the run dir; manifest untouched). |
 | **`run CASE_DIR --evidence DIR [--mode M] [--review-only] [--auto-human-loop] [--auto] [--max-iterations N]`** | **real (H)** | One deterministic engine: init → plan → dispatch → collect → critique → decide → report → done. |
 | **`resume RUN_DIR`** | **real (H)** | Reload `RunState`, continue from the current state (crash-safe). |
 | **`status RUN_DIR`** | **real (H)** | Print state / mode / iteration / gates / per-task attempts. |
@@ -223,7 +223,25 @@ The runner emits one `orchestration_events.jsonl` line per transition/decision/g
 itself — an honest no-op, no fake escalation); on a retry the runner records the routing decision to
 `audit/token_budget.jsonl`. Cost-based routing + a real strong tier land with Epic I (`agent_profiles.yaml`).
 
-### 6.10 §2B boundary (what is deferred, and why)
+### 6.10 Derived re-ingest (hth.2) — carved/decompressed artifacts become plannable
+The planner reads only the intake manifest, but `extract_artifacts_from_image` and `decompress` write
+*derived* files into `run/evidence/extracted/`. hth.2 makes them first-class plannable inputs **without
+mutating `evidence_manifest.json`** (forensically correct: ISO/IEC 27037 / NIST SP 800-86 treat
+Examination/Analysis outputs as provenance-linked new evidence, distinct from the Collection seal).
+- **`InputArtifact.origin`** (`evidence` | `derived`; default `evidence`) — a `derived` input's path is
+  run-relative and resolves under the **run dir**. The deterministic executor picks the root per input
+  (`ctx.run.root` for derived, else the evidence root); `run_tool` normalises the write-exclusion so a
+  derived task (whose `evidence_root` *is* the run dir) can still write its own outputs.
+- **`detect_derived_gaps` + `ingest_derived`** (`critic.py`) — read `derived_artifacts.json`, route each
+  derived file by basename (a `DECOMP-` image is forced to `memory_image` because a `.raw` suffix would
+  otherwise look like a disk image), and mint one `origin="derived"` task per uncovered actionable file.
+- **CLI** `siftmesh ingest-derived RUN_DIR` is the explicit step; the **engine does it autonomously** —
+  `critique_run`'s G9 follow-up generator now raises `derived_gap` follow-ups, so `run --auto` over a
+  `.E01` drives *extract → (critique sees carved files) → follow_up → dispatch the derived tasks → …*
+  through the existing `decide → follow_up` loop, **no engine change**. Provenance stays unbroken:
+  `claim → tool_call → derived file (sha) → derived_artifacts.json → source image (sha + inode)`.
+
+### 6.11 §2B boundary (what is deferred, and why)
 - **REPORT state = Epic J seam.** The forensic report (`final_report.md`/`accuracy_report.md`) is Epic J
   (spine order H→K→J). The engine reaches `report → done` and logs `report_pending`; `run` tells the
   user to run `siftmesh report`. No fake report.
@@ -231,9 +249,9 @@ itself — an honest no-op, no fake escalation); on a retry the runner records t
   human_review loop correctly; the demoable under-specified→retry→corrected scenario is Epic K (K3). The
   clean deterministic floor yields all-`accepted` verdicts, so tests force the loop branches via targeted
   decisions, not a manufactured demo.
-- **`hth.2` (open).** Re-ingest extracted/decompressed *derived* artifacts into the plannable input set
-  (the manifest-vs-derived seam), so `run` drives image/memory cases end-to-end. P2; custody-sensitive
-  (derived inputs kept distinct from the intake manifest seal).
+- **Full image/memory `run --auto` is host-gated.** The derived-ingest wiring is validated in CI with a
+  synthetic derived registry + a real EVTX placed in `evidence/extracted/`; the end-to-end `.E01`/memory
+  run needs the SANS box (Sleuthkit/Volatility) and the maintainer's evidence.
 
 ---
 
@@ -286,8 +304,8 @@ caps via `SIFTMESH_CAPS__MAX_ITERATIONS=7`.
 
 ## 9. Testing & quality gates
 
-- **331 tests pass**, per epic under `tests/EPIC_<X>_TESTS/` (unique basenames; no `__init__.py`):
-  **A=55, B=34, C=41, D=68, E=42, F=31, G=35, H=25.**
+- **339 tests pass**, per epic under `tests/EPIC_<X>_TESTS/` (unique basenames; no `__init__.py`):
+  **A=56, B=34, C=41, D=68, E=42, F=31, G=35, H=32.**
 - **CI-safe & real:** real tools over **committed public fixtures** in `tests/fixtures/forensic/` (never
   SANS evidence); subprocess/agent boundaries mocked; no API keys. Epic H tests build a real run
   (manifest + readonly + `RunState`) and drive `run_engine` over the real fixtures; the cap test
@@ -324,9 +342,9 @@ Closing the Epic H node (`bd close Project_SIFTAMESS-hth`) unblocks **Epic K —
 Self-Correction Scenario** (the next on the spine `H → K → J`): a real demo dataset + ground truth and
 the genuine under-specified→retry→corrected hero sequence the engine now supports. **Epic J** (Reports &
 Replay) follows K and fills the REPORT-state seam (`final_report.md` / `accuracy_report.md` / `replay`).
-The one open Epic-H child, **`hth.2`** (re-ingest extracted/decompressed derived artifacts), can be built
-to make `siftmesh run` drive image/memory cases end-to-end without a second `init-case`.
+Epic H is now **fully complete** — including `hth.2`, so `siftmesh run` drives image/memory cases
+end-to-end (extract → derived follow-ups → dispatch) without a second `init-case`.
 
 ```
-A✓  B✓  C✓  D✓  E✓  F✓  G✓  H(core done, hth.2 open, gate open)  →  K  J  L  M  N  I  P  O
+A✓  B✓  C✓  D✓  E✓  F✓  G✓  H✓ (all children closed; gate open)  →  K  J  L  M  N  I  P  O
 ```

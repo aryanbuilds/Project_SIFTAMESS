@@ -7,11 +7,21 @@ from pathlib import Path
 import pytest
 from siftmesh_core.adapters.base import get_adapter
 from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
+from siftmesh_core.adapters.opencode_adapter import OpenCodeHeadlessAdapter
 from siftmesh_core.config import load_settings
 from siftmesh_core.run_dir import new_run_dir
 
 
-def test_unknown_profile_falls_back_and_audits(tmp_path: Path) -> None:
+def _no_live_agents(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Force both live adapters unavailable so the test is independent of ambient CLI/login."""
+    monkeypatch.setattr(ClaudeHeadlessAdapter, "available", lambda self: False)
+    monkeypatch.setattr(OpenCodeHeadlessAdapter, "available", lambda self: False)
+
+
+def test_unknown_profile_falls_back_and_audits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _no_live_agents(monkeypatch)
     run = new_run_dir(base=tmp_path / "case_runs")
     adapter = get_adapter("does_not_exist", settings=load_settings(), run=run)
     assert adapter.profile_id == "deterministic_executor"

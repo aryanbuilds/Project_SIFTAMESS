@@ -43,9 +43,10 @@ _AUTH_VARS = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_
 
 
 def test_claude_absent_cli_falls_to_floor(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    # No claude CLI / auth in CI → registry must hand back the deterministic floor.
+    # No claude auth (env or logged-in CLI) → registry must hand back the deterministic floor.
     for var in _AUTH_VARS:
         monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr("siftmesh_core.adapters.claude_adapter._claude_logged_in", lambda: False)
     adapter = get_adapter("claude_headless", settings=load_settings())
     assert adapter.profile_id == "deterministic_executor"
 
@@ -53,7 +54,19 @@ def test_claude_absent_cli_falls_to_floor(real_case: RealCase, monkeypatch) -> N
 def test_claude_adapter_unavailable_without_key(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     for var in _AUTH_VARS:
         monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr("siftmesh_core.adapters.claude_adapter._claude_logged_in", lambda: False)
     assert ClaudeHeadlessAdapter(settings=load_settings()).available() is False
+
+
+def test_claude_available_when_cli_logged_in(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # No env var, but the CLI is logged in (credentials.json) -> usable (claude -p reads it).
+    monkeypatch.setattr(
+        "siftmesh_core.adapters.claude_adapter.shutil.which", lambda p: "/usr/bin/claude"
+    )
+    for var in _AUTH_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr("siftmesh_core.adapters.claude_adapter._claude_logged_in", lambda: True)
+    assert ClaudeHeadlessAdapter(settings=load_settings()).available() is True
 
 
 def test_claude_execute_captures_anchored_claims(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
@@ -118,6 +131,12 @@ def test_generic_shell_echo_agent_roundtrip(real_case: RealCase, tmp_path: Path)
     assert run.result_path("TASK-001").is_file()
 
 
-def test_generic_shell_absent_agent_falls_to_floor() -> None:
+def test_generic_shell_absent_agent_falls_to_floor(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # Force the live adapters unavailable so the chain resolves to the floor regardless of the box
+    # (a logged-in claude CLI would otherwise be a valid earlier link in the preference chain).
+    from siftmesh_core.adapters.opencode_adapter import OpenCodeHeadlessAdapter
+
+    monkeypatch.setattr(ClaudeHeadlessAdapter, "available", lambda self: False)
+    monkeypatch.setattr(OpenCodeHeadlessAdapter, "available", lambda self: False)
     settings = load_settings(generic_agent_cmd=None)
     assert get_adapter("generic_shell", settings=settings).profile_id == "deterministic_executor"

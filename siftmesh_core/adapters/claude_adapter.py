@@ -40,6 +40,17 @@ _MCP_TOOL_PREFIX = "mcp__siftmesh__"
 _AUTH_ENV = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
 
+def _claude_logged_in() -> bool:
+    """True if the Claude Code CLI is already logged in (its own credential store exists).
+
+    After ``claude setup-token`` / ``claude login`` the credentials live in
+    ``~/.claude/.credentials.json`` and ``claude -p`` authenticates from there with NO env var — so
+    a logged-in CLI is usable even when no ANTHROPIC_*/CLAUDE_CODE_* var is set. Existence is a
+    best-effort signal; an expired token still fails closed at subprocess time (never faked).
+    """
+    return (Path.home() / ".claude" / ".credentials.json").is_file()
+
+
 def _build_claude_argv(
     cli_path: str,
     prompt: str,
@@ -83,10 +94,13 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
     backend_label = "claude_headless"
 
     def available(self) -> bool:
-        # CLI present AND some auth: subscription token OR OAuth bearer OR API key (dual auth).
-        has_cli = shutil.which(self.settings.claude_cli_path) is not None
-        has_auth = any(os.environ.get(var) for var in _AUTH_ENV)
-        return has_cli and has_auth
+        # CLI present AND authenticated: an auth env var (subscription token / OAuth bearer / API
+        # key) OR a logged-in Claude Code CLI (its own credential store; `claude -p` uses it with no
+        # env var). Fails closed when the CLI or all auth is absent -> registry walks to the floor.
+        if shutil.which(self.settings.claude_cli_path) is None:
+            return False
+        has_env_auth = any(os.environ.get(var) for var in _AUTH_ENV)
+        return has_env_auth or _claude_logged_in()
 
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)

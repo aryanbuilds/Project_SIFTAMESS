@@ -39,10 +39,11 @@ def test_claude_dual_auth(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "siftmesh_core.adapters.claude_adapter.shutil.which", lambda p: "/usr/bin/claude"
     )
+    monkeypatch.setattr("siftmesh_core.adapters.claude_adapter._claude_logged_in", lambda: False)
     adapter = ClaudeHeadlessAdapter(settings=load_settings())
     for var in ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(var, raising=False)
-    assert not adapter.available()  # CLI present but no auth
+    assert not adapter.available()  # CLI present but no auth (env or logged-in CLI)
     monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "sub-token")  # subscription token alone
     assert adapter.available()
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN")

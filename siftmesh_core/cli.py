@@ -371,6 +371,50 @@ def analyze_memory_cmd(
 
 
 @app.command()
+def decompress(
+    run_dir: str,
+    archive: Annotated[
+        str,
+        typer.Option(help="Compressed memory capture, evidence-relative (e.g. Rocba-Memory.zip)."),
+    ],
+    evidence: Annotated[
+        str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
+    ] = None,
+) -> None:
+    """Decompress a memory archive (zip/7z) into evidence/extracted/ (derived; audited)."""
+    from siftmesh_core.evidence.decompress import decompress_archive
+    from siftmesh_core.orchestrator.scheduler import recover_evidence_root
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        run = RunPaths(root=root)
+        evidence_root: Path = Path(evidence) if evidence else recover_evidence_root(run)
+        outcome = decompress_archive(run, archive=archive, evidence_root=evidence_root)
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        ValueError,
+        PathPolicyViolation,
+        BackendUnavailableError,
+        RuntimeError,
+    ) as exc:
+        typer.echo(f"decompress failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"decompress complete: {outcome.derived_path}")
+    typer.echo(f"  format : {outcome.image_format}")
+    typer.echo(f"  size   : {outcome.size_bytes} bytes")
+    typer.echo(f"  sha256 : {outcome.sha256}")
+    typer.echo(f"  derived: {outcome.decomp_id} (custody: {run.custody_log})")
+    typer.echo(
+        f"  next   : siftmesh analyze-memory {run.root} "
+        f"--evidence {run.root} --memory {outcome.derived_path}"
+    )
+
+
+@app.command()
 def doctor(
     protocol_sift: Annotated[
         bool,

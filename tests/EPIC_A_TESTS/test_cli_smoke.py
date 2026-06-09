@@ -32,6 +32,7 @@ EXPECTED_COMMANDS = [
     "protocol-sift",
     "extract-artifacts",
     "analyze-memory",
+    "decompress",
     "mcp-serve",
 ]
 

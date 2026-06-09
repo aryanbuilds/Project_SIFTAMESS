@@ -93,16 +93,25 @@ It pulls the curated set: Security/PowerShell/System `.evtx`, SOFTWARE/SYSTEM hi
 `NTUSER.DAT`, `$MFT`. Missing artifacts are skipped; unreadable ones land in `failed[]` (never
 fabricated). To limit it: add `--keys security_evtx --keys system_evtx`, etc.
 
-**2d. Make the extracted artifacts plannable, then run the deterministic pipeline over them:**
+**2d. Make the extracted artifacts plannable, then run the deterministic pipeline over them.**
+`ingest-derived` writes one task contract per extracted artifact directly — so go **straight to
+`dispatch`; do NOT run `plan` here** (after a manual `extract-artifacts`, `plan` would create a fresh
+`extract_artifacts_from_image` task and re-run the 22 GB extraction):
 
 ```bash
 uv run siftmesh ingest-derived "$RUN" --evidence ~/projects/ev_disk
-uv run siftmesh plan     "$RUN"
+ls "$RUN/tasks/"                       # confirm the derived parse tasks were created
 uv run siftmesh dispatch "$RUN"
 uv run siftmesh collect  "$RUN"
 uv run siftmesh critique "$RUN"
 uv run siftmesh report   "$RUN"
 ```
+
+Note: only extracted artifacts that map to a typed tool get a task — PowerShell evtx →
+`parse_evtx_powershell`, SOFTWARE/SYSTEM/user hives → `extract_registry_run_keys`, Prefetch →
+`analyze_prefetch`. `System.evtx` and `$MFT` have no dedicated parser in the 10-tool allowlist and are
+reported as coverage gaps rather than parsed. (`Security.evtx` → `parse_evtx_security` only if it
+extracted.)
 
 Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 `"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).

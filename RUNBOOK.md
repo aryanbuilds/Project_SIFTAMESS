@@ -1,0 +1,234 @@
+# SIFTMesh Runbook — testing on real evidence (ROCBA)
+
+Line-by-line commands for driving SIFTMesh end-to-end against real DFIR evidence. Every command here
+is **real** — real Sleuthkit, real Volatility 3, real deterministic critic, real live agent. Nothing
+is mocked.
+
+**Ground rule (CLAUDE.md §2B):** the maintainer runs these against real evidence; the tooling never
+self-tests against forensic data. Run everything from the repo root:
+
+```bash
+cd ~/projects/Project_SIFTAMESS
+```
+
+All CLI commands are confirmed against `siftmesh … --help` and the current source.
+
+---
+
+## What the data is, and which tool handles it
+
+| File (`~/projects/data/`) | Size | Tool path |
+|---|---|---|
+| `rocba-cdrive.e01` | 22.6 GB | disk image → `extract-artifacts` (Sleuthkit `mmls/ifind/icat/fls`) |
+| `Rocba-Memory.zip` | 5.4 GB | memory, zipped → `decompress` → `analyze-memory` (Volatility 3, subprocess only) |
+| `ROCBA-BACKGROUND.pptx` | 39 MB | **case briefing only** — no typed parser; read it for context, do not feed it to tools |
+| `standard_case_1/` | 2.6 GB | only a **partial** `rocba-cdrive.e01.download` — ignore it |
+
+---
+
+## 0 — Prove the host is ready (no evidence touched)
+
+```bash
+uv run siftmesh doctor
+```
+
+What matters:
+
+- `[ ok ] gateway tool allowlist: 10 tools, no forbidden` — core is healthy.
+- SIFT-lane lines for **Sleuthkit (mmls/ifind/icat/fls)**, **Volatility 3 (vol)**, **7z**. These are
+  `[warn]` if absent (fine for `doctor`), but the tool **fails closed** when actually invoked. For the
+  ROCBA disk + memory you need them present:
+  - `which mmls ifind icat fls` (installed on SANS SIFT).
+  - `which vol` — if it lives elsewhere: `export SIFTMESH_VOL_PATH=/opt/volatility3/bin/vol`.
+  - `which 7z` (the memory zip wraps an inner archive).
+
+Optionally inspect the Protocol SIFT layer: `uv run siftmesh doctor --protocol-sift`.
+
+---
+
+## 1 — (Optional) 60-second engine smoke, no keys, public fixtures
+
+Confirms `init → plan → dispatch → collect → critique → report` works before spending time on 22 GB.
+
+```bash
+mkdir -p /tmp/smoke_ev
+cp tests/fixtures/forensic/security_short.evtx /tmp/smoke_ev/Security.evtx
+uv run siftmesh run ./case_smoke --evidence /tmp/smoke_ev --auto
+```
+
+Expect the run to reach `state: done`. This is the deterministic floor (real `evtx` parser, real
+claims) — no agent, no keys.
+
+---
+
+## 2 — Disk image: real Sleuthkit extraction + orchestration
+
+**2a. Curate a clean evidence dir** (hard-link = instant, same bytes; keeps the manifest focused and
+avoids hashing the 2.6 GB partial in `standard_case_1/`):
+
+```bash
+mkdir -p ~/projects/ev_disk
+ln ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/ 2>/dev/null \
+  || cp -n ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/
+```
+
+**2b. Seal evidence** (hashes the 22.6 GB e01 once — expect ~1 min):
+
+```bash
+uv run siftmesh init-case ./case_disk --evidence ~/projects/ev_disk
+RUN=$(ls -dt ./case_disk/case_runs/RUN-* | head -1); echo "RUN=$RUN"
+```
+
+Check: `cat "$RUN/evidence/evidence_manifest.json"` shows `rocba-cdrive.e01` with its SHA-256.
+
+**2c. Extract Windows artifacts with real Sleuthkit** (writes to `$RUN/evidence/extracted/`, fully
+audited; minutes on 22 GB, 1800 s timeout):
+
+```bash
+uv run siftmesh extract-artifacts "$RUN" --evidence ~/projects/ev_disk --image rocba-cdrive.e01
+ls -la "$RUN/evidence/extracted/"
+```
+
+It pulls the curated set: Security/PowerShell/System `.evtx`, SOFTWARE/SYSTEM hives, prefetch, user
+`NTUSER.DAT`, `$MFT`. Missing artifacts are skipped; unreadable ones land in `failed[]` (never
+fabricated). To limit it: add `--keys security_evtx --keys system_evtx`, etc.
+
+**2d. Make the extracted artifacts plannable, then run the deterministic pipeline over them:**
+
+```bash
+uv run siftmesh ingest-derived "$RUN" --evidence ~/projects/ev_disk
+uv run siftmesh plan     "$RUN"
+uv run siftmesh dispatch "$RUN"
+uv run siftmesh collect  "$RUN"
+uv run siftmesh critique "$RUN"
+uv run siftmesh report   "$RUN"
+```
+
+Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
+`"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).
+
+---
+
+## 3 — Memory: decompress + real Volatility 3
+
+**3a. Curate + seal** (point evidence at the zip's dir):
+
+```bash
+mkdir -p ~/projects/ev_mem
+ln ~/projects/data/Rocba-Memory.zip ~/projects/ev_mem/ 2>/dev/null \
+  || cp -n ~/projects/data/Rocba-Memory.zip ~/projects/ev_mem/
+uv run siftmesh init-case ./case_mem --evidence ~/projects/ev_mem
+RUNM=$(ls -dt ./case_mem/case_runs/RUN-* | head -1); echo "RUNM=$RUNM"
+```
+
+**3b. Decompress** (zip → inner 7z → raw image, into `$RUNM/evidence/extracted/`; needs `7z`):
+
+```bash
+uv run siftmesh decompress "$RUNM" --archive Rocba-Memory.zip --evidence ~/projects/ev_mem
+ls -la "$RUNM/evidence/extracted/"        # note the EXACT decompressed filename
+MEM=$(ls "$RUNM/evidence/extracted/" | head -1); echo "MEM=$MEM"
+```
+
+**3c. (Recommended) point Volatility's symbol cache at a writable dir** — vol downloads Windows PDB
+symbols (needs internet, or pre-cached):
+
+```bash
+mkdir -p /tmp/vol_symbols
+export SIFTMESH_VOL_SYMBOL_DIRS=/tmp/vol_symbols
+```
+
+**3d. Analyze** — `--evidence` is the **RUN dir** here (the raw image lives under it):
+
+```bash
+uv run siftmesh analyze-memory "$RUNM" --evidence "$RUNM" --memory "evidence/extracted/$MEM"
+```
+
+Defaults run `windows.pslist`, `pstree`, `netscan`, `cmdline`, `malfind` (per-plugin 900 s;
+`netscan`/`malfind` are slow on a big dump). `windows.info` gates the rest — if symbols don't resolve
+it fails closed (no fake rows). Narrow with `--plugins pslist --plugins pstree` to start. The full raw
+Volatility JSON is preserved in the tool-call audit; the typed summary is in the tool result.
+
+---
+
+## 4 — Live Claude self-correction (subscription or API)
+
+The live agent works on the **extracted** artifacts from §2 (it calls the typed tools, not the raw
+e01). Do §2a–2d first, reusing that `$RUN`.
+
+**4a. Authenticate Claude's own CLI** (the subscription only ever drives the real `claude` binary; it
+is never proxied to another client):
+
+```bash
+claude setup-token            # interactive → sets CLAUDE_CODE_OAUTH_TOKEN
+# …or for API billing instead:  export ANTHROPIC_API_KEY=sk-ant-...
+which claude && echo "auth: ${CLAUDE_CODE_OAUTH_TOKEN:+oauth}${ANTHROPIC_AUTH_TOKEN:+bearer}${ANTHROPIC_API_KEY:+apikey}"
+```
+
+Any one of `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_API_KEY` makes the adapter
+available; with none it silently falls back to the deterministic floor.
+
+**4b. Opt into the live agent** (staged, capping iterations to control cost):
+
+```bash
+uv run siftmesh plan "$RUN"
+uv run siftmesh dispatch "$RUN" --agent-profile claude_headless
+uv run siftmesh collect  "$RUN"
+uv run siftmesh critique "$RUN"
+```
+
+Or one-shot with the friendly flag (Claude preferred → OpenCode → floor; live until a gate):
+
+```bash
+uv run siftmesh run ./case_disk --evidence ~/projects/ev_disk --agent claude --auto-human-loop --max-iterations 2
+```
+
+`--agent` options: `claude` | `opencode` | `deterministic`. Default (no flag) stays the deterministic
+floor. Per-agent models come from `siftmesh_core/adapters/agent_profiles.yaml`
+(claude → `claude-opus-4-8`, opencode → `anthropic/claude-sonnet-4-6`).
+
+**4c. Watch the self-correction loop happen** (in `$RUN`):
+
+```bash
+cat "$RUN/audit/orchestration_events.jsonl"   # adapter_unavailable? which adapter ran
+cat "$RUN/audit/agent_calls.jsonl"            # attempt=1, attempt=2 …
+cat "$RUN/audit/critic_verdicts.jsonl"        # verdict=retry_required → then accepted
+cat "$RUN/claims/unsupported_claims.jsonl"    # the rejected, under-anchored over-claim (attempt 1)
+cat "$RUN/claims/claim_ledger.jsonl"          # the corrected, anchored claim (attempt 2)
+cat "$RUN/audit/retries.jsonl"                # the retry record + reasons
+```
+
+The story you're verifying: attempt 1 over-claims without a `tool_call_id` / `source_sha256` → the
+critic returns `retry_required` and the claim lands only in `unsupported_claims.jsonl` → the rejection
+reasons are injected into the retry prompt → attempt 2 cites the real anchor → it is accepted and
+promoted to `claim_ledger.jsonl`. Claim IDs are attempt-scoped (`…-A1-…` vs `…-A2-…`) so the
+correction never overwrites the rejection.
+
+---
+
+## 5 — Inspect / drive any run
+
+```bash
+uv run siftmesh status "$RUN"                  # state, mode, iteration, gates, per-task attempts
+uv run siftmesh resume "$RUN"                  # continue an interrupted run
+uv run siftmesh approve "$RUN" --gate plan     # gates: plan | dispatch | retry | report
+uv run siftmesh reject  "$RUN" --gate retry
+uv run siftmesh retry   "$RUN" TASK-001        # re-critique one task; tighten + re-dispatch if DECIDE says so
+```
+
+`tasks list` / `claims list` / `audit tail` are debug stubs — read the JSONL files directly (above).
+
+---
+
+## Practical notes
+
+- **Path arg vs RUN-id:** staged commands (`plan/dispatch/collect/critique/status/resume/approve/
+  reject/retry/extract-artifacts/analyze-memory/decompress/ingest-derived`) take a **RUN directory
+  path** (hence `$RUN`). `init-case` / `run` take a **case dir**.
+- **Cost/time:** hashing 22.6 GB ≈ ~1 min; Sleuthkit extraction = minutes; Volatility
+  `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`–`2` and a narrow set of
+  extracted artifacts.
+- **Fail-closed:** a missing SIFT-lane tool yields a clean `BackendUnavailableError` when invoked —
+  install the tool; never a fake result.
+- **Config precedence:** init args > env (`SIFTMESH_*`) > `siftmesh.toml` > defaults. Useful env vars:
+  `SIFTMESH_VOL_PATH`, `SIFTMESH_VOL_SYMBOL_DIRS`, `SIFTMESH_EXECUTOR_SELECTION` (`deterministic` |
+  `live` | `auto`), `SIFTMESH_CAPS__MAX_ITERATIONS=N`.

@@ -75,8 +75,10 @@ class SiftmeshSettings(BaseSettings):
     opencode_cli_path: str = "opencode"
     # Fixed-argv command for the generic shell adapter (F7); None => unavailable.
     generic_agent_cmd: str | None = None
-    # Whole-agent-invocation wall-clock (F7/F8); distinct from caps.max_tool_runtime_seconds.
-    agent_timeout_seconds: int = 300
+    # Whole-agent-invocation wall-clock (F7/F8); distinct from caps.max_tool_runtime_seconds. A live
+    # agent investigating via multiple typed-tool calls + reasoning routinely exceeds 5 min, so the
+    # default is 10 min (override per env/toml for slower models or larger artifacts).
+    agent_timeout_seconds: int = 600
 
     # Multi-agent layer (Epic I). When live is selected, profiles are tried in this order and the
     # first available() wins; the deterministic floor is always the final fall-back. role_profiles

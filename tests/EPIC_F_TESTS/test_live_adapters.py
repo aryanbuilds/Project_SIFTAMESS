@@ -39,6 +39,23 @@ def test_claude_argv_built_correctly(tmp_path: Path) -> None:
     assert any("mcp__siftmesh__parse_evtx_security" in a for a in argv)
 
 
+def test_mcp_config_launchable_and_absolute(real_case: RealCase) -> None:
+    # The MCP server must be launchable by the agent subprocess (NOT bare 'siftmesh', which is not
+    # on PATH) and the run-scoping roots must be absolute so the server resolves them from any cwd.
+    import json
+    import sys
+
+    run, evidence = real_case()
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    cfg = json.loads(adapter._write_mcp_config(ctx).read_text(encoding="utf-8"))
+    server = cfg["mcpServers"]["siftmesh"]
+    assert server["command"] == sys.executable
+    assert server["args"] == ["-m", "siftmesh_core.cli", "mcp-serve"]
+    assert Path(server["env"]["SIFTMESH_RUN_ROOT"]).is_absolute()
+    assert Path(server["env"]["SIFTMESH_EVIDENCE_ROOT"]).is_absolute()
+
+
 _AUTH_VARS = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
 

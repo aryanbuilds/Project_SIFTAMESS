@@ -21,6 +21,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -128,6 +129,7 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
             )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return self._error(contract, ctx, started, "agent_failed_or_timeout")
+        self._write_raw(ctx, contract, proc.stdout)  # persist raw envelope for debugging
         try:
             envelope = json.loads(proc.stdout)
         except json.JSONDecodeError:
@@ -148,15 +150,21 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
         )
 
     def _write_mcp_config(self, ctx: AdapterContext) -> Path:
-        """Write a per-run MCP config pointing at SIFTMesh's stdio FastMCP server."""
+        """Write a per-run MCP config pointing at SIFTMesh's stdio FastMCP server.
+
+        The server is launched as ``<this interpreter> -m siftmesh_core.cli mcp-serve`` — NOT bare
+        ``siftmesh`` (a uv/pip console script that is not on the agent subprocess's PATH), so the
+        agent can actually reach the typed tools regardless of how SIFTMesh was invoked. Roots are
+        written ABSOLUTE so the run-scoped server resolves them from any cwd.
+        """
         config = {
             "mcpServers": {
                 "siftmesh": {
-                    "command": "siftmesh",
-                    "args": ["mcp-serve"],
+                    "command": sys.executable,
+                    "args": ["-m", "siftmesh_core.cli", "mcp-serve"],
                     "env": {
-                        "SIFTMESH_RUN_ROOT": str(ctx.run.root),
-                        "SIFTMESH_EVIDENCE_ROOT": str(ctx.evidence_root),
+                        "SIFTMESH_RUN_ROOT": str(Path(ctx.run.root).resolve()),
+                        "SIFTMESH_EVIDENCE_ROOT": str(Path(ctx.evidence_root).resolve()),
                     },
                 }
             }
@@ -165,6 +173,12 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
         return target
+
+    def _write_raw(self, ctx: AdapterContext, contract: TaskContract, stdout: str) -> None:
+        """Persist the agent's raw stdout envelope for debugging (no parsing, no judgment)."""
+        target = safe_write_path(ctx.run.root, f"results/{contract.task_id}.agent_raw.json")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(stdout, encoding="utf-8")
 
     def _error(
         self, contract: TaskContract, ctx: AdapterContext, started: datetime, code: str

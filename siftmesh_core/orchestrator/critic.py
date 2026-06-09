@@ -66,6 +66,7 @@ from siftmesh_core.schemas.critic_records import (
 )
 from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.injection_alert import InjectionAlert
+from siftmesh_core.schemas.plan import InvestigationPlan
 from siftmesh_core.schemas.task import ArtifactOrigin, TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 from siftmesh_core.schemas.yaml_io import dump_yaml_model, read_yaml_model
@@ -459,7 +460,35 @@ def ingest_derived(
                 audit=log,
             )
         )
+    _ensure_dispatchable_plan(run, created=len(written))
     return written
+
+
+def _ensure_dispatchable_plan(run: RunPaths, *, created: int) -> None:
+    """Write a minimal InvestigationPlan if none exists, so the derived tasks are dispatchable.
+
+    The staged manual flow (``extract-artifacts`` → ``ingest-derived`` → ``dispatch``) never runs
+    ``plan``, so ``context/investigation_plan.yaml`` is absent and ``dispatch_run`` — which reads it
+    only to check ``review_only`` — fails closed. The derived tasks already live in ``tasks/``; this
+    records a non-review-only plan (empty step graph) so they can be dispatched. The ``plan`` /
+    high-level engine paths are unaffected (the file already exists there, so this is a no-op).
+    """
+    if run.investigation_plan.exists():
+        return
+    manifest = EvidenceManifest.model_validate_json(
+        run.evidence_manifest.read_text(encoding="utf-8")
+    )
+    plan = InvestigationPlan(
+        plan_id=f"{run.run_id}-derived",
+        case_id=manifest.case_id,
+        template="derived-ingest",
+        review_only=False,
+        artifact_count=created,
+        steps=[],
+    )
+    target = safe_write_path(run.root, "context/investigation_plan.yaml")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(dump_yaml_model(plan), encoding="utf-8")
 
 
 def _record_corroboration_gaps(

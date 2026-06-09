@@ -21,6 +21,7 @@ from siftmesh_core.orchestrator.critic import critique_run, detect_derived_gaps,
 from siftmesh_core.orchestrator.planner import generate_plan
 from siftmesh_core.orchestrator.scheduler import dispatch_run
 from siftmesh_core.run_dir import RunPaths
+from siftmesh_core.schemas.plan import InvestigationPlan
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.yaml_io import read_yaml_model
 from typer.testing import CliRunner
@@ -126,6 +127,29 @@ def test_decompress_derived_routes_as_memory(built_run: BuiltRun) -> None:
     assert len(gaps) == 1
     assert gaps[0].family == "memory_image"
     assert gaps[0].tool == "analyze_memory"
+
+
+def test_ingest_derived_writes_plan_when_absent(built_run: BuiltRun) -> None:
+    # Staged manual flow (no `plan` run): ingest-derived writes a minimal plan so dispatch works.
+    run, evidence = built_run(mode="manual")
+    assert not run.investigation_plan.exists()
+    _add_derived_evtx(run)
+    created = ingest_derived(run, evidence_root=evidence)
+    assert len(created) == 1
+    assert run.investigation_plan.exists()  # the fix wrote a dispatchable plan
+    plan = read_yaml_model(InvestigationPlan, run.investigation_plan)
+    assert plan.review_only is False and plan.steps == []
+    # dispatch previously failed closed ('No such file: investigation_plan.yaml'); now it runs.
+    refs = dispatch_run(run, settings=load_settings(), task_id=created[0].stem)
+    assert len(refs) == 1 and refs[0].status == "success"
+
+
+def test_ingest_derived_preserves_existing_plan(built_run: BuiltRun) -> None:
+    run, evidence = _prepared(built_run)  # a real plan already exists
+    before = run.investigation_plan.read_bytes()
+    _add_derived_evtx(run)
+    ingest_derived(run, evidence_root=evidence)
+    assert run.investigation_plan.read_bytes() == before  # never clobbers the planner's plan
 
 
 def test_ingest_derived_cli(built_run: BuiltRun, runner: CliRunner, cli_app: typer.Typer) -> None:

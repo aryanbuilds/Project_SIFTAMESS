@@ -82,26 +82,35 @@ RUN=$(ls -dt ./case_disk/case_runs/RUN-* | head -1); echo "RUN=$RUN"
 Check: `cat "$RUN/evidence/evidence_manifest.json"` shows `rocba-cdrive.e01` with its SHA-256.
 
 **2c. Extract Windows artifacts with real Sleuthkit** (writes to `$RUN/evidence/extracted/`, fully
-audited; minutes on 22 GB, 1800 s timeout):
+audited; minutes on 22 GB, 1800 s timeout).
+
+> **Scale note — extract a FOCUSED set.** Extracting *everything* (the default) pulls 200+ files
+> (every prefetch `.pf` + every user hive). `ingest-derived` then makes **one task per file**, and the
+> default cap is `max_agent_tasks=10` → `dispatch` would refuse. For a clean run, extract a few
+> single-file, high-value keys (each becomes one task):
 
 ```bash
-uv run siftmesh extract-artifacts "$RUN" --evidence ~/projects/ev_disk --image rocba-cdrive.e01
+uv run siftmesh extract-artifacts "$RUN" --evidence ~/projects/ev_disk --image rocba-cdrive.e01 \
+  --keys powershell_evtx --keys software_hive --keys system_hive --keys security_evtx
 ls -la "$RUN/evidence/extracted/"
 ```
 
-It pulls the curated set: Security/PowerShell/System `.evtx`, SOFTWARE/SYSTEM hives, prefetch, user
-`NTUSER.DAT`, `$MFT`. Missing artifacts are skipped; unreadable ones land in `failed[]` (never
-fabricated). To limit it: add `--keys security_evtx --keys system_evtx`, etc.
+Curated keys: `security_evtx`, `powershell_evtx`, `system_evtx`, `software_hive`, `system_hive`,
+`prefetch`, `user_hives`, `mft`. Missing artifacts are skipped; unreadable ones land in `failed[]`
+(never fabricated — e.g. on the ROCBA e01, `security_evtx` fails with a real TSK NTFS-decompression
+error and is honestly recorded, not faked). Omit `--keys` to take the full set, but then **raise the
+cap**: `export SIFTMESH_CAPS__MAX_AGENT_TASKS=400`.
 
 **2d. Make the extracted artifacts plannable, then run the deterministic pipeline over them.**
-`ingest-derived` writes one task contract per extracted artifact directly — so go **straight to
-`dispatch`; do NOT run `plan` here** (after a manual `extract-artifacts`, `plan` would create a fresh
-`extract_artifacts_from_image` task and re-run the 22 GB extraction):
+`ingest-derived` writes one task contract per extracted artifact **and** a minimal
+`investigation_plan.yaml` (so `dispatch` works without a separate `plan` step — do **not** run `plan`
+after a manual `extract-artifacts`, or it would create a fresh `extract_artifacts_from_image` task and
+re-run the 22 GB extraction):
 
 ```bash
 uv run siftmesh ingest-derived "$RUN" --evidence ~/projects/ev_disk
 ls "$RUN/tasks/"                       # confirm the derived parse tasks were created
-uv run siftmesh dispatch "$RUN"
+uv run siftmesh dispatch "$RUN"        # if you took the FULL set: prefix SIFTMESH_CAPS__MAX_AGENT_TASKS=400
 uv run siftmesh collect  "$RUN"
 uv run siftmesh critique "$RUN"
 uv run siftmesh report   "$RUN"
@@ -109,9 +118,8 @@ uv run siftmesh report   "$RUN"
 
 Note: only extracted artifacts that map to a typed tool get a task — PowerShell evtx →
 `parse_evtx_powershell`, SOFTWARE/SYSTEM/user hives → `extract_registry_run_keys`, Prefetch →
-`analyze_prefetch`. `System.evtx` and `$MFT` have no dedicated parser in the 10-tool allowlist and are
-reported as coverage gaps rather than parsed. (`Security.evtx` → `parse_evtx_security` only if it
-extracted.)
+`analyze_prefetch`, Security evtx → `parse_evtx_security`. `System.evtx` and `$MFT` have no dedicated
+parser in the 10-tool allowlist and are reported as coverage gaps rather than parsed.
 
 Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 `"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).

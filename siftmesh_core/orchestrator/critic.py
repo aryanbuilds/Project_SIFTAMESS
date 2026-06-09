@@ -155,9 +155,13 @@ def _detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord
 def _contradiction_rule(a: Claim, b: Claim) -> str | None:
     if {a.status, b.status} == {"confirmed", "contradicted"}:
         return "same_subject_opposite_assertion"
+    # Enumeration indices ("event #1" vs "event #2") mark DISTINCT items, not conflicting values —
+    # strip them so per-item sibling claims on one artifact aren't mistaken for a value mismatch.
+    enum = re.compile(r"#\s*\d+")
+    a_text, b_text = enum.sub("#", a.claim), enum.sub("#", b.claim)
     mask = re.compile(r"\d+")
-    if mask.sub("N", a.claim) == mask.sub("N", b.claim) and mask.findall(a.claim) != mask.findall(
-        b.claim
+    if mask.sub("N", a_text) == mask.sub("N", b_text) and mask.findall(a_text) != mask.findall(
+        b_text
     ):
         return "same_artifact_field_value_mismatch"
     return None

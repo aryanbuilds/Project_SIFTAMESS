@@ -37,9 +37,12 @@ _SIGNATURES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("new_instructions", re.compile(r"\bnew\s+instructions?\b", re.I)),
     ("reveal_prompt", re.compile(r"(reveal|print|show)\s+(your\s+)?system\s+prompt", re.I)),
 )
-# A long base64-ish blob is suspicious — but a 64-char lowercase-hex sha256 is not.
+# A long base64-ish blob is suspicious — but a pure-hex token (md5/sha1/sha256 and their upper/mixed
+# case forms, or any hex id) is a digest, not a base64 injection payload. Real base64 of a command
+# carries non-hex chars; excluding pure-hex avoids the DFIR false positives that flood real runs
+# (sha256 provenance, hash-named registry values).
 _BASE64_BLOB = re.compile(r"[A-Za-z0-9+/]{40,}={0,2}")
-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+_HEX_TOKEN = re.compile(r"^[0-9a-fA-F]+$")
 
 
 @dataclass(frozen=True)
@@ -87,8 +90,8 @@ def scan_injection(text: str) -> list[InjectionMatch]:
         for m in pattern.finditer(text):
             matches.append(InjectionMatch(name, _snippet(text, m.start(), m.end()), m.span()))
     for m in _BASE64_BLOB.finditer(text):
-        blob = m.group(0)
-        if _HEX64.match(blob):  # a bare sha256 is not an injection blob
+        blob = m.group(0).rstrip("=")
+        if _HEX_TOKEN.match(blob):  # a hash / hex id is not a base64 injection blob
             continue
         matches.append(InjectionMatch("base64_blob", _snippet(text, m.start(), m.end()), m.span()))
     return matches

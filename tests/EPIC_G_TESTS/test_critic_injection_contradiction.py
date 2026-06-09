@@ -149,6 +149,31 @@ def test_no_contradiction_false_positive_distinct_artifacts(
     assert not any(r.task_id == "TASK-913" for r in read_contradictions(run.root))
 
 
+def test_no_contradiction_false_positive_enumerated_siblings(
+    dispatched_case: DispatchedCase,
+) -> None:
+    # Per-event sibling claims on ONE artifact differ only by the enumeration index -> no conflict.
+    run, _ = dispatched_case()
+    a = _claim(
+        "TASK-915-1",
+        "TASK-915",
+        claim="PowerShell EventID 4104 (script-block logging) observed (event #1).",
+        source_artifact="PS.evtx",
+        evidence_type="windows_event_log",
+    )
+    b = _claim(
+        "TASK-915-2",
+        "TASK-915",
+        claim="PowerShell EventID 4104 (script-block logging) observed (event #2).",
+        source_artifact="PS.evtx",
+        evidence_type="windows_event_log",
+    )
+    _result(run, "TASK-915", [a, b])
+    verdicts = {v.task_id: v for v in critique_run(run, settings=load_settings())}
+    assert verdicts["TASK-915"].verdict != "escalation_required"
+    assert not any(r.task_id == "TASK-915" for r in read_contradictions(run.root))
+
+
 def test_broader_than_evidence_downgraded(dispatched_case: DispatchedCase) -> None:
     run, _ = dispatched_case()
     real_anchor = None

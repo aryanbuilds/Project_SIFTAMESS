@@ -83,12 +83,13 @@ class SiftmeshSettings(BaseSettings):
     # Multi-agent layer (Epic I). When live is selected, profiles are tried in this order and the
     # first available() wins; the deterministic floor is always the final fall-back. role_profiles
     # optionally pins a profile per task role (overrides the chain head). claude_permission_mode is
-    # the non-interactive headless permission value (re-verify `claude --help` on the box).
+    # the non-interactive headless permission value: "dontAsk" auto-denies any tool not explicitly
+    # allowed (the sandbox; do NOT use acceptEdits/bypassPermissions for the forensic agent).
     agent_preference: list[str] = Field(
         default_factory=lambda: ["claude_headless", "opencode_headless", "deterministic_executor"]
     )
     role_profiles: dict[str, str] = Field(default_factory=dict)
-    claude_permission_mode: str = "acceptEdits"
+    claude_permission_mode: str = "dontAsk"
 
     # Optional Layer-2 LLM adversarial critic (Epic G8). Off by default; the Layer-1
     # deterministic critic is always sufficient. The real pass needs the F8 agent.

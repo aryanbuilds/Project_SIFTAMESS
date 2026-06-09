@@ -36,7 +36,7 @@ def extract_registry_run_keys(
 ) -> RunKeysResult:
     """Extract Run/RunOnce autostart entries from an offline registry hive."""
     backend = get_backend(backend_mode)
-    path, sha = resolved_source(evidence_root, source_artifact)
+    path, sha = resolved_source(evidence_root, source_artifact, run_root=run_root)
 
     def produce() -> dict[str, Any]:
         try:

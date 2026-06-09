@@ -35,8 +35,18 @@ def test_claude_argv_built_correctly(tmp_path: Path) -> None:
     assert argv[0] == "claude" and "-p" in argv
     assert "--output-format" in argv and "json" in argv
     assert "--mcp-config" in argv
-    assert "--permission-mode" in argv  # I6: non-interactive
     assert any("mcp__siftmesh__parse_evtx_security" in a for a in argv)
+
+
+def test_claude_argv_is_sandboxed(tmp_path: Path) -> None:
+    # The forensic agent must be constrained to ONLY the mcp tools: deny built-in shell/file tools,
+    # auto-deny the rest (dontAsk), and ignore ambient MCP servers (CLAUDE.md §3/§6).
+    argv = _build_claude_argv("claude", "go", tmp_path / "mcp.json", ["parse_evtx_security"])
+    assert "--disallowedTools" in argv
+    for builtin in ("Bash", "Edit", "Write", "Read", "WebFetch", "Task"):
+        assert builtin in argv  # explicitly denied
+    assert "--strict-mcp-config" in argv
+    assert argv[argv.index("--permission-mode") + 1] == "dontAsk"  # auto-deny, no acceptEdits
 
 
 def test_mcp_config_launchable_and_absolute(real_case: RealCase) -> None:

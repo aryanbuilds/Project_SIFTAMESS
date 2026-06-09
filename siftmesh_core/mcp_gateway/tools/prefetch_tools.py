@@ -39,7 +39,7 @@ def analyze_prefetch(
 ) -> PrefetchResult:
     """Parse a Windows prefetch (``.pf``) artifact for execution evidence."""
     backend = get_backend(backend_mode)
-    path, sha = resolved_source(evidence_root, source_artifact)
+    path, sha = resolved_source(evidence_root, source_artifact, run_root=run_root)
 
     def produce() -> dict[str, Any]:
         try:

@@ -1,18 +1,20 @@
 """Claude Code headless adapter (Epic F, F8) — the live autonomous executor (CORE).
 
-Thin wrapper around ``claude -p`` in non-interactive JSON mode. The agent is
-constrained to SIFTMesh's typed tools by pointing it at the FastMCP server
-(``siftmesh mcp-serve``, the 10 allowlisted tools — no raw shell) and narrowing
-``--allowedTools`` to the contract's single tool. When the CLI or all auth
-(subscription token / OAuth bearer / API key) is absent the adapter is unavailable
-and the registry falls closed to the deterministic floor.
+Thin wrapper around ``claude -p`` in non-interactive JSON mode. The agent is SANDBOXED to
+SIFTMesh's typed tools: the FastMCP server is launched via ``python -m siftmesh_core.cli mcp-serve``
+(NOT bare ``siftmesh`` — not on the subprocess PATH), ``--strict-mcp-config`` ignores ambient MCP
+servers, ``--allowedTools`` pre-approves only the contract's ``mcp__siftmesh__*`` tools,
+``--disallowedTools`` denies the built-in shell/file/web/spawn tools, and ``--permission-mode
+dontAsk`` auto-denies anything else (no prompt/hang). So the agent cannot run raw shell or write
+files (CLAUDE §3/§6 privilege separation). When the CLI or all auth (subscription token / OAuth
+bearer / API key / logged-in CLI) is absent the adapter is unavailable and the registry falls closed
+to the deterministic floor.
 
 HARD GATES (CLAUDE §2A/§2B):
-* The exact CLI flags are UNVERIFIED — they are isolated in ``_build_claude_argv``
-  so they can be corrected in one place after confirming via ``claude --help`` /
-  the claude-code docs before any live run.
-* Live validation against real evidence is HUMAN-GATED. Unit tests mock the
-  subprocess boundary only; do NOT autonomously run a live agent against evidence.
+* CLI flags confirmed against claude v2.1.x ``--help`` and isolated in ``_build_claude_argv`` —
+  re-confirm on version bumps (the single place to correct them).
+* Live validation against real evidence is HUMAN-GATED. Unit tests mock the subprocess boundary
+  only; do NOT autonomously run a live agent against evidence.
 """
 
 from __future__ import annotations
@@ -40,6 +42,33 @@ _MCP_TOOL_PREFIX = "mcp__siftmesh__"
 # bearer OR the commercial API key. Any one present => the adapter is usable (dual auth).
 _AUTH_ENV = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
+# Built-in Claude Code tools the SANDBOXED forensic agent must NOT have. `--allowedTools` is only
+# ADDITIVE (it does not exclude built-ins — confirmed via claude-code docs + issue #62608), so we
+# explicitly DENY raw shell / file-write / read / web / spawn tools. Combined with
+# `--permission-mode dontAsk` (auto-deny anything not explicitly allowed, no prompt, no hang) this
+# constrains the agent to ONLY the typed mcp__siftmesh__* tools (CLAUDE.md §3/§6 privilege
+# separation). Over-listing is harmless — denying an unknown tool name is a no-op.
+_DISALLOWED_TOOLS = (
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Edit",
+    "MultiEdit",
+    "Write",
+    "NotebookEdit",
+    "Read",
+    "Glob",
+    "Grep",
+    "LS",
+    "WebFetch",
+    "WebSearch",
+    "Task",
+    "Agent",
+    "TodoWrite",
+    "Skill",
+    "SlashCommand",
+)
+
 
 def _claude_logged_in() -> bool:
     """True if the Claude Code CLI is already logged in (its own credential store exists).
@@ -59,14 +88,15 @@ def _build_claude_argv(
     allowed_tools: list[str],
     *,
     model: str | None = None,
-    permission_mode: str = "acceptEdits",
+    permission_mode: str = "dontAsk",
 ) -> list[str]:
-    """Build the headless ``claude -p`` argv (flags isolated here; Epic-I6 research-grounded).
+    """Build the SANDBOXED headless ``claude -p`` argv (flags isolated here; confirmed v2.1.x).
 
-    Flags confirmed via the claude-code docs (deepwiki) but **re-confirm `claude --help` before any
-    live run** — the single place to correct them. ``--mcp-config`` constrains the agent to the
-    typed tools; ``--allowedTools`` narrows to the contract's tool(s); ``--permission-mode`` is
-    non-interactive; ``--model`` (when set) pins the model.
+    The agent is constrained to ONLY the contract's ``mcp__siftmesh__*`` tools:
+    ``--allowedTools`` pre-approves them, ``--disallowedTools`` denies the built-in shell/file/web/
+    spawn tools (``--allowedTools`` alone is additive, not exclusive), ``--permission-mode dontAsk``
+    auto-denies anything else with no prompt/hang, and ``--strict-mcp-config`` ignores ambient MCP
+    servers. ``--model`` (when set) pins the model. Re-confirm ``claude --help`` on version bumps.
     """
     tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
     argv = [
@@ -77,8 +107,11 @@ def _build_claude_argv(
         "json",
         "--mcp-config",
         str(mcp_config),
+        "--strict-mcp-config",
         "--allowedTools",
         tools,
+        "--disallowedTools",
+        *_DISALLOWED_TOOLS,
         "--permission-mode",
         permission_mode,
     ]

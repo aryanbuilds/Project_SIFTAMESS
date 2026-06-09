@@ -86,7 +86,7 @@ def build_timeline(
         kind = item["kind"]
         if kind not in TIMELINE_KINDS:
             raise ValueError(f"unsupported timeline kind: {kind!r}")
-        path, sha = resolved_source(evidence_root, item["artifact"])
+        path, sha = resolved_source(evidence_root, item["artifact"], run_root=run_root)
         resolved.append((kind, item["artifact"], path, sha))
     digest = hashlib.sha256(
         "".join(sorted(sha for *_, sha in resolved)).encode("utf-8")

@@ -171,7 +171,7 @@ def analyze_memory(
     ``memory_artifact`` is resolved under ``evidence_root`` (typically the run's
     ``evidence/extracted`` dir where the decompressed image lives).
     """
-    memory_path, memory_sha = resolved_source(evidence_root, memory_artifact)
+    memory_path, memory_sha = resolved_source(evidence_root, memory_artifact, run_root=run_root)
     want = [_resolve_plugin(p) for p in (plugins or list(DEFAULT_PLUGINS))]
 
     def produce() -> dict[str, Any]:

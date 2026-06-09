@@ -23,3 +23,6 @@ htmlcov/
 
 # SIFTMesh run output (case runs are generated, never committed)
 case_runs/
+
+# Protocol SIFT case-workspace artifact (a global Stop-hook writes here on every claude run)
+analysis/

@@ -14,7 +14,13 @@ from typing import Any
 
 from siftmesh_core.schemas._base import StrictModel
 from siftmesh_core.schemas.agent_call import AgentCall, AgentCallStatus
-from siftmesh_core.schemas.agent_profile import AgentProfile, CostClass, ModelTier
+from siftmesh_core.schemas.agent_profile import (
+    AgentKind,
+    AgentProfile,
+    CostClass,
+    ModelTier,
+    OutputFormat,
+)
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType, ToolCall
 from siftmesh_core.schemas.claim import Claim, ClaimStatus, validate_claim_evidence
 from siftmesh_core.schemas.critic_records import (
@@ -110,6 +116,7 @@ def write_json_schemas(out_dir: Path | str) -> list[Path]:
 __all__ = [
     "AgentCall",
     "AgentCallStatus",
+    "AgentKind",
     "AgentProfile",
     "ArtifactMode",
     "ArtifactOrigin",
@@ -135,6 +142,7 @@ __all__ = [
     "InputArtifact",
     "InvestigationPlan",
     "ModelTier",
+    "OutputFormat",
     "PerTaskState",
     "PlanStep",
     "PlanStepKind",

@@ -78,10 +78,10 @@ def test_run_state_resumable_round_trip() -> None:
 
 def test_agent_profile_enums() -> None:
     profile = AgentProfile(
-        profile_id="p1", kind="claude_code", model_tier="high", cost_class="expensive"
+        profile_id="p1", kind="claude", model_tier="high", cost_class="expensive"
     )
     assert profile.model_tier == "high"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError):  # unknown kind + unknown model_tier both rejected
         AgentProfile(profile_id="p", kind="k", model_tier="ultra", cost_class="cheap")
 
 

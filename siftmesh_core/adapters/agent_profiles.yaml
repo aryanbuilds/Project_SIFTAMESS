@@ -1,0 +1,35 @@
+# SIFTMesh default agent profiles (Epic I, I1).
+# profile_id MUST equal a registered adapter id (adapters/__init__ / base.register) so the registry
+# resolves it. The deterministic floor is the always-available default + fall-back; the claude/opencode
+# profiles are the live agents (human-gated: need the CLI + an API key). A user may override these by
+# pointing config at their own agent_profiles.yaml.
+profiles:
+  - profile_id: deterministic_executor   # the real-tool floor (no keys; default + fall-back)
+    kind: deterministic
+    model_tier: local
+    cost_class: free
+    output_format: task_result_json
+    max_runtime_seconds: 300
+
+  - profile_id: claude_headless          # live Claude Code (human-gated): `claude -p ...`
+    kind: claude
+    model_tier: high
+    cost_class: expensive
+    model: claude-opus-4-8
+    output_format: claude_json
+    max_runtime_seconds: 600
+
+  - profile_id: opencode_headless        # live OpenCode (human-gated): `opencode run ...`
+    kind: opencode
+    model_tier: low
+    cost_class: cheap
+    model: anthropic/claude-sonnet-4-6
+    output_format: opencode_json
+    max_runtime_seconds: 600
+
+  - profile_id: generic_shell            # any fixed-argv shell agent that writes a TaskResult JSON
+    kind: generic_shell
+    model_tier: local
+    cost_class: cheap
+    output_format: task_result_json
+    max_runtime_seconds: 300

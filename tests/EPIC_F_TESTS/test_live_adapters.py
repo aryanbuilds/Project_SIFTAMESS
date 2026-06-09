@@ -35,7 +35,8 @@ def test_claude_argv_built_correctly(tmp_path: Path) -> None:
     assert argv[0] == "claude" and "-p" in argv
     assert "--output-format" in argv and "json" in argv
     assert "--mcp-config" in argv
-    assert "mcp__siftmesh__parse_evtx_security" in argv[-1]
+    assert "--permission-mode" in argv  # I6: non-interactive
+    assert any("mcp__siftmesh__parse_evtx_security" in a for a in argv)
 
 
 def test_claude_absent_cli_falls_to_floor(real_case: RealCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]

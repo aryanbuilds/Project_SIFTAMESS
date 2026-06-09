@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-09 (Epics A–H complete; Phase 8 `siftmesh run` state machine shipped)_
+_Last updated: 2026-06-09 (Epics A–H complete + Epic I core; live-agent profiles/adapters shipped. NB: bd order is …H→I→K→J… — Epic I before K)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -902,17 +902,23 @@ Also delivered: `orchestrator/{state_machine,workflow_runner,ultraworker,human_g
 `run_state.json` durable snapshot, orchestration transition audit, static budget router (H9). The REPORT
 state is the Epic-J seam (forensic report deferred). `hth.2` (derived re-ingest) remains open.
 
-### Day 9: Agent/CAO integration
+### Day 9: Agent/CAO integration ✅ CORE COMPLETE (Epic I, 2026-06-09)
+
+> **Note:** per the bd graph (source of truth), Epic I runs **before** Epic K (K's self-correction
+> needs the live agent; PLAN/08 §6) — i.e. `…H → I → K → J …`, not the stale §spine text order.
 
 Deliver:
 
 ```text
-agent_profiles.yaml
-CAO adapter attempt
-Claude Code task instructions
-OpenCode task instructions
-fallback adapter if CAO integration is slow
+agent_profiles.yaml           # packaged; 4 profiles keyed by registered adapter id (I1)
+Claude Code task instructions  # claude_headless adapter + spotlighted prompt builder (I3/I6)
+OpenCode task instructions     # opencode_headless adapter (I6 flag fixes)
+fallback adapter               # registry falls closed to the deterministic floor + audits it (I2)
+output-schema enforcement      # malformed agent result -> retry_required (I4)
 ```
+
+Also delivered: `adapters/{profiles.py,prompt_builder.py}`. The live invocation is **human-gated**
+(CLI + key; CI mocks the subprocess). **I5 (CAO adapter) is optional/best-effort — left open.**
 
 ### Day 10: Reports and replay
 

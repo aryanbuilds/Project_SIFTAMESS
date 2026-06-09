@@ -14,7 +14,7 @@ import subprocess
 from datetime import UTC, datetime
 
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
-from siftmesh_core.adapters.spotlight import wrap_evidence
+from siftmesh_core.adapters.prompt_builder import build_task_prompt
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 
@@ -23,8 +23,13 @@ _DEFAULT_MODEL = "anthropic/claude-opus-4-8"
 
 
 def _build_opencode_argv(cli_path: str, prompt: str, model: str) -> list[str]:
-    """Build the headless ``opencode run`` argv (flags isolated; UNVERIFIED)."""
-    return [cli_path, "run", prompt, "--model", model, "--output-format", "json"]
+    """Build the headless ``opencode run`` argv (Epic-I6 research-grounded).
+
+    Confirmed via opencode.ai/docs/cli: the non-interactive form is ``opencode run <prompt>`` with
+    ``--format json`` (NOT ``--output-format``, NOT ``-p``). Re-confirm ``opencode run --help``
+    before a live run; this is the single place to correct the flags.
+    """
+    return [cli_path, "run", prompt, "--model", model, "--format", "json"]
 
 
 @register
@@ -40,8 +45,7 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
         profile = ctx.requested_profile or self.profile_id
-        rows = [{"path": a.path, "sha256": a.sha256} for a in contract.input_artifacts]
-        prompt = f"{contract.objective}\n\n{wrap_evidence(rows, run_id=ctx.run.run_id)}"
+        prompt = build_task_prompt(contract, run_id=ctx.run.run_id)
         argv = _build_opencode_argv(self.settings.opencode_cli_path, prompt, _DEFAULT_MODEL)
         try:
             proc = subprocess.run(

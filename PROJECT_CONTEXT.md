@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-09 (Epics A–H complete; deterministic state machine + `siftmesh run`/resume/status/approve/reject shipped)_
+_Last updated: 2026-06-09 (Epics A–H complete + Epic I core; live-agent profiles/adapters + spotlighted prompt builder shipped)_
 
 ## 1. Project identity
 
@@ -236,9 +236,9 @@ Runs once near the beginning. Creates a compact context pack that explains the c
 
 The main controller. Chooses next task, chooses agent/tool, handles retries, tracks token budget, reads critic advice, and decides whether to mark done, retry, escalate, or request human review. Implemented as a deterministic state machine in `orchestrator/{state_machine,workflow_runner,ultraworker,human_gate,budget_router,run_state_store}.py`: a frozen transition table + pure `step()`, `RunState` persisted atomically (temp+fsync+rename) to `run_state.json` for crash-safe `resume`, caps enforced in the loop (global `iteration` vs per-task `attempt`), and the four `siftmesh run` modes (manual/review-only/auto-human-loop/auto) over one engine. The forensic report (REPORT state) is the Epic-J seam.
 
-### Executor Agents
+### Executor Agents ✅ (Epics F + I, deterministic floor + live agents)
 
-Do narrow artifact-specific work. They must not produce broad incident conclusions or final severity. They only extract, normalize, and summarize evidence for assigned tasks.
+Do narrow artifact-specific work. They must not produce broad incident conclusions or final severity. They only extract, normalize, and summarize evidence for assigned tasks. Selected by `assigned_agent_profile` (Epic I: `adapters/profiles.py` + `agent_profiles.yaml`); each gets a spotlighted prompt from its task contract (`adapters/prompt_builder.py` — no raw evidence dump). The deterministic real-tool floor is the always-available default + fall-back; the live claude/opencode headless adapters are human-gated (CLI + key), and the registry audits an `adapter_unavailable` event whenever it falls closed.
 
 ### Advisor / Critic
 
@@ -248,9 +248,9 @@ Validates outputs, rejects unsupported claims, finds contradictions, lowers conf
 
 Hashes evidence, enforces read-only handling, records derived artifacts, and maps every claim to evidence references.
 
-### Budget Router
+### Budget Router ✅ (Epic H9 static + Epic I profiles)
 
-Uses expensive models only where judgment matters. Uses cheaper/open/local agents for repetitive extraction, formatting, and schema repair.
+Uses expensive models only where judgment matters. Uses cheaper/open/local agents for repetitive extraction, formatting, and schema repair. Cost tiers come from the per-profile `cost_class`/`model_tier` in `agent_profiles.yaml` (Epic I); the static escalate-cheap→strong-on-retry router (`orchestrator/budget_router.py`, H9) logs each routing decision to `audit/token_budget.jsonl`. Real cost-based routing is roadmap R3.
 
 ### Prompt-Injection Guard
 

@@ -18,7 +18,8 @@ from datetime import UTC, datetime
 from pydantic import ValidationError
 
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
-from siftmesh_core.adapters.spotlight import scan_injection, wrap_evidence
+from siftmesh_core.adapters.prompt_builder import build_task_prompt
+from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
 from siftmesh_core.schemas.injection_alert import InjectionAlert
@@ -37,16 +38,6 @@ class GenericShellAdapter(ExecutorAdapter):
         cmd = self.settings.generic_agent_cmd
         return bool(cmd) and shutil.which(cmd) is not None  # type: ignore[arg-type]
 
-    def _build_prompt(self, contract: TaskContract, ctx: AdapterContext, result_file: str) -> str:
-        rows = [{"path": a.path, "sha256": a.sha256} for a in contract.input_artifacts]
-        return (
-            f"# Task {contract.task_id}: {contract.objective}\n\n"
-            f"Allowed tools: {', '.join(contract.allowed_tools)}\n"
-            f"Success criteria:\n- " + "\n- ".join(contract.success_criteria) + "\n\n"
-            f"Write a TaskResult JSON (task_id, status, claims[]) to: {result_file}\n\n"
-            f"{wrap_evidence(rows, run_id=ctx.run.run_id)}"
-        )
-
     def _error(self, contract: TaskContract, ctx: AdapterContext, code: str) -> TaskResult:
         now = datetime.now(UTC)
         return TaskResult(
@@ -60,6 +51,21 @@ class GenericShellAdapter(ExecutorAdapter):
             errors=[code],
         )
 
+    def _retry(self, contract: TaskContract, ctx: AdapterContext, code: str) -> TaskResult:
+        """A schema-invalid agent result is recoverable (I4): retry_required drives DECIDE (G)."""
+        now = datetime.now(UTC)
+        return TaskResult(
+            task_id=contract.task_id,
+            profile=ctx.requested_profile or self.profile_id,
+            adapter=self.profile_id,
+            attempt=ctx.attempt,
+            status="retry_required",
+            started_utc=now,
+            ended_utc=now,
+            errors=[code],
+            retry_cause=code,
+        )
+
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         cmd = self.settings.generic_agent_cmd
         if not cmd:
@@ -68,7 +74,10 @@ class GenericShellAdapter(ExecutorAdapter):
         prompt_path = safe_write_path(ctx.run.root, f"results/{contract.task_id}.prompt.txt")
         out_path = safe_write_path(ctx.run.root, f"results/{contract.task_id}.agent.json")
         prompt_path.parent.mkdir(parents=True, exist_ok=True)
-        prompt_path.write_text(self._build_prompt(contract, ctx, str(out_path)), encoding="utf-8")
+        prompt_path.write_text(
+            build_task_prompt(contract, run_id=ctx.run.run_id, result_file=str(out_path)),
+            encoding="utf-8",
+        )
         try:
             proc = subprocess.run(
                 [cmd, str(prompt_path), str(out_path)],
@@ -87,7 +96,7 @@ class GenericShellAdapter(ExecutorAdapter):
         try:
             parsed = TaskResult.model_validate_json(raw)
         except ValidationError:
-            return self._error(contract, ctx, "malformed_result")
+            return self._retry(contract, ctx, "malformed_result")  # I4: output-schema enforcement
         # Re-stamp identity fields so the canonical envelope is authoritative.
         return parsed.model_copy(
             update={

@@ -21,6 +21,7 @@ from pathlib import Path
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.agent_calls import append_agent_call, next_agent_call_id
+from siftmesh_core.ledgers.audit_log import log_event, open_orchestration_log
 from siftmesh_core.mcp_gateway.registry import assert_tool_allowed
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.agent_call import AgentCall, AgentCallStatus
@@ -142,15 +143,29 @@ def register(cls: type[ExecutorAdapter]) -> type[ExecutorAdapter]:
     return cls
 
 
-def get_adapter(profile_id: str, *, settings: SiftmeshSettings) -> ExecutorAdapter:
-    """Resolve an adapter by profile; fall closed to the deterministic floor.
+def get_adapter(
+    profile_id: str, *, settings: SiftmeshSettings, run: RunPaths | None = None
+) -> ExecutorAdapter:
+    """Resolve an adapter by profile; fall closed to the deterministic floor (I2).
 
-    Falls back when the profile is unknown, or when the resolved adapter's
-    CLI/key is absent (``available()`` is False) — so CI and the no-keys demo
-    always get a working executor.
+    Falls back when the profile is unknown, or when the resolved adapter's CLI/key is absent
+    (``available()`` is False) — so CI and the no-keys demo always get a working executor. When a
+    ``run`` is given, a fall-back is audited as an ``adapter_unavailable`` orchestration event.
     """
-    cls = _REGISTRY.get(profile_id) or _REGISTRY[DEFAULT_PROFILE]
+    reason: str | None = None
+    cls = _REGISTRY.get(profile_id)
+    if cls is None:
+        reason, cls = "unknown_profile", _REGISTRY[DEFAULT_PROFILE]
     adapter = cls(settings=settings)
     if not adapter.available():
-        return _REGISTRY[DEFAULT_PROFILE](settings=settings)
+        reason = "cli_or_key_absent"
+        adapter = _REGISTRY[DEFAULT_PROFILE](settings=settings)
+    if reason is not None and run is not None and profile_id != DEFAULT_PROFILE:
+        log_event(
+            open_orchestration_log(run.orchestration_events, run.run_id),
+            "adapter_unavailable",
+            requested=profile_id,
+            reason=reason,
+            fell_back_to=DEFAULT_PROFILE,
+        )
     return adapter

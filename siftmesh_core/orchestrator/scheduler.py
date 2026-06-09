@@ -144,7 +144,7 @@ def dispatch_run(
     refs: list[ResultRef] = []
     for contract in contracts:
         profile = agent_profile or contract.assigned_agent_profile
-        adapter = get_adapter(profile, settings=settings)
+        adapter = get_adapter(profile, settings=settings, run=run)
         ctx = AdapterContext(
             run=run,
             evidence_root=evidence_root,

@@ -25,7 +25,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
-from siftmesh_core.adapters.spotlight import scan_injection, wrap_evidence
+from siftmesh_core.adapters.prompt_builder import build_task_prompt
+from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
 from siftmesh_core.schemas.injection_alert import InjectionAlert
@@ -33,16 +34,21 @@ from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 
 _MCP_TOOL_PREFIX = "mcp__siftmesh__"
+# Non-interactive permission mode (Epic I6). The agent surface is already constrained to the 10
+# read-only typed tools via --mcp-config + --allowedTools (no Bash/Write/Edit), so this only makes
+# the already-safe headless run non-blocking. Re-confirm the value via `claude --help` on the box.
+_PERMISSION_MODE = "acceptEdits"
 
 
 def _build_claude_argv(
     cli_path: str, prompt: str, mcp_config: Path, allowed_tools: list[str]
 ) -> list[str]:
-    """Build the headless ``claude -p`` argv (flags isolated here; UNVERIFIED).
+    """Build the headless ``claude -p`` argv (flags isolated here; Epic-I6 research-grounded).
 
-    Re-confirm against ``claude --help`` before any live run; this is the single
-    place to correct flags. ``--mcp-config`` constrains the agent to SIFTMesh's
-    typed tools; ``--allowedTools`` narrows further to the contract's tool(s).
+    Flags confirmed via the claude-code docs (deepwiki) but **re-confirm `claude --help` before any
+    live run** — the single place to correct them. ``--mcp-config`` constrains the agent to the
+    typed tools; ``--allowedTools`` narrows to the contract's tool(s); ``--permission-mode`` is
+    non-interactive.
     """
     tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
     return [
@@ -55,6 +61,8 @@ def _build_claude_argv(
         str(mcp_config),
         "--allowedTools",
         tools,
+        "--permission-mode",
+        _PERMISSION_MODE,
     ]
 
 
@@ -73,13 +81,7 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
         profile = ctx.requested_profile or self.profile_id
-        rows = [{"path": a.path, "sha256": a.sha256} for a in contract.input_artifacts]
-        prompt = (
-            f"{contract.objective}\n\nSuccess criteria:\n- "
-            + "\n- ".join(contract.success_criteria)
-            + "\n\n"
-            + wrap_evidence(rows, run_id=ctx.run.run_id)
-        )
+        prompt = build_task_prompt(contract, run_id=ctx.run.run_id)
         mcp_config = self._write_mcp_config(ctx)
         argv = _build_claude_argv(
             self.settings.claude_cli_path, prompt, mcp_config, contract.allowed_tools

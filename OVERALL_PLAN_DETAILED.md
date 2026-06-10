@@ -326,6 +326,7 @@ siftmesh replay RUN_PATH
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --mode manual
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto-human-loop
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-iterations 3
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-agent-tasks 400   # raise the dispatch cap for a real disk image (200+ derived tasks)
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --review-only
 siftmesh resume RUN_PATH
 siftmesh status RUN_PATH

@@ -136,8 +136,13 @@ def dispatch_run(
 
     contracts = _load_contracts(run, task_id)
     if len(contracts) > settings.caps.max_agent_tasks:
+        n = len(contracts)
         raise CapError(
-            f"{len(contracts)} tasks exceeds max_agent_tasks={settings.caps.max_agent_tasks}"
+            f"{n} tasks exceeds max_agent_tasks={settings.caps.max_agent_tasks}. "
+            f"A real disk image yields 200+ derived tasks — raise the cap explicitly: "
+            f"`siftmesh run … --max-agent-tasks {n}` "
+            f"(or export SIFTMESH_CAPS__MAX_AGENT_TASKS={n}), "
+            f"or scope extraction with `extract-artifacts --keys …`."
         )
 
     audit = open_orchestration_log(run.orchestration_events, run.run_id)

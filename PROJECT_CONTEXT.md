@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core): testing & CI shipped — recorded-golden determinism proof, real e2e incl. subprocess smoke + skip-gated live property test, hardened coverage-gated CI)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core); real-evidence-run hardening for the ROCBA e2e: `run --max-agent-tasks` + actionable cap error, planner surfaces non-actionable evidence — never silently drops a memory zip)_
 
 ## 1. Project identity
 

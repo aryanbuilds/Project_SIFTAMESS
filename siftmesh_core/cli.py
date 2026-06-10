@@ -440,6 +440,13 @@ def run(
     max_iterations: Annotated[
         int | None, typer.Option("--max-iterations", help="Override the self-correction cap.")
     ] = None,
+    max_agent_tasks: Annotated[
+        int | None,
+        typer.Option(
+            "--max-agent-tasks",
+            help="Raise the dispatchable-task cap (real disk images yield 200+ derived tasks).",
+        ),
+    ] = None,
     agent: Annotated[
         str | None,
         typer.Option("--agent", help="Opt into a live agent: claude | opencode | deterministic."),
@@ -462,6 +469,11 @@ def run(
         typer.echo(f"run failed: unknown mode {mode!r} (use {', '.join(_RUN_MODES)})", err=True)
         raise typer.Exit(code=1)
     settings = load_settings(**_agent_overrides(agent))
+    if max_agent_tasks is not None:
+        # Caps stay enforced (CLAUDE §11) — the operator just sets the ceiling explicitly.
+        settings = settings.model_copy(
+            update={"caps": settings.caps.model_copy(update={"max_agent_tasks": max_agent_tasks})}
+        )
     try:
         run_paths = vault_init_case(case_dir, evidence, show_progress=True)
         state = RunState(

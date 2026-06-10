@@ -110,7 +110,7 @@ re-run the 22 GB extraction):
 ```bash
 uv run siftmesh ingest-derived "$RUN" --evidence ~/projects/ev_disk
 ls "$RUN/tasks/"                       # confirm the derived parse tasks were created
-uv run siftmesh dispatch "$RUN"        # if you took the FULL set: prefix SIFTMESH_CAPS__MAX_AGENT_TASKS=400
+uv run siftmesh dispatch "$RUN"        # FULL set? prefix SIFTMESH_CAPS__MAX_AGENT_TASKS=400 (staged dispatch reads the env var; `run` takes --max-agent-tasks)
 uv run siftmesh collect  "$RUN"
 uv run siftmesh critique "$RUN"
 uv run siftmesh report   "$RUN"
@@ -123,6 +123,36 @@ parser in the 10-tool allowlist and are reported as coverage gaps rather than pa
 
 Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 `"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).
+
+---
+
+## 2′ — Full-auto in ONE command (the hackathon-demo shape)
+
+Since the cap is now an explicit flag (`--max-agent-tasks`), a single `run --auto` drives the **whole**
+disk-image pipeline itself: hash → plan → extract (Sleuthkit) → **auto re-ingest the derived
+artifacts** → parse (evtx/registry/prefetch) → critique → report — no staged commands.
+
+```bash
+mkdir -p ~/projects/ev_disk && ln ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/ 2>/dev/null \
+  || cp -n ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/
+uv run siftmesh run ./case_disk --evidence ~/projects/ev_disk \
+  --auto --max-agent-tasks 400 --max-iterations 5
+```
+
+- The `.e01` extraction yields 200+ derived parse tasks; `--max-agent-tasks 400` lifts the default-10
+  cap **explicitly** (the safety cap stays enforced — you set the ceiling). Without it the run halts
+  with an actionable message telling you the exact number to pass.
+- `Rocba-Memory.zip` and `ROCBA-BACKGROUND.pptx` are **not** auto-analysed (an archive needs a size-
+  budgeted decompress; a pptx has no parser). The run does **not** silently drop them — it lists them
+  in `context/assumptions.md` ("Evidence not directly planned") and logs a `plan_non_actionable_evidence`
+  audit event. Add memory via §3.
+- **Live agent (emergent self-correction):** append `--agent claude` (needs a logged-in `claude` CLI;
+  consumes your subscription). The deterministic floor (no flag) is the reliable, key-free baseline —
+  run that first.
+
+> First real run? Prefer the **staged** §2 flow with `--keys` (fast, focused, proven). Use this
+> one-command form once the staged path looks right, for the clean "supply evidence → autonomous →
+> report" demo.
 
 ---
 

@@ -1,0 +1,105 @@
+name: ci
+
+# NOTE: This pipeline config is intentionally kept OUT of `.github/workflows/` so it is NOT
+# executed as a GitHub Actions workflow. CI is deliberately not run for this project right now
+# (maintainer decision). It is preserved here as reference config — move it back under
+# `.github/workflows/` (and push with a `workflow`-scoped token) to re-enable CI.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Byte-determinism pins (M6): the golden/report suite must behave identically
+  # everywhere. PYTHONHASHSEED is job-level so it precedes interpreter start.
+  TZ: UTC
+  LC_ALL: C.UTF-8
+  PYTHONHASHSEED: "0"
+
+jobs:
+  zizmor:
+    name: Actions security audit (zizmor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Audit workflows
+        run: uvx zizmor --no-online-audits .github/workflows/
+
+  test:
+    runs-on: ubuntu-latest # Linux-first (SANS SIFT / Ubuntu target)
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"] # floor + the SANS SIFT target (3.13 excluded: resolve() drift, threat_model §7)
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Sync (fail closed on stale lock)
+        run: uv sync --locked --extra sift # real Epic D parser backends
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+
+      - name: Type-check (mypy)
+        run: uv run mypy siftmesh_core
+
+      - name: Bypass suite — security gates (Epic L / M4)
+        run: uv run pytest tests/EPIC_L_TESTS -q
+
+      - name: Test (pytest + coverage)
+        run: uv run pytest --cov --cov-report=term --cov-fail-under=90
+
+      - name: Coverage gate — governance core >= 95% (schemas/evidence/critic/registry)
+        # image_access/memory_access are omitted: their sleuthkit/volatility subprocess
+        # lanes require maintainer-provided real evidence (CLAUDE §2B human-gated).
+        run: >
+          uv run coverage report
+          --include='siftmesh_core/schemas/*,siftmesh_core/evidence/*,siftmesh_core/orchestrator/critic.py,siftmesh_core/mcp_gateway/registry.py'
+          --omit='siftmesh_core/evidence/image_access.py,siftmesh_core/evidence/memory_access.py'
+          --fail-under=95
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage (python ${{ matrix.python-version }})"
+            echo '```'
+            uv run coverage report --sort=cover || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: failure-diagnostics-py${{ matrix.python-version }}
+          path: |
+            .coverage
+            .pytest_cache/v/cache/lastfailed
+          retention-days: 7
+          if-no-files-found: ignore

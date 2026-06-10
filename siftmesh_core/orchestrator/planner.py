@@ -97,34 +97,72 @@ def _context_packet(*, include_brief: bool) -> list[str]:
     return packet
 
 
+# Per-family aggregation cap: one executor task parses up to this many same-family artifacts
+# (200+ prefetch .pf → a few tasks, not one-per-file). Keeps a single task's runtime bounded.
+MAX_ARTIFACTS_PER_TASK = 64
+
+
+def group_actionable(
+    routed: list[RoutedArtifact], *, max_per_task: int = MAX_ARTIFACTS_PER_TASK
+) -> list[list[RoutedArtifact]]:
+    """Group actionable artifacts by (family, tool), chunked to ``max_per_task``, in manifest order.
+
+    The single biggest scale lever (bd 1xy6): collapses one-task-per-file into one task per family
+    group, so a real disk image yields a handful of executor tasks instead of 200+. Deterministic
+    (stable first-seen key order + manifest order within a group).
+    """
+    by_key: dict[tuple[str, str], list[RoutedArtifact]] = {}
+    order: list[tuple[str, str]] = []
+    for art in routed:
+        if not art.actionable or art.tool is None:
+            continue
+        key = (str(art.family), art.tool)
+        if key not in by_key:
+            by_key[key] = []
+            order.append(key)
+        by_key[key].append(art)
+    groups: list[list[RoutedArtifact]] = []
+    for key in order:
+        arts = by_key[key]
+        for i in range(0, len(arts), max_per_task):
+            groups.append(arts[i : i + max_per_task])
+    return groups
+
+
 def executor_contract(
     task_id: str,
-    art: RoutedArtifact,
+    arts: RoutedArtifact | list[RoutedArtifact],
     *,
     origin: ArtifactOrigin = "evidence",
     include_brief: bool = False,
 ) -> TaskContract:
-    """One TaskContract for an actionable artifact (E6/E7) — exactly one tool.
+    """One TaskContract for one or more same-family actionable artifacts (E6/E7) — exactly one tool.
 
     Public so the critic's G9 follow-up generator + the hth.2 derived-ingest reuse the exact
-    contract shape. ``origin="derived"`` marks a carved/decompressed input (it resolves under the
-    run dir, not the evidence root). ``include_brief`` adds the TRUSTED brief
-    (``context/incident_brief.md``) to the context packet when the operator supplied an objective.
+    contract shape. ``arts`` may be a single artifact or a same-(family, tool) group (per-family
+    aggregation, bd 1xy6) — all share the one tool; the executor runs it over each input artifact.
+    ``origin="derived"`` marks carved/decompressed inputs (they resolve under the run dir, not the
+    evidence root). ``include_brief`` adds the TRUSTED brief to the context packet.
     """
-    assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
+    group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
+    rep = group[0]
+    assert rep.tool is not None  # actionable => tool set (route_artifact guarantee)
+    objective = (
+        rep.objective if len(group) == 1 else f"{rep.objective} (across {len(group)} artifacts)"
+    )
     return TaskContract(
         task_id=task_id,
-        role=f"{art.family}_executor",
-        objective=art.objective,
+        role=f"{rep.family}_executor",
+        objective=objective,
         assigned_agent_profile=DEFAULT_AGENT_PROFILE,
-        allowed_tools=[art.tool],
-        input_artifacts=[InputArtifact(path=art.path, sha256=art.sha256, origin=origin)],
+        allowed_tools=[rep.tool],
+        input_artifacts=[InputArtifact(path=a.path, sha256=a.sha256, origin=origin) for a in group],
         context_packet=_context_packet(include_brief=include_brief),
         output_required=[f"results/{task_id}.result.json"],
         success_criteria=[
             "Every claim MUST carry a tool_call_id and source_sha256 binding it to evidence.",
             "No claim may be broader than the tool output rows support.",
-            f"Use only the allowed tool: {art.tool}.",
+            f"Use only the allowed tool: {rep.tool}.",
         ],
         retry_policy=_retry(),
         safety_policy=_safety(),
@@ -168,23 +206,22 @@ class _PlannedTask:
 def _build_contracts(
     routed: list[RoutedArtifact], *, include_brief: bool = False
 ) -> list[_PlannedTask]:
-    """Mint one task per actionable artifact (+ a timeline task) in manifest order."""
+    """Mint one task per actionable artifact FAMILY GROUP (+ a timeline task), in manifest order."""
     planned: list[_PlannedTask] = []
     n = 0
-    for art in routed:
-        if not art.actionable:
-            continue
-        assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
+    for group in group_actionable(routed):
+        rep = group[0]
+        assert rep.tool is not None  # actionable => tool set (route_artifact guarantee)
         n += 1
         task_id = f"TASK-{n:03d}"
         planned.append(
             _PlannedTask(
                 task_id=task_id,
-                contract=executor_contract(task_id, art, include_brief=include_brief),
+                contract=executor_contract(task_id, group, include_brief=include_brief),
                 kind="executor",
-                tool=art.tool,
-                input_paths=[art.path],
-                description=art.objective,
+                tool=rep.tool,
+                input_paths=[a.path for a in group],
+                description=rep.objective,
             )
         )
     timeline_arts = [a for a in routed if a.timeline_kind]

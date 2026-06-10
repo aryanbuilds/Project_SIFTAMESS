@@ -270,7 +270,8 @@ def _memory_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
         "plugins": None,
         "vol_path": ctx.settings.vol_path,
         "symbol_dirs": ctx.settings.vol_symbol_dirs,
-        "timeout": ctx.settings.caps.max_tool_runtime_seconds,
+        # A real 19 GB dump needs minutes, not the 300 s default tool cap.
+        "timeout": ctx.settings.heavy_tool_timeout_seconds,
         "backend_mode": "sift_lane",
     }
 
@@ -359,6 +360,19 @@ def scan_and_log_rows(
     return len(matches)
 
 
+# Single-source parse tools the floor runs once PER input artifact (per-family aggregation, bd
+# 1xy6): one aggregated task → one audited tool call per .pf/hive/evtx, claims merged + renumbered.
+# build_timeline (aggregates inputs itself) and image/memory (inherently single-source) stay 1-call.
+_PER_ARTIFACT_TOOLS = frozenset(
+    {
+        "parse_evtx_security",
+        "parse_evtx_powershell",
+        "analyze_prefetch",
+        "extract_registry_run_keys",
+    }
+)
+
+
 @register
 class DeterministicExecutor(ExecutorAdapter):
     """The real-tool floor: real Epic-D tools over real evidence → deterministic claims."""
@@ -366,39 +380,54 @@ class DeterministicExecutor(ExecutorAdapter):
     profile_id = "deterministic_executor"
     backend_label = "real"
 
+    def _result(
+        self,
+        contract: TaskContract,
+        ctx: AdapterContext,
+        started: datetime,
+        *,
+        status: str,
+        tool_call_ids: list[str] | None = None,
+        claims: list[Claim] | None = None,
+        errors: list[str] | None = None,
+        retry_cause: str | None = None,
+    ) -> TaskResult:
+        return TaskResult(
+            task_id=contract.task_id,
+            profile=ctx.requested_profile or self.profile_id,
+            adapter=self.profile_id,
+            attempt=ctx.attempt,
+            status=status,
+            tool_call_ids=tool_call_ids or [],
+            claims=claims or [],
+            started_utc=started,
+            ended_utc=datetime.now(UTC),
+            errors=errors or [],
+            retry_cause=retry_cause,
+        )
+
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
-        profile = ctx.requested_profile or self.profile_id
         tool = contract.allowed_tools[0] if contract.allowed_tools else ""
         if tool not in _DISPATCH:
-            return TaskResult(
-                task_id=contract.task_id,
-                profile=profile,
-                adapter=self.profile_id,
-                attempt=ctx.attempt,
-                status="error",
-                started_utc=started,
-                ended_utc=datetime.now(UTC),
-                errors=[f"unsupported_tool:{tool}"],
+            return self._result(
+                contract, ctx, started, status="error", errors=[f"unsupported_tool:{tool}"]
             )
         fn, build_kwargs, derive_claims = _DISPATCH[tool]
-        result = fn(ctx.run.root, **build_kwargs(contract, ctx))  # audited by run_tool
+        if tool in _PER_ARTIFACT_TOOLS and len(contract.input_artifacts) > 1:
+            return self._run_per_artifact(contract, ctx, fn, derive_claims, started)
 
+        result = fn(ctx.run.root, **build_kwargs(contract, ctx))  # audited by run_tool
         if result.status != "success":
-            return TaskResult(
-                task_id=contract.task_id,
-                profile=profile,
-                adapter=self.profile_id,
-                attempt=ctx.attempt,
+            return self._result(
+                contract,
+                ctx,
+                started,
                 status="retry_required",
                 tool_call_ids=[result.tool_call_id],
-                claims=[],
-                started_utc=started,
-                ended_utc=datetime.now(UTC),
                 errors=[result.error_code or "tool_error"],
                 retry_cause="recoverable_tool_error",
             )
-
         scan_and_log_rows(
             ctx,
             task_id=contract.task_id,
@@ -408,14 +437,76 @@ class DeterministicExecutor(ExecutorAdapter):
         claims = derive_claims(result, contract.task_id)
         for c in claims:
             append_claim(ctx.run.root, c, evidence_root=ctx.evidence_root)
-        return TaskResult(
-            task_id=contract.task_id,
-            profile=profile,
-            adapter=self.profile_id,
-            attempt=ctx.attempt,
+        return self._result(
+            contract,
+            ctx,
+            started,
             status="success",
             tool_call_ids=[result.tool_call_id],
             claims=claims,
-            started_utc=started,
-            ended_utc=datetime.now(UTC),
+        )
+
+    def _run_per_artifact(
+        self,
+        contract: TaskContract,
+        ctx: AdapterContext,
+        fn: Callable[..., ToolResult],
+        derive_claims: Callable[[Any, str], list[Claim]],
+        started: datetime,
+    ) -> TaskResult:
+        """Run a single-source tool over EVERY input artifact; merge + renumber claims (bd 1xy6).
+
+        One audited ``run_tool`` call per artifact (per-artifact provenance preserved in
+        tool_calls.jsonl). Partial failures are recorded but never fatal; the task succeeds if any
+        artifact parsed, else retry_required.
+        """
+        all_claims: list[Claim] = []
+        tool_call_ids: list[str] = []
+        errors: list[str] = []
+        any_ok = False
+        for art in contract.input_artifacts:
+            root = ctx.run.root if art.origin == "derived" else ctx.evidence_root
+            result = fn(
+                ctx.run.root,
+                source_artifact=art.path,
+                evidence_root=root,
+                backend_mode=ctx.settings.backend_mode,
+            )
+            tool_call_ids.append(result.tool_call_id)
+            if result.status != "success":
+                errors.append(f"{art.path}:{result.error_code or 'tool_error'}")
+                continue
+            any_ok = True
+            scan_and_log_rows(
+                ctx,
+                task_id=contract.task_id,
+                source_artifact=result.source_artifact,
+                rows=_evidence_rows(result),
+            )
+            all_claims.extend(derive_claims(result, contract.task_id))
+        if not any_ok:
+            return self._result(
+                contract,
+                ctx,
+                started,
+                status="retry_required",
+                tool_call_ids=tool_call_ids,
+                errors=errors or ["tool_error"],
+                retry_cause="recoverable_tool_error",
+            )
+        # Renumber claim_ids to stay unique across the aggregated artifacts (anchors unchanged).
+        claims = [
+            c.model_copy(update={"claim_id": f"{contract.task_id}-CLAIM-{i:03d}"})
+            for i, c in enumerate(all_claims, start=1)
+        ]
+        for c in claims:
+            append_claim(ctx.run.root, c, evidence_root=ctx.evidence_root)
+        return self._result(
+            contract,
+            ctx,
+            started,
+            status="success",
+            tool_call_ids=tool_call_ids,
+            claims=claims,
+            errors=errors,
         )

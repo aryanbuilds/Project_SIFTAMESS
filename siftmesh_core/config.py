@@ -79,6 +79,14 @@ class SiftmeshSettings(BaseSettings):
     # agent investigating via multiple typed-tool calls + reasoning routinely exceeds 5 min, so the
     # default is 10 min (override per env/toml for slower models or larger artifacts).
     agent_timeout_seconds: int = 600
+    # Executor tiering (scale fixes). Heavy, tool-bound tasks (disk-image extraction, memory
+    # triage) add nothing under a live agent and time out its wrapper, so they run on the
+    # deterministic floor even when a live agent is selected — unless `live_extraction` is set
+    # (`run --all-live`, for the per-artifact emergent-correction demo). Their floor tool timeout
+    # is `heavy_tool_timeout_seconds` (not the 300 s default), since a 22 GB image / 19 GB memory
+    # dump legitimately takes many minutes.
+    live_extraction: bool = False
+    heavy_tool_timeout_seconds: int = 1800
 
     # Multi-agent layer (Epic I). When live is selected, profiles are tried in this order and the
     # first available() wins; the deterministic floor is always the final fall-back. role_profiles

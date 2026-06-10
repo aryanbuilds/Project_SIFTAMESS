@@ -522,6 +522,14 @@ def run(
             'X compromised?". Alternative to --brief.',
         ),
     ] = None,
+    all_live: Annotated[
+        bool,
+        typer.Option(
+            "--all-live",
+            help="Also run heavy tool-bound tasks (disk-image extraction, memory triage) on the "
+            "live agent. Default tiers them to the deterministic floor (the tool does the work).",
+        ),
+    ] = False,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -545,6 +553,8 @@ def run(
         settings = settings.model_copy(
             update={"caps": settings.caps.model_copy(update={"max_agent_tasks": max_agent_tasks})}
         )
+    if all_live:
+        settings = settings.model_copy(update={"live_extraction": True})
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     try:

@@ -53,7 +53,7 @@ from siftmesh_core.orchestrator.artifact_router import (
     route_manifest,
     route_path,
 )
-from siftmesh_core.orchestrator.planner import executor_contract
+from siftmesh_core.orchestrator.planner import executor_contract, group_actionable
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType
 from siftmesh_core.schemas.claim import Claim
@@ -368,7 +368,7 @@ def detect_derived_gaps(run: RunPaths) -> list[RoutedArtifact]:
 
 def _write_followup_task(
     run: RunPaths,
-    art: RoutedArtifact,
+    arts: RoutedArtifact | list[RoutedArtifact],
     *,
     n: int,
     origin: ArtifactOrigin,
@@ -376,9 +376,11 @@ def _write_followup_task(
     evidence_root: Path | str | None,
     audit: FilteringBoundLogger,
 ) -> Path:
-    """Mint TASK-{n:03d} for a gap artifact, write its contract + a FollowupRecord, and log."""
+    """Mint TASK-{n:03d} for a gap artifact GROUP: write its contract + FollowupRecord, then log."""
+    group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
+    rep = group[0]
     task_id = f"TASK-{n:03d}"
-    contract = executor_contract(task_id, art, origin=origin)
+    contract = executor_contract(task_id, group, origin=origin)
     target = safe_write_path(run.root, f"tasks/{task_id}.yaml", evidence_root=evidence_root)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dump_yaml_model(contract), encoding="utf-8")
@@ -388,14 +390,21 @@ def _write_followup_task(
             followup_id=next_followup_id(run.root),
             task_id=task_id,
             reason=reason,
-            artifact=art.path,
-            family=art.family,
-            tool=art.tool,
+            artifact=rep.path,
+            family=rep.family,
+            tool=rep.tool,
             created_utc=_now(),
         ),
         evidence_root=evidence_root,
     )
-    log_event(audit, "followup_task_created", task_id=task_id, artifact=art.path, gap=reason)
+    log_event(
+        audit,
+        "followup_task_created",
+        task_id=task_id,
+        artifact=rep.path,
+        gap=reason,
+        artifacts=len(group),
+    )
     return target
 
 
@@ -408,12 +417,12 @@ def generate_followup_tasks(
     """
     written: list[Path] = []
     n = _max_task_number(run)
-    for art in detect_coverage_gaps(run):
+    for group in group_actionable(detect_coverage_gaps(run)):
         n += 1
         written.append(
             _write_followup_task(
                 run,
-                art,
+                group,
                 n=n,
                 origin="evidence",
                 reason="coverage_gap",
@@ -421,12 +430,12 @@ def generate_followup_tasks(
                 audit=audit,
             )
         )
-    for art in detect_derived_gaps(run):
+    for group in group_actionable(detect_derived_gaps(run)):
         n += 1
         written.append(
             _write_followup_task(
                 run,
-                art,
+                group,
                 n=n,
                 origin="derived",
                 reason="derived_gap",
@@ -451,12 +460,12 @@ def ingest_derived(
     log = audit or open_orchestration_log(run.orchestration_events, run.run_id)
     written: list[Path] = []
     n = _max_task_number(run)
-    for art in detect_derived_gaps(run):
+    for group in group_actionable(detect_derived_gaps(run)):
         n += 1
         written.append(
             _write_followup_task(
                 run,
-                art,
+                group,
                 n=n,
                 origin="derived",
                 reason="derived_gap",

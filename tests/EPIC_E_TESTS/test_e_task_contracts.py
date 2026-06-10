@@ -61,13 +61,16 @@ def test_fixed_mapping_windows_initial_triage(synthetic_run: SyntheticRun) -> No
     assert tool_for["Users/alice/NTUSER.DAT"] == "extract_registry_run_keys"
 
 
-def test_duplicate_basenames_yield_distinct_tasks(synthetic_run: SyntheticRun) -> None:
+def test_duplicate_basenames_preserved_as_distinct_inputs(synthetic_run: SyntheticRun) -> None:
+    # Per-family aggregation (bd 1xy6): both NTUSER.DAT hives land in ONE registry task as
+    # DISTINCT input artifacts (not collided, not one-per-file).
     run = synthetic_run()
     generate_plan(run, settings=load_settings())
     reg_paths = {
-        c.input_artifacts[0].path
+        art.path
         for c in _contracts(run)
         if c.allowed_tools == ["extract_registry_run_keys"]
+        for art in c.input_artifacts
     }
     assert {"Users/alice/NTUSER.DAT", "Users/bob/NTUSER.DAT"} <= reg_paths
 

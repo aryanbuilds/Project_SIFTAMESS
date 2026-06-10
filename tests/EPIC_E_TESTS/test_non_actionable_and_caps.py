@@ -56,13 +56,17 @@ def test_all_actionable_evidence_has_no_skip_section(synthetic_run: SyntheticRun
 
 
 def test_dispatch_cap_error_is_actionable(synthetic_run: SyntheticRun, tmp_path: Path) -> None:
-    # 12 prefetch files -> 12 parse tasks (+timeline) > default max_agent_tasks=10.
+    # Per-family aggregation (bd 1xy6) collapses the 12 prefetch files into ONE task (+timeline)
+    # = 2; a max_agent_tasks=1 cap still trips the actionable error. (Aggregation is also what
+    # makes the default cap of 10 comfortably enough for a real disk image now.)
     run = synthetic_run(tuple(f"CMD{i}.EXE-{i:08d}.pf" for i in range(12)))
-    generate_plan(run, settings=load_settings())
+    base = load_settings()
+    settings = base.model_copy(update={"caps": base.caps.model_copy(update={"max_agent_tasks": 1})})
+    generate_plan(run, settings=settings)
     evidence = tmp_path / "evidence"  # a real dir outside the run; unused before the cap raises
     evidence.mkdir(exist_ok=True)
     with pytest.raises(CapError, match="--max-agent-tasks"):
-        dispatch_run(run, settings=load_settings(), evidence_override=str(evidence))
+        dispatch_run(run, settings=settings, evidence_override=str(evidence))
 
 
 def test_max_agent_tasks_override_raises_ceiling() -> None:

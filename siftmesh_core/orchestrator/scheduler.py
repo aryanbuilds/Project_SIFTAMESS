@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from siftmesh_core.adapters import AdapterContext, ResultRef, get_adapter, resolve_profile
-from siftmesh_core.adapters.base import write_task_result
+from siftmesh_core.adapters.base import DEFAULT_PROFILE, write_task_result
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.path_policy import assert_run_outside_evidence
 from siftmesh_core.ledgers.agent_calls import append_agent_call, next_agent_call_id
@@ -29,6 +29,11 @@ from siftmesh_core.schemas.plan import InvestigationPlan
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
 from siftmesh_core.schemas.yaml_io import read_yaml_model
+
+# Heavy, tool-bound tasks that add nothing under a live agent (the tool does the work) and time
+# out its wrapper — run on the deterministic floor even when a live agent is selected, unless the
+# operator forces `live_extraction` (`run --all-live`). Executor tiering (scale fixes).
+_HEAVY_TOOL_BOUND = frozenset({"extract_artifacts_from_image", "analyze_memory"})
 
 
 class PolicyError(RuntimeError):
@@ -164,6 +169,21 @@ def dispatch_run(
     refs: list[ResultRef] = []
     for contract in contracts:
         profile = resolve_profile(contract.role, settings=settings, cli_override=agent_profile)
+        # Executor tiering: a heavy tool-bound task runs on the floor even under a live agent
+        # (the tool does the work; the agent only times out) unless --all-live is set.
+        if (
+            profile != DEFAULT_PROFILE
+            and not settings.live_extraction
+            and any(t in _HEAVY_TOOL_BOUND for t in contract.allowed_tools)
+        ):
+            log_event(
+                audit,
+                "tier_floor_forced",
+                task_id=contract.task_id,
+                tool=",".join(contract.allowed_tools),
+                reason="heavy_tool_bound",
+            )
+            profile = DEFAULT_PROFILE
         adapter = get_adapter(profile, settings=settings, run=run)
         ctx = AdapterContext(
             run=run,

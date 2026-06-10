@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core); ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run; the live agent stays loud opt-in via `--agent claude`)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core); ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run; the live agent stays loud opt-in via `--agent claude`. **Scale fixes (post-brief):** per-family task aggregation (bd 1xy6 — a disk image yields ~10 tasks, not 200+; the floor runs the tool once per artifact with per-artifact provenance), executor tiering (heavy tool-bound disk-image/memory tasks run on the deterministic floor even under `--agent claude`, `--all-live` to override; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM — no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth.)_
 
 ## 1. Project identity
 
@@ -307,6 +307,13 @@ Uses expensive models only where judgment matters. Uses cheaper/open/local agent
 Treats all case data as hostile. Detects instruction-like content inside logs, filenames, registry values, malware strings, command lines, and other evidence fields.
 
 ## 9. CAO role
+
+> **Decision (ADR 12, 2026-06-10): CAO evaluated and NOT pursued.** CAO puts an LLM supervisor in the
+> routing/delegation seat — the opposite of SIFTMesh's "LLM proposes, code decides" thesis (it would
+> weaken the constraint + audit criteria). The deterministic native FSM is kept; the optional
+> `cao_adapter` (I5) is closed won't-do. The simplest headless `claude -p` adapter is the live-agent
+> path. LangGraph was also evaluated and rejected (the shipped FSM already provides its value). See
+> `PLAN/12_ADR_orchestration_engine.md`. The section below is retained as background.
 
 CAO is a candidate harness layer for terminal-agent execution. It can run agents such as Claude Code, OpenCode, Codex, Gemini, Kimi, and others in isolated sessions. SIFTMesh should call CAO only during the dispatch stage.
 

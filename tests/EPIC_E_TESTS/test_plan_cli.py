@@ -32,8 +32,16 @@ def test_plan_cli_exits_zero_and_writes_artifacts(
         run.investigation_plan,
     ):
         assert path.is_file(), f"missing {path}"
-    # TRIAGE_FILES -> security, powershell, prefetch, 2x NTUSER.DAT (+timeline) = 6 tasks
-    assert len(list(run.tasks.glob("TASK-*.yaml"))) == 6
+    # Per-family aggregation (bd 1xy6): security, powershell, prefetch, ONE registry task over
+    # both NTUSER.DAT hives, (+timeline) = 5 tasks (was 6 one-per-file).
+    task_files = sorted(run.tasks.glob("TASK-*.yaml"))
+    assert len(task_files) == 5
+    registry = [
+        c
+        for c in (read_yaml_model(TaskContract, p) for p in task_files)
+        if c.role == "registry_hive_executor"
+    ]
+    assert len(registry) == 1 and len(registry[0].input_artifacts) == 2  # both hives, one task
 
 
 def test_plan_cli_missing_manifest_fails(

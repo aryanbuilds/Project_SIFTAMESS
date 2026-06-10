@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + bypass suite (L), testing & CI w/ recorded-golden determinism proof + coverage-gated hardened pipeline (M). Executed epic order: …H→I→K→J→L→M; Epic N (Docs & Submission) is next. **Maintainer-directed ROCBA refinement (post-M):** autonomous objective-driven run in one command — `--brief` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting, live agent stays loud opt-in via `--agent claude`. See `siftmesh_core/intake/brief.py`, `tests/REFINEMENT_TESTS/`, `tests/EPIC_H_TESTS/test_auto_archive_and_quarantine.py`.)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + bypass suite (L), testing & CI w/ recorded-golden determinism proof + coverage-gated hardened pipeline (M). Executed epic order: …H→I→K→J→L→M; Epic N (Docs & Submission) is next. **Maintainer-directed ROCBA refinement (post-M):** autonomous objective-driven run in one command — `--brief` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting, live agent stays loud opt-in via `--agent claude`. See `siftmesh_core/intake/brief.py`, `tests/REFINEMENT_TESTS/`, `tests/EPIC_H_TESTS/test_auto_archive_and_quarantine.py`. **Scale refinement (post-brief):** per-family task aggregation (bd 1xy6: ~10 tasks for a disk image, not 200+), executor tiering (heavy disk-image/memory tasks → deterministic floor; `--all-live` overrides), `heavy_tool_timeout_seconds`. **Orchestration ADR `PLAN/12`:** keep the native deterministic FSM — LangGraph + CAO evaluated and rejected; harvest only an advisory Tier-2 judge + Sigma. PLAN/11 (doctor --setup, space estimator, prune, merge) + the Tier-2 judge are the remaining sequenced work.)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -133,7 +133,10 @@ Run Claude Code, OpenCode, Codex, Gemini, Kimi, Hermes, or other agents.
 Preferred harness:
 
 ```text
-CAO, if integration is practical.
+CAO — EVALUATED AND NOT PURSUED (ADR 12, PLAN/12). CAO puts an LLM supervisor in the routing seat,
+which conflicts with "LLM proposes, code decides". The native deterministic FSM is kept; LangGraph
+was likewise evaluated and rejected (the FSM already provides its value). The simplest headless
+`claude -p` adapter is the live-agent path; cao_adapter (I5) is closed won't-do.
 ```
 
 Fallback:

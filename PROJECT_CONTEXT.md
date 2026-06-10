@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–K complete + Epic J core; deterministic reports & replay shipped — `siftmesh run --auto` now produces the final report)_
+_Last updated: 2026-06-10 (Epics A–K + J complete + Epic L core; security threat model + 80-test bypass suite shipped — every guardrail is now bypass-tested, not prose)_
 
 ## 1. Project identity
 
@@ -249,6 +249,24 @@ The hero loop, **emergent not scripted**. The live adapter drives the agent to i
 ### Reports & Replay ✅ (Epic J)
 
 Turns the run-dir ledgers into judge-ready, **byte-deterministic** artifacts — **no LLM at report time** (the replayable-audit differentiator, golden-tested). `siftmesh_core/reports/`: `loader.load_report_view` builds one frozen `ReportView` over every ledger (graceful-missing; corrupt line → `ReportLoadError`, `--tolerant` drops a trailing truncated line); `render.py` pins the Jinja env + a header/body sentinel split (`split_body()` so golden tests diff only the body) + a `MarkdownBuilder` (the markdown reports are code-built; only `replay.html` uses a template). Generators: `final_report.md` (confirmed/inferred findings each anchored to artifact+sha256+tool_call_id, MITRE ATT&CK table, contradictions, self-correction narrative, chain of custody, **complete** tool-execution appendix, **unsupported-only-in-appendix** firewall, mandatory "NOT court-ready" limitations), `accuracy_report.md` (honest self-assessment by default; precision/recall diff mode when `expected_findings.md` exists), `dataset_documentation.md`, `architecture_notes.md`, and a text + self-contained-HTML **replay**. Wired into `siftmesh report`/`replay` and the engine REPORT state (auto modes auto-generate, fail-soft — a report bug never strands a finished run). Every real-run edge case (failed tool, retry-only task, escalation, fell-back agent, empty/halted run, 400+ claims) degrades gracefully.
+
+### Security & Threat Model ✅ (Epic L)
+
+The constraints are **architectural and bypass-tested** (judged criterion 4), not prose.
+`docs/threat_model.md` maps threats T1–T9 → OWASP LLM Top-10 2025 → real module → bypass test →
+residual, with an **agentic overlay** (OWASP Top-10 for Agentic Apps ASI01–ASI10, MAESTRO, MITRE
+ATLAS) and honest residuals (prompt injection is *contained + traceable, not prevented*; path policy
+is posture-level + TOCTOU-bounded). Paired with `docs/architecture.md` (inline mermaid
+security-boundary diagram) + `docs/evidence_integrity.md` (chain of custody). The proof is
+`tests/EPIC_L_TESTS/` — **80 effect-asserting tests** that feed each gate a hostile input and assert
+the *effect* (a raise / an appended injection alert / byte-identical originals / a critic verdict /
+the launched argv): path-escape (incl. a Hypothesis property + the NUL-byte/`target==run` fixes),
+forbidden-tool + live MCP surface-equality, injection (logged-not-executed → critic human-review,
+no contagion), evidence read-only, claim-without-anchor rejection (end-to-end to the report
+firewall), agent-sandbox argv, MCP confused-deputy, memory-poisoning, and audit non-repudiation.
+Encodes the four real test-time bugs (5dh9/8tcx/bhyv/95q9) as permanent regressions. "LLM proposes,
+code decides": a successful injection cannot exfiltrate (no network tool), write outside the run dir,
+or become a reported fact without passing the deterministic critic.
 
 ### Advisor / Critic
 

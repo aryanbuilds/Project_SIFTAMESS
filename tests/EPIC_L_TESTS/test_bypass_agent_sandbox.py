@@ -1,0 +1,158 @@
+"""L5f — bypass test: live-agent harness sandbox (threat T2/T5 · OWASP LLM06 · ASI03/ASI05).
+
+Pure-function inspection of the argv/config the adapter WOULD launch — NO subprocess, NO live agent
+(CLAUDE §2B): the sandbox is an architectural constraint, so we assert the constraint, not a live
+run. Encodes the four REAL bugs as permanent regression scenarios: 5dh9 (agent had Edit/Write and
+edited source), 8tcx (bare 'siftmesh' not on PATH -> zero tools), bhyv (derived artifact
+unreadable when evidence_root!=run_root), 95q9 (available() rejected a logged-in CLI). Unlike CAO,
+no '--yolo' turns the sandbox off. Plus operational edge cases (timeout / bad-JSON fail closed).
+"""
+
+from __future__ import annotations
+
+import subprocess
+from collections.abc import Callable
+from pathlib import Path
+
+from siftmesh_core.adapters.base import AdapterContext
+from siftmesh_core.adapters.claude_adapter import (
+    _DISALLOWED_TOOLS,
+    ClaudeHeadlessAdapter,
+    _build_claude_argv,
+    _claude_logged_in,
+)
+from siftmesh_core.config import load_settings
+from siftmesh_core.run_dir import RunPaths
+from siftmesh_core.schemas.task import InputArtifact, SafetyPolicy, TaskContract
+
+DispatchedCase = Callable[..., tuple[RunPaths, Path]]
+_AUTH_VARS = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
+
+
+def _contract() -> TaskContract:
+    return TaskContract(
+        task_id="TASK-001",
+        role="evtx_security_executor",
+        objective="Parse Security log",
+        assigned_agent_profile="claude_headless",
+        allowed_tools=["parse_evtx_security"],
+        input_artifacts=[InputArtifact(path="Security.evtx", sha256="a" * 64)],
+        safety_policy=SafetyPolicy(),
+    )
+
+
+def _argv() -> list[str]:
+    return _build_claude_argv(
+        "claude", "investigate", Path("/tmp/mcp.json"), ["parse_evtx_security"]
+    )
+
+
+# ── 5dh9: the agent can never edit SIFTMesh source / run shell / reach the web ─
+
+
+def test_5dh9_file_mutation_tools_denied() -> None:
+    # The rogue-edit incident: the agent had Edit/Write. Every file-mutating built-in is denied.
+    for builtin in ("Edit", "MultiEdit", "Write", "NotebookEdit"):
+        assert builtin in _DISALLOWED_TOOLS
+        assert builtin in _argv()
+
+
+def test_5dh9_shell_and_web_and_spawn_denied() -> None:
+    for builtin in ("Bash", "BashOutput", "KillShell", "WebFetch", "WebSearch", "Task", "Agent"):
+        assert builtin in _argv()
+
+
+def test_allowedtools_contains_only_mcp_siftmesh() -> None:
+    argv = _argv()
+    allowed_value = argv[argv.index("--allowedTools") + 1]
+    entries = allowed_value.split(",")
+    assert entries  # non-empty
+    assert all(e.startswith("mcp__siftmesh__") for e in entries), entries  # zero built-ins leak in
+
+
+def test_sandbox_flags_present() -> None:
+    argv = _argv()
+    assert "--strict-mcp-config" in argv
+    assert argv[argv.index("--permission-mode") + 1] == "dontAsk"
+    assert "--disallowedTools" in argv
+
+
+# ── 8tcx + bhyv: MCP launch + dual-root scoping ──────────────────────────────
+
+
+def test_8tcx_mcp_launch_is_module_not_bare_siftmesh(dispatched_case: DispatchedCase) -> None:
+    import json
+    import sys
+
+    run, evidence = dispatched_case(dispatch=False)
+    assert Path(evidence).resolve() != Path(run.root).resolve()  # evidence_root != run_root
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    cfg = json.loads(adapter._write_mcp_config(ctx).read_text(encoding="utf-8"))
+    server = cfg["mcpServers"]["siftmesh"]
+    assert server["command"] == sys.executable  # NOT bare 'siftmesh' (not on PATH)
+    assert server["args"] == ["-m", "siftmesh_core.cli", "mcp-serve"]
+    run_env = Path(server["env"]["SIFTMESH_RUN_ROOT"])
+    evi_env = Path(server["env"]["SIFTMESH_EVIDENCE_ROOT"])
+    assert run_env.is_absolute() and evi_env.is_absolute()
+    assert run_env == Path(run.root).resolve()
+    assert evi_env == Path(evidence).resolve()  # distinct roots both passed correctly (bhyv)
+
+
+# ── 95q9: a logged-in CLI is usable (no env var required) ─────────────────────
+
+
+def test_95q9_available_with_credentials_file_only(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    home = tmp_path / "home"
+    (home / ".claude").mkdir(parents=True)
+    (home / ".claude" / ".credentials.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))  # Path.home() reads $HOME on POSIX
+    monkeypatch.setattr(
+        "siftmesh_core.adapters.claude_adapter.shutil.which", lambda _p: "/usr/bin/claude"
+    )
+    for var in _AUTH_VARS:
+        monkeypatch.delenv(var, raising=False)
+    assert _claude_logged_in() is True  # the REAL credential-store check
+    assert ClaudeHeadlessAdapter(settings=load_settings()).available() is True
+
+
+def test_available_false_when_cli_absent(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr("siftmesh_core.adapters.claude_adapter.shutil.which", lambda _p: None)
+    for var in _AUTH_VARS:
+        monkeypatch.delenv(var, raising=False)
+    assert ClaudeHeadlessAdapter(settings=load_settings()).available() is False  # fails closed
+
+
+# ── operational edge cases (fail closed, never crash) ────────────────────────
+
+
+def test_timeout_returns_error_result(dispatched_case: DispatchedCase, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    run, evidence = dispatched_case(dispatch=False)
+
+    def _raise(*_a: object, **_k: object) -> object:
+        raise subprocess.TimeoutExpired(cmd="claude", timeout=1)
+
+    monkeypatch.setattr(subprocess, "run", _raise)
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    result = adapter._execute(_contract(), ctx)
+    assert result.status == "error"
+    assert "agent_failed_or_timeout" in result.errors
+
+
+def test_bad_json_returns_error_and_persists_raw(
+    dispatched_case: DispatchedCase, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    run, evidence = dispatched_case(dispatch=False)
+
+    def _fake(*_a: object, **_k: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(args=[], returncode=0, stdout="not json{", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", _fake)
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    result = adapter._execute(_contract(), ctx)
+    assert result.status == "error"
+    assert "agent_bad_json" in result.errors
+    # the raw envelope is still persisted for audit even on a parse failure
+    assert (run.root / "results" / "TASK-001.agent_raw.json").is_file()

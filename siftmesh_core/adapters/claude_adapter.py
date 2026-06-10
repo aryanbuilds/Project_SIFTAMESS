@@ -11,8 +11,10 @@ bearer / API key / logged-in CLI) is absent the adapter is unavailable and the r
 to the deterministic floor.
 
 HARD GATES (CLAUDE §2A/§2B):
-* CLI flags confirmed against claude v2.1.x ``--help`` and isolated in ``_build_claude_argv`` —
-  re-confirm on version bumps (the single place to correct them).
+* CLI flags re-confirmed against claude v2.1.170 ``--help`` (Epic L): ``--permission-mode`` accepts
+  ``dontAsk`` (of acceptEdits/auto/bypassPermissions/default/dontAsk/plan); ``--strict-mcp-config``
+  ignores ambient MCP servers; ``--allowedTools`` / ``--disallowedTools`` / ``--mcp-config`` /
+  ``--output-format`` present. Isolated in ``_build_claude_argv``; re-confirm on bumps.
 * Live validation against real evidence is HUMAN-GATED. Unit tests mock the subprocess boundary
   only; do NOT autonomously run a live agent against evidence.
 """

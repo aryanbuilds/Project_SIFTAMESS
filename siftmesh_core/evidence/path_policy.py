@@ -40,17 +40,29 @@ def safe_write_path(
 ) -> Path:
     """Return the resolved write target under ``run_root``, or raise.
 
-    Rejects ``..`` traversal, absolute-path escape, symlink-to-outside, and —
-    when ``evidence_root`` is given — any path under the original evidence tree.
+    Rejects ``..`` traversal, absolute-path escape, symlink-to-outside, an
+    embedded NUL byte, a target equal to the run dir itself, and — when
+    ``evidence_root`` is given — any path under the original evidence tree.
+
+    Scope (honest): canonicalize-then-check on a filesystem snapshot, so it is
+    TOCTOU-exposed if a component is swapped for a symlink between this call and
+    the real open; its correctness rests on ``Path.resolve()`` semantics (pinned
+    Python). It assumes ``rel`` is already the final decoded relpath — callers
+    must never URL-decode before calling. See ``docs/threat_model.md`` §5.1/§7.
     """
     run = Path(run_root).resolve()
     try:
         target = (run / Path(rel)).resolve()
-    except (OSError, RuntimeError) as exc:  # symlink loops, etc.
+    except (OSError, RuntimeError, ValueError) as exc:  # symlink loops, embedded NUL byte, etc.
         raise PathPolicyViolation(f"cannot resolve {rel!r} under {run}: {exc}") from exc
 
     if not target.is_relative_to(run):
         raise PathPolicyViolation(f"{target} escapes run dir {run}")
+
+    if target == run:
+        # '.', '', 'a/..' resolve to the run dir itself; a write *onto* the run dir is never a
+        # valid file target (would EISDIR), so fail closed rather than hand back the directory.
+        raise PathPolicyViolation(f"{target} is the run dir itself, not a writable target")
 
     if evidence_root is not None:
         evidence = Path(evidence_root).resolve()

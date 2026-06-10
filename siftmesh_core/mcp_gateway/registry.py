@@ -1,6 +1,6 @@
 """Forensic-tool allowlist + registration guard (D1).
 
-The gateway exposes EXACTLY the eight typed forensic tools (CLAUDE.md §7) and
+The gateway exposes EXACTLY the ten typed forensic tools (CLAUDE.md §7) and
 nothing else. A forbidden name (CLAUDE.md §6 — raw shell / destructive) can never
 register, and any name outside the allowlist is rejected at registration time
 (criterion 4: a constrained tool surface). This module is ``mcp``-free so the

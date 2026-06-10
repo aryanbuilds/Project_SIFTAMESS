@@ -1,0 +1,42 @@
+%% SIFTMesh security boundaries (Epic L6) — source of truth for the diagram.
+%% Render:  mmdc -i security_boundaries.mmd -o security_boundaries.svg   (npm i -g @mermaid-js/mermaid-cli)
+%% GitHub renders this natively when embedded in a fenced ```mermaid block (see architecture.md).
+flowchart TB
+    subgraph UNTRUSTED["HOSTILE / UNTRUSTED INPUTS"]
+        EV["Evidence data<br/>(EVTX, registry, prefetch,<br/>$MFT, images, memory)"]
+        AG["LLM agent<br/>(proposes claims only)"]
+        A2A["Remote A2A agent<br/>(Epic P — untrusted by default)"]
+    end
+
+    subgraph POLICY["SIFTMesh forensic policy layer — code-decided, always on"]
+        direction TB
+        B1{{"① Evidence-vault boundary<br/>read-only · hash-before-analysis<br/>evidence/readonly.py · manifest.py"}}
+        B4{{"④ Evidence-as-hostile boundary<br/>spotlight DATA · injection ledger<br/>adapters/spotlight.py · injection_alerts.py"}}
+        B2{{"② Typed-tool (MCP) boundary<br/>allowlist of 10 · no raw shell<br/>mcp_gateway/registry.py · server.py"}}
+        B3{{"③ Run-dir write boundary<br/>safe_write_path · canonicalize<br/>evidence/path_policy.py"}}
+        B5{{"⑤ Critic boundary<br/>anchor-or-reject · no exec severity<br/>orchestrator/critic.py"}}
+        HG["Human approval gates<br/>plan · dispatch · retry · report"]
+    end
+
+    subgraph TRUSTED["TRUSTED OUTPUTS (run dir)"]
+        LED["Ledgers<br/>claims · contradictions · audit"]
+        REP["Deterministic reports<br/>+ replayable audit"]
+    end
+
+    EV -->|"read-only, hashed"| B1
+    B1 --> B2
+    AG -->|"spotlighted DATA, never instructions"| B4
+    A2A -.->|"x_siftmesh overlay + conformance gate"| B4
+    B4 --> B2
+    B2 -->|"only the 10 typed tools"| B3
+    B3 --> B5
+    HG -.->|"guided mode"| B5
+    B5 -->|"anchored facts only"| LED
+    LED --> REP
+
+    classDef hostile fill:#fde2e2,stroke:#c0392b,stroke-width:1px,color:#000;
+    classDef gate fill:#e8f0fe,stroke:#1a73e8,stroke-width:1px,color:#000;
+    classDef trusted fill:#e6f4ea,stroke:#137333,stroke-width:1px,color:#000;
+    class EV,AG,A2A hostile;
+    class B1,B2,B3,B4,B5,HG gate;
+    class LED,REP trusted;

@@ -58,6 +58,7 @@ dev = [
     "mypy>=1.10",
     "pytest>=8.0,<10",
     "types-pyyaml>=6.0",
+    "hypothesis>=6.155.2",
 ]
 
 # REQUIRED for the flat layout: package dir `siftmesh_core` != project name

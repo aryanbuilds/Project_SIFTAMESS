@@ -1,6 +1,6 @@
 """FastMCP server (D1) — the thin agent-facing adapter over the typed tools.
 
-Registers EXACTLY the eight allowlisted forensic tools (CLAUDE.md §7) on a FastMCP
+Registers EXACTLY the ten allowlisted forensic tools (CLAUDE.md §7) on a FastMCP
 stdio server, each guarded by :func:`assert_tool_allowed` at registration so a
 forbidden / off-allowlist name can never be exposed (criterion 4). The adapters are
 thin: they take primitive args an agent can supply and delegate to the same service

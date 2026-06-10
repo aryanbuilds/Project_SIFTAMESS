@@ -23,10 +23,19 @@ class EvidenceFile(StrictModel):
 
 
 class EvidenceManifest(StrictModel):
-    """Manifest of all ingested artifacts for one run."""
+    """Manifest of all ingested artifacts for one run.
+
+    ``incident_objective`` / ``incident_brief_path`` record an OPERATOR-supplied incident
+    briefing (the investigation objective) when one is given via ``--brief``. The brief is
+    TRUSTED operator context, NOT hostile evidence — it is deliberately kept out of ``files``
+    (the hostile set the artifact router consumes) and lives under ``context/`` instead. Both
+    default to ``None`` so manifests without a brief stay valid.
+    """
 
     case_id: str
     run_id: str
     created_utc: UtcDateTime
     tool_version: str
     files: list[EvidenceFile] = Field(default_factory=list)
+    incident_objective: str | None = None
+    incident_brief_path: str | None = None

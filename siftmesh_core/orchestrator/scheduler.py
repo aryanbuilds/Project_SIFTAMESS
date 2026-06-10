@@ -24,6 +24,7 @@ from siftmesh_core.ledgers.audit_log import log_event, open_orchestration_log
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.agent_call import AgentCall
+from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.plan import InvestigationPlan
 from siftmesh_core.schemas.task import TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
@@ -56,6 +57,16 @@ class CollectReport:
     @property
     def malformed(self) -> list[str]:
         return [r.task_id for r in self.rows if r.status == "malformed"]
+
+
+def _incident_objective(run: RunPaths) -> str | None:
+    """The operator's TRUSTED incident objective from the manifest (None if no --brief given)."""
+    if not run.evidence_manifest.is_file():
+        return None
+    manifest = EvidenceManifest.model_validate_json(
+        run.evidence_manifest.read_text(encoding="utf-8")
+    )
+    return manifest.incident_objective
 
 
 def recover_evidence_root(run: RunPaths) -> Path:
@@ -145,6 +156,10 @@ def dispatch_run(
             f"or scope extraction with `extract-artifacts --keys …`."
         )
 
+    # The operator's TRUSTED incident objective (from --brief), inlined into every agent prompt so
+    # the live agent investigates TOWARD it. Manifest metadata only — not the hostile evidence set.
+    incident_objective = _incident_objective(run)
+
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
     refs: list[ResultRef] = []
     for contract in contracts:
@@ -157,6 +172,7 @@ def dispatch_run(
             requested_profile=profile,
             attempt=attempt,
             critic_feedback=critic_feedback,
+            incident_objective=incident_objective,
         )
         try:
             ref = adapter.run(contract, ctx)

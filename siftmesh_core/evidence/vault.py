@@ -64,8 +64,15 @@ def init_case(
     run_name: str | None = None,
     verify_after: bool = False,
     show_progress: bool = False,
+    brief_path: Path | str | None = None,
 ) -> RunPaths:
-    """Ingest evidence into a fresh run dir; return its :class:`RunPaths`."""
+    """Ingest evidence into a fresh run dir; return its :class:`RunPaths`.
+
+    ``brief_path`` (optional) is the operator's TRUSTED incident briefing (the investigation
+    objective). It is rendered into ``context/incident_brief.md`` and recorded as manifest
+    metadata only — never added to the hostile evidence ``files`` set. A brief that cannot be
+    read fails closed (:class:`~siftmesh_core.intake.brief.BriefIntakeError`).
+    """
     case_path = Path(case_dir)
     evidence_path = Path(evidence_dir)
     if not evidence_path.is_dir():
@@ -100,6 +107,19 @@ def init_case(
     manifest = build_manifest(
         case_id=case_path.name, run_id=run.run_id, facts=facts, created_utc=ingest_started
     )
+    if brief_path is not None:
+        from siftmesh_core.intake.brief import ingest_brief
+
+        brief_md, objective = ingest_brief(brief_path, run, evidence_root=evidence_path)
+        manifest = manifest.model_copy(
+            update={
+                "incident_objective": objective,
+                "incident_brief_path": brief_md.resolve()
+                .relative_to(run.root.resolve())
+                .as_posix(),
+            }
+        )
+        log_event(audit, "incident_brief_recorded", objective_chars=len(objective))
     write_manifest(manifest, run.root, evidence_root=evidence_path)
     write_hashes_sha256(manifest, run.root, evidence_root=evidence_path)
     log_event(audit, "manifest_written", files=len(manifest.files))

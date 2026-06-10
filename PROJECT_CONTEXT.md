@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core); real-evidence-run hardening for the ROCBA e2e: `run --max-agent-tasks` + actionable cap error, planner surfaces non-actionable evidence — never silently drops a memory zip)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core); ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run; the live agent stays loud opt-in via `--agent claude`)_
 
 ## 1. Project identity
 
@@ -172,6 +172,8 @@ For repeatable benchmark-style execution:
 siftmesh run ./case01 --evidence ./evidence --auto --max-iterations 3
 ```
 
+In `--auto` the engine prepares archive evidence itself (auto-decompress + auto-ingest of the derived image) and **never halts on a single task**: a task the critic sends to human-review/escalation is *quarantined* (recorded in `RunState.quarantined_tasks`, surfaced in the report; its claims are never promoted to facts) and the run completes to `done`. The `max_iterations` cap is the one genuine "stop and ask a human" (CLAUDE §12). Use `--auto-human-loop` when you instead want it to halt at the meaningful gates for `approve`/`reject`.
+
 Required limits:
 
 ```text
@@ -227,6 +229,8 @@ The LLM can recommend actions, but the deterministic Ultraworker state machine d
 ### Planner ✅ (Epic E, shipped 2026-06-08)
 
 Creates the investigation strategy, scope, constraints, expected artifacts, initial task graph, and evidence policy. Implemented deterministically in `siftmesh_core/orchestrator/planner.py` (+ `artifact_router.py`): `siftmesh plan` writes `context/{case_brief,context_pack,investigation_plan,tool_map,assumptions}` and `tasks/TASK-*.yaml` from manifest metadata only — it proposes, it never executes.
+
+**Incident objective (`--brief`).** A real engagement starts from an incident briefing (e.g. `ROCBA-BACKGROUND.pptx`) that states the TARGET. `--brief PATH` on `init-case`/`run` ingests that operator-designated document as **TRUSTED** context (`siftmesh_core/intake/brief.py` → `context/incident_brief.md` + manifest `incident_objective` metadata) — distinct from HOSTILE evidence: it is never in the evidence `files` set, never routed to a tool, never spotlighted. The objective is threaded into the case brief, the context pack, every executor task's prompt (so the live agent investigates *toward* it), and an "Answer to the incident objective" section in `final_report.md`. Designated explicitly only — a document merely found in the evidence dir is never auto-promoted to trusted instructions.
 
 ### Deep Context Agent ✅ (Epic E, deterministic)
 

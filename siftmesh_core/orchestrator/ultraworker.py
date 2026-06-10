@@ -48,12 +48,22 @@ def undispatched_task_ids(run: RunPaths) -> list[str]:
 
 
 def aggregate_decision(
-    run: RunPaths, state: RunState, *, settings: SiftmeshSettings
+    run: RunPaths,
+    state: RunState,
+    *,
+    settings: SiftmeshSettings,
+    exclude: frozenset[str] = frozenset(),
 ) -> RunDecision:
-    """Fold the per-task ``decide`` outcomes into one run-level :class:`RunDecision`."""
+    """Fold the per-task ``decide`` outcomes into one run-level :class:`RunDecision`.
+
+    ``exclude`` drops task_ids from the fold — full-auto passes the quarantined tasks so one
+    flagged task's ``human_review``/``escalate`` does not starve the others' retries/follow-ups.
+    """
     verdicts = latest_verdict_by_task(run)
     per_action: dict[str, DecisionAction] = {}
     for task_id, verdict in verdicts.items():
+        if task_id in exclude:
+            continue
         per_task = state.per_task.get(task_id, PerTaskState())
         per_action[task_id] = decide(
             verdict.verdict,
@@ -73,7 +83,7 @@ def aggregate_decision(
     retry_ids = tuple(sorted(t for t, a in per_action.items() if a == "retry"))
     if retry_ids:
         return RunDecision("retry", "critic requested a stricter retry", retry_ids)
-    pending = tuple(undispatched_task_ids(run))
+    pending = tuple(t for t in undispatched_task_ids(run) if t not in exclude)
     if pending:
         return RunDecision("follow_up", "uncovered artifacts have follow-up tasks", pending)
     return RunDecision("done", "all tasks accepted or downgraded", ())

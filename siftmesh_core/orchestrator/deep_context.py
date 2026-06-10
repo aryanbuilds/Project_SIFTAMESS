@@ -52,6 +52,20 @@ def build_context_pack(manifest: EvidenceManifest, routed: list[RoutedArtifact])
         f"- Run: {manifest.run_id}",
         f"- Artifacts in manifest: {len(manifest.files)}",
         "",
+    ]
+    # The operator's TRUSTED incident objective (from --brief) — plain trusted text, kept
+    # visually separate from the datamarked hostile filenames below.
+    if manifest.incident_objective:
+        lines += [
+            "## Incident objective (TRUSTED operator context)",
+            "",
+            f"> {manifest.incident_objective}",
+            "",
+            "Investigate the artifacts below TOWARD this objective. (Full brief: "
+            "context/incident_brief.md.)",
+            "",
+        ]
+    lines += [
         "## Artifact families present",
         "",
     ]

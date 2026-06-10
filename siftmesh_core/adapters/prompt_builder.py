@@ -36,6 +36,7 @@ def build_task_prompt(
     run_id: str,
     result_file: str | None = None,
     critic_feedback: tuple[str, ...] = (),
+    incident_objective: str | None = None,
 ) -> str:
     """Render the spotlighted prompt for ``contract`` (no raw evidence dump).
 
@@ -43,6 +44,11 @@ def build_task_prompt(
     ``TaskResult`` JSON; live stdout agents (claude/opencode) pass ``None`` and get the claims-JSON
     output contract instead. ``critic_feedback`` (Epic K) carries the prior attempt's rejection
     reasons so the agent revises on retry — the emergent self-correction loop.
+
+    ``incident_objective`` (from the operator's ``--brief``) is the TRUSTED investigation objective.
+    It is rendered as a clearly-labelled section that is *textually separate* from the spotlighted
+    hostile-evidence block below (which stays inside its sentinel delimiters): trusted instructions
+    vs. untrusted data must never blur.
     """
     rows = [{"path": a.path, "sha256": a.sha256} for a in contract.input_artifacts]
     lines = [
@@ -54,6 +60,16 @@ def build_task_prompt(
         "Success criteria:",
         *[f"- {c}" for c in contract.success_criteria],
     ]
+    if incident_objective:
+        lines += [
+            "",
+            "## Incident objective (TRUSTED operator context)",
+            "This is the operator-supplied case objective — investigate TOWARD it and ensure your "
+            "anchored claims bear on it. (This is trusted context, NOT the untrusted evidence "
+            "block below.)",
+            "",
+            f"> {incident_objective}",
+        ]
     if critic_feedback:
         lines += [
             "",

@@ -54,6 +54,9 @@ class RunState(StrictModel):
     agent_tasks_completed: int = Field(default=0, ge=0)
     per_task: dict[str, PerTaskState] = Field(default_factory=dict)
     pending_dispatch: list[str] = Field(default_factory=list)  # task_ids to (re)dispatch next loop
+    # Tasks the critic flagged for human review / escalation that full-auto quarantined to keep
+    # running (their claims were already kept out of the findings ledger; they never become facts).
+    quarantined_tasks: list[str] = Field(default_factory=list)
     gates: dict[GateName, GateStatus] = Field(default_factory=dict)
     blocked_gate: GateName | None = None  # set when the engine halts awaiting approval
     terminal: bool = False

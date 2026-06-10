@@ -75,7 +75,12 @@ class GenericShellAdapter(ExecutorAdapter):
         out_path = safe_write_path(ctx.run.root, f"results/{contract.task_id}.agent.json")
         prompt_path.parent.mkdir(parents=True, exist_ok=True)
         prompt_path.write_text(
-            build_task_prompt(contract, run_id=ctx.run.run_id, result_file=str(out_path)),
+            build_task_prompt(
+                contract,
+                run_id=ctx.run.run_id,
+                result_file=str(out_path),
+                incident_objective=ctx.incident_objective,
+            ),
             encoding="utf-8",
         )
         try:

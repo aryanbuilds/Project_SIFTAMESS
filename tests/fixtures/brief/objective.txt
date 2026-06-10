@@ -1,0 +1,5 @@
+Operation ROCBA (synthetic public fixture).
+
+Objective: determine whether the workstation ROCBA was compromised, identify the initial
+access vector, and establish whether data was staged for exfiltration. Prioritise
+program-execution, persistence, and account-logon artifacts.

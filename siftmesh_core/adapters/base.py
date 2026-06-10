@@ -54,6 +54,7 @@ class AdapterContext:
     attempt: int = 1
     requested_profile: str | None = None  # what the dispatcher asked for (vs adapter actual)
     critic_feedback: tuple[str, ...] = field(default_factory=tuple)  # Epic G fills on retry
+    incident_objective: str | None = None  # operator's TRUSTED objective (from --brief), inlined
 
 
 class ExecutorAdapter(ABC):

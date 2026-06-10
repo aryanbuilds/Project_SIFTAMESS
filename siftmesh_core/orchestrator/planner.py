@@ -89,14 +89,27 @@ def _retry() -> RetryPolicy:
     return RetryPolicy(max_attempts=2, retry_on=["malformed_json", "result_missing_reference"])
 
 
+def _context_packet(*, include_brief: bool) -> list[str]:
+    """The base context packet, plus the TRUSTED incident brief when one was supplied."""
+    packet = list(_CONTEXT_PACKET)
+    if include_brief:
+        packet.append("context/incident_brief.md")
+    return packet
+
+
 def executor_contract(
-    task_id: str, art: RoutedArtifact, *, origin: ArtifactOrigin = "evidence"
+    task_id: str,
+    art: RoutedArtifact,
+    *,
+    origin: ArtifactOrigin = "evidence",
+    include_brief: bool = False,
 ) -> TaskContract:
     """One TaskContract for an actionable artifact (E6/E7) — exactly one tool.
 
     Public so the critic's G9 follow-up generator + the hth.2 derived-ingest reuse the exact
     contract shape. ``origin="derived"`` marks a carved/decompressed input (it resolves under the
-    run dir, not the evidence root).
+    run dir, not the evidence root). ``include_brief`` adds the TRUSTED brief
+    (``context/incident_brief.md``) to the context packet when the operator supplied an objective.
     """
     assert art.tool is not None  # actionable => tool set (route_artifact guarantee)
     return TaskContract(
@@ -106,7 +119,7 @@ def executor_contract(
         assigned_agent_profile=DEFAULT_AGENT_PROFILE,
         allowed_tools=[art.tool],
         input_artifacts=[InputArtifact(path=art.path, sha256=art.sha256, origin=origin)],
-        context_packet=list(_CONTEXT_PACKET),
+        context_packet=_context_packet(include_brief=include_brief),
         output_required=[f"results/{task_id}.result.json"],
         success_criteria=[
             "Every claim MUST carry a tool_call_id and source_sha256 binding it to evidence.",
@@ -118,7 +131,9 @@ def executor_contract(
     )
 
 
-def _timeline_contract(task_id: str, timeline_arts: list[RoutedArtifact]) -> TaskContract:
+def _timeline_contract(
+    task_id: str, timeline_arts: list[RoutedArtifact], *, include_brief: bool = False
+) -> TaskContract:
     """A single build_timeline task over every timeline-capable artifact."""
     return TaskContract(
         task_id=task_id,
@@ -127,7 +142,7 @@ def _timeline_contract(task_id: str, timeline_arts: list[RoutedArtifact]) -> Tas
         assigned_agent_profile=DEFAULT_AGENT_PROFILE,
         allowed_tools=[TIMELINE_TOOL],
         input_artifacts=[InputArtifact(path=a.path, sha256=a.sha256) for a in timeline_arts],
-        context_packet=list(_CONTEXT_PACKET),
+        context_packet=_context_packet(include_brief=include_brief),
         output_required=[f"results/{task_id}.result.json"],
         success_criteria=[
             "Merge only the supplied artifacts; every row must name its source_artifact.",
@@ -150,7 +165,9 @@ class _PlannedTask:
     description: str
 
 
-def _build_contracts(routed: list[RoutedArtifact]) -> list[_PlannedTask]:
+def _build_contracts(
+    routed: list[RoutedArtifact], *, include_brief: bool = False
+) -> list[_PlannedTask]:
     """Mint one task per actionable artifact (+ a timeline task) in manifest order."""
     planned: list[_PlannedTask] = []
     n = 0
@@ -163,7 +180,7 @@ def _build_contracts(routed: list[RoutedArtifact]) -> list[_PlannedTask]:
         planned.append(
             _PlannedTask(
                 task_id=task_id,
-                contract=executor_contract(task_id, art),
+                contract=executor_contract(task_id, art, include_brief=include_brief),
                 kind="executor",
                 tool=art.tool,
                 input_paths=[art.path],
@@ -177,7 +194,7 @@ def _build_contracts(routed: list[RoutedArtifact]) -> list[_PlannedTask]:
         planned.append(
             _PlannedTask(
                 task_id=task_id,
-                contract=_timeline_contract(task_id, timeline_arts),
+                contract=_timeline_contract(task_id, timeline_arts, include_brief=include_brief),
                 kind="timeline",
                 tool=TIMELINE_TOOL,
                 input_paths=[a.path for a in timeline_arts],
@@ -258,6 +275,23 @@ def _build_case_brief(
     present = [f for f in FAMILY_ORDER if any(a.family == f for a in routed)]
     family_line = ", ".join(FAMILY_LABEL[f] for f in present) or "none recognised"
     mode = "review-only (recommendations only, no dispatch)" if review_only else "standard"
+    # The operator's TRUSTED incident objective (from --brief), if supplied, drives the
+    # investigation. It is plain trusted text (NOT datamarked like the hostile case_id).
+    if manifest.incident_objective:
+        objective_lines = [
+            "Operator incident objective (investigate TOWARD this; full brief in "
+            "`context/incident_brief.md`):",
+            "",
+            f"> {manifest.incident_objective}",
+            "",
+            "Produce evidence-backed findings that bear on this objective, each anchored to a "
+            "tool execution and a source hash.",
+        ]
+    else:
+        objective_lines = [
+            "Triage the supplied Windows evidence and produce evidence-backed findings, "
+            "each anchored to a tool execution and a source hash.",
+        ]
     lines = [
         "# Case Brief",
         "",
@@ -268,8 +302,7 @@ def _build_case_brief(
         "",
         "## Objective",
         "",
-        "Triage the supplied Windows evidence and produce evidence-backed findings, "
-        "each anchored to a tool execution and a source hash.",
+        *objective_lines,
         "",
         "## Scope",
         "",
@@ -393,8 +426,9 @@ def generate_plan(
         _write(run, "context/tool_map.md", _build_tool_map(routed)),
     ]
 
-    # E6/E7 task contracts.
-    planned = _build_contracts(routed)
+    # E6/E7 task contracts. When the operator supplied an incident objective (--brief), each
+    # contract references the TRUSTED brief in its context packet (the agent also gets it inlined).
+    planned = _build_contracts(routed, include_brief=manifest.incident_objective is not None)
     task_files: list[Path] = [
         _write(run, f"tasks/{task.task_id}.yaml", dump_yaml_model(task.contract))
         for task in planned

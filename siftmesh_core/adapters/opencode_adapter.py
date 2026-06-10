@@ -76,7 +76,10 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
         prompt = build_task_prompt(
-            contract, run_id=ctx.run.run_id, critic_feedback=ctx.critic_feedback
+            contract,
+            run_id=ctx.run.run_id,
+            critic_feedback=ctx.critic_feedback,
+            incident_objective=ctx.incident_objective,
         )
         prof = self.profile()
         model = prof.model if (prof and prof.model) else _DEFAULT_MODEL

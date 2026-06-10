@@ -46,6 +46,14 @@ sift = [
 a2a = [
     "a2a-sdk==1.1.0",
 ]
+# Optional incident-brief intake (the operator's TRUSTED objective document). Opt-in:
+# only needed to read .pptx/.docx/.pdf briefs (.txt/.md need nothing). A missing lib for a
+# REQUESTED brief format fails closed (BriefIntakeError), never a fake objective. See doctor.
+brief = [
+    "python-pptx>=1.0,<2",
+    "python-docx>=1.1,<2",
+    "pypdf>=5.1,<6",
+]
 
 [project.scripts]
 siftmesh = "siftmesh_core.cli:app"
@@ -102,7 +110,7 @@ no_implicit_optional = true
 
 [[tool.mypy.overrides]]
 # Forensic/optional backends without stubs; do not block on missing types.
-module = ["regipy.*", "evtx.*", "pyscca.*", "mft.*", "a2a.*"]
+module = ["regipy.*", "evtx.*", "pyscca.*", "mft.*", "a2a.*", "pptx.*", "docx.*", "pypdf.*"]
 ignore_missing_imports = true
 
 # ── pytest ────────────────────────────────────────────────────────────────

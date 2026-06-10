@@ -141,7 +141,10 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
     def _execute(self, contract: TaskContract, ctx: AdapterContext) -> TaskResult:
         started = datetime.now(UTC)
         prompt = build_task_prompt(
-            contract, run_id=ctx.run.run_id, critic_feedback=ctx.critic_feedback
+            contract,
+            run_id=ctx.run.run_id,
+            critic_feedback=ctx.critic_feedback,
+            incident_objective=ctx.incident_objective,
         )
         mcp_config = self._write_mcp_config(ctx)
         prof = self.profile()

@@ -20,8 +20,8 @@ All CLI commands are confirmed against `siftmesh … --help` and the current sou
 | File (`~/projects/data/`) | Size | Tool path |
 |---|---|---|
 | `rocba-cdrive.e01` | 22.6 GB | disk image → `extract-artifacts` (Sleuthkit `mmls/ifind/icat/fls`) |
-| `Rocba-Memory.zip` | 5.4 GB | memory, zipped → `decompress` → `analyze-memory` (Volatility 3, subprocess only) |
-| `ROCBA-BACKGROUND.pptx` | 39 MB | **case briefing only** — no typed parser; read it for context, do not feed it to tools |
+| `Rocba-Memory.zip` | 5.4 GB | memory, zipped → `decompress` → `analyze-memory` (Volatility 3, subprocess only). In `run --auto` this is **auto-decompressed + auto-ingested** (needs `7z`); staged, use §3 |
+| `ROCBA-BACKGROUND.pptx` | 39 MB | **incident briefing = the TRUSTED objective** → pass with `--brief` so the agent investigates toward it (it is never fed to a forensic tool) |
 | `standard_case_1/` | 2.6 GB | only a **partial** `rocba-cdrive.e01.download` — ignore it |
 
 ---
@@ -128,31 +128,43 @@ Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 
 ## 2′ — Full-auto in ONE command (the hackathon-demo shape)
 
-Since the cap is now an explicit flag (`--max-agent-tasks`), a single `run --auto` drives the **whole**
-disk-image pipeline itself: hash → plan → extract (Sleuthkit) → **auto re-ingest the derived
-artifacts** → parse (evtx/registry/prefetch) → critique → report — no staged commands.
+A single `run --auto` drives the **whole** investigation itself: read the incident brief →
+hash → **auto-decompress any archive (memory zip)** → plan → extract (Sleuthkit) → **auto re-ingest
+the derived artifacts** (disk + memory) → parse (evtx/registry/prefetch/Volatility) → critique →
+report — no staged commands. Put **everything** in one evidence dir and point `--brief` at the
+incident document:
 
 ```bash
-mkdir -p ~/projects/ev_disk && ln ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/ 2>/dev/null \
-  || cp -n ~/projects/data/rocba-cdrive.e01 ~/projects/ev_disk/
-uv run siftmesh run ./case_disk --evidence ~/projects/ev_disk \
-  --auto --max-agent-tasks 400 --max-iterations 5
+mkdir -p ~/projects/ev_all
+ln ~/projects/data/rocba-cdrive.e01 ~/projects/ev_all/ 2>/dev/null || cp -n ~/projects/data/rocba-cdrive.e01 ~/projects/ev_all/
+ln ~/projects/data/Rocba-Memory.zip ~/projects/ev_all/ 2>/dev/null || cp -n ~/projects/data/Rocba-Memory.zip ~/projects/ev_all/
+
+uv run siftmesh run ./case_rocba --evidence ~/projects/ev_all \
+  --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
+  --agent claude --auto --max-agent-tasks 400 --max-iterations 5
 ```
 
-- The `.e01` extraction yields 200+ derived parse tasks; `--max-agent-tasks 400` lifts the default-10
-  cap **explicitly** (the safety cap stays enforced — you set the ceiling). Without it the run halts
-  with an actionable message telling you the exact number to pass.
-- `Rocba-Memory.zip` and `ROCBA-BACKGROUND.pptx` are **not** auto-analysed (an archive needs a size-
-  budgeted decompress; a pptx has no parser). The run does **not** silently drop them — it lists them
-  in `context/assumptions.md` ("Evidence not directly planned") and logs a `plan_non_actionable_evidence`
-  audit event. Add memory via §3.
-- **Live agent (emergent self-correction):** append `--agent claude` (needs a logged-in `claude` CLI;
-  consumes your subscription). The deterministic floor (no flag) is the reliable, key-free baseline —
-  run that first.
+- **`--brief …pptx`** ingests the incident document as the **TRUSTED objective** (written to
+  `context/incident_brief.md`, recorded as manifest metadata, never fed to a forensic tool). The
+  objective is threaded into the case brief, the context pack, and **every agent prompt** — so the
+  live agent investigates *toward* it, and `reports/final_report.md` gets an **"Answer to the incident
+  objective"** section. (`.pptx`/`.docx` need `uv sync --extra brief`; `.txt`/`.md` need nothing.)
+- **`--agent claude`** is the headline: a live, objective-driven investigation that self-corrects under
+  the deterministic critic. Needs a logged-in `claude` CLI (consumes your subscription). Omit it for
+  the key-free deterministic floor — `run`/`doctor` print a hint when claude is available but not
+  selected. The floor is the reliable baseline; run it first.
+- **Archives are auto-handled:** `Rocba-Memory.zip` is decompressed at the start of the run and the
+  raw image is auto-ingested into a `analyze-memory` task (needs `7z` + `vol`; missing → logged
+  `archive_decompress_skipped`, run continues). No manual `decompress` / `ingest-derived` needed.
+- **One flagged task no longer strands the run:** in `--auto`, a task the critic sends to
+  human-review/escalation is **quarantined** (recorded + surfaced in the report; its claims never
+  become facts) and the run completes to `done`. Use `--auto-human-loop` if you want it to **halt**
+  for `approve`/`reject` instead. `--max-agent-tasks 400` lifts the default-10 cap explicitly (the cap
+  stays enforced; without it the run halts with the exact number to pass).
 
 > First real run? Prefer the **staged** §2 flow with `--keys` (fast, focused, proven). Use this
-> one-command form once the staged path looks right, for the clean "supply evidence → autonomous →
-> report" demo.
+> one-command form once the staged path looks right, for the clean "supply evidence + brief →
+> autonomous → report" demo.
 
 ---
 

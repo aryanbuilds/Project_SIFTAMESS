@@ -20,6 +20,7 @@ from siftmesh_core.doctor import run_doctor
 from siftmesh_core.evidence.path_policy import PathPolicyViolation
 from siftmesh_core.evidence.vault import EvidenceModifiedError
 from siftmesh_core.evidence.vault import init_case as vault_init_case
+from siftmesh_core.intake.brief import BriefIntakeError
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 from siftmesh_core.protocol_sift import PROTOCOL_SIFT_SKILLS, detect_protocol_sift
 
@@ -79,6 +80,14 @@ def init_case(
     case_dir: str,
     evidence: Annotated[str, typer.Option(help="Path to read-only evidence.")],
     run_name: Annotated[str | None, typer.Option(help="Override the generated RUN-* id.")] = None,
+    brief: Annotated[
+        str | None,
+        typer.Option(
+            "--brief",
+            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective, "
+            "not evidence.",
+        ),
+    ] = None,
     verify_after: Annotated[
         bool,
         typer.Option(
@@ -90,13 +99,19 @@ def init_case(
     """Hash + seal evidence into a new run dir (manifest, custody, policy)."""
     try:
         run = vault_init_case(
-            case_dir, evidence, run_name=run_name, verify_after=verify_after, show_progress=True
+            case_dir,
+            evidence,
+            run_name=run_name,
+            verify_after=verify_after,
+            show_progress=True,
+            brief_path=brief,
         )
     except (
         FileNotFoundError,
         NotADirectoryError,
         PathPolicyViolation,
         EvidenceModifiedError,
+        BriefIntakeError,
     ) as exc:
         typer.echo(f"init-case failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -104,6 +119,8 @@ def init_case(
     typer.echo(f"  run id   : {run.run_id}")
     typer.echo(f"  manifest : {run.evidence_manifest}")
     typer.echo(f"  custody  : {run.custody_log}")
+    if brief is not None:
+        typer.echo(f"  brief    : {run.incident_brief} (TRUSTED objective)")
 
 
 @app.command()
@@ -239,6 +256,7 @@ def critique(
     from pydantic import ValidationError
 
     from siftmesh_core.config import load_settings
+    from siftmesh_core.ledgers.claim_ledger import read_claims, read_unsupported_claims
     from siftmesh_core.ledgers.followups import read_followups
     from siftmesh_core.ledgers.jsonl_ledger import LedgerCorruptionError
     from siftmesh_core.orchestrator.critic import critique_run
@@ -253,6 +271,8 @@ def critique(
             run, settings=load_settings(), evidence_root=evidence, generate_followups=followups
         )
         followup_count = len(read_followups(run.root))
+        promoted = len(read_claims(run.root))
+        unsupported = len(read_unsupported_claims(run.root))
     except (
         FileNotFoundError,
         NotADirectoryError,
@@ -264,7 +284,13 @@ def critique(
         raise typer.Exit(code=1) from exc
     typer.echo(f"critique complete: {len(verdicts)} verdict(s)")
     for v in verdicts:
-        typer.echo(f"  {v.task_id}: {v.verdict} ({len(v.affected_claim_ids)} claim(s))")
+        # The count is per-task FLAGGED claims (downgraded/unsupported/rejected/human) — not the
+        # total; an "accepted (0 flagged)" task still contributed anchored claims to the ledger.
+        typer.echo(f"  {v.task_id}: {v.verdict} ({len(v.affected_claim_ids)} flagged)")
+    typer.echo(
+        f"  claims: {promoted} promoted to findings ledger; {unsupported} unsupported "
+        f"(appendix-only, never facts)"
+    )
     if followup_count:
         typer.echo(f"  follow-ups : {followup_count} gap(s) raised (audit/followups.jsonl)")
 
@@ -400,6 +426,26 @@ def _agent_overrides(agent: str | None) -> dict[str, object]:
     }
 
 
+def _claude_available(settings: object) -> bool:
+    """Best-effort check of whether the live Claude agent could run here (CLI + auth present)."""
+    from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
+
+    try:
+        return ClaudeHeadlessAdapter(settings=settings).available()  # type: ignore[arg-type]
+    except Exception:  # never let a discoverability hint break a run
+        return False
+
+
+def _hint_live_agent(settings: object) -> None:
+    """Loud opt-in: when no --agent was chosen but claude is available, suggest the live path."""
+    if _claude_available(settings):
+        typer.echo(
+            "hint: the Claude live agent is available — add `--agent claude` for a live, "
+            "objective-driven investigation (this run uses the deterministic floor).",
+            err=True,
+        )
+
+
 def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
     typer.echo(f"run: {run_paths.root}")
     typer.echo(f"  run id : {run_paths.run_id}")
@@ -451,6 +497,14 @@ def run(
         str | None,
         typer.Option("--agent", help="Opt into a live agent: claude | opencode | deterministic."),
     ] = None,
+    brief: Annotated[
+        str | None,
+        typer.Option(
+            "--brief",
+            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective the "
+            "agent investigates toward.",
+        ),
+    ] = None,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -474,8 +528,10 @@ def run(
         settings = settings.model_copy(
             update={"caps": settings.caps.model_copy(update={"max_agent_tasks": max_agent_tasks})}
         )
+    if agent is None:
+        _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     try:
-        run_paths = vault_init_case(case_dir, evidence, show_progress=True)
+        run_paths = vault_init_case(case_dir, evidence, show_progress=True, brief_path=brief)
         state = RunState(
             run_id=run_paths.run_id,
             mode=resolved,
@@ -494,6 +550,7 @@ def run(
         PathPolicyViolation,
         EvidenceModifiedError,
         BackendUnavailableError,
+        BriefIntakeError,
         ValidationError,
         PolicyError,
         CapError,

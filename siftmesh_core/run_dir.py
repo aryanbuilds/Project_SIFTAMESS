@@ -108,6 +108,11 @@ class RunPaths:
         return self.context / "context_pack.md"
 
     @property
+    def incident_brief(self) -> Path:
+        """Operator's TRUSTED incident briefing (the objective), rendered from ``--brief``."""
+        return self.context / "incident_brief.md"
+
+    @property
     def investigation_plan(self) -> Path:
         """Ordered investigation step graph (E4)."""
         return self.context / "investigation_plan.yaml"

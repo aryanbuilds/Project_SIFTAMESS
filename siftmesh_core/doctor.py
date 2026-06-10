@@ -44,6 +44,14 @@ FORENSIC_DEPS: tuple[tuple[str, str], ...] = (
     ("mft", "MFT (pymft-rs)"),
 )
 
+# Optional incident-brief readers (`brief` extra). Missing => WARN; only fails closed when a
+# brief of that format is actually passed via --brief (.txt/.md need nothing).
+BRIEF_DEPS: tuple[tuple[str, str], ...] = (
+    ("pptx", "Incident brief .pptx (python-pptx)"),
+    ("docx", "Incident brief .docx (python-docx)"),
+    ("pypdf", "Incident brief .pdf (pypdf)"),
+)
+
 # Optional SIFT-lane host CLIs (Epic D deepening: disk-image extraction + memory
 # triage). Missing => WARN, not a failure; the tool that needs one fails closed.
 SIFT_LANE_TOOLS: tuple[tuple[str, str], ...] = (
@@ -107,6 +115,15 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
                 "installed" if ok else "absent: uv sync --extra sift",
             )
         )
+    for mod, human in BRIEF_DEPS:
+        ok = _module_available(mod)
+        checks.append(
+            Check(
+                OK if ok else WARN,
+                f"brief: {human}",
+                "installed" if ok else "absent: uv sync --extra brief",
+            )
+        )
     checks.append(Check(OK if _cwd_writable() else FAIL, "run-dir writable", "case_runs/ (cwd)"))
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
@@ -132,6 +149,23 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             OK if vol_present else WARN,
             "sift-lane: Volatility 3 (vol)",
             settings.vol_path if vol_present else "absent (subprocess-only, never imported)",
+        )
+    )
+    # Live agent (loud opt-in): report whether the Claude headless agent could run here. Absent =>
+    # WARN; runs fall to the deterministic floor unless `--agent claude` is used with CLI + auth.
+    try:
+        from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
+
+        claude_ok = ClaudeHeadlessAdapter(settings=settings).available()
+    except Exception:
+        claude_ok = False
+    checks.append(
+        Check(
+            OK if claude_ok else WARN,
+            "live agent: Claude Code",
+            "available — for a live objective-driven run add `--agent claude`"
+            if claude_ok
+            else "absent (CLI/auth) — runs use the deterministic floor",
         )
     )
     # Safety posture (CLAUDE.md §11) read from config.

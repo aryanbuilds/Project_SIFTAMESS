@@ -33,6 +33,7 @@ def generate_final_report(
     md.h1(f"SIFTMesh Forensic Report — {v.run_id}")
 
     _exec_summary(md, v)
+    _objective_answer(md, v)
     _scope(md, v)
     _methodology(md, v)
     _timeline(md, v)
@@ -88,6 +89,38 @@ def _run_status(v: ReportView) -> str:
     if rs.terminal and rs.state != "done":
         return f"terminated in state '{rs.state}'"
     return f"state={rs.state}, mode={rs.mode}, iteration={rs.iteration}/{rs.max_iterations}"
+
+
+def _objective_answer(md: MarkdownBuilder, v: ReportView) -> None:
+    """Answer the operator's incident objective from the PROMOTED (anchored) findings only.
+
+    Deterministic, no LLM: it quotes the objective and re-presents the already-promoted
+    confirmed/inferred claims that bear on it. It NEVER reads unsupported claims (the
+    unsupported-only-in-appendix firewall holds), and emits nothing when no --brief was given.
+    """
+    objective = v.manifest.incident_objective if v.manifest is not None else None
+    if not objective:
+        return
+    md.h2("Answer to the incident objective")
+    md.line("**Operator objective:**")
+    md.bullet(_truncate(objective, 280))
+    findings = [c for c in v.high_signal_claims if c in (*v.confirmed, *v.inferred)]
+    if not findings:
+        md.blank().line(
+            "No evidence-anchored finding yet bears on this objective. See the limitations and "
+            "the follow-up/coverage notes below."
+        )
+        return
+    md.blank().line(
+        f"{len(v.confirmed) + len(v.inferred)} evidence-anchored finding(s) bear on the objective; "
+        f"the highest-signal are listed here (full set under Findings):"
+    )
+    for c in findings:
+        md.blank().line(f"**{c.claim_id}** — {c.claim}")
+        md.bullet(
+            f"artifact `{c.source_artifact}` · sha256 `{(c.source_sha256 or '')[:_SHA_SHORT]}…` · "
+            f"tool `{c.tool_name}` · call `{c.tool_call_id}` · confidence {_confidence(v, c)}"
+        )
 
 
 def _scope(md: MarkdownBuilder, v: ReportView) -> None:

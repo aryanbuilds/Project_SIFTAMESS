@@ -1,44 +1,31 @@
 """Debug inspection commands (CLAUDE §4): tasks list/show, claims list/show, audit tail.
 
-Real read-only views over a real run (manifest + plan + dispatch of the committed evtx
-fixture) — these were the last CLI print stubs. Each test asserts genuine run-dir content.
+Real read-only views over a real run (the shared root factory: manifest + plan +
+dispatch of the committed fixtures) — these were the last CLI print stubs. Each test
+asserts genuine run-dir content.
 """
 
 from __future__ import annotations
 
-import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import typer
-from siftmesh_core.config import load_settings
-from siftmesh_core.evidence.manifest import build_manifest_from_dir, write_manifest
-from siftmesh_core.evidence.readonly import write_readonly_record
 from siftmesh_core.ledgers.claim_ledger import read_claims
-from siftmesh_core.orchestrator.planner import generate_plan
-from siftmesh_core.orchestrator.scheduler import dispatch_run
-from siftmesh_core.run_dir import RunPaths, new_run_dir
+from siftmesh_core.run_dir import RunPaths
 from typer.testing import CliRunner
 
-_FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "forensic"
+MakeRealRun = Callable[..., tuple[RunPaths, Path]]
 
 
-def _dispatched_run(tmp_path: Path) -> tuple[RunPaths, Path]:
-    evidence = tmp_path / "evidence"
-    evidence.mkdir(parents=True)
-    shutil.copy(_FIXTURES / "security_short.evtx", evidence / "Security.evtx")
-    run = new_run_dir(base=tmp_path / "case_runs")
-    manifest = build_manifest_from_dir(evidence, case_id="case01", run_id=run.run_id)
-    write_manifest(manifest, run.root, evidence_root=evidence)
-    write_readonly_record(evidence, run.root, file_count=len(manifest.files))
-    generate_plan(run, settings=load_settings())
-    dispatch_run(run, settings=load_settings())
-    return run, evidence
+def _dispatched_run(make_real_run: MakeRealRun) -> tuple[RunPaths, Path]:
+    return make_real_run(dispatch=True)
 
 
 def test_tasks_list_shows_contracts_and_status(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["tasks", "list", str(run.root)])
     assert result.exit_code == 0
     assert "TASK-001" in result.output
@@ -47,9 +34,9 @@ def test_tasks_list_shows_contracts_and_status(
 
 
 def test_tasks_show_echoes_validated_contract(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["tasks", "show", str(run.root), "TASK-001"])
     assert result.exit_code == 0
     assert "task_id: TASK-001" in result.output
@@ -57,17 +44,17 @@ def test_tasks_show_echoes_validated_contract(
 
 
 def test_tasks_show_unknown_task_exits_1(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["tasks", "show", str(run.root), "TASK-999"])
     assert result.exit_code == 1
 
 
 def test_claims_list_shows_ledger_and_unsupported_count(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["claims", "list", str(run.root)])
     assert result.exit_code == 0
     assert "claim(s) in the findings ledger" in result.output
@@ -75,9 +62,9 @@ def test_claims_list_shows_ledger_and_unsupported_count(
 
 
 def test_claims_show_prints_full_claim_json(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     claims = read_claims(run.root)
     assert claims, "precondition: the dispatched run promoted at least one claim"
     cid = claims[0].claim_id
@@ -88,17 +75,17 @@ def test_claims_show_prints_full_claim_json(
 
 
 def test_claims_show_unknown_claim_exits_1(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["claims", "show", str(run.root), "CLAIM-NOPE"])
     assert result.exit_code == 1
 
 
 def test_audit_tail_events_and_tool_calls(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     events = runner.invoke(cli_app, ["audit", "tail", str(run.root)])
     assert events.exit_code == 0
     assert "events line(s)" in events.output
@@ -108,9 +95,9 @@ def test_audit_tail_events_and_tool_calls(
 
 
 def test_audit_tail_unknown_ledger_exits_1(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
+    runner: CliRunner, cli_app: typer.Typer, make_real_run: MakeRealRun
 ) -> None:
-    run, _ = _dispatched_run(tmp_path)
+    run, _ = _dispatched_run(make_real_run)
     result = runner.invoke(cli_app, ["audit", "tail", str(run.root), "--ledger", "bogus"])
     assert result.exit_code == 1
 

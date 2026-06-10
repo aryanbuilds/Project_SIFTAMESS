@@ -1,0 +1,7 @@
+# Byte-determinism guard: golden artifacts must never flap on line endings (M3).
+tests/golden/** text eol=lf
+*.md text eol=lf
+*.jsonl text eol=lf
+*.yaml text eol=lf
+# Real forensic fixture binaries — never translate.
+tests/fixtures/forensic/** -text

@@ -1,0 +1,52 @@
+{
+  "task_id": "TASK-001",
+  "profile": "deterministic_executor",
+  "adapter": "deterministic_executor",
+  "attempt": 1,
+  "status": "success",
+  "tool_call_ids": [
+    "TOOL-001"
+  ],
+  "claims": [
+    {
+      "claim_id": "TASK-001-CLAIM-001",
+      "task_id": "TASK-001",
+      "status": "confirmed",
+      "claim": "CMD.EXE executed 3 time(s).",
+      "confidence": 0.9,
+      "evidence_type": "program_execution",
+      "source_artifact": "CMD.EXE-89305D47.pf",
+      "source_sha256": "6127d820b031cac7f5fb1e6d45e244aa48cbb7fa62910ad0317eacb71a0edcd0",
+      "tool_name": "analyze_prefetch",
+      "tool_call_id": "TOOL-001",
+      "timestamp_utc": "2026-06-10T07:11:23.012578Z",
+      "supporting_evidence_refs": [
+        "TOOL-001"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    },
+    {
+      "claim_id": "TASK-001-CLAIM-002",
+      "task_id": "TASK-001",
+      "status": "inferred",
+      "claim": "1 execution timestamp(s) recorded.",
+      "confidence": 0.7,
+      "evidence_type": "program_execution",
+      "source_artifact": "CMD.EXE-89305D47.pf",
+      "source_sha256": "6127d820b031cac7f5fb1e6d45e244aa48cbb7fa62910ad0317eacb71a0edcd0",
+      "tool_name": "analyze_prefetch",
+      "tool_call_id": "TOOL-001",
+      "timestamp_utc": "2026-06-10T07:11:23.012578Z",
+      "supporting_evidence_refs": [
+        "TOOL-001"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    }
+  ],
+  "started_utc": "2026-06-10T07:11:23.010820Z",
+  "ended_utc": "2026-06-10T07:11:23.018419Z",
+  "errors": [],
+  "retry_cause": null
+}

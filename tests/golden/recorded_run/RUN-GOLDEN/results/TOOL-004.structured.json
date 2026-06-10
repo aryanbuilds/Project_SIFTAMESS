@@ -1,0 +1,57 @@
+{
+  "event_count": 8,
+  "sources": [
+    "CMD.EXE-89305D47.pf",
+    "Security.evtx"
+  ],
+  "events": [
+    {
+      "timestamp_utc": "2016-01-16T20:03:15.551424",
+      "source_kind": "prefetch",
+      "source_artifact": "CMD.EXE-89305D47.pf",
+      "detail": "ran CMD.EXE"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:24:34.346Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 5152 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:24:36.686Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 4611 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:24:36.686Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 4776 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:24:36.7172Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 4625 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:24:57.0908Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 5152 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:25:08.822Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 5157 (Security)"
+    },
+    {
+      "timestamp_utc": "2016-06-29T15:25:08.822Z UTC",
+      "source_kind": "evtx",
+      "source_artifact": "Security.evtx",
+      "detail": "EventID 4673 (Security)"
+    }
+  ]
+}

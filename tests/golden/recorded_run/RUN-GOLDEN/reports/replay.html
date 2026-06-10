@@ -1,0 +1,46 @@
+<!-- generated_utc: 2026-06-10T07:11:23.143916Z -->
+<!-- host: siftworkstation -->
+<!-- python: 3.12.3 -->
+<!-- run_id: RUN-GOLDEN -->
+<!-- run_dir: <RUN> -->
+<!-- load_mode: strict -->
+<!-- load_error: no run_state.json (run driven by discrete commands; engine snapshot absent) -->
+<!-- SIFTMESH-REPORT-BODY-BELOW -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SIFTMesh Replay — RUN-GOLDEN</title>
+<style>
+body { font-family: ui-monospace, Menlo, Consolas, monospace; margin: 2rem; color: #1a1a1a; background: #fafafa; }
+h1 { font-size: 1.3rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; vertical-align: top; }
+th { background: #efefef; }
+tr.ev-retry, tr.ev-decision { background: #fff4e5; }
+tr.ev-verdict { background: #e7f5ff; }
+tr.ev-tool, tr.ev-dispatch { background: #ebfbee; }
+tr.ev-injection, tr.ev-gate { background: #fff0f6; }
+td.detail { color: #555; word-break: break-word; }
+</style>
+</head>
+<body>
+<h1>SIFTMesh Replay — RUN-GOLDEN</h1>
+<p>10 orchestration events (chronological; reconstructed from audit/orchestration_events.jsonl).</p>
+<table>
+<thead><tr><th>#</th><th>Timestamp (UTC)</th><th>Event</th><th>Detail</th></tr></thead>
+<tbody>
+<tr class="ev-info"><td>1</td><td>2026-06-10T07:11:22.975665Z</td><td>plan_started</td><td class="detail">review_only=False; template=windows_initial_triage</td></tr>
+<tr class="ev-info"><td>2</td><td>2026-06-10T07:11:22.993801Z</td><td>plan_complete</td><td class="detail">context_files=5; review_only=False; task_count=4</td></tr>
+<tr class="ev-dispatch"><td>3</td><td>2026-06-10T07:11:23.019193Z</td><td>task_dispatched</td><td class="detail">adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-001</td></tr>
+<tr class="ev-dispatch"><td>4</td><td>2026-06-10T07:11:23.088332Z</td><td>task_dispatched</td><td class="detail">adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-002</td></tr>
+<tr class="ev-dispatch"><td>5</td><td>2026-06-10T07:11:23.099333Z</td><td>task_dispatched</td><td class="detail">adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-003</td></tr>
+<tr class="ev-dispatch"><td>6</td><td>2026-06-10T07:11:23.105288Z</td><td>task_dispatched</td><td class="detail">adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-004</td></tr>
+<tr class="ev-verdict"><td>7</td><td>2026-06-10T07:11:23.107128Z</td><td>critic_verdict</td><td class="detail">affected=0; task_id=TASK-001; verdict=accepted</td></tr>
+<tr class="ev-verdict"><td>8</td><td>2026-06-10T07:11:23.107948Z</td><td>critic_verdict</td><td class="detail">affected=0; task_id=TASK-002; verdict=accepted</td></tr>
+<tr class="ev-verdict"><td>9</td><td>2026-06-10T07:11:23.109057Z</td><td>critic_verdict</td><td class="detail">affected=0; task_id=TASK-003; verdict=accepted</td></tr>
+<tr class="ev-verdict"><td>10</td><td>2026-06-10T07:11:23.109977Z</td><td>critic_verdict</td><td class="detail">affected=0; task_id=TASK-004; verdict=accepted</td></tr>
+</tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,71 @@
+plan_id: RUN-20260610-071122
+case_id: golden-case
+template: windows_initial_triage
+review_only: false
+artifact_count: 3
+steps:
+- step_id: step-001
+  kind: deep_context
+  description: Build the deep-context pack.
+  depends_on: []
+  task_id: null
+  tool: null
+  input_artifacts: []
+- step_id: step-002
+  kind: executor
+  description: Analyse the prefetch artifact for program-execution evidence (run count,
+    last-run times).
+  depends_on:
+  - step-001
+  task_id: TASK-001
+  tool: analyze_prefetch
+  input_artifacts:
+  - CMD.EXE-89305D47.pf
+- step_id: step-003
+  kind: executor
+  description: Extract autostart Run/RunOnce keys from the registry hive.
+  depends_on:
+  - step-001
+  task_id: TASK-002
+  tool: extract_registry_run_keys
+  input_artifacts:
+  - NTUSER.DAT
+- step_id: step-004
+  kind: executor
+  description: Parse the Windows Security event log for logon, privilege, and account-management
+    activity.
+  depends_on:
+  - step-001
+  task_id: TASK-003
+  tool: parse_evtx_security
+  input_artifacts:
+  - Security.evtx
+- step_id: step-005
+  kind: timeline
+  description: Merge timeline-capable artifacts into one chronology.
+  depends_on:
+  - step-001
+  task_id: TASK-004
+  tool: build_timeline
+  input_artifacts:
+  - CMD.EXE-89305D47.pf
+  - Security.evtx
+- step_id: step-006
+  kind: critique
+  description: Validate every claim's evidence binding; reject unsupported claims.
+  depends_on:
+  - step-002
+  - step-003
+  - step-004
+  - step-005
+  task_id: null
+  tool: null
+  input_artifacts: []
+- step_id: step-007
+  kind: report
+  description: Render the final evidence-backed report.
+  depends_on:
+  - step-006
+  task_id: null
+  tool: null
+  input_artifacts: []

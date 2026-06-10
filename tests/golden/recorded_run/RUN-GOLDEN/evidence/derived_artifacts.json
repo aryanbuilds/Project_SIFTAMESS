@@ -1,0 +1,44 @@
+{
+  "derived": [
+    {
+      "derived_path": "results/TOOL-001.structured.json",
+      "source_artifact": "CMD.EXE-89305D47.pf",
+      "source_sha256": "6127d820b031cac7f5fb1e6d45e244aa48cbb7fa62910ad0317eacb71a0edcd0",
+      "tool_call_id": "TOOL-001",
+      "derived_sha256": "9a275d34dc28dcaf5dccd17041b03e28a5639b768f27684d109e5aa9e70301b3",
+      "extraction_source_path": null,
+      "extraction_inode": null,
+      "extraction_method": null
+    },
+    {
+      "derived_path": "results/TOOL-002.structured.json",
+      "source_artifact": "NTUSER.DAT",
+      "source_sha256": "6a38fcea924113963e4931725cc4c2f4f10e1240234cb1867d101a1cd92cd439",
+      "tool_call_id": "TOOL-002",
+      "derived_sha256": "a73c0b43795e3c2eec3263888d52cdd54c1107a17d8ba97b35d29031e91c4060",
+      "extraction_source_path": null,
+      "extraction_inode": null,
+      "extraction_method": null
+    },
+    {
+      "derived_path": "results/TOOL-003.structured.json",
+      "source_artifact": "Security.evtx",
+      "source_sha256": "50c87926d2dfed9776906ffbcc77e61577940910a71fb1c1871860a4e2213456",
+      "tool_call_id": "TOOL-003",
+      "derived_sha256": "dacacc8af52e1cd17fb684d76d7099770c8c37132a9febf084eff574215f4248",
+      "extraction_source_path": null,
+      "extraction_inode": null,
+      "extraction_method": null
+    },
+    {
+      "derived_path": "results/TOOL-004.structured.json",
+      "source_artifact": "timeline",
+      "source_sha256": "4ad00a02214d95f6e8a449395f4ad99be293f7da1c76f3e22527afa8cb066033",
+      "tool_call_id": "TOOL-004",
+      "derived_sha256": "16ad9793e619d3b6ff60869ad2747823548916fc79f56b99ba244126224a30de",
+      "extraction_source_path": null,
+      "extraction_inode": null,
+      "extraction_method": null
+    }
+  ]
+}

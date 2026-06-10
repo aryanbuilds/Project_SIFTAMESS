@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–K + J complete + Epic L core; security threat model + 80-test bypass suite shipped — every guardrail is now bypass-tested, not prose)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core): testing & CI shipped — recorded-golden determinism proof, real e2e incl. subprocess smoke + skip-gated live property test, hardened coverage-gated CI)_
 
 ## 1. Project identity
 
@@ -267,6 +267,24 @@ firewall), agent-sandbox argv, MCP confused-deputy, memory-poisoning, and audit 
 Encodes the four real test-time bugs (5dh9/8tcx/bhyv/95q9) as permanent regressions. "LLM proposes,
 code decides": a successful injection cannot exfiltrate (no network tool), write outside the run dir,
 or become a reported fact without passing the deterministic critic.
+
+### Testing & CI ✅ (Epic M)
+
+**499 tests** (498 CI-run + 1 maintainer-gated live e2e), all real-fixture-driven. One consolidated
+run factory in the root `tests/conftest.py` (`make_real_run` — manifest/readonly → plan → dispatch →
+critique over the committed public fixtures; per-epic conftests are thin wrappers). **Recorded-golden
+proof of Epic J's determinism** (`tests/golden/`): a REAL recorded run (real ledgers, §2B floor) +
+committed report bodies; tests assert render-from-recorded == committed **byte-for-byte**, double-render
+identity, and host-independence (regen only via `tests/golden/record.py --update`). **End-to-end**:
+the §8 MVP artifact checklist over the genuine `vault init-case → run_engine --auto` path, a
+subprocess smoke of the real module entrypoint, and a **skip-gated live property e2e**
+(`SIFTMESH_LIVE_E2E=1` + claude CLI; asserts emergent self-correction as a property, never bytes —
+maintainer-run only, §2B). **CI** (`.github/workflows/ci.yml`): Ubuntu matrix py3.11+3.12,
+determinism env pins (TZ/LC_ALL/PYTHONHASHSEED), `uv sync --locked`, a **zizmor** Actions-security
+job (clean), the **bypass suite as a named gate**, coverage gates (**92% overall, ≥90 enforced;
+governance core schemas/evidence/critic/registry ≥95** — image/memory subprocess lanes honestly
+omitted: they need maintainer evidence), coverage in the job summary, failure-only artifact upload,
+every action SHA-pinned (verified live: checkout v6.0.3, setup-uv v8.2.0, upload-artifact v7.0.1).
 
 ### Advisor / Critic
 

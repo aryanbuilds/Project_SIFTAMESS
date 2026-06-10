@@ -1,0 +1,52 @@
+{
+  "task_id": "TASK-003",
+  "profile": "deterministic_executor",
+  "adapter": "deterministic_executor",
+  "attempt": 1,
+  "status": "success",
+  "tool_call_ids": [
+    "TOOL-003"
+  ],
+  "claims": [
+    {
+      "claim_id": "TASK-003-CLAIM-001",
+      "task_id": "TASK-003",
+      "status": "confirmed",
+      "claim": "Parsed 7 Security event(s).",
+      "confidence": 0.95,
+      "evidence_type": "windows_event_log",
+      "source_artifact": "Security.evtx",
+      "source_sha256": "50c87926d2dfed9776906ffbcc77e61577940910a71fb1c1871860a4e2213456",
+      "tool_name": "parse_evtx_security",
+      "tool_call_id": "TOOL-003",
+      "timestamp_utc": "2026-06-10T07:11:23.091793Z",
+      "supporting_evidence_refs": [
+        "TOOL-003"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    },
+    {
+      "claim_id": "TASK-003-CLAIM-002",
+      "task_id": "TASK-003",
+      "status": "confirmed",
+      "claim": "Security EventID 4625 (failed logon) observed (event #4).",
+      "confidence": 0.9,
+      "evidence_type": "windows_event_log",
+      "source_artifact": "Security.evtx",
+      "source_sha256": "50c87926d2dfed9776906ffbcc77e61577940910a71fb1c1871860a4e2213456",
+      "tool_name": "parse_evtx_security",
+      "tool_call_id": "TOOL-003",
+      "timestamp_utc": "2026-06-10T07:11:23.091793Z",
+      "supporting_evidence_refs": [
+        "TOOL-003"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    }
+  ],
+  "started_utc": "2026-06-10T07:11:23.088412Z",
+  "ended_utc": "2026-06-10T07:11:23.098336Z",
+  "errors": [],
+  "retry_cause": null
+}

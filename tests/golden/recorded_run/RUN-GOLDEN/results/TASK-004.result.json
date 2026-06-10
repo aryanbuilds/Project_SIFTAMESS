@@ -1,0 +1,34 @@
+{
+  "task_id": "TASK-004",
+  "profile": "deterministic_executor",
+  "adapter": "deterministic_executor",
+  "attempt": 1,
+  "status": "success",
+  "tool_call_ids": [
+    "TOOL-004"
+  ],
+  "claims": [
+    {
+      "claim_id": "TASK-004-CLAIM-001",
+      "task_id": "TASK-004",
+      "status": "inferred",
+      "claim": "Unified timeline built: 8 events across 2 source(s).",
+      "confidence": 0.6,
+      "evidence_type": "timeline",
+      "source_artifact": "timeline",
+      "source_sha256": "4ad00a02214d95f6e8a449395f4ad99be293f7da1c76f3e22527afa8cb066033",
+      "tool_name": "build_timeline",
+      "tool_call_id": "TOOL-004",
+      "timestamp_utc": "2026-06-10T07:11:23.101472Z",
+      "supporting_evidence_refs": [
+        "TOOL-004"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    }
+  ],
+  "started_utc": "2026-06-10T07:11:23.099403Z",
+  "ended_utc": "2026-06-10T07:11:23.104323Z",
+  "errors": [],
+  "retry_cause": null
+}

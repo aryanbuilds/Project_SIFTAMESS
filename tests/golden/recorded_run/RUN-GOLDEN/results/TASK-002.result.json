@@ -1,0 +1,52 @@
+{
+  "task_id": "TASK-002",
+  "profile": "deterministic_executor",
+  "adapter": "deterministic_executor",
+  "attempt": 1,
+  "status": "success",
+  "tool_call_ids": [
+    "TOOL-002"
+  ],
+  "claims": [
+    {
+      "claim_id": "TASK-002-CLAIM-001",
+      "task_id": "TASK-002",
+      "status": "confirmed",
+      "claim": "1 autostart Run/RunOnce value(s) found.",
+      "confidence": 0.85,
+      "evidence_type": "registry_autostart",
+      "source_artifact": "NTUSER.DAT",
+      "source_sha256": "6a38fcea924113963e4931725cc4c2f4f10e1240234cb1867d101a1cd92cd439",
+      "tool_name": "extract_registry_run_keys",
+      "tool_call_id": "TOOL-002",
+      "timestamp_utc": "2026-06-10T07:11:23.081482Z",
+      "supporting_evidence_refs": [
+        "TOOL-002"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    },
+    {
+      "claim_id": "TASK-002-CLAIM-002",
+      "task_id": "TASK-002",
+      "status": "confirmed",
+      "claim": "Autostart Run key 'Sidebar' present under \\Software\\Microsoft\\Windows\\CurrentVersion\\Run.",
+      "confidence": 0.85,
+      "evidence_type": "registry_autostart",
+      "source_artifact": "NTUSER.DAT",
+      "source_sha256": "6a38fcea924113963e4931725cc4c2f4f10e1240234cb1867d101a1cd92cd439",
+      "tool_name": "extract_registry_run_keys",
+      "tool_call_id": "TOOL-002",
+      "timestamp_utc": "2026-06-10T07:11:23.081482Z",
+      "supporting_evidence_refs": [
+        "TOOL-002"
+      ],
+      "contradicting_evidence_refs": [],
+      "requires_human_review": false
+    }
+  ],
+  "started_utc": "2026-06-10T07:11:23.019258Z",
+  "ended_utc": "2026-06-10T07:11:23.087141Z",
+  "errors": [],
+  "retry_cause": null
+}

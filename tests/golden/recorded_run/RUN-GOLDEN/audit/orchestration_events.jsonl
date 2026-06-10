@@ -1,0 +1,10 @@
+{"run_id": "RUN-20260610-071122", "template": "windows_initial_triage", "review_only": false, "event": "plan_started", "level": "info", "timestamp": "2026-06-10T07:11:22.975665Z"}
+{"run_id": "RUN-20260610-071122", "context_files": 5, "task_count": 4, "review_only": false, "event": "plan_complete", "level": "info", "timestamp": "2026-06-10T07:11:22.993801Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-001", "profile": "deterministic_executor", "adapter": "deterministic_executor", "status": "success", "event": "task_dispatched", "level": "info", "timestamp": "2026-06-10T07:11:23.019193Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-002", "profile": "deterministic_executor", "adapter": "deterministic_executor", "status": "success", "event": "task_dispatched", "level": "info", "timestamp": "2026-06-10T07:11:23.088332Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-003", "profile": "deterministic_executor", "adapter": "deterministic_executor", "status": "success", "event": "task_dispatched", "level": "info", "timestamp": "2026-06-10T07:11:23.099333Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-004", "profile": "deterministic_executor", "adapter": "deterministic_executor", "status": "success", "event": "task_dispatched", "level": "info", "timestamp": "2026-06-10T07:11:23.105288Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-001", "verdict": "accepted", "affected": 0, "event": "critic_verdict", "level": "info", "timestamp": "2026-06-10T07:11:23.107128Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-002", "verdict": "accepted", "affected": 0, "event": "critic_verdict", "level": "info", "timestamp": "2026-06-10T07:11:23.107948Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-003", "verdict": "accepted", "affected": 0, "event": "critic_verdict", "level": "info", "timestamp": "2026-06-10T07:11:23.109057Z"}
+{"run_id": "RUN-20260610-071122", "task_id": "TASK-004", "verdict": "accepted", "affected": 0, "event": "critic_verdict", "level": "info", "timestamp": "2026-06-10T07:11:23.109977Z"}

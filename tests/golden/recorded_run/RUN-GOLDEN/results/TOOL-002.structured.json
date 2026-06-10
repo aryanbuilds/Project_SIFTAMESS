@@ -1,0 +1,11 @@
+{
+  "run_key_count": 1,
+  "run_keys": [
+    {
+      "key_path": "\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "Sidebar",
+      "value": "%ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun",
+      "value_type": "REG_EXPAND_SZ"
+    }
+  ]
+}

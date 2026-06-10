@@ -1,0 +1,13 @@
+SIFTMesh replay — RUN-GOLDEN
+10 orchestration events
+
+0001  2026-06-10T07:11:22.975665Z  plan_started  [review_only=False; template=windows_initial_triage]
+0002  2026-06-10T07:11:22.993801Z  plan_complete  [context_files=5; review_only=False; task_count=4]
+0003  2026-06-10T07:11:23.019193Z  task_dispatched  [adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-001]
+0004  2026-06-10T07:11:23.088332Z  task_dispatched  [adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-002]
+0005  2026-06-10T07:11:23.099333Z  task_dispatched  [adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-003]
+0006  2026-06-10T07:11:23.105288Z  task_dispatched  [adapter=deterministic_executor; profile=deterministic_executor; status=success; task_id=TASK-004]
+0007  2026-06-10T07:11:23.107128Z  critic_verdict  [affected=0; task_id=TASK-001; verdict=accepted]
+0008  2026-06-10T07:11:23.107948Z  critic_verdict  [affected=0; task_id=TASK-002; verdict=accepted]
+0009  2026-06-10T07:11:23.109057Z  critic_verdict  [affected=0; task_id=TASK-003; verdict=accepted]
+0010  2026-06-10T07:11:23.109977Z  critic_verdict  [affected=0; task_id=TASK-004; verdict=accepted]

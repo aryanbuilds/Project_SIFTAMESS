@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-10 (Epics A–L complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + 80-test bypass suite (L). Executed epic order: …H→I→K→J→L; Epic M (Testing & CI) is next.)_
+_Last updated: 2026-06-10 (Epics A–M complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + bypass suite (L), testing & CI w/ recorded-golden determinism proof + coverage-gated hardened pipeline (M). Executed epic order: …H→I→K→J→L→M; Epic N (Docs & Submission) is next.)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 

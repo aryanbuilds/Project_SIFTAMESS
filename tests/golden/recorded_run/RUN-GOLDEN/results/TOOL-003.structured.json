@@ -1,0 +1,149 @@
+{
+  "event_count": 7,
+  "events": [
+    {
+      "event_record_id": 1,
+      "event_id": 5152,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:24:34.346Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "ProcessId": 0,
+        "Application": "-",
+        "Direction": "%%14592",
+        "SourceAddress": "23.94.153.202",
+        "SourcePort": "59639",
+        "DestAddress": "169.46.6.101",
+        "DestPort": "3389",
+        "Protocol": 6,
+        "FilterRTID": 67607,
+        "LayerName": "%%14597",
+        "LayerRTID": 13
+      }
+    },
+    {
+      "event_record_id": 2,
+      "event_id": 4611,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:24:36.686Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "SubjectUserSid": "S-1-5-18",
+        "SubjectUserName": "TEMPORAL$",
+        "SubjectDomainName": "WORKGROUP",
+        "SubjectLogonId": "0x3e7",
+        "LogonProcessName": "Winlogon"
+      }
+    },
+    {
+      "event_record_id": 3,
+      "event_id": 4776,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:24:36.686Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "PackageName": "MICROSOFT_AUTHENTICATION_PACKAGE_V1_0",
+        "TargetUserName": "Administrator",
+        "Workstation": "TEMPORAL",
+        "Status": "0xc000006a"
+      }
+    },
+    {
+      "event_record_id": 4,
+      "event_id": 4625,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:24:36.7172Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "SubjectUserSid": "S-1-5-18",
+        "SubjectUserName": "TEMPORAL$",
+        "SubjectDomainName": "WORKGROUP",
+        "SubjectLogonId": "0x3e7",
+        "TargetUserSid": "S-1-0-0",
+        "TargetUserName": "Administrator",
+        "TargetDomainName": "TEMPORAL",
+        "Status": "0xc000006d",
+        "FailureReason": "%%2313",
+        "SubStatus": "0xc000006a",
+        "LogonType": 10,
+        "LogonProcessName": "User32 ",
+        "AuthenticationPackageName": "Negotiate",
+        "WorkstationName": "TEMPORAL",
+        "TransmittedServices": "-",
+        "LmPackageName": "-",
+        "KeyLength": 0,
+        "ProcessId": "0xc38",
+        "ProcessName": "C:\\Windows\\System32\\winlogon.exe",
+        "IpAddress": "23.94.153.202",
+        "IpPort": "60167"
+      }
+    },
+    {
+      "event_record_id": 5,
+      "event_id": 5152,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:24:57.0908Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "ProcessId": 4,
+        "Application": "System",
+        "Direction": "%%14592",
+        "SourceAddress": "169.46.118.42",
+        "SourcePort": "0",
+        "DestAddress": "169.46.6.101",
+        "DestPort": "8",
+        "Protocol": 1,
+        "FilterRTID": 67249,
+        "LayerName": "%%14610",
+        "LayerRTID": 44
+      }
+    },
+    {
+      "event_record_id": 6,
+      "event_id": 5157,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:25:08.822Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "ProcessID": 4,
+        "Application": "System",
+        "Direction": "%%14592",
+        "SourceAddress": "169.46.6.101",
+        "SourcePort": "8",
+        "DestAddress": "169.46.118.42",
+        "DestPort": "0",
+        "Protocol": 1,
+        "FilterRTID": 67249,
+        "LayerName": "%%14610",
+        "LayerRTID": 44,
+        "RemoteUserID": "S-1-0-0",
+        "RemoteMachineID": "S-1-0-0"
+      }
+    },
+    {
+      "event_record_id": 7,
+      "event_id": 4673,
+      "channel": "Security",
+      "computer": "temporal",
+      "timestamp_utc": "2016-06-29T15:25:08.822Z UTC",
+      "provider": "Microsoft-Windows-Security-Auditing",
+      "event_data": {
+        "SubjectUserSid": "S-1-5-18",
+        "SubjectUserName": "TEMPORAL$",
+        "SubjectDomainName": "WORKGROUP",
+        "SubjectLogonId": "0x3e7",
+        "ObjectServer": "Security Account Manager",
+        "Service": "Security Account Manager",
+        "PrivilegeList": "SeTcbPrivilege",
+        "ProcessId": "0x300",
+        "ProcessName": "C:\\Windows\\System32\\lsass.exe"
+      }
+    }
+  ]
+}

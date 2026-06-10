@@ -212,8 +212,47 @@ def _format_protocol_sift(status: ProtocolSiftStatus) -> list[str]:
     ]
 
 
-def run_doctor(*, protocol_sift: bool = False, settings: SiftmeshSettings | None = None) -> int:
-    """Run all checks, print a report, return an exit code (0 = ok, 1 = fail-closed)."""
+def run_setup(settings: SiftmeshSettings) -> int:
+    """One-command install/configure: `uv sync --all-extras` + create the vol symbol cache.
+
+    Fails closed if `uv` is absent (never a pip fallback). Returns 0 on success, 1 on failure.
+    """
+    import importlib
+    import subprocess
+
+    uv = shutil.which("uv")
+    if uv is None:
+        print(
+            f"{_MARK[FAIL]} setup: uv not found on PATH — install uv (https://docs.astral.sh/uv/)"
+        )
+        return 1
+    print("setup: uv sync --all-extras (installs forensic + brief + a2a backends)…")
+    proc = subprocess.run([uv, "sync", "--all-extras"], check=False)  # fixed argv, shell=False
+    if proc.returncode != 0:
+        print(f"{_MARK[FAIL]} setup: `uv sync --all-extras` failed (exit {proc.returncode})")
+        return 1
+    importlib.invalidate_caches()  # so the dependency checks below see freshly installed packages
+    cache = Path(settings.vol_symbol_dirs)
+    try:
+        cache.mkdir(parents=True, exist_ok=True)
+        print(f"{_MARK[OK]} setup: Volatility symbol cache ready: {cache}")
+    except OSError as exc:
+        print(f"{_MARK[WARN]} setup: could not create symbol cache {cache}: {exc}")
+    print()
+    return 0
+
+
+def run_doctor(
+    *, protocol_sift: bool = False, setup: bool = False, settings: SiftmeshSettings | None = None
+) -> int:
+    """Run all checks, print a report, return an exit code (0 = ok, 1 = fail-closed).
+
+    With ``setup=True``, first install all extras + create the symbol cache (one-command setup),
+    then run the checks (so the report proves the setup worked).
+    """
+    settings = settings or load_settings()
+    if setup and run_setup(settings) != 0:
+        return 1
     checks = collect_checks(settings)
     for c in checks:
         print(f"{_MARK[c.status]} {c.name}: {c.detail}")

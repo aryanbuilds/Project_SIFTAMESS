@@ -14,6 +14,7 @@ from siftmesh_core.reports.architecture_notes import generate_architecture_notes
 from siftmesh_core.reports.dataset_documentation import generate_dataset_documentation
 from siftmesh_core.reports.final_report import generate_final_report
 from siftmesh_core.reports.loader import ReportLoadError, ReportView, load_report_view
+from siftmesh_core.reports.merge_report import merge_runs
 from siftmesh_core.reports.render import split_body
 from siftmesh_core.reports.replay import generate_replay_html, render_text_replay
 from siftmesh_core.run_dir import RunPaths
@@ -28,6 +29,7 @@ __all__ = [
     "generate_final_report",
     "generate_replay_html",
     "load_report_view",
+    "merge_runs",
     "render_text_replay",
     "split_body",
 ]

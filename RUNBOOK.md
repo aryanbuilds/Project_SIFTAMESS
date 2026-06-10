@@ -26,11 +26,17 @@ All CLI commands are confirmed against `siftmesh … --help` and the current sou
 
 ---
 
-## 0 — Prove the host is ready (no evidence touched)
+## 0 — Set up + prove the host is ready (one command, no evidence touched)
 
 ```bash
-uv run siftmesh doctor
+uv run siftmesh doctor --setup
 ```
+
+`--setup` runs `uv sync --all-extras` (forensic + brief + a2a backends) and creates the Volatility
+symbol cache, then verifies the host — replacing the old `uv sync --extra …` + `mkdir/export
+SIFTMESH_VOL_SYMBOL_DIRS` steps. (Plain `uv run siftmesh doctor` just verifies, installs nothing.)
+**NOTE:** `uv sync --extra X` is *declarative* and removes extras you don't name — always
+`--all-extras` (or use `doctor --setup`).
 
 What matters:
 
@@ -168,9 +174,28 @@ uv run siftmesh run ./case_rocba --evidence ~/projects/ev_all \
   for `approve`/`reject` instead. `--max-agent-tasks 400` lifts the default-10 cap explicitly (the cap
   stays enforced; without it the run halts with the exact number to pass).
 
+- **Per-family aggregation (scale fix):** the planner now mints one task per artifact *family*
+  (one `analyze_prefetch` task over all `.pf`, etc.), so a disk image yields ~10 tasks, not 200+ —
+  the default `--max-agent-tasks 10` is usually enough now; raise it only if `dispatch` says so.
+- **Pre-flight space check:** `run` estimates how much derived data the evidence will produce
+  (exact from zip/7z headers; labelled allowance otherwise) vs free disk. If it won't fit it
+  refuses and prints a **partition plan** — run the evidence in portions, `siftmesh prune <run>`
+  the bulky derived data between them, then `siftmesh merge`. `--force` skips the check.
+
 > First real run? Prefer the **staged** §2 flow with `--keys` (fast, focused, proven). Use this
 > one-command form once the staged path looks right, for the clean "supply evidence + brief →
 > autonomous → report" demo.
+
+### Low on disk? Run in portions, then merge
+
+```bash
+# analyse the disk image and the memory capture as SEPARATE runs, pruning the bulky one between:
+uv run siftmesh run ./case_disk --evidence ~/projects/ev_disk --brief …/ROCBA-BACKGROUND.pptx --auto
+uv run siftmesh prune ./case_disk/case_runs/RUN-…          # reclaim evidence/extracted/, keep ledgers
+uv run siftmesh run ./case_mem  --evidence ~/projects/ev_mem  --auto
+# combine into ONE provenance-tracked report (add --agent claude for an advisory cross-run synthesis):
+uv run siftmesh merge ./case_merged --run ./case_disk/case_runs/RUN-… --run ./case_mem/case_runs/RUN-…
+```
 
 ---
 

@@ -17,12 +17,14 @@ deterministically.
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
 
 from structlog.typing import FilteringBoundLogger
 
+from siftmesh_core.adapters.claude_adapter import invoke_claude_text
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.derived import read_derived
@@ -106,6 +108,11 @@ def _injection_affected(claim: Claim, alerts: list[InjectionAlert]) -> bool:
             return True
     blob = claim.claim + " " + " ".join(claim.supporting_evidence_refs)
     return bool(scan_injection(blob))
+
+
+def detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord]:
+    """Public wrapper over the deterministic contradiction detector (reused by cross-run merge)."""
+    return _detect_contradictions(claims)
 
 
 def _detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord]:
@@ -307,6 +314,7 @@ def critique_run(
 
     if settings.llm_critic_enabled:
         verdicts = llm_adversarial_review(verdicts, settings=settings)
+        run_tier2_judge(run, settings=settings, evidence_root=evidence_root, audit=audit)
     return verdicts
 
 
@@ -673,11 +681,133 @@ def write_retry(
 def llm_adversarial_review(
     verdicts: list[CriticVerdict], *, settings: SiftmeshSettings
 ) -> list[CriticVerdict]:
-    """Layer-2 LLM adversarial critic seam (G8) — IDENTITY/no-op, deferred.
+    """Layer-2 seam (G8): the Tier-1 verdicts are AUTHORITATIVE and returned unchanged.
 
-    Behind ``settings.llm_critic_enabled`` (default off). The real pass needs the
-    Epic-F8 agent adapter (``claude -p --output-format json`` via the isolated
-    ``claude_adapter._build_claude_argv``); the Layer-1 deterministic verdicts are
-    always complete and sufficient for the hero. Returns verdicts unchanged.
+    The advisory Tier-2 work (which may lower confidence / suggest corroboration / annotate, but
+    NEVER promote) is done by :func:`run_tier2_judge` as logged side effects — it does not alter
+    the deterministic verdicts.
     """
     return verdicts
+
+
+# Closed verdict vocabulary the Tier-2 judge may return (advisory only — never promotes).
+_TIER2_VERDICTS = frozenset({"ok", "overbroad", "low_confidence", "needs_corroboration"})
+
+
+def _tier2_prompt(claims: list[Claim], objective: str | None) -> str:
+    rows = "\n".join(
+        f"- {c.claim_id} [{c.status}, confidence {c.confidence}] {c.claim}" for c in claims
+    )
+    obj = f"Investigation objective: {objective}\n\n" if objective else ""
+    return (
+        "You are an adversarial DFIR review judge. Below are EVIDENCE-ANCHORED findings a "
+        "deterministic critic already accepted. You may ONLY flag concerns — you cannot add facts, "
+        "add citations, raise confidence, or promote anything.\n\n" + obj + rows + "\n\n"
+        "Respond with ONLY a JSON object (no prose):\n"
+        '{"judgements": [{"claim_id": "<exact id above>", '
+        '"verdict": "ok|overbroad|low_confidence|needs_corroboration", '
+        '"note": "<short reason>", "suggested_confidence": 0.0-1.0}]}\n'
+        "Use ONLY claim_ids from the list; omit suggested_confidence unless lowering it."
+    )
+
+
+def _append_tier2_judgement(
+    run: RunPaths, payload: dict[str, object], evidence_root: Path | str | None
+) -> None:
+    target = safe_write_path(
+        run.root, Path("audit") / "tier2_judgements.jsonl", evidence_root=evidence_root
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8", newline="\n") as out:
+        out.write(json.dumps(payload, default=str) + "\n")
+
+
+def run_tier2_judge(
+    run: RunPaths,
+    *,
+    settings: SiftmeshSettings,
+    evidence_root: Path | str | None,
+    audit: FilteringBoundLogger,
+) -> int:
+    """Advisory Tier-2 LLM judge over the PROMOTED claims (G8). Returns judgements acted on.
+
+    STRICTLY advisory: it may lower a claim's confidence (a logged ``confidence_change``), raise a
+    corroboration follow-up, or annotate uncertainty (``tier2_judgements.jsonl``) — it NEVER
+    promotes, adds, removes, or up-weights a claim (Tier-1 is the sole promoter). Fails soft: a
+    missing agent / unparseable output / fabricated claim-ref produces no change.
+    """
+    promoted = [c for c in read_claims(run.root) if c.status in ("confirmed", "inferred")]
+    if not promoted:
+        return 0
+    manifest = (
+        EvidenceManifest.model_validate_json(run.evidence_manifest.read_text(encoding="utf-8"))
+        if run.evidence_manifest.is_file()
+        else None
+    )
+    objective = manifest.incident_objective if manifest else None
+    text = invoke_claude_text(_tier2_prompt(promoted, objective), settings)
+    if not text:
+        return 0
+    try:
+        parsed = json.loads(text)
+        judgements = parsed.get("judgements", []) if isinstance(parsed, dict) else []
+    except (json.JSONDecodeError, ValueError):
+        return 0
+    by_id = {c.claim_id: c for c in promoted}
+    acted = 0
+    for j in judgements:
+        if not isinstance(j, dict):
+            continue
+        cid = j.get("claim_id")
+        verdict = j.get("verdict")
+        if not isinstance(cid, str) or verdict not in _TIER2_VERDICTS:
+            continue
+        claim = by_id.get(cid)  # ignore fabricated / unknown ids (never act on them)
+        if claim is None:
+            continue
+        sugg = j.get("suggested_confidence")
+        _append_tier2_judgement(
+            run,
+            {
+                "claim_id": cid,
+                "verdict": verdict,
+                "note": str(j.get("note", ""))[:300],
+                "suggested_confidence": sugg,
+            },
+            evidence_root,
+        )
+        if (
+            verdict in ("overbroad", "low_confidence")
+            and isinstance(sugg, int | float)
+            and 0.0 <= float(sugg) < claim.confidence  # may ONLY lower, never raise
+        ):
+            append_confidence_change(
+                run.root,
+                ConfidenceChange(
+                    change_id=next_confidence_change_id(run.root),
+                    claim_id=claim.claim_id,
+                    task_id=claim.task_id,
+                    from_confidence=claim.confidence,
+                    to_confidence=round(float(sugg), 4),
+                    reason=f"tier2 advisory ({verdict}): {str(j.get('note', ''))[:120]}",
+                    changed_utc=_now(),
+                ),
+                evidence_root=evidence_root,
+            )
+        elif verdict == "needs_corroboration":
+            append_followup(
+                run.root,
+                FollowupRecord(
+                    followup_id=next_followup_id(run.root),
+                    task_id=claim.task_id,
+                    reason="corroboration_gap",
+                    artifact=claim.source_artifact or "",
+                    family=claim.evidence_type,
+                    origin_claim_id=claim.claim_id,
+                    created_utc=_now(),
+                ),
+                evidence_root=evidence_root,
+            )
+        acted += 1
+    log_event(audit, "tier2_judge_complete", judgements=acted)
+    return acted

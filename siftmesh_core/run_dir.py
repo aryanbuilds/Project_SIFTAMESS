@@ -176,6 +176,11 @@ class RunPaths:
         return self.audit / "followups.jsonl"
 
     @property
+    def tier2_judgements(self) -> Path:
+        """Advisory Tier-2 LLM-judge verdicts (G8). Verbatim; advisory-only, never a fact."""
+        return self.audit / "tier2_judgements.jsonl"
+
+    @property
     def orchestration_events(self) -> Path:
         return self.audit / "orchestration_events.jsonl"
 

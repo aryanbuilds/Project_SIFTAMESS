@@ -48,7 +48,9 @@ class RealBackend:
         try:
             from evtx import PyEvtxParser
         except ImportError as exc:  # pragma: no cover - exercised via fail-closed test
-            raise BackendUnavailableError("EVTX backend missing: uv sync --extra sift") from exc
+            raise BackendUnavailableError(
+                "EVTX backend missing: run `siftmesh doctor --setup`"
+            ) from exc
 
         rows: list[dict[str, Any]] = []
         parser = PyEvtxParser(str(path))
@@ -117,7 +119,9 @@ class RealBackend:
         try:
             import pyscca
         except ImportError as exc:  # pragma: no cover
-            raise BackendUnavailableError("prefetch backend missing: uv sync --extra sift") from exc
+            raise BackendUnavailableError(
+                "prefetch backend missing: run `siftmesh doctor --setup`"
+            ) from exc
 
         scca = pyscca.open(str(path))
         last_run_times: list[str] = []
@@ -151,7 +155,9 @@ class RealBackend:
         try:
             from mft import PyMftParser
         except ImportError as exc:  # pragma: no cover
-            raise BackendUnavailableError("MFT backend missing: uv sync --extra sift") from exc
+            raise BackendUnavailableError(
+                "MFT backend missing: run `siftmesh doctor --setup`"
+            ) from exc
 
         rows: list[dict[str, Any]] = []
         parser = PyMftParser(str(path))

@@ -455,6 +455,52 @@ def _hint_live_agent(settings: object) -> None:
         )
 
 
+def _space_preflight_ok(case_dir: str, evidence: str) -> bool:
+    """Estimate derived-data size vs free disk; on shortfall print a portion plan and return False.
+
+    Never blocks on its own failure (a corrupt archive → warn + proceed). Returns True to proceed.
+    """
+    from siftmesh_core.evidence.space import estimate_required, human_bytes, partition_plan
+
+    try:
+        est = estimate_required(evidence, run_location=case_dir)
+    except (OSError, ValueError) as exc:
+        typer.echo(f"  space  : estimate skipped ({exc}); proceeding", err=True)
+        return True
+    if est.fits:
+        tag = " (some estimated)" if est.any_estimated else ""
+        typer.echo(
+            f"  space  : ~{human_bytes(est.needed_bytes)} derived needed{tag}; "
+            f"{human_bytes(est.free_bytes)} free — OK"
+        )
+        return True
+
+    typer.echo("run refused: not enough free disk for the derived data this evidence will produce.")
+    typer.echo(f"  needed (incl. margin): ~{human_bytes(est.needed_bytes)}")
+    typer.echo(f"  free                 : {human_bytes(est.free_bytes)}")
+    for it in est.items:
+        if it.derived_bytes:
+            kind = "exact" if it.exact else "estimated"
+            typer.echo(f"    - {it.path}: ~{human_bytes(it.derived_bytes)} derived ({kind})")
+    existing = sorted(Path(case_dir).glob("case_runs/RUN-*"))
+    if existing:
+        typer.echo("  reclaim space by deleting old runs (or `siftmesh prune <run>`):")
+        for r in existing:
+            typer.echo(f"    {r}")
+    budget = int(est.free_bytes / 1.2)
+    portions = partition_plan([i for i in est.items if i.derived_bytes], budget)
+    if len(portions) > 1:
+        typer.echo(f"  or split into {len(portions)} portions that each fit, then merge:")
+        for n, portion in enumerate(portions, 1):
+            files = " ".join(it.path for it in portion)
+            typer.echo(
+                f"    portion {n}: run these in ev_p{n}/ then `siftmesh prune <run>` — {files}"
+            )
+        typer.echo("    finally: siftmesh merge ./case_merged --run <RUN_1> --run <RUN_2> …")
+    typer.echo("  (or re-run with --force to proceed anyway)")
+    return False
+
+
 def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
     typer.echo(f"run: {run_paths.root}")
     typer.echo(f"  run id : {run_paths.run_id}")
@@ -530,6 +576,14 @@ def run(
             "live agent. Default tiers them to the deterministic floor (the tool does the work).",
         ),
     ] = False,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            help="Skip the pre-flight free-disk check (which estimates derived-data size from the "
+            "evidence and refuses if it won't fit).",
+        ),
+    ] = False,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -557,6 +611,8 @@ def run(
         settings = settings.model_copy(update={"live_extraction": True})
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
+    if not force and not _space_preflight_ok(case_dir, evidence):
+        raise typer.Exit(code=1)  # the gate already printed the needed/free + portion plan
     try:
         run_paths = vault_init_case(
             case_dir, evidence, show_progress=True, brief_path=brief, objective_text=objective
@@ -707,15 +763,18 @@ def analyze_memory_cmd(
     ] = None,
 ) -> None:
     """Triage a memory image with Volatility 3 (subprocess; audited)."""
+    from siftmesh_core.config import load_settings
     from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
 
+    # Default the symbol cache from settings (created on use) so no manual export is needed.
+    symbols = symbol_dirs or load_settings().vol_symbol_dirs
     try:
         result = analyze_memory(
             run_dir,
             memory_artifact=memory,
             evidence_root=evidence,
             plugins=plugins,
-            symbol_dirs=symbol_dirs,
+            symbol_dirs=symbols,
         )
     except (FileNotFoundError, ValueError, PathPolicyViolation, BackendUnavailableError) as exc:
         typer.echo(f"analyze-memory failed: {exc}", err=True)
@@ -800,14 +859,86 @@ def ingest_derived_cmd(
 
 
 @app.command()
+def prune(
+    run_dir: str,
+    force: Annotated[
+        bool, typer.Option("--force", help="Prune even if the run is not terminal.")
+    ] = False,
+) -> None:
+    """Reclaim a completed run's bulky derived data (evidence/extracted/); keep all ledgers."""
+    from siftmesh_core.evidence.prune import PrunePolicyError, prune_run
+    from siftmesh_core.evidence.space import human_bytes
+    from siftmesh_core.run_dir import RunPaths
+
+    try:
+        root = Path(run_dir)
+        if not root.is_dir():
+            raise NotADirectoryError(f"run directory does not exist: {root}")
+        outcome = prune_run(RunPaths(root=root), force=force)
+    except (FileNotFoundError, NotADirectoryError, PathPolicyViolation, PrunePolicyError) as exc:
+        typer.echo(f"prune failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(
+        f"prune complete: removed {outcome.files_removed} derived file(s), "
+        f"freed {human_bytes(outcome.bytes_freed)} (ledgers + reports kept)"
+    )
+
+
+@app.command()
+def merge(
+    case_dir: str,
+    run: Annotated[
+        list[str] | None,
+        typer.Option("--run", help="A source RUN directory (repeatable; at least two)."),
+    ] = None,
+    agent: Annotated[
+        str | None,
+        typer.Option(
+            "--agent",
+            help="claude → add an ADVISORY cross-run synthesis section (validated; promotes "
+            "nothing). Omit for the deterministic merge only.",
+        ),
+    ] = None,
+) -> None:
+    """Merge ≥2 completed runs into one combined, provenance-tracked report (deterministic core)."""
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.reports import ReportLoadError, merge_runs
+
+    use_agent = agent is not None and agent not in ("deterministic", "floor")
+    try:
+        merge_run = merge_runs(
+            case_dir, list(run or []), settings=load_settings(), agent_synthesis=use_agent
+        )
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        ValueError,
+        PathPolicyViolation,
+        ReportLoadError,
+    ) as exc:
+        typer.echo(f"merge failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"merge complete: {merge_run.root}")
+    typer.echo(f"  report : {merge_run.reports / 'final_report.md'}")
+
+
+@app.command()
 def doctor(
     protocol_sift: Annotated[
         bool,
         typer.Option("--protocol-sift", help="Also detect the ~/.claude Protocol SIFT layer."),
     ] = False,
+    setup: Annotated[
+        bool,
+        typer.Option(
+            "--setup",
+            help="Install everything (uv sync --all-extras) + create the Volatility symbol cache, "
+            "then verify. One-command setup.",
+        ),
+    ] = False,
 ) -> None:
-    """Verify host + tool backends (fails closed on missing deps)."""
-    raise typer.Exit(code=run_doctor(protocol_sift=protocol_sift))
+    """Verify host + tool backends (fails closed on missing deps); --setup also installs them."""
+    raise typer.Exit(code=run_doctor(protocol_sift=protocol_sift, setup=setup))
 
 
 @app.command()

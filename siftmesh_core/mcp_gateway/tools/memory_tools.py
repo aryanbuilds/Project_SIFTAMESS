@@ -92,6 +92,7 @@ def _run_plugin(
     """Run one vol plugin with the JSON renderer → (rows, raw_stdout). rows None on failure."""
     argv = [vol_exe, "-r", "json", "-f", str(memory)]
     if symbol_dirs:  # a writable symbol cache (vol can't write its read-only install dir)
+        Path(symbol_dirs).mkdir(parents=True, exist_ok=True)  # ensure it exists (vol won't create)
         argv += ["--symbol-dirs", symbol_dirs]
     if offline:
         argv.append("--offline")

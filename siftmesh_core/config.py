@@ -15,6 +15,7 @@ live separately (e.g. an explicit Path("siftmesh.toml").exists() check in
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -58,9 +59,13 @@ class SiftmeshSettings(BaseSettings):
     # closed when actually used — never faked.
     extraction_tools_enabled: bool = False
     vol_path: str = "/opt/volatility3/bin/vol"
-    # Writable Volatility 3 symbol cache (its install dir is usually read-only, so vol
-    # cannot cache downloaded PDB symbols there). None => vol uses its own default.
-    vol_symbol_dirs: str | None = None
+    # Writable Volatility 3 symbol cache (its install dir is usually read-only, so vol cannot
+    # cache downloaded PDB symbols there). Defaults to a per-user cache dir (created on use +
+    # by `doctor --setup`), so memory triage Just Works with no manual export. Override via
+    # SIFTMESH_VOL_SYMBOL_DIRS / toml.
+    vol_symbol_dirs: str = Field(
+        default_factory=lambda: str(Path.home() / ".cache" / "siftmesh" / "vol_symbols")
+    )
     # EZ Tools install dir for the SIFT-lane backend (D12); EvtxECmd/MFTECmd/RECmd .dlls
     # run via `dotnet <dll>`. Missing tool fails closed when sift_lane is actually used.
     ez_tools_dir: str = "/opt/zimmermantools"

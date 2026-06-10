@@ -83,6 +83,56 @@ def _claude_logged_in() -> bool:
     return (Path.home() / ".claude" / ".credentials.json").is_file()
 
 
+def claude_available(settings: object) -> bool:
+    """True if the Claude CLI is on PATH and some auth is present (subscription/OAuth/API key)."""
+    cli = getattr(settings, "claude_cli_path", "claude")
+    if shutil.which(cli) is None:
+        return False
+    return any(os.environ.get(var) for var in _AUTH_ENV) or _claude_logged_in()
+
+
+def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = None) -> str | None:
+    """Tool-LESS reasoning call: ``claude -p <prompt> --output-format json`` → the agent's text.
+
+    For ADVISORY layers (Tier-2 judge, cross-run synthesis) that reason over already-collected text
+    and need NO forensic tools — so no MCP config and all built-in tools denied (sandboxed). Returns
+    ``None`` on absence / timeout / error / unparseable output (callers fail soft; never fabricate).
+    """
+    cli = getattr(settings, "claude_cli_path", "claude")
+    if shutil.which(cli) is None:
+        return None
+    argv = [
+        cli,
+        "-p",
+        prompt,
+        "--output-format",
+        "json",
+        "--disallowedTools",
+        *_DISALLOWED_TOOLS,
+        "--permission-mode",
+        getattr(settings, "claude_permission_mode", "dontAsk"),
+    ]
+    try:
+        proc = subprocess.run(
+            argv,
+            capture_output=True,
+            text=True,
+            timeout=timeout or getattr(settings, "agent_timeout_seconds", 600),
+            shell=False,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    try:
+        envelope = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return None
+    if envelope.get("is_error", proc.returncode != 0):
+        return None
+    text = str(envelope.get("result", "")).strip()
+    return text or None
+
+
 def _build_claude_argv(
     cli_path: str,
     prompt: str,

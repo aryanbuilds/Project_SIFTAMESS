@@ -40,9 +40,11 @@ class BriefIntakeError(RuntimeError):
 
 def _missing_lib_msg(suffix: str, package: str) -> str:
     return (
-        f"reading a {suffix} incident brief requires the optional '{package}' library "
-        f"(install: uv sync --extra brief). Missing dependency — failing closed (never a fake "
-        f"objective). Or supply the brief as .txt/.md."
+        f"reading a {suffix} incident brief requires the optional '{package}' library. "
+        f"Install with: uv sync --all-extras   (NOTE: `uv sync --extra X` makes the env exactly "
+        f"base+X and REMOVES other extras — combine them or use --all-extras). "
+        f"Missing dependency — failing closed (never a fake objective). "
+        f'Or supply the brief as .txt/.md, or pass --objective "text" directly.'
     )
 
 
@@ -155,24 +157,23 @@ def _render_brief_md(source_name: str, objective: str, text: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def ingest_brief(
-    brief_path: Path | str,
+def _write_brief(
     run: RunPaths,
     *,
-    evidence_root: Path | str | None = None,
+    source_name: str,
+    text: str,
+    evidence_root: Path | str | None,
 ) -> tuple[Path, str]:
-    """Extract + render the brief to ``context/incident_brief.md``; return (path, objective).
+    """Render TRUSTED brief text to ``context/incident_brief.md``; return (path, objective).
 
     The brief is TRUSTED, so its text is rendered raw (never datamarked). It IS injection-scanned
     for visibility — any signature is logged to the orchestration audit, but it never blocks or
-    changes the trust posture (the operator designated this document explicitly).
+    changes the trust posture (the operator supplied this content explicitly).
     """
-    src = Path(brief_path)
-    text = extract_brief_text(src)
     objective = derive_objective(text)
     target = safe_write_path(run.root, "context/incident_brief.md", evidence_root=evidence_root)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(_render_brief_md(src.name, objective, text), encoding="utf-8")
+    target.write_text(_render_brief_md(source_name, objective, text), encoding="utf-8")
 
     from siftmesh_core.adapters.spotlight import scan_injection  # local: keep intake import light
 
@@ -181,8 +182,40 @@ def ingest_brief(
     log_event(
         audit,
         "incident_brief_ingested",
-        source=src.name,
+        source=source_name,
         objective_chars=len(objective),
         injection_signatures=len(hits),
     )
     return target, objective
+
+
+def ingest_brief(
+    brief_path: Path | str,
+    run: RunPaths,
+    *,
+    evidence_root: Path | str | None = None,
+) -> tuple[Path, str]:
+    """Extract + render a brief FILE to ``context/incident_brief.md``; return (path, objective)."""
+    src = Path(brief_path)
+    text = extract_brief_text(src)
+    return _write_brief(run, source_name=src.name, text=text, evidence_root=evidence_root)
+
+
+def ingest_objective_text(
+    objective_text: str,
+    run: RunPaths,
+    *,
+    evidence_root: Path | str | None = None,
+) -> tuple[Path, str]:
+    """Ingest an INLINE operator objective (no file — e.g. ``--objective "find …"``).
+
+    Same trust model and output as :func:`ingest_brief`: the text is TRUSTED operator context,
+    rendered to ``context/incident_brief.md`` and threaded as the investigation objective. An
+    empty/whitespace objective fails closed (never a silent objective-less run).
+    """
+    text = objective_text.strip()
+    if not text:
+        raise BriefIntakeError("inline objective is empty — pass real objective text")
+    return _write_brief(
+        run, source_name="(inline --objective)", text=text, evidence_root=evidence_root
+    )

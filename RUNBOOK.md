@@ -148,7 +148,13 @@ uv run siftmesh run ./case_rocba --evidence ~/projects/ev_all \
   `context/incident_brief.md`, recorded as manifest metadata, never fed to a forensic tool). The
   objective is threaded into the case brief, the context pack, and **every agent prompt** — so the
   live agent investigates *toward* it, and `reports/final_report.md` gets an **"Answer to the incident
-  objective"** section. (`.pptx`/`.docx` need `uv sync --extra brief`; `.txt`/`.md` need nothing.)
+  objective"** section. `.txt`/`.md` briefs need no extra; `.pptx`/`.docx`/`.pdf` need the `brief`
+  extra — install the whole suite with **`uv sync --all-extras`** (NOTE: `uv sync --extra X` is
+  *declarative* — it removes extras you don't name, so `--extra brief` alone would uninstall the
+  `sift` parsers; always use `--all-extras` or name every extra).
+- **No file? Use `--objective "text"`** — the same TRUSTED objective supplied inline, e.g.
+  `--objective "Was host ROCBA compromised? Identify the initial access vector."` (alternative to
+  `--brief`; passing both is an error).
 - **`--agent claude`** is the headline: a live, objective-driven investigation that self-corrects under
   the deterministic critic. Needs a logged-in `claude` CLI (consumes your subscription). Omit it for
   the key-free deterministic floor — `run`/`doctor` print a hint when claude is available but not

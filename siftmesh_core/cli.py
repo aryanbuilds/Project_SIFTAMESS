@@ -88,6 +88,14 @@ def init_case(
             "not evidence.",
         ),
     ] = None,
+    objective: Annotated[
+        str | None,
+        typer.Option(
+            "--objective",
+            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
+            'X compromised?". Alternative to --brief.',
+        ),
+    ] = None,
     verify_after: Annotated[
         bool,
         typer.Option(
@@ -105,6 +113,7 @@ def init_case(
             verify_after=verify_after,
             show_progress=True,
             brief_path=brief,
+            objective_text=objective,
         )
     except (
         FileNotFoundError,
@@ -119,7 +128,7 @@ def init_case(
     typer.echo(f"  run id   : {run.run_id}")
     typer.echo(f"  manifest : {run.evidence_manifest}")
     typer.echo(f"  custody  : {run.custody_log}")
-    if brief is not None:
+    if brief is not None or objective is not None:
         typer.echo(f"  brief    : {run.incident_brief} (TRUSTED objective)")
 
 
@@ -505,6 +514,14 @@ def run(
             "agent investigates toward.",
         ),
     ] = None,
+    objective: Annotated[
+        str | None,
+        typer.Option(
+            "--objective",
+            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
+            'X compromised?". Alternative to --brief.',
+        ),
+    ] = None,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -531,7 +548,9 @@ def run(
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     try:
-        run_paths = vault_init_case(case_dir, evidence, show_progress=True, brief_path=brief)
+        run_paths = vault_init_case(
+            case_dir, evidence, show_progress=True, brief_path=brief, objective_text=objective
+        )
         state = RunState(
             run_id=run_paths.run_id,
             mode=resolved,

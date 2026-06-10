@@ -13,6 +13,7 @@ from siftmesh_core.intake.brief import (
     derive_objective,
     extract_brief_text,
     ingest_brief,
+    ingest_objective_text,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "derive_objective",
     "extract_brief_text",
     "ingest_brief",
+    "ingest_objective_text",
 ]

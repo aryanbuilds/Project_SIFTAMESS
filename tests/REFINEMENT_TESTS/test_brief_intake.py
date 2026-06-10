@@ -15,6 +15,7 @@ from siftmesh_core.intake.brief import (
     derive_objective,
     extract_brief_text,
     ingest_brief,
+    ingest_objective_text,
 )
 from siftmesh_core.run_dir import new_run_dir
 
@@ -99,3 +100,22 @@ def test_ingest_brief_writes_trusted_markdown(tmp_path: Path) -> None:
     assert objective in body
     # The ingest is visible in the audit (visibility, not a trust change).
     assert "incident_brief_ingested" in run.orchestration_events.read_text(encoding="utf-8")
+
+
+def test_ingest_objective_text_inline_no_file(tmp_path: Path) -> None:
+    run = new_run_dir(base=tmp_path / "case_runs")
+    path, objective = ingest_objective_text(
+        "Was host ROCBA compromised? Identify the initial access vector.", run
+    )
+    assert path == run.incident_brief
+    assert objective == "Was host ROCBA compromised? Identify the initial access vector."
+    body = path.read_text(encoding="utf-8")
+    assert "TRUSTED operator context" in body
+    assert "(inline --objective)" in body
+    assert "incident_brief_ingested" in run.orchestration_events.read_text(encoding="utf-8")
+
+
+def test_ingest_objective_text_empty_fails_closed(tmp_path: Path) -> None:
+    run = new_run_dir(base=tmp_path / "case_runs")
+    with pytest.raises(BriefIntakeError, match="empty"):
+        ingest_objective_text("   \n\t ", run)

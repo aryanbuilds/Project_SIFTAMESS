@@ -57,3 +57,34 @@ def test_unreadable_brief_aborts_init_case(
     except BriefIntakeError:
         return
     raise AssertionError("init_case should fail closed on an unreadable brief")
+
+
+def test_init_case_with_inline_objective(
+    tmp_path: Path, build_evidence: Callable[..., None]
+) -> None:
+    evidence = tmp_path / "evidence"
+    build_evidence(evidence)
+    run = init_case(
+        tmp_path / "case", evidence, objective_text="Was host ROCBA compromised? Find the vector."
+    )
+    manifest = EvidenceManifest.model_validate_json(
+        run.evidence_manifest.read_text(encoding="utf-8")
+    )
+    assert manifest.incident_objective == "Was host ROCBA compromised? Find the vector."
+    assert manifest.incident_brief_path == "context/incident_brief.md"
+    assert run.incident_brief.is_file()
+    assert all("incident_brief" not in f.path for f in manifest.files)
+
+
+def test_init_case_rejects_brief_and_objective_together(
+    tmp_path: Path, build_evidence: Callable[..., None]
+) -> None:
+    evidence = tmp_path / "evidence"
+    build_evidence(evidence)
+    brief = tmp_path / "objective.md"
+    brief.write_bytes((BRIEF_FIXTURES / "objective.md").read_bytes())
+    try:
+        init_case(tmp_path / "case", evidence, brief_path=brief, objective_text="also this")
+    except BriefIntakeError:
+        return
+    raise AssertionError("init_case should reject --brief and --objective together")

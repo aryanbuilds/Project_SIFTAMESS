@@ -106,13 +106,15 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     for mod, human in CORE_DEPS:
         ok = _module_available(mod)
         checks.append(Check(OK if ok else FAIL, f"dep: {human}", mod if ok else f"MISSING ({mod})"))
+    # NOTE: `uv sync --extra X` is declarative — it makes the env exactly base+X and REMOVES
+    # other extras. Recommend --all-extras so installing one suite never uninstalls another.
     for mod, human in FORENSIC_DEPS:
         ok = _module_available(mod)
         checks.append(
             Check(
                 OK if ok else WARN,
                 f"forensic: {human}",
-                "installed" if ok else "absent: uv sync --extra sift",
+                "installed" if ok else "absent: uv sync --all-extras",
             )
         )
     for mod, human in BRIEF_DEPS:
@@ -121,7 +123,7 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             Check(
                 OK if ok else WARN,
                 f"brief: {human}",
-                "installed" if ok else "absent: uv sync --extra brief",
+                "installed" if ok else "absent: uv sync --all-extras",
             )
         )
     checks.append(Check(OK if _cwd_writable() else FAIL, "run-dir writable", "case_runs/ (cwd)"))

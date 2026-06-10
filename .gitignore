@@ -18,10 +18,14 @@ dist/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+.hypothesis/
 .coverage
+.coverage.*
+coverage.json
 htmlcov/
 
-# SIFTMesh run output (case runs are generated, never committed)
+# SIFTMesh run output (case runs are generated, never committed; the committed
+# regression fixture lives at tests/golden/recorded_run/ outside any case_runs/)
 case_runs/
 
 # Protocol SIFT case-workspace artifact (a global Stop-hook writes here on every claude run)

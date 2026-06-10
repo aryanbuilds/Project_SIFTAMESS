@@ -270,15 +270,91 @@ def critique(
 
 
 @app.command()
-def report(run_dir: str) -> None:
-    """Render the final evidence-backed report."""
-    print(f"report {run_dir}")
+def report(
+    run_dir: str,
+    tolerant: Annotated[
+        bool, typer.Option("--tolerant", help="Tolerate a truncated trailing ledger line.")
+    ] = False,
+    expected: Annotated[
+        str | None, typer.Option("--expected", help="expected_findings.md → accuracy diff mode.")
+    ] = None,
+) -> None:
+    """Render the deterministic evidence-backed reports + replay.html for a run."""
+    from pathlib import Path
+
+    from pydantic import ValidationError
+
+    from siftmesh_core.evidence.path_policy import PathPolicyViolation
+    from siftmesh_core.ledgers.jsonl_ledger import LedgerCorruptionError
+    from siftmesh_core.reports import ReportLoadError, generate_all_reports
+    from siftmesh_core.run_dir import RunPaths
+
+    root = Path(run_dir)
+    if not root.is_dir():
+        typer.echo(f"report failed: not a run directory: {run_dir}", err=True)
+        raise typer.Exit(code=1)
+    try:
+        run = RunPaths(root=root)
+        paths = generate_all_reports(run, strict=not tolerant, expected_findings=expected)
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+        LedgerCorruptionError,
+        ReportLoadError,
+    ) as exc:
+        typer.echo(f"report failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"report: {len(paths)} artifact(s) written")
+    for p in paths:
+        typer.echo(f"  {p}")
 
 
 @app.command()
-def replay(run_dir: str) -> None:
-    """Replay the audit trail for a run."""
-    print(f"replay {run_dir}")
+def replay(
+    run_dir: str,
+    html: Annotated[bool, typer.Option("--html", help="Also write reports/replay.html.")] = False,
+    tolerant: Annotated[
+        bool, typer.Option("--tolerant", help="Tolerate a truncated trailing ledger line.")
+    ] = False,
+) -> None:
+    """Replay the audit trail (chronological events) as a deterministic text timeline."""
+    from pathlib import Path
+
+    from pydantic import ValidationError
+
+    from siftmesh_core.evidence.path_policy import PathPolicyViolation
+    from siftmesh_core.ledgers.jsonl_ledger import LedgerCorruptionError
+    from siftmesh_core.reports import (
+        ReportLoadError,
+        generate_replay_html,
+        load_report_view,
+        render_text_replay,
+    )
+    from siftmesh_core.run_dir import RunPaths
+
+    root = Path(run_dir)
+    if not root.is_dir():
+        typer.echo(f"replay failed: not a run directory: {run_dir}", err=True)
+        raise typer.Exit(code=1)
+    run = RunPaths(root=root)
+    try:
+        view = load_report_view(run, strict=not tolerant)
+        typer.echo(render_text_replay(view), nl=False)
+        if html:
+            path = generate_replay_html(run, view=view)
+            typer.echo(f"replay.html: {path}")
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        PathPolicyViolation,
+        ValidationError,
+        LedgerCorruptionError,
+        ReportLoadError,
+    ) as exc:
+        typer.echo(f"replay failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
 
 _RUN_MODES = ("manual", "review_only", "auto_human_loop", "auto")
@@ -333,7 +409,7 @@ def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
     )
     if state.state == "done":
         typer.echo("  status : complete")
-        typer.echo("  report : run `siftmesh report` for the forensic report (Epic J)")
+        typer.echo("  report : reports/ written (auto modes) — or run `siftmesh report <run>`")
     elif state.terminal:
         typer.echo(f"  status : halted ({state.blocked_gate or 'rejected'})")
     elif state.blocked_gate:

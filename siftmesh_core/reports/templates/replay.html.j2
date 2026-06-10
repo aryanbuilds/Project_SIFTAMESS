@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SIFTMesh Replay — {{ run_id }}</title>
+<style>
+body { font-family: ui-monospace, Menlo, Consolas, monospace; margin: 2rem; color: #1a1a1a; background: #fafafa; }
+h1 { font-size: 1.3rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; vertical-align: top; }
+th { background: #efefef; }
+tr.ev-retry, tr.ev-decision { background: #fff4e5; }
+tr.ev-verdict { background: #e7f5ff; }
+tr.ev-tool, tr.ev-dispatch { background: #ebfbee; }
+tr.ev-injection, tr.ev-gate { background: #fff0f6; }
+td.detail { color: #555; word-break: break-word; }
+</style>
+</head>
+<body>
+<h1>SIFTMesh Replay — {{ run_id }}</h1>
+<p>{{ event_count }} orchestration events (chronological; reconstructed from audit/orchestration_events.jsonl).</p>
+{% if events %}
+<table>
+<thead><tr><th>#</th><th>Timestamp (UTC)</th><th>Event</th><th>Detail</th></tr></thead>
+<tbody>
+{% for e in events %}
+<tr class="ev-{{ e.kind }}"><td>{{ loop.index }}</td><td>{{ e.timestamp }}</td><td>{{ e.event }}</td><td class="detail">{{ e.detail }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p>No orchestration events were recorded for this run.</p>
+{% endif %}
+</body>
+</html>

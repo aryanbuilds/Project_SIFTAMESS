@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "license": "CC-BY-4.0",
+    "source": "MITRE ATT&CK (https://attack.mitre.org/)",
+    "attack_version": "v15",
+    "note": "Coarse evidence_type -> ATT&CK technique mapping for triage context only; NOT attribution. Unknown evidence_types render as '(unmapped)'."
+  },
+  "windows_event_log": {"tactic": "Execution", "technique": "T1059", "subtechnique": null, "name": "Command and Scripting Interpreter", "url": "https://attack.mitre.org/techniques/T1059/"},
+  "evtx_powershell_event": {"tactic": "Execution", "technique": "T1059", "subtechnique": "T1059.001", "name": "PowerShell", "url": "https://attack.mitre.org/techniques/T1059/001/"},
+  "evtx_security_event": {"tactic": "Execution", "technique": "T1059", "subtechnique": null, "name": "Command and Scripting Interpreter", "url": "https://attack.mitre.org/techniques/T1059/"},
+  "registry_autostart": {"tactic": "Persistence", "technique": "T1547", "subtechnique": "T1547.001", "name": "Registry Run Keys / Startup Folder", "url": "https://attack.mitre.org/techniques/T1547/001/"},
+  "registry_run_key": {"tactic": "Persistence", "technique": "T1547", "subtechnique": "T1547.001", "name": "Registry Run Keys / Startup Folder", "url": "https://attack.mitre.org/techniques/T1547/001/"},
+  "program_execution": {"tactic": "Execution", "technique": "T1204", "subtechnique": null, "name": "User Execution", "url": "https://attack.mitre.org/techniques/T1204/"},
+  "image_extraction": {"tactic": "Collection", "technique": "T1005", "subtechnique": null, "name": "Data from Local System", "url": "https://attack.mitre.org/techniques/T1005/"},
+  "memory_analysis": {"tactic": "Defense Evasion", "technique": "T1055", "subtechnique": null, "name": "Process Injection", "url": "https://attack.mitre.org/techniques/T1055/"},
+  "timeline": null
+}

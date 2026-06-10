@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-09 (Epics A–I complete + Epic K core; multi-agent selection/fallback + live self-correction loop shipped)_
+_Last updated: 2026-06-10 (Epics A–K complete + Epic J core; deterministic reports & replay shipped — `siftmesh run --auto` now produces the final report)_
 
 ## 1. Project identity
 
@@ -234,7 +234,7 @@ Runs once near the beginning. Creates a compact context pack that explains the c
 
 ### Ultraworker ✅ (Epic H, shipped 2026-06-09)
 
-The main controller. Chooses next task, chooses agent/tool, handles retries, tracks token budget, reads critic advice, and decides whether to mark done, retry, escalate, or request human review. Implemented as a deterministic state machine in `orchestrator/{state_machine,workflow_runner,ultraworker,human_gate,budget_router,run_state_store}.py`: a frozen transition table + pure `step()`, `RunState` persisted atomically (temp+fsync+rename) to `run_state.json` for crash-safe `resume`, caps enforced in the loop (global `iteration` vs per-task `attempt`), and the four `siftmesh run` modes (manual/review-only/auto-human-loop/auto) over one engine. The forensic report (REPORT state) is the Epic-J seam.
+The main controller. Chooses next task, chooses agent/tool, handles retries, tracks token budget, reads critic advice, and decides whether to mark done, retry, escalate, or request human review. Implemented as a deterministic state machine in `orchestrator/{state_machine,workflow_runner,ultraworker,human_gate,budget_router,run_state_store}.py`: a frozen transition table + pure `step()`, `RunState` persisted atomically (temp+fsync+rename) to `run_state.json` for crash-safe `resume`, caps enforced in the loop (global `iteration` vs per-task `attempt`), and the four `siftmesh run` modes (manual/review-only/auto-human-loop/auto) over one engine. The REPORT state now generates the deterministic reports (Epic J) in auto modes.
 
 ### Executor Agents ✅ (Epics F + I, deterministic floor + live agents)
 
@@ -245,6 +245,10 @@ Do narrow artifact-specific work. They must not produce broad incident conclusio
 ### Live self-correction loop ✅ (Epic K, K3)
 
 The hero loop, **emergent not scripted**. The live adapter drives the agent to investigate via the typed MCP tools and respond with a JSON `{claims:[…]}` payload citing the `tool_call_id` + `source_sha256` each tool returned (`adapters/agent_result.parse_agent_result`). Two honesty rules: an **under-anchored claim is recorded `unsupported`** (never fabricate an anchor → it lands in `unsupported_claims.jsonl`), and **unparseable/empty output → `retry_required`**. The deterministic critic rejects the unsupported claim; the rejection reasons flow into the retry prompt (`build_task_prompt(critic_feedback=…)`); the agent revises against the real tool output and the corrected, anchored claim is promoted to the findings ledger. Claim IDs are **attempt-scoped** (`…-A{attempt}-CLAIM-NNN`) so a correction never collides with the claim it replaces. The MCP server is **run-scoped**: its agent-facing tools read `SIFTMESH_RUN_ROOT`/`SIFTMESH_EVIDENCE_ROOT` from the adapter-set environment (the agent cannot choose a root; missing env fails closed). The live run is human-gated (CLI + token); CI always mocks the agent subprocess and exercises the loop against the **real** critic + a **real** seeded tool call.
+
+### Reports & Replay ✅ (Epic J)
+
+Turns the run-dir ledgers into judge-ready, **byte-deterministic** artifacts — **no LLM at report time** (the replayable-audit differentiator, golden-tested). `siftmesh_core/reports/`: `loader.load_report_view` builds one frozen `ReportView` over every ledger (graceful-missing; corrupt line → `ReportLoadError`, `--tolerant` drops a trailing truncated line); `render.py` pins the Jinja env + a header/body sentinel split (`split_body()` so golden tests diff only the body) + a `MarkdownBuilder` (the markdown reports are code-built; only `replay.html` uses a template). Generators: `final_report.md` (confirmed/inferred findings each anchored to artifact+sha256+tool_call_id, MITRE ATT&CK table, contradictions, self-correction narrative, chain of custody, **complete** tool-execution appendix, **unsupported-only-in-appendix** firewall, mandatory "NOT court-ready" limitations), `accuracy_report.md` (honest self-assessment by default; precision/recall diff mode when `expected_findings.md` exists), `dataset_documentation.md`, `architecture_notes.md`, and a text + self-contained-HTML **replay**. Wired into `siftmesh report`/`replay` and the engine REPORT state (auto modes auto-generate, fail-soft — a report bug never strands a finished run). Every real-run edge case (failed tool, retry-only task, escalation, fell-back agent, empty/halted run, 400+ claims) degrades gracefully.
 
 ### Advisor / Critic
 

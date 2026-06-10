@@ -38,11 +38,10 @@ EXPECTED_COMMANDS = [
 ]
 
 COMMAND_SMOKE_CASES = [
-    # init-case (B), plan (E), dispatch/collect (F), critique/retry (G), and
-    # run/resume/status/approve/reject (H) are no longer stubs — they have real
-    # behaviour covered by their per-epic test folders. report/replay remain stubs (Epic J).
-    (("report", "RUN-001"), "report RUN-001"),
-    (("replay", "RUN-001"), "replay RUN-001"),
+    # init-case (B), plan (E), dispatch/collect (F), critique/retry (G),
+    # run/resume/status/approve/reject (H), and report/replay (J) are no longer stubs —
+    # they have real behaviour covered by their per-epic test folders. Only the debug
+    # inspection commands (tasks/claims/audit) remain print stubs.
     (("tasks", "list", "RUN-001"), "tasks list RUN-001"),
     (("tasks", "show", "RUN-001", "TASK-001"), "tasks show RUN-001 TASK-001"),
     (("claims", "list", "RUN-001"), "claims list RUN-001"),

@@ -126,11 +126,18 @@ def _advance(
     if current == "decide":
         return _decide(run, state, settings=settings, evidence_root=evidence_root, audit=audit)
     if current == "report":
-        log_event(
-            audit,
-            "report_pending",
-            note="forensic report generation is Epic J; run `siftmesh report`",
-        )
+        if state.mode in ("auto", "auto_human_loop"):
+            from siftmesh_core.reports import generate_all_reports
+
+            try:
+                paths = generate_all_reports(run, evidence_root=evidence_root, strict=True)
+                log_event(
+                    audit, "reports_generated", count=len(paths), files=[p.name for p in paths]
+                )
+            except Exception as exc:
+                log_event(audit, "reports_failed", error=str(exc))
+        else:
+            log_event(audit, "report_skipped", reason="non-auto mode; run `siftmesh report <run>`")
         return state, next_state(current)
     raise IllegalTransitionError(f"no action defined for state {current!r}")
 

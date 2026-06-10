@@ -37,17 +37,8 @@ EXPECTED_COMMANDS = [
     "mcp-serve",
 ]
 
-COMMAND_SMOKE_CASES = [
-    # init-case (B), plan (E), dispatch/collect (F), critique/retry (G),
-    # run/resume/status/approve/reject (H), and report/replay (J) are no longer stubs —
-    # they have real behaviour covered by their per-epic test folders. Only the debug
-    # inspection commands (tasks/claims/audit) remain print stubs.
-    (("tasks", "list", "RUN-001"), "tasks list RUN-001"),
-    (("tasks", "show", "RUN-001", "TASK-001"), "tasks show RUN-001 TASK-001"),
-    (("claims", "list", "RUN-001"), "claims list RUN-001"),
-    (("claims", "show", "CLAIM-001"), "claims show CLAIM-001"),
-    (("audit", "tail", "RUN-001"), "audit tail RUN-001"),
-]
+# No print stubs remain: every registered command has real behaviour covered by its
+# per-epic test folder (the debug inspection commands are tested in test_cli_inspect.py).
 
 
 def test_help_exit_zero(runner: CliRunner, cli_app: typer.Typer) -> None:
@@ -66,18 +57,6 @@ def test_version_exit_zero(runner: CliRunner, cli_app: typer.Typer) -> None:
     result = runner.invoke(cli_app, ["--version"])
     assert result.exit_code == 0
     assert "siftmesh 0.1.0" in result.output
-
-
-@pytest.mark.parametrize(("args", "expected"), COMMAND_SMOKE_CASES)
-def test_registered_stub_commands_execute(
-    runner: CliRunner,
-    cli_app: typer.Typer,
-    args: tuple[str, ...],
-    expected: str,
-) -> None:
-    result = runner.invoke(cli_app, list(args))
-    assert result.exit_code == 0
-    assert expected in result.output
 
 
 def test_protocol_sift_inspect_outputs_status(runner: CliRunner, cli_app: typer.Typer) -> None:

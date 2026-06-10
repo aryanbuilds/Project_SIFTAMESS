@@ -832,34 +832,154 @@ def reject(
     _resolve_gate(run_dir, gate, approve=False)
 
 
+def _open_run(run_dir: str) -> RunPaths:
+    """Resolve an existing run dir for the read-only inspection commands (exit 1 if absent)."""
+    from siftmesh_core.run_dir import RunPaths
+
+    root = Path(run_dir)
+    if not root.is_dir():
+        typer.echo(f"run directory does not exist: {root}", err=True)
+        raise typer.Exit(code=1)
+    return RunPaths(root=root)
+
+
+def _printable(text: str, *, limit: int = 80) -> str:
+    """One sanitized line of hostile-evidence-derived text (control chars stripped)."""
+    flat = " ".join(text.split())
+    safe = "".join(ch if ch.isprintable() else "?" for ch in flat)
+    return safe if len(safe) <= limit else safe[: limit - 3] + "..."
+
+
 @tasks_app.command("list")
-def tasks_list(run_id: str) -> None:
-    """List tasks for a run -> `siftmesh tasks list RUN-001`."""
-    print(f"tasks list {run_id}")
+def tasks_list(run_dir: str) -> None:
+    """List a run's task contracts with their result status (read-only)."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.schemas.task import TaskContract
+    from siftmesh_core.schemas.task_result import TaskResult
+    from siftmesh_core.schemas.yaml_io import read_yaml_model
+
+    run = _open_run(run_dir)
+    paths = sorted(run.tasks.glob("TASK-*.yaml"))
+    if not paths:
+        typer.echo("no tasks yet (run `siftmesh plan` first)")
+        return
+    for path in paths:
+        try:
+            contract = read_yaml_model(TaskContract, path)
+        except (ValidationError, OSError):
+            typer.echo(f"  {path.stem}  [invalid contract]")
+            continue
+        result_path = run.result_path(contract.task_id)
+        status = "pending"
+        if result_path.is_file():
+            try:
+                status = TaskResult.model_validate_json(
+                    result_path.read_text(encoding="utf-8")
+                ).status
+            except ValidationError:
+                status = "malformed-result"
+        typer.echo(
+            f"  {contract.task_id}  role={_printable(contract.role, limit=32)}  "
+            f"profile={contract.assigned_agent_profile}  status={status}"
+        )
+    typer.echo(f"{len(paths)} task(s)")
 
 
 @tasks_app.command("show")
-def tasks_show(run_id: str, task_id: str) -> None:
-    """Show a task -> `siftmesh tasks show RUN-001 TASK-001`."""
-    print(f"tasks show {run_id} {task_id}")
+def tasks_show(run_dir: str, task_id: str) -> None:
+    """Show one task contract (validated, then echoed)."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.schemas.task import TaskContract
+    from siftmesh_core.schemas.yaml_io import read_yaml_model
+
+    run = _open_run(run_dir)
+    path = run.tasks / f"{task_id}.yaml"
+    if not path.is_file():
+        typer.echo(f"no such task: {task_id} ({path})", err=True)
+        raise typer.Exit(code=1)
+    try:
+        read_yaml_model(TaskContract, path)  # prove it is a valid contract before echoing
+    except ValidationError as exc:
+        typer.echo(f"contract fails schema validation: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    raw = path.read_text(encoding="utf-8")
+    typer.echo("".join(ch if ch.isprintable() or ch == "\n" else "?" for ch in raw))
 
 
 @claims_app.command("list")
-def claims_list(run_id: str) -> None:
-    """List claims for a run -> `siftmesh claims list RUN-001`."""
-    print(f"claims list {run_id}")
+def claims_list(run_dir: str) -> None:
+    """List the promoted findings ledger + the unsupported count (read-only)."""
+    from siftmesh_core.ledgers.claim_ledger import read_claims, read_unsupported_claims
+
+    run = _open_run(run_dir)
+    claims = read_claims(run.root)
+    for c in claims:
+        artifact = _printable(c.source_artifact or "-", limit=40)
+        typer.echo(
+            f"  {c.claim_id}  [{c.status}]  conf={c.confidence:.2f}  "
+            f"{artifact}  {_printable(c.claim, limit=60)}"
+        )
+    unsupported = read_unsupported_claims(run.root)
+    typer.echo(
+        f"{len(claims)} claim(s) in the findings ledger; "
+        f"{len(unsupported)} unsupported (appendix-only, never facts)"
+    )
 
 
 @claims_app.command("show")
-def claims_show(claim_id: str) -> None:
-    """Show a single claim -> `siftmesh claims show CLAIM-003`."""
-    print(f"claims show {claim_id}")
+def claims_show(run_dir: str, claim_id: str) -> None:
+    """Show one claim (findings ledger first, then the unsupported ledger)."""
+    from siftmesh_core.ledgers.claim_ledger import read_claims, read_unsupported_claims
+
+    run = _open_run(run_dir)
+    for claim in read_claims(run.root):
+        if claim.claim_id == claim_id:
+            typer.echo(claim.model_dump_json(indent=2))
+            return
+    for claim in read_unsupported_claims(run.root):
+        if claim.claim_id == claim_id:
+            typer.echo(claim.model_dump_json(indent=2))
+            typer.echo("status: UNSUPPORTED — rejected by the critic; never a report fact")
+            return
+    typer.echo(f"no such claim: {claim_id}", err=True)
+    raise typer.Exit(code=1)
+
+
+_AUDIT_LEDGERS = ("events", "tool-calls", "agent-calls", "retries", "token-budget")
 
 
 @audit_app.command("tail")
-def audit_tail(run_id: str) -> None:
-    """Tail the audit log for a run -> `siftmesh audit tail RUN-001`."""
-    print(f"audit tail {run_id}")
+def audit_tail(
+    run_dir: str,
+    lines: Annotated[int, typer.Option("--lines", "-n", help="How many trailing lines.")] = 20,
+    ledger: Annotated[
+        str,
+        typer.Option(help="events | tool-calls | agent-calls | retries | token-budget"),
+    ] = "events",
+) -> None:
+    """Tail an audit ledger (raw JSONL lines, newest last; read-only)."""
+    run = _open_run(run_dir)
+    targets = {
+        "events": run.orchestration_events,
+        "tool-calls": run.tool_calls,
+        "agent-calls": run.agent_calls,
+        "retries": run.retries,
+        "token-budget": run.token_budget,
+    }
+    if ledger not in targets:
+        choices = ", ".join(_AUDIT_LEDGERS)
+        typer.echo(f"unknown ledger {ledger!r}; choose one of {choices}", err=True)
+        raise typer.Exit(code=1)
+    path = targets[ledger]
+    if not path.is_file():
+        typer.echo(f"no {ledger} recorded yet ({path})")
+        return
+    recorded = path.read_text(encoding="utf-8").splitlines()
+    for line in recorded[-max(lines, 0) :]:
+        typer.echo(line)
+    typer.echo(f"-- {min(max(lines, 0), len(recorded))} of {len(recorded)} {ledger} line(s)")
 
 
 @protocol_sift_app.command("inspect")

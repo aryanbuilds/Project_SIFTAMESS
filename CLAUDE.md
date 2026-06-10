@@ -59,8 +59,10 @@ These rules override default agent behavior. They are non-negotiable and apply t
 ### B. Strictly sequential epics — NEVER jump (HARD STOP after each epic)
 
 - Epics execute in a **fixed linear order** enforced by a `blocks` chain:
-  `A → B → C → D → E → F → G → H → K → J → L → M → N → I → P → O`
-  (must-have spine first; `I` CAO/agents, `P` A2A, `O` TUI are stretch and run last).
+  `A → B → C → D → E → F → G → H → I → K → J → L → M → N → P → O`
+  (must-have spine first; `I` core was pulled forward by maintainer approval since K's live
+  self-correction needs the live agent — its optional remainder (I5 CAO adapter), `P` A2A,
+  and `O` TUI are stretch and run last).
 - Each epic node stays **blocked** until the previous epic's node is **closed**; a blocked epic's tasks are hidden from `bd ready`. So at any moment `bd ready` shows **only the current epic**.
 - **Work only the current epic.** Do not start, plan, design, or write code for any later epic.
 - **When the current epic's last task is closed → STOP, and leave the epic node itself OPEN.** Do **not** `bd close` the epic node yourself. Report completion and hand off.
@@ -139,13 +141,14 @@ siftmesh protocol-sift inspect                      # inspect & govern Protocol 
 Debug commands:
 
 ```bash
-siftmesh tasks list RUN-001
-siftmesh claims list RUN-001
-siftmesh claims show CLAIM-003
-siftmesh audit tail RUN-001
-siftmesh retry TASK-003
-siftmesh approve RUN-001 --gate plan
-siftmesh reject RUN-001 --gate retry
+siftmesh tasks list ./case_runs/RUN-001
+siftmesh tasks show ./case_runs/RUN-001 TASK-001
+siftmesh claims list ./case_runs/RUN-001
+siftmesh claims show ./case_runs/RUN-001 CLAIM-003
+siftmesh audit tail ./case_runs/RUN-001 [-n 20] [--ledger events|tool-calls|agent-calls|retries|token-budget]
+siftmesh retry ./case_runs/RUN-001 TASK-003
+siftmesh approve ./case_runs/RUN-001 --gate plan
+siftmesh reject ./case_runs/RUN-001 --gate retry
 ```
 
 ## 5. Run directory contract

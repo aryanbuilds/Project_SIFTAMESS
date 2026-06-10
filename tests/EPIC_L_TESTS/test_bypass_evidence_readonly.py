@@ -19,7 +19,7 @@ from siftmesh_core.schemas.evidence import EvidenceManifest
 DispatchedCase = Callable[..., tuple[RunPaths, Path]]
 
 
-def test_originals_byte_identical_after_real_run(dispatched_case: DispatchedCase) -> None:
+def test_original_evidence_not_modified(dispatched_case: DispatchedCase) -> None:
     run, evidence = dispatched_case()  # builds evidence, then runs real tools over it
     manifest = EvidenceManifest.model_validate_json(run.evidence_manifest.read_text())
     assert manifest.files  # the baseline exists

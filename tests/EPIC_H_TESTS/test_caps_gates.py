@@ -45,7 +45,7 @@ def test_auto_mode_stops_at_max_iterations(
     assert run.token_budget.is_file()  # H9 routing decision recorded on the retry
 
 
-def test_guided_blocks_at_plan_gate(built_run: BuiltRun) -> None:
+def test_guided_mode_requires_approval_at_plan_gate(built_run: BuiltRun) -> None:
     run, evidence = built_run(mode="auto_human_loop")
     state = run_engine(run, settings=load_settings(), evidence_root=evidence)
     assert state.blocked_gate == "plan"

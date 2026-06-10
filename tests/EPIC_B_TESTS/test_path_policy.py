@@ -72,3 +72,17 @@ def test_run_outside_evidence_ok(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
     assert_run_outside_evidence(run, evidence)  # must not raise
+
+
+@pytest.mark.parametrize(
+    "rel",
+    ["../escape.txt", "../../etc/passwd", "/etc/passwd", "a/b/../../../../out", "foo\x00bar"],
+)
+def test_write_paths_restricted_to_run_directory(tmp_path: Path, rel: str) -> None:
+    # CLAUDE §14 umbrella: every escape vector is rejected, a legit in-run path is contained.
+    run = tmp_path / "run"
+    run.mkdir()
+    with pytest.raises(PathPolicyViolation):
+        safe_write_path(run, rel)
+    allowed = safe_write_path(run, "results/TASK-001.result.json")
+    assert allowed.is_relative_to(run.resolve())

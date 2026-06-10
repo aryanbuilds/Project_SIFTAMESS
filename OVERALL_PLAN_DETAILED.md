@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-09 (Epics A–H complete + Epic I core; live-agent profiles/adapters shipped. NB: bd order is …H→I→K→J… — Epic I before K)_
+_Last updated: 2026-06-10 (Epics A–L complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + 80-test bypass suite (L). Executed epic order: …H→I→K→J→L; Epic M (Testing & CI) is next.)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -794,7 +794,7 @@ TUI must read existing run files and optionally call CLI commands. It must not d
 
 ## 7. 12-day schedule
 
-### Day 1: Skeleton and docs
+### Day 1: Skeleton and docs ✅ COMPLETE (Epic A)
 
 Deliver:
 
@@ -808,7 +808,7 @@ CLAUDE.md
 OVERALL_PLAN_DETAILED.md
 ```
 
-### Day 2: Evidence vault
+### Day 2: Evidence vault ✅ COMPLETE (Epic B)
 
 Deliver:
 
@@ -820,7 +820,7 @@ path policy
 audit logger
 ```
 
-### Day 3: Schemas and ledgers
+### Day 3: Schemas and ledgers ✅ COMPLETE (Epic C)
 
 Deliver:
 
@@ -833,7 +833,7 @@ JSONL ledgers
 schema tests
 ```
 
-### Day 4: Tool gateway MVP
+### Day 4: Tool gateway MVP ✅ COMPLETE (Epic D; allowlist now 10)
 
 Deliver:
 
@@ -862,7 +862,7 @@ Also delivered: `context/{context_pack,tool_map,assumptions}.md`, `orchestrator/
 (family→tool router), `workflows/windows_initial_triage.yaml`. Planner reads only manifest metadata
 (privilege separation). See PLAN/04 "EPIC E DONE".
 
-### Day 6: Dispatch and collect
+### Day 6: Dispatch and collect ✅ COMPLETE (Epic F, 2026-06-08)
 
 Deliver:
 
@@ -874,7 +874,7 @@ agent_calls.jsonl
 result collection
 ```
 
-### Day 7: Critic and retry
+### Day 7: Critic and retry ✅ COMPLETE (Epic G, 2026-06-09)
 
 Deliver:
 
@@ -920,27 +920,30 @@ output-schema enforcement      # malformed agent result -> retry_required (I4)
 Also delivered: `adapters/{profiles.py,prompt_builder.py}`. The live invocation is **human-gated**
 (CLI + key; CI mocks the subprocess). **I5 (CAO adapter) is optional/best-effort — left open.**
 
-### Day 10: Reports and replay
+### Day 10: Reports and replay ✅ COMPLETE (Epic J, 2026-06-10)
 
 Deliver:
 
 ```text
-final_report.md
-accuracy_report.md
-dataset_documentation.md
-replay command
-self-correction summary
+final_report.md               # deterministic, code-built; anchored findings + ATT&CK + appendices
+accuracy_report.md            # honest self-assessment; diff mode when expected_findings.md exists
+dataset_documentation.md      # + architecture_notes.md + replay.html (self-contained)
+replay command                # siftmesh replay (text + --html); siftmesh report
+self-correction summary       # retries/verdicts narrative section in final_report.md
 ```
 
-### Day 11: Demo hardening
+Also delivered: byte-deterministic rendering (no LLM at report time), the unsupported-only-in-appendix
+firewall, and REPORT-state auto-generation in `siftmesh run` auto modes (fail-soft). See PLAN/06.
+
+### Day 11: Demo hardening (self-correction ✅ Epic K; demo evidence maintainer-gated)
 
 Deliver:
 
 ```text
-stable demo case (real maintainer-provided evidence; integration-gated)
-real deterministic self-correction (under-specified contract -> retry -> corrected; PLAN/08 §6)
-prompt-injection alert optional
-clean install instructions
+stable demo case (real maintainer-provided evidence; integration-gated — Epic K1 open)
+real EMERGENT self-correction ✅ (live agent + deterministic critic + retry feedback; Epic K3)
+prompt-injection alert ✅ (injection_alerts.jsonl + critic human-review consequence; bypass-tested in L)
+clean install instructions (Epic N)
 ```
 
 ### Day 12: Polish and submission assets

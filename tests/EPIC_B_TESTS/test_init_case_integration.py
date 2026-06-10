@@ -45,9 +45,7 @@ def test_init_case_creates_all_run_files(tmp_path: Path) -> None:
         assert path.exists(), f"missing {path}"
 
 
-def test_cli_init_case_produces_valid_manifest(
-    runner: CliRunner, cli_app: typer.Typer, tmp_path: Path
-) -> None:
+def test_evidence_manifest_created(runner: CliRunner, cli_app: typer.Typer, tmp_path: Path) -> None:
     evi = _evidence(tmp_path)
     case = tmp_path / "case01"
     result = runner.invoke(cli_app, ["init-case", str(case), "--evidence", str(evi)])

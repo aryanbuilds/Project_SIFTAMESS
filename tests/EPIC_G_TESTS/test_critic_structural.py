@@ -92,3 +92,28 @@ def test_unsupported_lands_in_unsupported_not_findings(dispatched_case: Dispatch
     critique_run(run, settings=load_settings())
     assert "TASK-902-U" in {c.claim_id for c in read_unsupported_claims(run.root)}
     assert "TASK-902-U" not in {c.claim_id for c in read_claims(run.root)}
+
+
+def test_retry_created_for_malformed_json(dispatched_case: DispatchedCase) -> None:
+    # CLAUDE §14: a corrupt result JSON -> critic retry_required -> a retry record is
+    # created (the same write_retry seam the engine + `siftmesh retry` use), with the
+    # tightened contract written back over tasks/<id>.yaml.
+    from siftmesh_core.ledgers.retries import read_retries
+    from siftmesh_core.orchestrator.critic import write_retry
+    from siftmesh_core.schemas.task import TaskContract
+    from siftmesh_core.schemas.yaml_io import read_yaml_model
+
+    run, _ = dispatched_case()
+    task_id = sorted(p.stem for p in run.tasks.glob("TASK-*.yaml"))[0]
+    run.result_path(task_id).write_text("{not json", encoding="utf-8")  # corrupt the result
+
+    verdicts = {v.task_id: v for v in critique_run(run, settings=load_settings())}
+    verdict = verdicts[task_id]
+    assert verdict.verdict == "retry_required"
+    assert any("malformed result JSON" in r for r in verdict.reasons)
+
+    contract = read_yaml_model(TaskContract, run.tasks / f"{task_id}.yaml")
+    record = write_retry(run, contract, from_attempt=1, cause=verdict.verdict)
+    persisted = [r for r in read_retries(run.root) if r.task_id == task_id]
+    assert record in persisted
+    assert persisted[-1].to_attempt == 2

@@ -12,6 +12,9 @@ from siftmesh_core.adapters import claude_adapter as _claude  # noqa: F401
 # Import concretes for their @register side effects (order: floor first).
 from siftmesh_core.adapters import deterministic_executor as _deterministic  # noqa: F401
 from siftmesh_core.adapters import generic_shell_adapter as _generic_shell  # noqa: F401
+from siftmesh_core.adapters import (
+    headless as _headless,  # noqa: F401  # gemini/codex/openclaw (Epic Q)
+)
 from siftmesh_core.adapters import opencode_adapter as _opencode  # noqa: F401
 from siftmesh_core.adapters.base import (
     DEFAULT_PROFILE,

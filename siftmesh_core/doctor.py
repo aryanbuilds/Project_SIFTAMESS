@@ -10,15 +10,21 @@ one is fine here; it only fails closed when the corresponding tool is actually
 from __future__ import annotations
 
 import importlib.util
+import os
 import platform
 import shutil
+import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from siftmesh_core.adapters.profiles import load_profiles
 from siftmesh_core.config import SiftmeshSettings, load_settings
+from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.protocol_sift import ProtocolSiftStatus, detect_protocol_sift
+from siftmesh_core.schemas.agent_capabilities import AgentCapability, AgentCapabilityMap
+from siftmesh_core.schemas.agent_profile import AgentProfile
 
 OK = "ok"
 FAIL = "fail"
@@ -242,13 +248,176 @@ def run_setup(settings: SiftmeshSettings) -> int:
     return 0
 
 
+# ---- Agent onboarding (Epic Q) -------------------------------------------------------------------
+# The connector kinds we onboard (a coding agent the operator could dispatch to). ``generic_shell``
+# is operator-defined fixed-argv (not an onboarding target); ``deterministic`` is the always-present
+# real-tool floor.
+_LIVE_KINDS = ("claude", "opencode", "headless")
+# Default pick order when no settings.agent_preference is configured (best first).
+_DEFAULT_AGENT_ORDER = (
+    "claude_headless",
+    "opencode_headless",
+    "gemini_headless",
+    "codex_headless",
+    "openclaw_headless",
+)
+
+
+def _profile_cli(prof: AgentProfile, settings: SiftmeshSettings) -> str | None:
+    """The launch binary for a dispatchable profile (None for the deterministic floor)."""
+    if prof.kind == "claude":
+        return settings.claude_cli_path
+    if prof.kind == "opencode":
+        return settings.opencode_cli_path
+    if prof.kind == "headless":
+        return prof.launch_argv[0] if prof.launch_argv else None
+    return None
+
+
+def _agent_version(cli: str) -> str:
+    """Best-effort ``<cli> --version`` first line (fast, fixed-argv, never raises)."""
+    try:
+        proc = subprocess.run(
+            [cli, "--version"], capture_output=True, text=True, timeout=5, shell=False, check=False
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return "unknown"
+    lines = (proc.stdout or proc.stderr or "").strip().splitlines()
+    return lines[0].strip() if lines else "unknown"
+
+
+def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
+    """Whether the agent is authenticated (env/credential present, or none required)."""
+    if prof.kind == "claude":
+        try:
+            from siftmesh_core.adapters.claude_adapter import claude_available
+
+            return bool(claude_available(settings))
+        except Exception:
+            return False
+    if prof.kind == "opencode":  # OpenCode uses its own config; presence is treated as usable
+        return shutil.which(settings.opencode_cli_path) is not None
+    if prof.kind == "headless":
+        return (not prof.auth_env) or any(os.environ.get(v) for v in prof.auth_env)
+    return True
+
+
+def _agent_tool_reach(prof: AgentProfile) -> str:
+    """Can this agent reach the typed forensic tools? (honest; only Claude is verified today)."""
+    if prof.kind in ("deterministic", "claude"):
+        return "yes"
+    if prof.kind == "opencode":
+        return "no"  # OpenCode has no MCP support (its adapter notes this)
+    if prof.kind == "headless":
+        return "yes" if prof.mcp_strategy == "claude_flag" else "verify-live"
+    return "verify-live"
+
+
+def _choose_default(caps: list[AgentCapability], settings: SiftmeshSettings) -> str:
+    """The profile SIFTMesh would dispatch to by default: first ready live agent, else the floor.
+
+    "Ready" requires present + authenticated + actually able to reach the typed tools, so an agent
+    that can't reach the tools yet (``verify-live``) is never the silent default (the operator can
+    still select it explicitly with ``--agent``).
+    """
+    ready = {c.profile_id for c in caps if c.present and c.auth_ok and c.tool_reachable == "yes"}
+    order = settings.agent_preference or list(_DEFAULT_AGENT_ORDER)
+    for pid in order:
+        if pid in ready:
+            return pid
+    return "deterministic_executor"
+
+
+def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap:
+    """Env-only onboarding probe: which agent CLIs are installed/authed + which is the default.
+
+    Pure function of the host + the profile registry (no agent is launched beyond ``--version``),
+    so the map is fully snapshot-stable. Fails closed via ``StrictModel`` validation.
+    """
+    settings = settings or load_settings()
+    caps: list[AgentCapability] = []
+    for pid, prof in load_profiles().items():
+        if prof.kind == "deterministic":
+            caps.append(
+                AgentCapability(
+                    profile_id=pid,
+                    kind="deterministic",
+                    present=True,
+                    version="builtin",
+                    auth_ok=True,
+                    tool_reachable="yes",
+                    selected=False,
+                )
+            )
+            continue
+        if prof.kind not in _LIVE_KINDS:
+            continue  # generic_shell / future kinds are not onboarding targets
+        cli = _profile_cli(prof, settings)
+        present = bool(cli and shutil.which(cli))
+        caps.append(
+            AgentCapability(
+                profile_id=pid,
+                kind=prof.kind,
+                present=present,
+                version=_agent_version(cli) if present and cli else "absent",
+                auth_ok=_agent_auth_ok(prof, settings),
+                tool_reachable=_agent_tool_reach(prof),
+                selected=False,
+            )
+        )
+    chosen = _choose_default(caps, settings)
+    caps.sort(key=lambda c: c.profile_id)
+    for c in caps:
+        c.selected = c.profile_id == chosen
+    return AgentCapabilityMap(agents=caps, chosen=chosen)
+
+
+def write_agent_capability_map(
+    run_root: Path | str,
+    *,
+    settings: SiftmeshSettings | None = None,
+    evidence_root: Path | str | None = None,
+) -> Path:
+    """Write the onboarding map to ``context/agent_capabilities.json`` (path-policed)."""
+    cap = probe_agents(settings)
+    target = safe_write_path(
+        run_root, Path("context") / "agent_capabilities.json", evidence_root=evidence_root
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(cap.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    return target
+
+
+def _format_agents(cap: AgentCapabilityMap) -> list[str]:
+    lines = ["", "-- Coding agents (onboarding) --"]
+    for c in cap.agents:
+        mark = OK if (c.present and c.auth_ok) else WARN
+        sel = "  <- default" if c.selected else ""
+        auth = "auth ok" if c.auth_ok else "no auth"
+        present = c.version if c.present else "absent"
+        lines.append(
+            f"  {_MARK[mark]} {c.profile_id:<22} {present:<26} "
+            f"{auth:<8} tools:{c.tool_reachable}{sel}"
+        )
+    lines.append(f"  default agent: {cap.chosen}")
+    if cap.chosen == "deterministic_executor":
+        lines.append("  (no live agent ready — runs use the deterministic real-tool floor)")
+    lines.append("  install/auth an absent agent, then re-run `siftmesh doctor --agents`.")
+    return lines
+
+
 def run_doctor(
-    *, protocol_sift: bool = False, setup: bool = False, settings: SiftmeshSettings | None = None
+    *,
+    protocol_sift: bool = False,
+    agents: bool = False,
+    setup: bool = False,
+    settings: SiftmeshSettings | None = None,
 ) -> int:
     """Run all checks, print a report, return an exit code (0 = ok, 1 = fail-closed).
 
     With ``setup=True``, first install all extras + create the symbol cache (one-command setup),
-    then run the checks (so the report proves the setup worked).
+    then run the checks (so the report proves the setup worked). With ``agents=True``, also print
+    the coding-agent onboarding map (absent agents are informational, never a fail-closed failure).
     """
     settings = settings or load_settings()
     if setup and run_setup(settings) != 0:
@@ -259,6 +428,10 @@ def run_doctor(
 
     if protocol_sift:
         for line in _format_protocol_sift(detect_protocol_sift()):
+            print(line)
+
+    if agents:
+        for line in _format_agents(probe_agents(settings)):
             print(line)
 
     failures = [c for c in checks if c.status == FAIL]

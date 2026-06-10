@@ -33,3 +33,42 @@ profiles:
     cost_class: cheap
     output_format: task_result_json
     max_runtime_seconds: 300
+
+  # Agent-neutral headless connectors (Epic Q). One config-driven adapter; adding an agent is a row.
+  # Drift-prone fields (model ids, launch flags, auth env names) are best-current and tagged
+  # `verify-live` — confirm on the maintainer box before relying on them (CLAUDE §2B; PLAN/13 §10).
+  # mcp_strategy: only `claude_flag` is verified to reach the run-scoped typed tools today; these
+  # default to `none` (run, but no typed tools until per-run MCP wiring lands in round 2 / ACP).
+  - profile_id: gemini_headless          # live Gemini CLI: `gemini -p "<prompt>" --output-format json`
+    kind: headless
+    model_tier: high
+    cost_class: cheap
+    model: gemini-2.5-pro                 # verify-live (model ids drift)
+    launch_argv: ["gemini", "-p"]         # verify-live
+    model_flag: "--model"                 # verify-live
+    extra_argv: ["--output-format", "json"]   # verify-live
+    auth_env: ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+    output_format: agent_json
+    mcp_strategy: none                    # verify-live: per-run MCP wiring (round 2 / ACP)
+    max_runtime_seconds: 600
+
+  - profile_id: codex_headless           # live Codex CLI: `codex exec "<prompt>" --json`
+    kind: headless
+    model_tier: high
+    cost_class: expensive
+    model: gpt-5-codex                    # verify-live
+    launch_argv: ["codex", "exec"]        # verify-live
+    extra_argv: ["--json"]                # verify-live
+    auth_env: ["CODEX_API_KEY", "OPENAI_API_KEY"]
+    output_format: agent_json
+    mcp_strategy: none                    # verify-live
+    max_runtime_seconds: 600
+
+  - profile_id: openclaw_headless        # live OpenClaw CLI (launch + flags unconfirmed)
+    kind: headless
+    model_tier: low
+    cost_class: cheap
+    launch_argv: ["openclaw", "run"]      # verify-live
+    output_format: agent_json
+    mcp_strategy: none                    # verify-live
+    max_runtime_seconds: 600

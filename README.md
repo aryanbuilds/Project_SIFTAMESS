@@ -34,7 +34,12 @@ under the deterministic critic → quarantines any single flagged task (the run 
 writes a report whose "Answer to the incident objective" section is anchored to real tool calls.
 
 - **No briefing file?** Use `--objective "was host X compromised? find initial access"`.
-- **Free, no keys?** Omit `--agent claude` — the deterministic real-tool floor runs the whole pipeline.
+- **Agent-neutral.** `--agent claude|gemini|codex|opencode|openclaw` (or `deterministic`). SIFTMesh is
+  not Claude-only: any agent is a swap-in connector under the same deterministic governance. Run
+  `siftmesh doctor --agents` (or `siftmesh agents list`) to onboard — it shows which agents are
+  installed + authenticated and picks the best default. (Only Claude reaches the typed tools today;
+  others run but their tool wiring is `verify-live` — see `PLAN/13`.)
+- **Free, no keys?** Omit `--agent …` — the deterministic real-tool floor runs the whole pipeline.
 - **Heavy tasks (disk-image extract, memory triage)** always run on the floor (the tool does the work);
   `--all-live` overrides. A pre-flight check estimates derived-data size vs free disk and, if it won't
   fit, prints a partition plan (run portions → `prune` → `merge`); `--force` skips it.
@@ -45,12 +50,12 @@ writes a report whose "Answer to the incident objective" section is anchored to 
 
 | Command | What it does |
 |---|---|
-| `run CASE --evidence DIR [--brief/--objective] [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent claude]` | Init → plan → dispatch → collect → critique → decide → report, end to end. |
+| `run CASE --evidence DIR [--brief/--objective] [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent claude\|gemini\|codex\|opencode]` | Init → plan → dispatch → collect → critique → decide → report, end to end. |
 | `resume RUN` | Continue an interrupted run from its persisted state (skips hashing + decompress). |
 | `status RUN` | Show state, mode, iteration, gates, per-task attempts, quarantined tasks. |
 | `approve RUN --gate G` / `reject RUN --gate G` | Resolve a gate (plan\|dispatch\|retry\|report) in guided mode. |
 | `merge CASE --run RUN_A --run RUN_B … [--agent claude]` | Combine ≥2 completed runs into one provenance-tracked report (opt-in advisory synthesis). |
-| `doctor [--setup] [--protocol-sift]` | Verify the host/backends (fail-closed); `--setup` also installs + configures them. |
+| `doctor [--setup] [--protocol-sift] [--agents]` | Verify the host/backends (fail-closed); `--setup` installs + configures them; `--agents` onboards the coding agents. |
 
 **Manual / deterministic (staged — full control; `run --auto` does all of this for you):**
 
@@ -71,6 +76,7 @@ writes a report whose "Answer to the incident objective" section is anchored to 
 | Command | What it does |
 |---|---|
 | `tasks list\|show RUN [TASK]` · `claims list\|show RUN [CLAIM]` · `audit tail RUN [--ledger …]` | Inspect contracts, claims, and audit ledgers. |
+| `agents list` · `agents inspect <id>` | Onboard/inspect the coding-agent connectors (installed? authed? tool-reachable? default?). |
 | `protocol-sift inspect` · `protocol-sift skills list` | Inspect/govern the `~/.claude` Protocol SIFT layer. |
 
 ## Develop

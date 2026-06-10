@@ -9,7 +9,16 @@ from siftmesh_core.adapters.base import _REGISTRY
 from siftmesh_core.adapters.profiles import load_profiles
 from siftmesh_core.schemas.agent_profile import AgentProfile
 
-_EXPECTED = {"deterministic_executor", "claude_headless", "opencode_headless", "generic_shell"}
+_EXPECTED = {
+    "deterministic_executor",
+    "claude_headless",
+    "opencode_headless",
+    "generic_shell",
+    # Epic Q — agent-neutral headless connectors.
+    "gemini_headless",
+    "codex_headless",
+    "openclaw_headless",
+}
 
 
 def test_profile_schema_valid() -> None:

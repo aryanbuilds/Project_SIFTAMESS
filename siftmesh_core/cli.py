@@ -51,6 +51,10 @@ skills_app = typer.Typer(no_args_is_help=True, help="Protocol SIFT skill inspect
 protocol_sift_app.add_typer(skills_app, name="skills")
 app.add_typer(protocol_sift_app, name="protocol-sift")
 
+# Agent-neutral onboarding/inspection (Epic Q): which coding agents are installed + usable.
+agents_app = typer.Typer(no_args_is_help=True, help="Inspect & onboard coding agent connectors.")
+app.add_typer(agents_app, name="agents")
+
 
 def _version_callback(value: bool) -> None:
     # Eager: fires during arg parsing, before subcommand dispatch and before the
@@ -409,26 +413,39 @@ def _resolve_mode(
     return cast("RunMode", norm) if norm in _RUN_MODES else None
 
 
+# Agent-neutral selection (Epic Q): friendly --agent name → registered profile_id.
 _AGENT_ALIASES = {
     "claude": "claude_headless",
     "opencode": "opencode_headless",
+    "gemini": "gemini_headless",
+    "codex": "codex_headless",
+    "openclaw": "openclaw_headless",
     "deterministic": "deterministic_executor",
     "floor": "deterministic_executor",
 }
+# Every live connector, in default preference order (the floor is always appended last).
+_LIVE_PROFILES = (
+    "claude_headless",
+    "opencode_headless",
+    "gemini_headless",
+    "codex_headless",
+    "openclaw_headless",
+)
 
 
 def _agent_overrides(agent: str | None) -> dict[str, object]:
     """Translate a friendly --agent choice into settings overrides (opt into the live chain).
 
-    ``claude``/``opencode`` put that agent first in the preference chain (the other stays a
-    fallback, floor last) and flip executor_selection to ``auto``. ``deterministic`` pins the floor.
+    Any live agent (claude/opencode/gemini/codex/openclaw) is put first in the preference chain
+    (the others stay fallbacks, floor last) and flips executor_selection to ``auto``.
+    ``deterministic`` pins the floor.
     """
     if not agent:
         return {}
     profile = _AGENT_ALIASES.get(agent, agent)  # passthrough if already a full profile_id
     if profile == "deterministic_executor":
         return {"executor_selection": "deterministic"}
-    others = [p for p in ("claude_headless", "opencode_headless") if p != profile]
+    others = [p for p in _LIVE_PROFILES if p != profile]
     return {
         "executor_selection": "auto",
         "agent_preference": [profile, *others, "deterministic_executor"],
@@ -928,6 +945,14 @@ def doctor(
         bool,
         typer.Option("--protocol-sift", help="Also detect the ~/.claude Protocol SIFT layer."),
     ] = False,
+    agents: Annotated[
+        bool,
+        typer.Option(
+            "--agents",
+            help="Also probe the coding agents (claude/gemini/codex/opencode/openclaw): "
+            "which are installed + authenticated, and which is the live default.",
+        ),
+    ] = False,
     setup: Annotated[
         bool,
         typer.Option(
@@ -938,7 +963,70 @@ def doctor(
     ] = False,
 ) -> None:
     """Verify host + tool backends (fails closed on missing deps); --setup also installs them."""
-    raise typer.Exit(code=run_doctor(protocol_sift=protocol_sift, setup=setup))
+    raise typer.Exit(code=run_doctor(protocol_sift=protocol_sift, agents=agents, setup=setup))
+
+
+@agents_app.command("list")
+def agents_list() -> None:
+    """List coding agents: installed? authenticated? can reach the typed tools? which is default?"""
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.doctor import probe_agents
+
+    cap = probe_agents(load_settings())
+    typer.echo(f"{'agent':<22} {'present':<8} {'auth':<8} {'tools':<12} version")
+    for c in cap.agents:
+        sel = "  <- default" if c.selected else ""
+        typer.echo(
+            f"{c.profile_id:<22} {('yes' if c.present else 'no'):<8} "
+            f"{('yes' if c.auth_ok else 'no'):<8} {c.tool_reachable:<12} "
+            f"{(c.version if c.present else 'absent')}{sel}"
+        )
+    typer.echo(f"\ndefault agent: {cap.chosen}")
+    if cap.chosen == "deterministic_executor":
+        typer.echo("(no live agent ready — runs use the deterministic real-tool floor)")
+    typer.echo("select one for a run with `--agent <name>` (e.g. --agent gemini).")
+
+
+@agents_app.command("inspect")
+def agents_inspect(profile_id: str) -> None:
+    """Show one agent's profile + launch recipe + governance (allowed tools are per-task)."""
+    from pydantic import ValidationError
+
+    from siftmesh_core.adapters.profiles import load_profiles
+    from siftmesh_core.config import load_settings
+    from siftmesh_core.doctor import probe_agents
+
+    pid = _AGENT_ALIASES.get(profile_id, profile_id)  # accept friendly names too
+    try:
+        profiles = load_profiles()
+    except (FileNotFoundError, ValidationError, ValueError) as exc:
+        typer.echo(f"agents inspect failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    prof = profiles.get(pid)
+    if prof is None:
+        typer.echo(f"unknown agent profile: {profile_id} (try `siftmesh agents list`)", err=True)
+        raise typer.Exit(code=1)
+    cap = {c.profile_id: c for c in probe_agents(load_settings()).agents}.get(pid)
+    typer.echo(f"profile_id      : {prof.profile_id}")
+    typer.echo(f"kind            : {prof.kind}")
+    typer.echo(f"model           : {prof.model or '(n/a)'}")
+    typer.echo(f"cost/tier       : {prof.cost_class} / {prof.model_tier}")
+    typer.echo(f"output_format   : {prof.output_format}")
+    typer.echo(f"max_runtime_s   : {prof.max_runtime_seconds}")
+    if prof.kind == "headless":
+        recipe = [*prof.launch_argv, "<prompt>"]
+        if prof.model and prof.model_flag:
+            recipe += [prof.model_flag, prof.model]
+        recipe += [*prof.extra_argv, *prof.native_tool_argv]
+        typer.echo(f"launch          : {' '.join(recipe)}")
+        typer.echo(f"auth_env        : {', '.join(prof.auth_env) or '(none)'}")
+        typer.echo(f"mcp_strategy    : {prof.mcp_strategy}")
+    if cap is not None:
+        typer.echo(
+            f"status          : present={cap.present} auth={cap.auth_ok} "
+            f"tools={cap.tool_reachable}{' (default)' if cap.selected else ''}"
+        )
+    typer.echo("allowed tools   : per-task (the contract's allowed_tools); native tools denied.")
 
 
 @app.command()

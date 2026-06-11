@@ -61,6 +61,50 @@ def test_cockpit_mounts_and_renders_golden() -> None:
     _drive(app, scenario)
 
 
+def test_cockpit_task_and_claim_drilldown_and_console() -> None:
+    app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
+
+    async def scenario(pilot: Any) -> None:
+        from siftmesh_core.tui.modals import GateScreen, ReplayScreen, TaskDetailScreen
+        from textual.widgets import DataTable, Input, Select
+
+        cockpit = app.screen
+        # claim-list tab populated + the filter/ledger controls mounted
+        assert cockpit.query_one("#claimlist", DataTable).row_count >= 1
+        assert cockpit.query_one("#taskfilter", Input) is not None
+        assert cockpit.query_one("#ledgersel", Select) is not None
+
+        # task drill-down: focus + select the first #tasks row + open it (RowSelected on Enter)
+        tasks = cockpit.query_one("#tasks", DataTable)
+        tasks.focus()
+        tasks.move_cursor(row=0)
+        await pilot.pause()
+        await pilot.press("enter")
+        assert isinstance(app.screen, TaskDetailScreen)
+        await pilot.press("escape")
+
+        # replay modal
+        await pilot.press("p")
+        assert isinstance(app.screen, ReplayScreen)
+        await pilot.press("escape")
+
+        # gate selector pops up
+        await pilot.press("g")
+        assert isinstance(app.screen, GateScreen)
+        await pilot.press("escape")
+
+        # task filter narrows the table
+        full = cockpit.query_one("#tasks", DataTable).row_count
+        cockpit.query_one("#taskfilter", Input).value = "ZZZ-no-match"
+        await pilot.pause()
+        assert cockpit.query_one("#tasks", DataTable).row_count == 0
+        cockpit.query_one("#taskfilter", Input).value = ""
+        await pilot.pause()
+        assert cockpit.query_one("#tasks", DataTable).row_count == full
+
+    _drive(app, scenario)
+
+
 def test_app_registers_siftmesh_themes() -> None:
     app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
 

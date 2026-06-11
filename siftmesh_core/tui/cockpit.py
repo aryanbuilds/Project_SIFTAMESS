@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from rich.markdown import Markdown as RichMarkdown
-from rich.syntax import Syntax
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -20,9 +18,11 @@ from textual.widgets import (
     DataTable,
     Footer,
     Header,
+    Input,
     LoadingIndicator,
     ProgressBar,
     RichLog,
+    Select,
     Static,
     TabbedContent,
     TabPane,
@@ -31,12 +31,13 @@ from textual.widgets import (
 
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.run_dir import RunPaths
-from siftmesh_core.schemas.run import RunMode
+from siftmesh_core.schemas.run import GateName, RunMode
 from siftmesh_core.tui import runner, widgets
 from siftmesh_core.tui.snapshot import CockpitSnapshot, build_snapshot
 
 _SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 _NAV_DIRS = ("context", "tasks", "results", "claims", "audit", "reports", "evidence")
+_LEDGERS = ("events", "tool-calls", "agent-calls", "retries", "token-budget")
 
 
 class CockpitScreen(Screen):
@@ -45,6 +46,11 @@ class CockpitScreen(Screen):
     BINDINGS = [
         ("a", "approve", "Approve gate"),
         ("r", "reject", "Reject gate"),
+        ("g", "gate_selector", "Gate…"),
+        ("t", "retry_task", "Retry task"),
+        ("R", "resume", "Resume/step"),
+        ("p", "replay", "Replay"),
+        ("s", "switch_run", "Switch run"),
         ("escape", "app.pop_screen", "Back"),
         ("q", "quit", "Quit"),
     ]
@@ -64,18 +70,25 @@ class CockpitScreen(Screen):
         self._spin = 0
         self._nav_built = False
         self._snap: CockpitSnapshot | None = None
+        self._filter = ""
+        self._ticker_ledger = "events"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static(id="vitals")
         yield ProgressBar(id="taskbar", total=100, show_eta=False)
         yield Static(id="ribbon")
+        with Horizontal(id="controls"):
+            yield Input(placeholder="filter tasks…", id="taskfilter")
+            yield Select.from_values(_LEDGERS, value="events", id="ledgersel", allow_blank=False)
         yield LoadingIndicator(id="loading")
         with Horizontal(id="working"):
             yield DataTable(id="tasks", zebra_stripes=True, cursor_type="row")
             with TabbedContent(id="side"):
                 with TabPane("Claims", id="tab-claims"):
                     yield Static(id="claims")
+                with TabPane("Claim list", id="tab-claimlist"):
+                    yield DataTable(id="claimlist", zebra_stripes=True, cursor_type="row")
                 with TabPane("Agents", id="tab-agents"):
                     yield Static(id="agents")
                 with TabPane("Budget", id="tab-budget"):
@@ -90,7 +103,14 @@ class CockpitScreen(Screen):
     def on_mount(self) -> None:
         table = self.query_one("#tasks", DataTable)
         table.add_columns("task", "status", "att", "family", "agent", "clm", "verdict")
-        table.tooltip = "task: status · attempt · artifact family · agent · claims · verdict"
+        table.tooltip = (
+            "task: status · attempt · artifact family · agent · claims · verdict (↵ details)"
+        )
+        claimlist = self.query_one("#claimlist", DataTable)
+        claimlist.add_columns("claim", "status", "conf", "task", "artifact")
+        claimlist.tooltip = "↵ to view the full claim JSON"
+        self.query_one("#taskfilter", Input).tooltip = "filter tasks by id / family / status"
+        self.query_one("#ledgersel", Select).tooltip = "which audit ledger the ticker shows"
         self.query_one("#nav", Tree).tooltip = "Select a run file to view (markdown/JSON rendered)"
         self.query_one("#taskbar", ProgressBar).tooltip = "Tasks completed / total"
         # Cache the honest agent safety tiers once (pure profile classification — no subprocess).
@@ -139,29 +159,108 @@ class CockpitScreen(Screen):
             return
         from siftmesh_core.orchestrator.workflow_runner import run_engine
 
+        # Manual mode = exactly one transition per resume (matches `siftmesh resume`).
+        single = (self._snap.mode if self._snap else "") == "manual"
         try:
-            run_engine(self.run, settings=self.settings)
-        except Exception as exc:  #
+            run_engine(self.run, settings=self.settings, single_step=single)
+        except Exception as exc:
             self.app.call_from_thread(self.notify, f"resume failed: {exc}", severity="error")
 
     # ---- gate actions (governed) ----
     def action_approve(self) -> None:
-        self._resolve_gate("approved")
+        self._quick_gate(True)
 
     def action_reject(self) -> None:
-        self._resolve_gate("rejected")
+        self._quick_gate(False)
 
-    def _resolve_gate(self, status: str) -> None:
+    def _quick_gate(self, approve: bool) -> None:
+        """a/r shortcut: resolve the currently-blocked gate."""
+        from typing import cast
+
         if self.run is None or self._snap is None or not self._snap.blocked_gate:
             self.notify("no blocked gate to resolve")
             return
-        from siftmesh_core.orchestrator.human_gate import set_gate
+        self._do_gate(cast(GateName, self._snap.blocked_gate), approve)
 
-        gate = self._snap.blocked_gate
-        set_gate(self.run, gate, status)  # type: ignore[arg-type]
-        self.notify(f"gate {gate} → {status}")
-        if status == "approved":
-            self._resume_engine()
+    def action_gate_selector(self) -> None:
+        """g: choose ANY gate to approve/reject (codex-style pop-up)."""
+        if self.run is None:
+            return
+        from siftmesh_core.tui.modals import GateScreen
+
+        blocked = self._snap.blocked_gate if self._snap else None
+
+        def _done(result: tuple[GateName, bool] | None) -> None:
+            if result is not None:
+                gate, approve = result
+                self._do_gate(gate, approve)
+
+        self.app.push_screen(GateScreen(blocked), _done)
+
+    def _do_gate(self, gate: GateName, approve: bool) -> None:
+        self._gate_worker(gate, approve)
+
+    @work(thread=True, exclusive=True)
+    def _gate_worker(self, gate: GateName, approve: bool) -> None:
+        from siftmesh_core.tui import actions
+
+        if self.run is None:
+            return
+        res = actions.resolve_gate(self.run, gate, approve=approve, settings=self.settings)
+        self.app.call_from_thread(
+            self.notify, res.message, severity="information" if res.ok else "error"
+        )
+
+    # ---- retry / resume / replay / switch ----
+    def action_retry_task(self) -> None:
+        task_id = self._selected_task()
+        if task_id is None:
+            self.notify("select a task row to retry")
+            return
+        self.notify(f"retrying {task_id}…")
+        self._retry_worker(task_id)
+
+    @work(thread=True, exclusive=True)
+    def _retry_worker(self, task_id: str) -> None:
+        from siftmesh_core.tui import actions
+
+        if self.run is None:
+            return
+        res = actions.retry_task(self.run, task_id, settings=self.settings)
+        self.app.call_from_thread(
+            self.notify, res.message, severity="information" if res.ok else "warning"
+        )
+
+    def action_resume(self) -> None:
+        if self.run is None or (self._snap and self._snap.terminal):
+            self.notify("nothing to resume")
+            return
+        self.notify("resuming…")
+        self._resume_engine()
+
+    def action_replay(self) -> None:
+        if self.run is None:
+            return
+        from siftmesh_core.tui.modals import ReplayScreen
+
+        self.app.push_screen(ReplayScreen(self.run))
+
+    def action_switch_run(self) -> None:
+        from siftmesh_core.tui.app import HomeScreen
+
+        self.app.push_screen(HomeScreen(settings=self.settings))
+
+    def _selected_task(self) -> str | None:
+        from textual.coordinate import Coordinate
+
+        table = self.query_one("#tasks", DataTable)
+        if table.row_count == 0:
+            return None
+        try:
+            row_key = table.coordinate_to_cell_key(Coordinate(table.cursor_row, 0)).row_key
+            return str(row_key.value)
+        except Exception:
+            return None
 
     # ---- polling render ----
     def _refresh(self) -> None:
@@ -189,12 +288,16 @@ class CockpitScreen(Screen):
         )
         self.query_one("#budget", Static).update(widgets.budget_text(snap))
         self._sync_tasks(snap)
+        self._sync_claimlist(snap)
         self._sync_ticker(snap)
 
     def _sync_tasks(self, snap: CockpitSnapshot) -> None:
         table = self.query_one("#tasks", DataTable)
         table.clear()
+        flt = self._filter.lower()
         for t in snap.tasks:
+            if flt and flt not in f"{t.task_id} {t.family} {t.status}".lower():
+                continue
             table.add_row(
                 t.task_id,
                 widgets.status_cell(t.status),
@@ -206,12 +309,50 @@ class CockpitScreen(Screen):
                 key=t.task_id,
             )
 
+    def _sync_claimlist(self, snap: CockpitSnapshot) -> None:
+        table = self.query_one("#claimlist", DataTable)
+        table.clear()
+        for c in snap.claims:
+            table.add_row(
+                c.claim_id,
+                widgets.status_cell(c.status),
+                f"{c.confidence:.2f}",
+                c.task_id,
+                c.source_artifact,
+                key=c.claim_id,
+            )
+
     def _sync_ticker(self, snap: CockpitSnapshot) -> None:
         log = self.query_one("#ticker", RichLog)
-        for ev in snap.events:
+        rows = snap.ledger_lines.get(self._ticker_ledger, snap.events)
+        for ev in rows:
             if ev.lineno > self._last_lineno:
                 log.write(f"[dim]{ev.timestamp}[/] {ev.summary}")
                 self._last_lineno = ev.lineno
+
+    # ---- interactive handlers ----
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if self.run is None:
+            return
+        from siftmesh_core.tui.modals import ClaimDetailScreen, TaskDetailScreen
+
+        key = str(event.row_key.value) if event.row_key else ""
+        if event.data_table.id == "tasks" and key:
+            self.app.push_screen(TaskDetailScreen(self.run, key))
+        elif event.data_table.id == "claimlist" and key:
+            self.app.push_screen(ClaimDetailScreen(self.run, key))
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input.id == "taskfilter":
+            self._filter = event.value
+            if self._snap is not None:
+                self._sync_tasks(self._snap)
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        if event.select.id == "ledgersel" and event.value is not None:
+            self._ticker_ledger = str(event.value)
+            self.query_one("#ticker", RichLog).clear()
+            self._last_lineno = -1  # repaint the chosen ledger from the top
 
     # ---- navigation tree ----
     def _build_nav(self) -> None:
@@ -235,18 +376,4 @@ class CockpitScreen(Screen):
         view = self.query_one("#fileview", Static)
         if not isinstance(data, Path) or not data.is_file():
             return
-        try:
-            text = data.read_text(encoding="utf-8", errors="replace")
-        except OSError as exc:
-            view.update(f"[$error]cannot read {data.name}: {exc}[/]")
-            return
-        clipped = text if len(text) <= 20000 else text[:20000] + "\n… (truncated)"
-        suffix = data.suffix.lower()
-        if suffix in (".md", ".markdown"):
-            view.update(RichMarkdown(clipped))
-        elif suffix in (".json", ".jsonl"):
-            view.update(Syntax(clipped, "json", word_wrap=True, background_color="default"))
-        elif suffix in (".yaml", ".yml"):
-            view.update(Syntax(clipped, "yaml", word_wrap=True, background_color="default"))
-        else:
-            view.update(clipped)
+        view.update(widgets.render_file(data))

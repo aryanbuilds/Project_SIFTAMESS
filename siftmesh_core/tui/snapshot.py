@@ -46,6 +46,19 @@ class TaskRow:
     agent: str  # profile/adapter that last ran it ("—" if not yet)
     claims: int  # promoted (confirmed+inferred) claims anchored to this task
     verdict: str  # latest critic verdict ("—" if none)
+    claim_ids: tuple[str, ...] = ()  # claim ids anchored to this task (for drill-down)
+
+
+@dataclass(frozen=True)
+class ClaimRow:
+    """One claim, for the claims-list table + drill-down (zone 3)."""
+
+    claim_id: str
+    status: str
+    confidence: float
+    task_id: str
+    source_artifact: str
+    text: str
 
 
 @dataclass(frozen=True)
@@ -96,8 +109,10 @@ class CockpitSnapshot:
     verdict_tally: dict[str, int]
     agent_sessions: tuple[AgentSession, ...]
     budget: tuple[dict[str, object], ...]
-    # audit ticker (zone 4)
+    claims: tuple[ClaimRow, ...]  # all claims (incl. unsupported) for the list + drill-down
+    # audit ticker (zone 4) + the other selectable ledgers
     events: tuple[EventRow, ...]
+    ledger_lines: dict[str, tuple[EventRow, ...]]  # name -> rows (events/tool-calls/agent-calls/…)
     load_errors: tuple[str, ...]
 
 
@@ -139,7 +154,9 @@ def _empty(run_id: str) -> CockpitSnapshot:
         verdict_tally={},
         agent_sessions=(),
         budget=(),
+        claims=(),
         events=(),
+        ledger_lines={},
         load_errors=(),
     )
 
@@ -284,9 +301,13 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
     stage_elapsed = _seconds(end_ref, stage_entry)
     dispatched = {a.task_id for a in view.agent_calls}
     promoted_by_task: dict[str, int] = {}
+    claim_ids_by_task: dict[str, list[str]] = {}
     for claim in (*view.confirmed, *view.inferred):
         if claim.task_id:
             promoted_by_task[claim.task_id] = promoted_by_task.get(claim.task_id, 0) + 1
+    for claim in (*view.confirmed, *view.inferred, *view.contradicted, *view.unsupported):
+        if claim.task_id:
+            claim_ids_by_task.setdefault(claim.task_id, []).append(claim.claim_id)
     latest_agent_for: dict[str, tuple[str, str]] = {}
     for call in view.agent_calls:  # sorted by AGENT-NNN ⇒ chronological; last wins
         latest_agent_for[call.task_id] = (call.profile, call.adapter)
@@ -315,6 +336,7 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
                 agent=f"{agent[0]}" if agent else "—",
                 claims=promoted_by_task.get(c.task_id, 0),
                 verdict=verdict.verdict if verdict else "—",
+                claim_ids=tuple(claim_ids_by_task.get(c.task_id, ())),
             )
         )
 
@@ -342,6 +364,54 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
         )
         for e in view.events
     )
+    claims = tuple(
+        ClaimRow(
+            claim_id=c.claim_id,
+            status=c.status,
+            confidence=c.confidence,
+            task_id=c.task_id or "—",
+            source_artifact=c.source_artifact or "—",
+            text=c.claim,
+        )
+        for c in (*view.confirmed, *view.inferred, *view.contradicted, *view.unsupported)
+    )
+    budget = _budget(run)
+    ledger_lines = {
+        "events": events,
+        "tool-calls": tuple(
+            EventRow(
+                i, str(t.start_time_utc), "tool_call", f"{t.tool_call_id} {t.tool_name} {t.status}"
+            )
+            for i, t in enumerate(view.tool_results)
+        ),
+        "agent-calls": tuple(
+            EventRow(
+                i,
+                str(a.start_time_utc),
+                "agent_call",
+                f"{a.agent_call_id} {a.task_id} {a.profile} {a.status}",
+            )
+            for i, a in enumerate(view.agent_calls)
+        ),
+        "retries": tuple(
+            EventRow(
+                i,
+                "",
+                "retry",
+                f"{r.task_id} attempt={getattr(r, 'from_attempt', '?')} {getattr(r, 'cause', '')}",
+            )
+            for i, r in enumerate(view.retries)
+        ),
+        "token-budget": tuple(
+            EventRow(
+                i,
+                str(b.get("timestamp", "")),
+                "budget",
+                f"{b.get('base_profile', '?')} -> {b.get('selected_profile', '?')}",
+            )
+            for i, b in enumerate(budget)
+        ),
+    }
 
     return CockpitSnapshot(
         run_id=run.run_id,
@@ -368,8 +438,10 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
         },
         verdict_tally=view.verdict_tally,
         agent_sessions=sessions,
-        budget=_budget(run),
+        budget=budget,
+        claims=claims,
         events=events,
+        ledger_lines=ledger_lines,
         load_errors=view.load_errors,
     )
 

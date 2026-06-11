@@ -7,7 +7,36 @@ Every status is doubled (a glyph AND a word) so it survives no-colour terminals 
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
 from siftmesh_core.tui.snapshot import CockpitSnapshot, StageCell
+
+_FILE_VIEW_LIMIT = 20000
+
+
+def render_file(path: Path, *, limit: int = _FILE_VIEW_LIMIT) -> Any:
+    """Render a run file as a Rich renderable (markdown / JSON / YAML highlighted, else text).
+
+    Shared by the cockpit nav viewer and the detail modals so they render identically.
+    """
+    from rich.markdown import Markdown as RichMarkdown
+    from rich.syntax import Syntax
+
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return f"[red]cannot read {path.name}: {exc}[/]"
+    clipped = text if len(text) <= limit else text[:limit] + "\n… (truncated)"
+    suffix = path.suffix.lower()
+    if suffix in (".md", ".markdown"):
+        return RichMarkdown(clipped)
+    if suffix in (".json", ".jsonl"):
+        return Syntax(clipped, "json", word_wrap=True, background_color="default")
+    if suffix in (".yaml", ".yml"):
+        return Syntax(clipped, "yaml", word_wrap=True, background_color="default")
+    return clipped
+
 
 # status → (glyph, colour). Semantic colours (green=good, red=bad) that are UNIVERSAL across themes.
 # These render inside BOTH a DataTable cell (Rich markup) and a Static (Textual content markup), so

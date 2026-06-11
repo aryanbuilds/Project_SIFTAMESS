@@ -24,6 +24,29 @@ Screen {
     color: $text-muted;
 }
 
+/* Filter + ledger-selector control row. */
+#controls {
+    height: 3;
+    padding: 0 1;
+}
+#taskfilter {
+    width: 2fr;
+}
+#ledgersel {
+    width: 1fr;
+}
+
+/* Detail / gate / replay modals. */
+GateScreen, TaskDetailScreen, ClaimDetailScreen, ReplayScreen {
+    align: center middle;
+}
+TaskDetailScreen > TabbedContent, ClaimDetailScreen > VerticalScroll, ReplayScreen > VerticalScroll {
+    width: 90%;
+    height: 90%;
+    border: round $accent;
+    background: $surface;
+}
+
 /* Shown only while a launched run is initializing (toggled in code). */
 #loading {
     height: 3;

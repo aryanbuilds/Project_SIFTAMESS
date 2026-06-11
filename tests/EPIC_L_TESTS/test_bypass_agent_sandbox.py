@@ -77,6 +77,43 @@ def test_sandbox_flags_present() -> None:
     assert "--disallowedTools" in argv
 
 
+def test_gssw_ambient_hooks_disabled() -> None:
+    # gssw: the user's ambient ~/.claude lifecycle hooks must NOT fire during the governed run —
+    # `--settings {"disableAllHooks": true}` suppresses them while preserving subscription auth.
+    import json
+
+    argv = _argv()
+    assert "--settings" in argv
+    settings_value = argv[argv.index("--settings") + 1]
+    assert json.loads(settings_value).get("disableAllHooks") is True
+    assert "--bare" not in argv  # --bare would break subscription auth (our hard constraint)
+
+
+def test_gssw_advisory_call_also_disables_hooks(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # The tool-less advisory call (Tier-2 judge / synthesis) is also a headless `claude -p`,
+    # so it must likewise suppress ambient hooks.
+    import json
+    import subprocess as _sp
+
+    from siftmesh_core.adapters.claude_adapter import invoke_claude_text
+
+    captured: dict[str, object] = {}
+
+    def _fake(argv, **_k):  # type: ignore[no-untyped-def]
+        captured["argv"] = argv
+        return _sp.CompletedProcess(args=argv, returncode=0, stdout='{"result": "ok"}', stderr="")
+
+    monkeypatch.setattr(
+        "siftmesh_core.adapters.claude_adapter.shutil.which", lambda _p: "/bin/claude"
+    )
+    monkeypatch.setattr(_sp, "run", _fake)
+    invoke_claude_text("judge this", load_settings())
+    argv = captured["argv"]
+    assert "--settings" in argv  # type: ignore[operator]
+    val = argv[argv.index("--settings") + 1]  # type: ignore[union-attr]
+    assert json.loads(val).get("disableAllHooks") is True
+
+
 # ── 8tcx + bhyv: MCP launch + dual-root scoping ──────────────────────────────
 
 

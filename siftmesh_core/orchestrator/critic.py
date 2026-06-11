@@ -228,9 +228,11 @@ def critique_run(
             all_claims.extend(tr.claims)
     contradictions = _detect_contradictions(all_claims)
     alerts = read_injection_alerts(run.root)
-    persisted_ids = {c.claim_id for c in read_claims(run.root)} | {
-        c.claim_id for c in read_unsupported_claims(run.root)
-    }
+    already = [*read_claims(run.root), *read_unsupported_claims(run.root)]
+    persisted_ids = {c.claim_id for c in already}
+    # Content keys defeat the dual id scheme (floor TASK-CLAIM-NNN vs live TASK-A{n}-CLAIM-NNN):
+    # the SAME finding from the SAME evidence must not be promoted twice across re-critique passes.
+    persisted_keys = {_claim_key(c) for c in already}
 
     # Pass 2: per-task verdict.
     verdicts: list[CriticVerdict] = []
@@ -293,7 +295,9 @@ def critique_run(
                 _write_downgrade(run, claim, evidence_root)
             if outcome == _HUMAN:
                 _write_injection_consequence(run, claim, evidence_root, audit)
-            _maybe_promote(run, tr, claim, outcome, persisted_ids, evidence_root)
+            _maybe_promote(
+                run, tr, claim, outcome, persisted_ids, persisted_keys, evidence_root
+            )
 
         verdict_type, reasons = _task_verdict(outcomes, has_contradiction=task_has_contradiction)
         verdicts.append(
@@ -616,21 +620,34 @@ def _write_injection_consequence(
     )
 
 
+def _claim_key(claim: Claim) -> tuple[str, str, str, str]:
+    """Content identity of a claim (independent of the id scheme): task + source + normalized text.
+
+    Defeats the dual id scheme — a floor ``TASK-002-CLAIM-001`` and a live
+    ``TASK-002-A1-CLAIM-001`` for the same finding over the same evidence collapse to one key.
+    """
+    text = " ".join((claim.claim or "").split()).strip().lower()
+    return (claim.task_id, claim.source_sha256 or "", claim.tool_call_id or "", text)
+
+
 def _maybe_promote(
     run: RunPaths,
     tr: TaskResult,
     claim: Claim,
     outcome: str,
     persisted_ids: set[str],
+    persisted_keys: set[tuple[str, str, str, str]],
     evidence_root: Path | str | None,
 ) -> None:
     """Promote a LIVE-agent claim; floor claims are already persisted (no re-append)."""
-    if claim.claim_id in persisted_ids:
-        return  # floor result: F already appended it — validate-only, never duplicate
     if outcome in (_REJECT, _HUMAN):
         return  # rejected / human-review claims are not promoted
+    key = _claim_key(claim)
+    if claim.claim_id in persisted_ids or key in persisted_keys:
+        return  # already promoted (by id OR by content) — validate-only, never duplicate
     append_claim(run.root, claim, evidence_root=evidence_root)
     persisted_ids.add(claim.claim_id)
+    persisted_keys.add(key)
 
 
 # G5 — retry task generation -------------------------------------------------------

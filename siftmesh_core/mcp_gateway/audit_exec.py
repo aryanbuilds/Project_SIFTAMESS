@@ -219,6 +219,44 @@ def run_tool(
             evidence_root=evidence_root,
         )
 
+    # Indirect-injection guard (Project_SIFTAMESS-nkyo): a tool result is hostile-evidence-derived
+    # and flows back into the agent context, so scan it (not only the agent's final message). The
+    # single chokepoint covering BOTH the floor and the live agent. Logged-only — never gates.
+    if status == "success" and payload:
+        _scan_tool_result(
+            run_root, tool_call_id, source_artifact, payload, evidence_root=evidence_root
+        )
+
     if reraise is not None:
         raise reraise
     return result
+
+
+def _scan_tool_result(
+    run_root: Path | str,
+    tool_call_id: str,
+    source_artifact: str,
+    payload: dict[str, Any],
+    *,
+    evidence_root: Path | str | None,
+) -> None:
+    """Scan a tool result for injection-like content; append InjectionAlert(s). Logged-only."""
+    from siftmesh_core.adapters.spotlight import scan_injection
+    from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
+    from siftmesh_core.schemas.injection_alert import InjectionAlert
+
+    text = json.dumps(payload, default=str)
+    for m in scan_injection(text):
+        append_injection_alert(
+            run_root,
+            InjectionAlert(
+                alert_id=next_alert_id(run_root),
+                source="tool_result",
+                signature=m.signature,
+                snippet=m.snippet,
+                detected_utc=datetime.now(UTC),
+                task_id=tool_call_id,  # the tool call that surfaced it (no task ctx in this layer)
+                source_artifact=source_artifact,
+            ),
+            evidence_root=evidence_root,
+        )

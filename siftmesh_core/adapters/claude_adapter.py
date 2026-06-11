@@ -73,6 +73,18 @@ _DISALLOWED_TOOLS = (
     "SlashCommand",
 )
 
+# Hook isolation (Project_SIFTAMESS-gssw): the user's ambient ~/.claude (and project) lifecycle
+# HOOKS still fire during a headless `claude -p` run even with the tool sandbox — observed: a
+# Protocol SIFT Stop-hook appended to <repo>/analysis/forensic_audit.log on every live run. That is
+# a side-effect channel OUTSIDE the typed-tool sandbox. `disableAllHooks` is a scalar that, via
+# `--settings`, overrides the user/project hooks WHILE PRESERVING subscription auth (the OAuth
+# credentials in ~/.claude/.credentials.json are still read) — unlike `--bare`, which disables the
+# keychain and breaks subscription auth. This TIGHTENS containment (it removes an uncontained side
+# effect); every real guardrail (--permission-mode dontAsk / --disallowedTools / --tools "" /
+# --strict-mcp-config) is unchanged. Confirmed on claude v2.1.173: `--settings <file-or-json>`
+# accepts an inline JSON string. Re-confirm on version bumps.
+_DISABLE_HOOKS_SETTINGS = '{"disableAllHooks": true}'
+
 
 def claude_sandbox_flags(
     allowed_tools: list[str] | tuple[str, ...], *, permission_mode: str = "dontAsk"
@@ -97,6 +109,8 @@ def claude_sandbox_flags(
         *_DISALLOWED_TOOLS,
         "--permission-mode",
         permission_mode,
+        "--settings",
+        _DISABLE_HOOKS_SETTINGS,  # gssw: no ambient hook fires during the governed run
     ]
 
 
@@ -145,6 +159,8 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
         *_DISALLOWED_TOOLS,
         "--permission-mode",
         getattr(settings, "claude_permission_mode", "dontAsk"),
+        "--settings",
+        _DISABLE_HOOKS_SETTINGS,  # gssw: advisory call must not fire ambient hooks either
     ]
     try:
         proc = subprocess.run(

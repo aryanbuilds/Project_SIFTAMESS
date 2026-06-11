@@ -292,7 +292,8 @@ its own login) or `--judge litellm:<model>` (the LiteLLM SDK — API/cloud: `lit
 `litellm:vertex_ai/gemini-2.5-pro`, `litellm:openai/gpt-5.5`, `litellm:anthropic/…`, `litellm:moonshot/…`).
 It is **fail-soft**: a missing CLI/key/extra → the judge is skipped (`tier2_judge_skipped` logged) and
 the run still completes on Tier-1. Install the SDK with `uv sync --extra llm` (or `siftmesh setup`).
-Persist a default with `siftmesh setup` (TUI judge picker) → `siftmesh.toml`. **Data-residency:**
+Persist a default in onboarding: `siftmesh setup` (TUI judge picker) or headless
+`siftmesh setup --no-tui --judge gemini` → `siftmesh.toml`. **Data-residency:**
 `litellm:moonshot/*` (Kimi) and `litellm:minimax/*` are China-hosted — sending case-derived claim text
 there is an operator decision; the judge is off by default.
 

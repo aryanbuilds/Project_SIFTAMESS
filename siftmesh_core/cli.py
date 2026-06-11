@@ -1008,8 +1008,16 @@ def setup(
     yes: Annotated[
         bool, typer.Option("--yes", "-y", help="Non-interactive: accept the ready agents.")
     ] = False,
+    judge: Annotated[
+        str | None,
+        typer.Option(
+            "--judge",
+            help="Also set the advisory Tier-2 judge: claude|gemini|codex|opencode|litellm:<model>"
+            "|off (headless persists it; in the TUI it pre-selects the judge picker).",
+        ),
+    ] = None,
 ) -> None:
-    """One-command onboarding: install backends, probe agents, pick a set, and remember it."""
+    """One-command onboarding: install backends, probe agents, pick a set + judge, remember it."""
     import importlib
 
     from siftmesh_core.config import load_settings, save_agent_selection
@@ -1019,7 +1027,10 @@ def setup(
         typer.echo("setup failed: --scope must be 'global' or 'project'", err=True)
         raise typer.Exit(code=1)
 
-    settings = load_settings()
+    judge_over = _judge_overrides(
+        judge
+    )  # {} | {judge,llm_critic_enabled} | {llm_critic_enabled:False}
+    settings = load_settings(**judge_over)
     headless = no_tui or yes
     if not headless:
         from siftmesh_core import tui as _tui
@@ -1032,6 +1043,7 @@ def setup(
     if not headless:
         from siftmesh_core import tui as _tui
 
+        # `settings.judge` (from --judge) pre-selects the TUI judge picker; the screen persists.
         raise typer.Exit(code=_tui.launch(settings=settings, start="onboard"))
 
     # Headless: install everything, then auto-select the agents that are actually ready.
@@ -1046,10 +1058,20 @@ def setup(
     ]
     preference = [*ready, "deterministic_executor"]
     executor = "auto" if ready else "deterministic"
-    path = save_agent_selection(executor, preference, scope=scope)  # type: ignore[arg-type]
+    # Persist the judge too (None unless --judge was given → Tier-1 only; never auto-enabled).
+    persist_judge = judge_over.get("judge")
+    persist_gate = judge_over.get("llm_critic_enabled")
+    path = save_agent_selection(
+        executor,
+        preference,
+        scope=scope,  # type: ignore[arg-type]
+        judge=persist_judge if isinstance(persist_judge, str) else None,
+        llm_critic_enabled=persist_gate if isinstance(persist_gate, bool) else None,
+    )
     typer.echo(f"setup: saved {path}")
     typer.echo(f"  executor_selection = {executor}")
     typer.echo(f"  agent_preference   = {preference}")
+    typer.echo(f"  tier-2 judge       = {persist_judge or 'Tier-1 only (use --judge to enable)'}")
     if not ready:
         typer.echo("  (no live agent ready — runs use the deterministic floor; install/auth one)")
     raise typer.Exit(code=0)

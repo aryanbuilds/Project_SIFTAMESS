@@ -63,9 +63,25 @@ def test_onboarding_screen_mounts() -> None:
 
     async def scenario(_pilot: Any) -> None:
         from siftmesh_core.tui.setup_screen import OnboardingScreen
-        from textual.widgets import SelectionList
+        from textual.widgets import Select, SelectionList
 
         assert isinstance(app.screen, OnboardingScreen)
-        assert app.screen.query_one("#agentsel", SelectionList) is not None
+        assert app.screen.query_one("#agentsel", SelectionList) is not None  # executor multi-select
+        assert (
+            app.screen.query_one("#judge", Select) is not None
+        )  # Tier-2 judge picker (Epic Q judge)
+
+    _drive(app, scenario)
+
+
+def test_onboarding_judge_picker_preselects_from_settings() -> None:
+    app = SiftmeshTUI(settings=load_settings(judge="cli:gemini"), start="onboard")
+
+    async def scenario(_pilot: Any) -> None:
+        from textual.widgets import Select
+
+        assert (
+            app.screen.query_one("#judge", Select).value == "cli:gemini"
+        )  # pre-selected from config
 
     _drive(app, scenario)

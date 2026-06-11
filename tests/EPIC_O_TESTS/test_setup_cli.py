@@ -44,6 +44,30 @@ def test_setup_headless_persists_ready_agents(monkeypatch, tmp_path: Path) -> No
     assert settings.executor_selection == "auto"
 
 
+def test_setup_headless_persists_judge(monkeypatch, tmp_path: Path) -> None:
+    # `setup --no-tui --judge …` wires the judge into the onboarding process (persist + enable).
+    _isolate(monkeypatch, tmp_path)
+    monkeypatch.setattr(doctor, "run_setup", lambda settings: 0)
+    monkeypatch.setattr(__import__("shutil"), "which", lambda c: None)
+    result = runner.invoke(app, ["setup", "--no-tui", "--judge", "litellm:gemini/gemini-2.5-pro"])
+    assert result.exit_code == 0
+    settings = load_settings()
+    assert settings.judge == "litellm:gemini/gemini-2.5-pro"
+    assert settings.llm_critic_enabled is True  # picking a judge enables the advisory layer
+
+
+def test_setup_headless_no_judge_stays_tier1(monkeypatch, tmp_path: Path) -> None:
+    # Default headless onboarding does NOT auto-enable an LLM judge (no data egress without opt-in).
+    _isolate(monkeypatch, tmp_path)
+    monkeypatch.setattr(doctor, "run_setup", lambda settings: 0)
+    monkeypatch.setattr(__import__("shutil"), "which", lambda c: None)
+    result = runner.invoke(app, ["setup", "--no-tui"])
+    assert result.exit_code == 0
+    settings = load_settings()
+    assert settings.judge is None
+    assert settings.llm_critic_enabled is False
+
+
 def test_setup_headless_floor_when_nothing_ready(monkeypatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
     monkeypatch.setattr(doctor, "run_setup", lambda settings: 0)

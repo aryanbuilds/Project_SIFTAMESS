@@ -295,9 +295,7 @@ def critique_run(
                 _write_downgrade(run, claim, evidence_root)
             if outcome == _HUMAN:
                 _write_injection_consequence(run, claim, evidence_root, audit)
-            _maybe_promote(
-                run, tr, claim, outcome, persisted_ids, persisted_keys, evidence_root
-            )
+            _maybe_promote(run, tr, claim, outcome, persisted_ids, persisted_keys, evidence_root)
 
         verdict_type, reasons = _task_verdict(outcomes, has_contradiction=task_has_contradiction)
         verdicts.append(

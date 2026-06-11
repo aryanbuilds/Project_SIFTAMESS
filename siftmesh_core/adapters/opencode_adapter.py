@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 
 from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
+from siftmesh_core.adapters.profiles import effective_model
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
 from siftmesh_core.adapters.sandbox import scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
@@ -83,8 +84,11 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
             incident_objective=ctx.incident_objective,
         )
         prof = self.profile()
-        model = prof.model if (prof and prof.model) else _DEFAULT_MODEL
-        argv = _build_opencode_argv(self.settings.opencode_cli_path, prompt, model)
+        model = effective_model(
+            self.settings, self.profile_id, prof.model if (prof and prof.model) else _DEFAULT_MODEL
+        )
+        cli = self.settings.opencode_cli_path
+        argv = _build_opencode_argv(cli, prompt, model or _DEFAULT_MODEL)
         try:
             proc = subprocess.run(
                 argv,

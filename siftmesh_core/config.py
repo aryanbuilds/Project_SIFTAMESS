@@ -124,6 +124,10 @@ class SiftmeshSettings(BaseSettings):
     # e.g. "litellm:gemini/gemini-2.5-pro", "litellm:vertex_ai/...", "litellm:openai/gpt-5.5").
     # A bare name ("gemini") => "cli:gemini". Fails SOFT: an unavailable judge is skipped.
     judge: str | None = None
+    # Per-provider model override: profile_id -> model id (wins over the profile's YAML default).
+    # Keys: claude_headless / gemini_headless / codex_headless / opencode_headless. Empty = the
+    # profile default (gemini auto-routes). Set via `--model gemini=…` / `setup` / onboarding TUI.
+    agent_models: dict[str, str] = Field(default_factory=dict)
 
     @classmethod
     def settings_customise_sources(
@@ -158,6 +162,7 @@ def save_agent_selection(
     role_profiles: dict[str, str] | None = None,
     judge: str | None = None,
     llm_critic_enabled: bool | None = None,
+    agent_models: dict[str, str] | None = None,
 ) -> Path:
     """Persist the onboarding agent choice to a TOML file; return the path written.
 
@@ -183,5 +188,10 @@ def save_agent_selection(
         doc["judge"] = judge
     if llm_critic_enabled is not None:
         doc["llm_critic_enabled"] = llm_critic_enabled
+    if agent_models is not None:
+        # merge (don't clobber other providers' pins the operator already saved)
+        existing = dict(doc.get("agent_models", {}))
+        existing.update(agent_models)
+        doc["agent_models"] = existing
     target.write_text(tomlkit.dumps(doc), encoding="utf-8")
     return target

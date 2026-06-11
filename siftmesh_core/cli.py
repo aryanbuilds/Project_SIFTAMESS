@@ -55,6 +55,11 @@ app.add_typer(protocol_sift_app, name="protocol-sift")
 agents_app = typer.Typer(no_args_is_help=True, help="Inspect & onboard coding agent connectors.")
 app.add_typer(agents_app, name="agents")
 
+# Forensic evidence-access specialists (disk image / memory / archive). `run --auto` does these
+# automatically; the group is for manual/staged use. Old top-level names kept as hidden aliases.
+evidence_app = typer.Typer(no_args_is_help=True, help="Manual evidence access (disk/mem/archive).")
+app.add_typer(evidence_app, name="evidence")
+
 
 def _version_callback(value: bool) -> None:
     # Eager: fires during arg parsing, before subcommand dispatch and before the
@@ -466,6 +471,22 @@ def _judge_overrides(judge: str | None) -> dict[str, object]:
     return {"judge": backend, "llm_critic_enabled": True}
 
 
+def _parse_model_overrides(pairs: list[str] | None) -> dict[str, str]:
+    """Parse repeated ``--model agent=model`` into ``{profile_id: model}`` (friendly name → id)."""
+    if not pairs:
+        return {}
+    out: dict[str, str] = {}
+    for item in pairs:
+        if "=" not in item:
+            raise typer.BadParameter(f"--model must be agent=model (got {item!r})")
+        name, model = (s.strip() for s in item.split("=", 1))
+        if not model:
+            raise typer.BadParameter(f"--model {name}= needs a model id")
+        profile = _AGENT_ALIASES.get(name, name)  # claude→claude_headless, or a raw profile_id
+        out[profile] = model
+    return out
+
+
 def _claude_available(settings: object) -> bool:
     """Best-effort check of whether the live Claude agent could run here (CLI + auth present)."""
     from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
@@ -596,6 +617,14 @@ def run(
             "this run; fails soft if unavailable.",
         ),
     ] = None,
+    model: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--model",
+            help="Per-provider model override (repeatable): --model gemini=gemini-3-pro "
+            "--model codex=gpt-5.5. Overrides the profile default for this run.",
+        ),
+    ] = None,
     brief: Annotated[
         str | None,
         typer.Option(
@@ -646,6 +675,11 @@ def run(
         typer.echo(f"run failed: unknown mode {mode!r} (use {', '.join(_RUN_MODES)})", err=True)
         raise typer.Exit(code=1)
     settings = load_settings(**{**_agent_overrides(agent), **_judge_overrides(judge)})
+    model_over = _parse_model_overrides(model)
+    if model_over:  # merge per-run --model over any persisted agent_models (run wins)
+        settings = settings.model_copy(
+            update={"agent_models": {**settings.agent_models, **model_over}}
+        )
     if max_agent_tasks is not None:
         # Caps stay enforced (CLAUDE §11) — the operator just sets the ceiling explicitly.
         settings = settings.model_copy(
@@ -765,7 +799,7 @@ def mcp_serve() -> None:
     run_server()
 
 
-@app.command("extract-artifacts")
+@evidence_app.command("extract")
 def extract_artifacts(
     run_dir: str,
     evidence: Annotated[str, typer.Option(help="Evidence root (the originals dir).")],
@@ -794,7 +828,7 @@ def extract_artifacts(
     )
 
 
-@app.command("analyze-memory")
+@evidence_app.command("memory")
 def analyze_memory_cmd(
     run_dir: str,
     evidence: Annotated[str, typer.Option(help="Root dir containing the memory image.")],
@@ -829,7 +863,7 @@ def analyze_memory_cmd(
     )
 
 
-@app.command()
+@evidence_app.command("decompress")
 def decompress(
     run_dir: str,
     archive: Annotated[
@@ -873,7 +907,7 @@ def decompress(
     )
 
 
-@app.command("ingest-derived")
+@evidence_app.command("ingest")
 def ingest_derived_cmd(
     run_dir: str,
     evidence: Annotated[
@@ -900,6 +934,14 @@ def ingest_derived_cmd(
         typer.echo(f"  {path.stem}")
     if created:
         typer.echo(f"  next: siftmesh dispatch {run.root}")
+
+
+# Deprecated top-level aliases for the forensic specialists — now under `siftmesh evidence …`.
+# Same functions, hidden from --help, kept so existing scripts / the RUNBOOK keep working.
+app.command("extract-artifacts", hidden=True)(extract_artifacts)
+app.command("analyze-memory", hidden=True)(analyze_memory_cmd)
+app.command("decompress", hidden=True)(decompress)
+app.command("ingest-derived", hidden=True)(ingest_derived_cmd)
 
 
 @app.command()
@@ -1016,8 +1058,16 @@ def setup(
             "|off (headless persists it; in the TUI it pre-selects the judge picker).",
         ),
     ] = None,
+    model: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--model",
+            help="Per-provider model to persist (repeatable): --model gemini=gemini-3-pro "
+            "--model codex=gpt-5.5. In the TUI it pre-fills the per-agent model fields.",
+        ),
+    ] = None,
 ) -> None:
-    """One-command onboarding: install backends, probe agents, pick a set + judge, remember it."""
+    """One-command onboarding: install backends, probe agents, pick agents + judge + models."""
     import importlib
 
     from siftmesh_core.config import load_settings, save_agent_selection
@@ -1030,7 +1080,12 @@ def setup(
     judge_over = _judge_overrides(
         judge
     )  # {} | {judge,llm_critic_enabled} | {llm_critic_enabled:False}
+    model_over = _parse_model_overrides(model)
     settings = load_settings(**judge_over)
+    if model_over:  # pre-fill the TUI model pickers / carry into headless persistence
+        settings = settings.model_copy(
+            update={"agent_models": {**settings.agent_models, **model_over}}
+        )
     headless = no_tui or yes
     if not headless:
         from siftmesh_core import tui as _tui
@@ -1067,11 +1122,14 @@ def setup(
         scope=scope,  # type: ignore[arg-type]
         judge=persist_judge if isinstance(persist_judge, str) else None,
         llm_critic_enabled=persist_gate if isinstance(persist_gate, bool) else None,
+        agent_models=model_over or None,
     )
     typer.echo(f"setup: saved {path}")
     typer.echo(f"  executor_selection = {executor}")
     typer.echo(f"  agent_preference   = {preference}")
     typer.echo(f"  tier-2 judge       = {persist_judge or 'Tier-1 only (use --judge to enable)'}")
+    if model_over:
+        typer.echo(f"  agent_models       = {model_over}")
     if not ready:
         typer.echo("  (no live agent ready — runs use the deterministic floor; install/auth one)")
     raise typer.Exit(code=0)
@@ -1154,17 +1212,24 @@ def agents_inspect(profile_id: str) -> None:
     if prof is None:
         typer.echo(f"unknown agent profile: {profile_id} (try `siftmesh agents list`)", err=True)
         raise typer.Exit(code=1)
-    cap = {c.profile_id: c for c in probe_agents(load_settings()).agents}.get(pid)
+    from siftmesh_core.adapters.profiles import effective_model
+
+    settings = load_settings()
+    cap = {c.profile_id: c for c in probe_agents(settings).agents}.get(pid)
+    eff = effective_model(settings, pid, prof.model)
+    model_line = eff or "(auto / profile default)"
+    if eff and eff != prof.model:
+        model_line = f"{eff}  (override; profile default: {prof.model or 'auto'})"
     typer.echo(f"profile_id      : {prof.profile_id}")
     typer.echo(f"kind            : {prof.kind}")
-    typer.echo(f"model           : {prof.model or '(n/a)'}")
+    typer.echo(f"model           : {model_line}")
     typer.echo(f"cost/tier       : {prof.cost_class} / {prof.model_tier}")
     typer.echo(f"output_format   : {prof.output_format}")
     typer.echo(f"max_runtime_s   : {prof.max_runtime_seconds}")
     if prof.kind == "headless":
         recipe = [*prof.launch_argv, "<prompt>"]
-        if prof.model and prof.model_flag:
-            recipe += [prof.model_flag, prof.model]
+        if eff and prof.model_flag:
+            recipe += [prof.model_flag, eff]
         recipe += [*prof.extra_argv, *prof.native_tool_argv]
         typer.echo(f"launch          : {' '.join(recipe)}")
         typer.echo(

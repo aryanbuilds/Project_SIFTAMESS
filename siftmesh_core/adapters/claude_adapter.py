@@ -31,6 +31,7 @@ from pathlib import Path
 
 from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
+from siftmesh_core.adapters.profiles import effective_model
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
 from siftmesh_core.adapters.sandbox import scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
@@ -230,7 +231,7 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
             prompt,
             mcp_config,
             contract.allowed_tools,
-            model=prof.model if prof else None,
+            model=effective_model(self.settings, self.profile_id, prof.model if prof else None),
             permission_mode=self.settings.claude_permission_mode,
         )
         try:

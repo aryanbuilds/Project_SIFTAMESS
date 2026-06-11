@@ -33,3 +33,13 @@ def load_profiles(path: Path | str | None = None) -> dict[str, AgentProfile]:
     if len(by_id) != len(profiles):
         raise ValueError("duplicate profile_id in agent profiles")
     return by_id
+
+
+def effective_model(settings: object, profile_id: str, default: str | None) -> str | None:
+    """The model for ``profile_id``: the operator's ``agent_models`` override, else the default.
+
+    Lets the user pin a model per provider (``--model gemini=…`` / `setup` / onboarding TUI) without
+    editing the packaged profile YAML; an empty/missing override falls back to the profile default.
+    """
+    override = (getattr(settings, "agent_models", None) or {}).get(profile_id)
+    return override or default

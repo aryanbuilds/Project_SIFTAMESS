@@ -10,12 +10,24 @@ Screen {
     padding: 0 1;
     background: $boost;
     color: $text;
+    text-style: bold;
+}
+
+#taskbar {
+    height: 1;
+    padding: 0 1;
 }
 
 #ribbon {
     height: 1;
     padding: 0 1;
     color: $text-muted;
+}
+
+/* Shown only while a launched run is initializing (toggled in code). */
+#loading {
+    height: 3;
+    display: none;
 }
 
 #working {
@@ -33,6 +45,9 @@ Screen {
     height: 1fr;
     border: round $secondary;
 }
+#side Static {
+    padding: 0 1;
+}
 
 #navcol {
     width: 1fr;
@@ -44,11 +59,12 @@ Screen {
     border: round $accent;
 }
 
-#fileview {
+#filescroll {
     height: 1fr;
     border: round $accent;
+}
+#fileview {
     padding: 0 1;
-    overflow: auto scroll;
 }
 
 #ticker {

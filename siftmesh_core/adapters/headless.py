@@ -31,6 +31,7 @@ from pathlib import Path
 from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.claude_adapter import claude_sandbox_flags
+from siftmesh_core.adapters.profiles import effective_model
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
 from siftmesh_core.adapters.sandbox import minimal_child_env, scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
@@ -225,8 +226,9 @@ class HeadlessAdapter(ExecutorAdapter):
         allowed_tools: list[str] | tuple[str, ...] = (),
     ) -> list[str]:
         argv = [*prof.launch_argv, prompt]
-        if prof.model and prof.model_flag:
-            argv += [prof.model_flag, prof.model]
+        model = effective_model(self.settings, self.profile_id, prof.model)
+        if model and prof.model_flag:
+            argv += [prof.model_flag, model]
         argv += list(prof.extra_argv)
         argv += list(prof.native_tool_argv)
         if mcp_config is not None:  # claude_flag: typed tools AND the full claude sandbox block

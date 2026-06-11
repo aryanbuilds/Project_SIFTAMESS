@@ -35,14 +35,41 @@ def test_cockpit_mounts_and_renders_golden() -> None:
     app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
 
     async def scenario(_pilot: Any) -> None:
-        from textual.widgets import DataTable, RichLog, Static
+        from textual.widgets import (
+            DataTable,
+            LoadingIndicator,
+            ProgressBar,
+            RichLog,
+            Static,
+            TabbedContent,
+        )
 
-        # the first poll ran on mount → the snapshot rendered into the widgets
+        # the first poll ran on mount → the snapshot rendered into the redesigned widgets
         table = app.screen.query_one("#tasks", DataTable)
         assert table.row_count == 4  # the golden run's four tasks
         assert app.screen.query_one("#vitals", Static) is not None
         assert app.screen.query_one("#ribbon", Static) is not None
         assert app.screen.query_one("#ticker", RichLog) is not None
+        # redesign: progress bar + tabbed side panel (3 tabs) + loading indicator
+        bar = app.screen.query_one("#taskbar", ProgressBar)
+        assert bar.total == 4  # tasks_total from the golden snapshot
+        assert app.screen.query_one("#side", TabbedContent) is not None
+        for tab in ("#claims", "#agents", "#budget"):
+            assert app.screen.query_one(tab, Static) is not None
+        assert app.screen.query_one("#loading", LoadingIndicator).display is False
+
+    _drive(app, scenario)
+
+
+def test_app_registers_siftmesh_themes() -> None:
+    app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
+
+    async def scenario(_pilot: Any) -> None:
+        assert app.theme == "siftmesh-dark"  # default on_mount
+        assert "siftmesh-dark" in app.available_themes
+        assert "siftmesh-light" in app.available_themes
+        app.action_toggle_theme()
+        assert app.theme == "siftmesh-light"  # ctrl+t toggles
 
     _drive(app, scenario)
 
@@ -70,6 +97,24 @@ def test_onboarding_screen_mounts() -> None:
         assert (
             app.screen.query_one("#judge", Select) is not None
         )  # Tier-2 judge picker (Epic Q judge)
+        # per-provider model inputs (Epic O redesign — finer control)
+        from textual.widgets import Input
+
+        for name in ("claude", "gemini", "codex", "opencode"):
+            assert app.screen.query_one(f"#model-{name}", Input) is not None
+
+    _drive(app, scenario)
+
+
+def test_onboarding_model_input_prefills_from_settings() -> None:
+    app = SiftmeshTUI(
+        settings=load_settings(agent_models={"gemini_headless": "gemini-3-pro"}), start="onboard"
+    )
+
+    async def scenario(_pilot: Any) -> None:
+        from textual.widgets import Input
+
+        assert app.screen.query_one("#model-gemini", Input).value == "gemini-3-pro"
 
     _drive(app, scenario)
 

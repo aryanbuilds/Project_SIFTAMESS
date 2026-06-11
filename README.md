@@ -43,6 +43,11 @@ writes a report whose "Answer to the incident objective" section is anchored to 
   installed + authenticated + sandboxed and picks the best default. (Only Claude reaches the typed
   tools today; others run sandboxed but their tool wiring is `verify-live` — see `PLAN/13`. A live
   agent is opt-in: a plain `run` uses the deterministic floor unless you pass `--agent`.)
+- **Pick a model per provider.** `--model gemini=gemini-3-pro --model codex=gpt-5.5` (repeatable)
+  overrides the model for that run; persist it via `siftmesh setup` (CLI flag or the onboarding TUI's
+  per-provider fields). `siftmesh agents inspect gemini` shows the effective model.
+- **Tier-2 judge (advisory).** `--judge gemini|codex|opencode|claude|litellm:<model>|off` enables an
+  advisory second-opinion judge for the run (fails soft; the deterministic critic stays sole promoter).
 - **Free, no keys?** Omit `--agent …` — the deterministic real-tool floor runs the whole pipeline.
 - **Heavy tasks (disk-image extract, memory triage)** always run on the floor (the tool does the work);
   `--all-live` overrides. A pre-flight check estimates derived-data size vs free disk and, if it won't
@@ -85,9 +90,9 @@ a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui
 | `plan RUN [--review-only]` | Deterministic investigation plan + task contracts (one per artifact family). |
 | `dispatch RUN` / `collect RUN` / `critique RUN` | Execute task contracts → gather results → validate claims, emit verdicts. |
 | `report RUN` / `replay RUN [--html]` | Render the deterministic evidence-backed reports / replay the audit timeline. |
-| `extract-artifacts RUN --image … --keys …` | Recover Windows artifacts from a disk image (Sleuthkit; audited). |
-| `analyze-memory RUN --memory …` | Triage a memory image with Volatility 3 (subprocess; audited). |
-| `decompress RUN --archive …` / `ingest-derived RUN` | Expand an archive → make derived artifacts plannable. |
+| `evidence extract RUN --image … --keys …` | Recover Windows artifacts from a disk image (Sleuthkit; audited). |
+| `evidence memory RUN --memory …` | Triage a memory image with Volatility 3 (subprocess; audited). |
+| `evidence decompress RUN --archive …` / `evidence ingest RUN` | Expand an archive → make derived artifacts plannable. |
 | `prune RUN [--force]` | Reclaim a completed run's bulky `evidence/extracted/` derived data; keep all ledgers. |
 | `retry RUN TASK` | Re-critique one task; tighten + re-dispatch if DECIDE says so. |
 

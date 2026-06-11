@@ -76,7 +76,7 @@ class SiftmeshTUI(App):
 
     CSS_PATH = "cockpit.tcss"
     TITLE = "SIFTMesh"
-    BINDINGS = [("q", "quit", "Quit")]
+    BINDINGS = [("ctrl+t", "toggle_theme", "Theme"), ("q", "quit", "Quit")]
     # Collapse the cockpit's right column under the task table on narrow terminals.
     HORIZONTAL_BREAKPOINTS = [(0, "-narrow"), (100, "-wide")]
 
@@ -94,8 +94,19 @@ class SiftmeshTUI(App):
         self._launch_params = launch_params
         self._start = start
 
+    def action_toggle_theme(self) -> None:
+        """Toggle the two SIFTMesh themes (the ctrl+p command palette lists all themes)."""
+        from siftmesh_core.tui.theme import SIFTMESH_DARK, SIFTMESH_LIGHT
+
+        self.theme = SIFTMESH_LIGHT.name if self.theme == SIFTMESH_DARK.name else SIFTMESH_DARK.name
+
     def on_mount(self) -> None:
         from siftmesh_core.tui.cockpit import CockpitScreen
+        from siftmesh_core.tui.theme import DEFAULT_THEME, SIFTMESH_THEMES
+
+        for theme in SIFTMESH_THEMES:
+            self.register_theme(theme)
+        self.theme = DEFAULT_THEME  # ctrl+t toggles; ctrl+p → "Change theme" lists all
 
         if self._start == "onboard":
             from siftmesh_core.tui.setup_screen import OnboardingScreen

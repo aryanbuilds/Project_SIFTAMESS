@@ -141,6 +141,17 @@ siftmesh doctor --agents                            # onboard coding agents (ins
 siftmesh protocol-sift inspect                      # inspect & govern Protocol SIFT (env-only capability map; PLAN/09)
 siftmesh agents list                                # agent-neutral onboarding: which agents are usable + the default
 siftmesh agents inspect <agent>                     # one agent's launch recipe + sandbox/auth/tool-reach status
+siftmesh run … --judge gemini|codex|opencode|claude|litellm:<model>|off   # advisory Tier-2 judge (fail-soft; Tier-1 stays sole promoter)
+siftmesh run … --model gemini=gemini-3-pro --model codex=gpt-5.5          # per-provider model override (repeatable); also on `setup`
+```
+
+Evidence-access specialists (grouped; the old top-level names remain as hidden deprecated aliases):
+
+```bash
+siftmesh evidence extract RUN --image … --keys …   # Sleuthkit: Windows artifacts from a disk image (was: extract-artifacts)
+siftmesh evidence memory RUN --memory …            # Volatility 3 subprocess triage (was: analyze-memory)
+siftmesh evidence decompress RUN --archive …       # expand a zip/7z into evidence/extracted/ (was: decompress)
+siftmesh evidence ingest RUN                        # make derived artifacts plannable (was: ingest-derived)
 ```
 
 Debug commands:

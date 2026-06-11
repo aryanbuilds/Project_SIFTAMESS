@@ -22,7 +22,7 @@ import subprocess
 
 from siftmesh_core.adapters.claude_adapter import claude_available, invoke_claude_text
 from siftmesh_core.adapters.headless import extract_agent_text
-from siftmesh_core.adapters.profiles import load_profiles
+from siftmesh_core.adapters.profiles import effective_model, load_profiles
 from siftmesh_core.adapters.sandbox import minimal_child_env
 
 # Friendly judge-agent name → its headless profile id (the tool-less CLI judge reuses the recipe).
@@ -84,14 +84,16 @@ def invoke_judge_text(prompt: str, settings: object, *, timeout: int | None = No
 
 def _cli_text(agent: str, prompt: str, settings: object, *, timeout: int | None) -> str | None:
     """Run a vendor CLI in tool-less mode (no MCP) from its headless recipe; return its text."""
-    prof = load_profiles().get(_CLI_PROFILE.get(agent, ""))
+    profile_id = _CLI_PROFILE.get(agent, "")
+    prof = load_profiles().get(profile_id)
     if prof is None or not prof.launch_argv:
         return None
     if shutil.which(prof.launch_argv[0]) is None:
         return None
     argv = [*prof.launch_argv, prompt]
-    if prof.model and prof.model_flag:
-        argv += [prof.model_flag, prof.model]
+    model = effective_model(settings, profile_id, prof.model)  # honor the per-provider override
+    if model and prof.model_flag:
+        argv += [prof.model_flag, model]
     argv += [*prof.extra_argv, *prof.native_tool_argv]  # tool-less: deny flags ok, NO --mcp-config
     try:
         proc = subprocess.run(

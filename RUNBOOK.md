@@ -101,7 +101,7 @@ audited; minutes on 22 GB, 1800 s timeout).
 > single-file, high-value keys (each becomes one task):
 
 ```bash
-uv run siftmesh extract-artifacts "$RUN" --evidence ~/projects/ev_disk --image rocba-cdrive.e01 \
+uv run siftmesh evidence extract "$RUN" --evidence ~/projects/ev_disk --image rocba-cdrive.e01 \
   --keys powershell_evtx --keys software_hive --keys system_hive --keys security_evtx
 ls -la "$RUN/evidence/extracted/"
 ```
@@ -113,13 +113,13 @@ error and is honestly recorded, not faked). Omit `--keys` to take the full set, 
 cap**: `export SIFTMESH_CAPS__MAX_AGENT_TASKS=400`.
 
 **2d. Make the extracted artifacts plannable, then run the deterministic pipeline over them.**
-`ingest-derived` writes one task contract per extracted artifact **and** a minimal
+`evidence ingest` writes one task contract per extracted artifact **and** a minimal
 `investigation_plan.yaml` (so `dispatch` works without a separate `plan` step — do **not** run `plan`
-after a manual `extract-artifacts`, or it would create a fresh `extract_artifacts_from_image` task and
+after a manual `evidence extract`, or it would create a fresh `extract_artifacts_from_image` task and
 re-run the 22 GB extraction):
 
 ```bash
-uv run siftmesh ingest-derived "$RUN" --evidence ~/projects/ev_disk
+uv run siftmesh evidence ingest "$RUN" --evidence ~/projects/ev_disk
 ls "$RUN/tasks/"                       # confirm the derived parse tasks were created
 uv run siftmesh dispatch "$RUN"        # FULL set? prefix SIFTMESH_CAPS__MAX_AGENT_TASKS=400 (staged dispatch reads the env var; `run` takes --max-agent-tasks)
 uv run siftmesh collect  "$RUN"
@@ -219,7 +219,7 @@ RUNM=$(ls -dt ./case_mem/case_runs/RUN-* | head -1); echo "RUNM=$RUNM"
 **3b. Decompress** (zip → inner 7z → raw image, into `$RUNM/evidence/extracted/`; needs `7z`):
 
 ```bash
-uv run siftmesh decompress "$RUNM" --archive Rocba-Memory.zip --evidence ~/projects/ev_mem
+uv run siftmesh evidence decompress "$RUNM" --archive Rocba-Memory.zip --evidence ~/projects/ev_mem
 ls -la "$RUNM/evidence/extracted/"        # note the EXACT decompressed filename
 MEM=$(ls "$RUNM/evidence/extracted/" | head -1); echo "MEM=$MEM"
 ```
@@ -235,7 +235,7 @@ export SIFTMESH_VOL_SYMBOL_DIRS=/tmp/vol_symbols
 **3d. Analyze** — `--evidence` is the **RUN dir** here (the raw image lives under it):
 
 ```bash
-uv run siftmesh analyze-memory "$RUNM" --evidence "$RUNM" --memory "evidence/extracted/$MEM"
+uv run siftmesh evidence memory "$RUNM" --evidence "$RUNM" --memory "evidence/extracted/$MEM"
 ```
 
 Defaults run `windows.pslist`, `pstree`, `netscan`, `cmdline`, `malfind` (per-plugin 900 s;
@@ -338,8 +338,13 @@ a new one, or onboard agents. The cockpit is read-only; launching a run reuses t
 ## Practical notes
 
 - **Path arg vs RUN-id:** staged commands (`plan/dispatch/collect/critique/status/resume/approve/
-  reject/retry/extract-artifacts/analyze-memory/decompress/ingest-derived`) take a **RUN directory
+  reject/retry` and the `evidence extract/memory/decompress/ingest` group) take a **RUN directory
   path** (hence `$RUN`). `init-case` / `run` take a **case dir**.
+- **Evidence specialists moved under a group:** `evidence extract|memory|decompress|ingest` (the old
+  top-level `extract-artifacts`/`analyze-memory`/`decompress`/`ingest-derived` still work as hidden
+  deprecated aliases — scripts won't break).
+- **Per-provider model:** add `--model gemini=gemini-3-pro --model codex=gpt-5.5` to `run`/`setup`
+  to override a provider's model (or set it once in the `siftmesh setup` onboarding TUI).
 - **Cost/time:** hashing 22.6 GB ≈ ~1 min; Sleuthkit extraction = minutes; Volatility
   `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`–`2` and a narrow set of
   extracted artifacts.

@@ -8,8 +8,10 @@ from textual.containers import Horizontal, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import (
     Button,
+    Collapsible,
     Footer,
     Header,
+    Input,
     Label,
     RadioButton,
     RadioSet,
@@ -19,6 +21,7 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 
+from siftmesh_core.adapters.profiles import effective_model, load_profiles
 from siftmesh_core.config import SiftmeshSettings, save_agent_selection
 from siftmesh_core.doctor import probe_agents, run_setup
 
@@ -31,6 +34,13 @@ _JUDGE_CHOICES = [
     ("gemini (CLI)", "cli:gemini"),
     ("codex (CLI)", "cli:codex"),
     ("opencode (CLI)", "cli:opencode"),
+]
+# Live agents that take a per-provider model override (friendly name → profile_id).
+_MODEL_AGENTS = [
+    ("claude", "claude_headless"),
+    ("gemini", "gemini_headless"),
+    ("codex", "codex_headless"),
+    ("opencode", "opencode_headless"),
 ]
 
 
@@ -51,6 +61,15 @@ class OnboardingScreen(Screen):
             id="intro",
         )
         yield SelectionList[str](id="agentsel")
+        with Collapsible(title="Per-provider models (blank = default)", id="models"):
+            for name, profile_id in _MODEL_AGENTS:
+                prof = load_profiles().get(profile_id)
+                default = effective_model(self.settings, profile_id, prof.model if prof else None)
+                yield Input(
+                    value=default or "",
+                    placeholder=f"{name} model (e.g. {default or 'auto / provider default'})",
+                    id=f"model-{name}",
+                )
         with Horizontal(id="judgerow"):
             yield Label("Tier-2 judge (advisory):")
             yield Select(
@@ -127,6 +146,15 @@ class OnboardingScreen(Screen):
         norm = j if ":" in j else f"cli:{j}"
         return norm if norm in {v for _, v in _JUDGE_CHOICES} else "none"
 
+    def _collect_models(self) -> dict[str, str]:
+        """Per-agent model overrides from the inputs (only those the operator filled in)."""
+        models: dict[str, str] = {}
+        for name, profile_id in _MODEL_AGENTS:
+            val = self.query_one(f"#model-{name}", Input).value.strip()
+            if val:
+                models[profile_id] = val
+        return models
+
     def _save(self) -> None:
         selected = list(self.query_one("#agentsel", SelectionList).selected)
         preference = [*selected, _FLOOR] if selected else [_FLOOR]
@@ -134,12 +162,14 @@ class OnboardingScreen(Screen):
         scope = "project" if self.query_one("#scope", RadioSet).pressed_index == 1 else "global"
         judge_choice = str(self.query_one("#judge", Select).value)
         judge = None if judge_choice == "none" else judge_choice
+        models = self._collect_models()
         path = save_agent_selection(
             executor,
             preference,
             scope=scope,  # type: ignore[arg-type]
             judge=judge,
             llm_critic_enabled=judge is not None,  # picking a judge enables the advisory layer
+            agent_models=models or None,
         )
         jlabel = judge or "Tier-1 only"
         self._status(

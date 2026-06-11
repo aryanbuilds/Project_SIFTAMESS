@@ -30,12 +30,13 @@ EXPECTED_COMMANDS = [
     "claims",
     "audit",
     "protocol-sift",
-    "extract-artifacts",
-    "analyze-memory",
-    "decompress",
-    "ingest-derived",
+    "evidence",  # the forensic specialists now live under `siftmesh evidence …` (extract/memory/…)
     "mcp-serve",
 ]
+
+# Forensic specialists are grouped under `siftmesh evidence` (old top-level names kept as hidden
+# deprecated aliases — see test_evidence_group.py).
+EVIDENCE_SUBCOMMANDS = ["extract", "memory", "decompress", "ingest"]
 
 # No print stubs remain: every registered command has real behaviour covered by its
 # per-epic test folder (the debug inspection commands are tested in test_cli_inspect.py).
@@ -51,6 +52,13 @@ def test_help_lists_command(runner: CliRunner, cli_app: typer.Typer, command: st
     result = runner.invoke(cli_app, ["--help"])
     assert result.exit_code == 0
     assert command in result.output
+
+
+@pytest.mark.parametrize("sub", EVIDENCE_SUBCOMMANDS)
+def test_evidence_group_subcommands(runner: CliRunner, cli_app: typer.Typer, sub: str) -> None:
+    result = runner.invoke(cli_app, ["evidence", "--help"])
+    assert result.exit_code == 0
+    assert sub in result.output
 
 
 def test_version_exit_zero(runner: CliRunner, cli_app: typer.Typer) -> None:

@@ -58,6 +58,11 @@ def judge_ready(settings: object) -> tuple[bool, str]:
     if backend == "cli":
         if target == "claude":
             return (bool(claude_available(settings)), "cli:claude")
+        if target == "opencode":
+            # opencode's profile has no launch_argv (its executor builds argv specially), so the
+            # generic launch_argv check would mis-report it as unavailable — probe the CLI directly.
+            cli = getattr(settings, "opencode_cli_path", "opencode")
+            return (shutil.which(cli) is not None, "cli:opencode")
         prof_id = _CLI_PROFILE.get(target)
         if prof_id is None:
             return (False, f"unknown judge agent '{target}'")
@@ -84,6 +89,10 @@ def invoke_judge_text(prompt: str, settings: object, *, timeout: int | None = No
 
 def _cli_text(agent: str, prompt: str, settings: object, *, timeout: int | None) -> str | None:
     """Run a vendor CLI in tool-less mode (no MCP) from its headless recipe; return its text."""
+    if agent == "opencode":
+        # opencode uses `opencode run … --format json` (not a generic launch_argv); reuse the
+        # executor's argv builder + event collector as the single source of truth for its CLI shape.
+        return _opencode_judge_text(prompt, settings, timeout=timeout)
     profile_id = _CLI_PROFILE.get(agent, "")
     prof = load_profiles().get(profile_id)
     if prof is None or not prof.launch_argv:
@@ -108,6 +117,35 @@ def _cli_text(agent: str, prompt: str, settings: object, *, timeout: int | None)
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return None
     text = extract_agent_text(proc.stdout, prof.output_format).strip()
+    return text or None
+
+
+def _opencode_judge_text(prompt: str, settings: object, *, timeout: int | None) -> str | None:
+    """Tool-less opencode judge: `opencode run <prompt> --model … --format json`; None on error."""
+    from siftmesh_core.adapters.opencode_adapter import (
+        _DEFAULT_MODEL,
+        _build_opencode_argv,
+        _collect_text,
+    )
+
+    cli = getattr(settings, "opencode_cli_path", "opencode")
+    if shutil.which(cli) is None:
+        return None
+    model = effective_model(settings, "opencode_headless", None) or _DEFAULT_MODEL
+    argv = _build_opencode_argv(cli, prompt, model)  # tool-less: no MCP/typed-tool wiring
+    try:
+        proc = subprocess.run(
+            argv,
+            capture_output=True,
+            text=True,
+            timeout=timeout or getattr(settings, "agent_timeout_seconds", 600),
+            shell=False,
+            check=False,
+            env=minimal_child_env(),  # HOME/PATH/XDG_* kept → opencode reads its own auth.json
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    text = _collect_text(proc.stdout).strip()
     return text or None
 
 

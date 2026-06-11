@@ -24,6 +24,7 @@ from pathlib import Path
 
 from structlog.typing import FilteringBoundLogger
 
+from siftmesh_core.adapters.agent_result import _extract_json
 from siftmesh_core.adapters.judge import invoke_judge_text
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.config import SiftmeshSettings
@@ -751,11 +752,15 @@ def run_tier2_judge(
     if not text:
         log_event(audit, "tier2_judge_skipped", reason="backend_unavailable_or_no_output")
         return 0
-    try:
-        parsed = json.loads(text)
-        judgements = parsed.get("judgements", []) if isinstance(parsed, dict) else []
-    except (json.JSONDecodeError, ValueError):
+    # Judges routinely wrap JSON in ```json fences or prose — reuse the agent-result extractor so a
+    # well-formed opinion isn't silently dropped over a code fence. Log (don't swallow) a true parse
+    # failure so an unusable judge response is visible in the audit, not invisible.
+    parsed = _extract_json(text)
+    if parsed is None:
+        log_event(audit, "tier2_judge_unparsable", reason="no_json_object_in_response")
         return 0
+    raw = parsed.get("judgements", [])
+    judgements = raw if isinstance(raw, list) else []
     by_id = {c.claim_id: c for c in promoted}
     acted = 0
     for j in judgements:

@@ -88,6 +88,33 @@ def test_cli_judge_fail_soft_when_cli_absent(monkeypatch) -> None:  # type: igno
     assert invoke_judge_text("x", load_settings(judge="cli:gemini")) is None
 
 
+def test_opencode_judge_ready_and_argv(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # Regression (live 2026-06-11): opencode's profile has empty launch_argv (its executor builds
+    # argv specially), so the generic path mis-reported it unavailable + never invoked it. The judge
+    # must probe the opencode CLI directly and use `opencode run … --format json`.
+    import json as _json
+
+    captured: dict[str, object] = {}
+
+    def fake_run(argv, **kwargs):  # type: ignore[no-untyped-def]
+        captured["argv"] = argv
+        out = _json.dumps({"type": "text", "part": {"text": "OPENCODE-JUDGE"}})
+        return subprocess.CompletedProcess(args=argv, returncode=0, stdout=out, stderr="")
+
+    monkeypatch.setattr(shutil, "which", lambda c: f"/usr/bin/{c}")
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    s = load_settings(
+        judge="cli:opencode", agent_models={"opencode_headless": "opencode-go/glm-5.1"}
+    )
+    assert judge_ready(s) == (True, "cli:opencode")  # no longer mis-reported as unavailable
+    assert invoke_judge_text("judge this", s) == "OPENCODE-JUDGE"
+    argv = captured["argv"]
+    assert "run" in argv and "judge this" in argv
+    assert argv[argv.index("--model") + 1] == "opencode-go/glm-5.1"  # per-provider model honored
+    assert "--format" in argv and "json" in argv
+    assert "--mcp-config" not in argv  # tool-less
+
+
 # ---- run_tier2_judge: fail-SOFT skip (logs, never fails, never promotes) ----
 
 

@@ -6,7 +6,14 @@ _Plan set version 1.0 · authored 2026-06-04 · expands `OVERALL_PLAN_DETAILED.m
 >
 > **Real-only delivery (no mocks/placeholders): see `PLAN/08_REAL_TOOL_STACK.md` (authoritative, research-confirmed).**
 
-> **Current state: ZERO implementation.** This repo is **planning-only** — no package, CLI, tests, CI, or `LICENSE` yet. **Epic A is the only valid implementation scope now** (the bd `blocks` chain enforces it — `bd ready` shows only Epic A). Do not implement any later epic before Epic A closes.
+> **IMPLEMENTATION STATUS (current — 2026-06-11, supersedes the "ZERO implementation" framing below).**
+> The MVP spine is **shipped and green**: Epics **A–N core + L + M** plus the post-MVP refinements —
+> agent-neutral connectors (**Epic Q**, `PLAN/13`), the **Textual cockpit + one-command `setup`/`tui`**
+> (**Epic O**, `PLAN/14`), one-command objective-driven `run --auto` (`--brief`/`--objective`),
+> per-family task aggregation + executor tiering, the advisory **Tier-2 judge**, and space-aware
+> `setup`/`prune`/`merge` (`PLAN/11`). Orchestration is the native deterministic FSM — **LangGraph and
+> CAO evaluated and rejected** (ADR `PLAN/12`). Real end-to-end runs against forensic evidence remain
+> maintainer-gated (CLAUDE.md §2B). The planning text below is retained as the historical record.
 >
 > **Winning MVP (narrow but deep) — the non-cuttable spine:** `init-case` (hash + **custody**) → live agent plans tasks → typed **real** tools run → every claim cites `artifact` + `sha256` + `tool_call_id` → **deterministic critic rejects/downgrades unsupported claims** → **retry _or follow-up task_** for coverage gaps → final report (confirmed + labelled-inferred only) → **replayable chain-of-custody audit**. Cut TUI / A2A / extra tools / broad parsers **before** cutting the live agent, the critic, the evidence + claim + **custody** ledgers, or replay. Protocol SIFT integration → `PLAN/09`.
 
@@ -14,7 +21,7 @@ _Plan set version 1.0 · authored 2026-06-04 · expands `OVERALL_PLAN_DETAILED.m
 
 ## 0. How to read this plan set
 
-The work is decomposed three levels deep: **Plan (file) → Epic (A–P) → Task (A1, A2 …)**. Eight grouped files:
+The work is decomposed three levels deep: **Plan (file) → Epic (A–Q) → Task (A1, A2 …)**. The grouped files:
 
 | File | Epics | Theme |
 |---|---|---|
@@ -23,9 +30,16 @@ The work is decomposed three levels deep: **Plan (file) → Epic (A–P) → Tas
 | `02_PLAN_foundation_evidence.md` | A, B, C | Skeleton · Evidence vault · Schemas & ledgers |
 | `03_PLAN_mcp_tool_gateway.md` | D | Typed, evidence-safe MCP tool gateway |
 | `04_PLAN_orchestration_critic.md` | E, F, G, H | Planner · Executors · **Critic/self-correction (hero)** · State machine |
-| `05_PLAN_agents_automation.md` | I, **P** | Agent profiles · CAO/adapters · automation modes · **A2A interop (Epic P)** |
+| `05_PLAN_agents_automation.md` | I, **P** | Agent profiles · adapters · automation modes · **A2A interop (Epic P, stretch)** |
 | `06_PLAN_reports_demo_security.md` | J, K, L | Reports/replay · Demo case · **Threat model + bypass suite** |
-| `07_PLAN_testing_docs_submission.md` | M, N, O | Testing/CI · Docs & submission matrix · Optional TUI |
+| `07_PLAN_testing_docs_submission.md` | M, N, O | Testing/CI · Docs & submission matrix · TUI |
+| `08_REAL_TOOL_STACK.md` | — | Authoritative real-tool/SDK stack (no mocks); licenses; gated upgrades |
+| `09_PROTOCOL_SIFT_INTEGRATION.md` | — | Protocol SIFT (~/.claude) layer: env-only inspect/govern |
+| `10_EVIDENCE_ACCESS_LAYER.md` | — | Disk-image / memory evidence access (Sleuthkit, Volatility) |
+| `11_PLAN_setup_space_merge.md` | — | `doctor --setup`, space estimator, `prune`, cross-run `merge` |
+| `12_ADR_orchestration_engine.md` | — | **ADR: keep the native FSM; reject LangGraph + CAO** (harvest Tier-2 judge + Sigma) |
+| `13_PLAN_agent_neutral_connectors.md` | **Q** | Agent-neutral headless connectors + onboarding (ACP round-2) |
+| `14_PLAN_cockpit_onboarding.md` | **O** | **Textual cockpit TUI + unified `setup`** (ADR: Textual over Ratatui) |
 
 Each Epic file carries: goal, judging-criteria mapping, dependencies, a **full Task table** (ID · description · key files · deps · testable acceptance · owning role · effort S/M/L · risk), key design decisions, and tests-to-add.
 
@@ -35,7 +49,7 @@ Each Epic file carries: goal, judging-criteria mapping, dependencies, a **full T
 
 SIFTMesh is a **CLI-first, evidence-safe, agent-agnostic control plane for autonomous DFIR** on SANS SIFT / Protocol SIFT. It turns a forensic investigation into a deterministic state machine that dispatches narrow task contracts to agents, runs typed read-only forensic tools, records every finding as an evidence-anchored claim, runs an adversarial critic that rejects unsupported claims and drives self-correction, and produces replayable, judge-ready reports. **The CLI is the source of truth; the LLM proposes, deterministic code decides.**
 
-**Protocol stack (who does what):** **MCP = agent→tool** (typed SIFT forensic tools) · **A2A = agent→agent** (Agent Card discovery + remote delegation, optional) · **CAO = local terminal-agent harness** (Claude Code / OpenCode / Codex / Gemini in tmux) · **SIFTMesh = DFIR control plane** (policy, evidence, claims, retries, reports). MCP and A2A are complementary; A2A never replaces SIFTMesh's governance (see Epic P + `01_ARCHITECTURE.md §2.1`).
+**Protocol stack (who does what):** **MCP = agent→tool** (typed SIFT forensic tools) · **agent connectors = agent→runtime** (the agent-neutral headless adapter — Claude Code / Gemini / Codex / OpenCode; Epic Q, `PLAN/13`) · **A2A = agent→agent** (Agent Card discovery + remote delegation, optional stretch) · **SIFTMesh = DFIR control plane** (policy, evidence, claims, retries, reports). **CAO was evaluated and rejected** (it puts an LLM supervisor in the routing seat — ADR `PLAN/12`); the native deterministic FSM is kept. MCP and A2A are complementary; A2A never replaces SIFTMesh's governance (see Epic P + `01_ARCHITECTURE.md §2.1`).
 
 ---
 
@@ -94,13 +108,14 @@ The request was to **analyze and improve**, not only restructure. The substantiv
 | F | Executor Adapters & Dispatch/Collect | 04 | M | 1,4,5 |
 | G | **Critic & Self-Correction (HERO)** | 04 | L | 1,2,4,5 |
 | H | Ultraworker State Machine & `run` | 04 | L | 1,4,5,6 |
-| I | Agent Profiles & CAO Integration | 05 | M | 3,6 |
+| I | Agent Profiles & Adapters (CAO rejected — ADR `PLAN/12`) | 05 | M | 3,6 |
 | J | Reports & Replay | 06 | L | 2,5,6 |
 | K | Demo Case & Self-Correction Scenario | 06 | M | 1,2,3 |
 | L | Security & Threat Model + Bypass Suite | 06 | L | 4,5,2 |
 | M | Testing & CI | 07 | L | 4,5,6 |
 | N | Documentation & Submission | 07 | M | 6,5 |
-| O | Optional Ratatui TUI (deferred) | 07 | M | 6 |
+| O | **Textual cockpit TUI + unified `setup`** ✅ shipped (`PLAN/14`) | 14 | M | 6 |
+| **Q** | **Agent-neutral connectors + onboarding** ✅ round 1 (`PLAN/13`) | 13 | M | 3,6 |
 | **P** | **A2A Interoperability Layer (stretch, > TUI)** | 05 | M | 3,4,6 |
 
 ---

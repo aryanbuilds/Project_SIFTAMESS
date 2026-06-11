@@ -2,22 +2,24 @@
 
 # SIFTMesh Guidelines
 
-_Last updated: 2026-06-04_
+_Last updated: 2026-06-11 (MVP spine shipped; agent-neutral connectors (Epic Q) + Textual cockpit & unified `setup` (Epic O) added; CAO/LangGraph rejected per ADR `PLAN/12`)._
 
 This document defines the rules for building SIFTMesh. Treat these as project constraints, not suggestions.
 
 ## 1. Top-level build priorities
 
 ```text
-Priority 1: Make the CLI fully working.
-Priority 2: Make evidence vault, task contracts, claim ledger, critic loop, and reports reliable.
-Priority 3: Add CAO/agent adapter integration.
-Priority 4: Add guided and full automation modes.
-Priority 5: Add optional A2A Agent Card discovery and delegation (governed by the SIFTMesh policy overlay).
-Priority 6: Add optional Ratatui TUI last.
+Priority 1: Make the CLI fully working.                                  ✅ shipped
+Priority 2: Evidence vault, task contracts, claim ledger, critic loop, reports — reliable.  ✅ shipped
+Priority 3: Agent adapter integration (agent-neutral headless connectors; Epic Q).  ✅ shipped
+            NOTE: CAO + LangGraph evaluated and REJECTED — keep the native deterministic FSM (ADR PLAN/12).
+Priority 4: Guided and full automation modes.                            ✅ shipped (one engine, four modes)
+Priority 5: Optional A2A Agent Card discovery and delegation (governed by the policy overlay).  ⏳ stretch (Epic P)
+Priority 6: Textual TUI cockpit last.                                    ✅ shipped (Epic O; Textual, not Ratatui)
 ```
 
-The CLI is the source of truth. The TUI is optional and must be a thin reader/launcher over CLI state files.
+The CLI is the source of truth. The TUI is a thin **read-only** reader/launcher over CLI state files
+(it renders `run_state.json` + the ledgers; launching a run reuses the governed engine).
 
 ## 2. Product rules
 
@@ -48,13 +50,16 @@ siftmesh doctor   # verify host + each tool backend; fails closed on missing dep
 siftmesh protocol-sift inspect   # inspect & govern the ~/.claude Protocol SIFT layer (env-only; PLAN/09)
 ```
 
-Then add high-level automation:
+Then add high-level automation + onboarding/cockpit (Epics O/Q):
 
 ```bash
+siftmesh setup                                          # one-command onboarding: install + probe agents + pick a set + persist
 siftmesh run ./case01 --evidence ./evidence --mode manual
 siftmesh run ./case01 --evidence ./evidence --auto-human-loop
 siftmesh run ./case01 --evidence ./evidence --auto --max-iterations 3
 siftmesh run ./case01 --evidence ./evidence --review-only
+siftmesh run ./case01 --evidence ./evidence --agent claude|gemini|codex|opencode   # agent-neutral (Epic Q)
+siftmesh tui [RUN]                                      # live Textual cockpit (Epic O)
 ```
 
 ## 4. Automation mode guidelines
@@ -406,6 +411,12 @@ Rules:
 
 ## 13. CAO integration guidelines
 
+> **DECISION (ADR `PLAN/12`, 2026-06-10): CAO evaluated and NOT pursued** — it puts an LLM supervisor
+> in the routing/delegation seat, the opposite of "LLM proposes, code decides". The native
+> deterministic FSM is kept; the live-agent path is the agent-neutral headless connector (Epic Q,
+> `PLAN/13`). LangGraph was likewise rejected (the FSM already provides its value). The guidance below
+> is retained as background for any future external harness.
+
 CAO may be used to run terminal agents, but SIFTMesh remains the controller.
 
 Correct flow:
@@ -460,29 +471,27 @@ SDK reference: `a2a-sdk` (Apache 2.0, Python 3.10+; transports JSON-RPC / HTTP+J
 
 ## 14. TUI guidelines
 
-TUI is optional and last.
-
-When built:
+TUI is optional and last. **Shipped as Epic O (`PLAN/14`) using Textual** (Python, MIT) — chosen over
+the originally-penciled Ratatui: it reuses the existing readers (`load_report_view`/`read_run_state`),
+needs no Rust, and the cockpit is a thin renderer over data the CLI already writes. Built rules
+(honored):
 
 ```text
-- Use Ratatui or another terminal UI library.
-- Read state from run directory files.
-- Trigger CLI commands rather than duplicating logic.
-- Do not implement evidence logic in TUI.
-- Do not implement critic logic in TUI.
+- Textual (pure-Python); optional `tui` extra, lazy-imported with an install hint.
+- READ-ONLY over the run dir: render run_state.json + the ledgers on a poll. The single, tested,
+  Textual-free data source is tui/snapshot.build_snapshot() (no re-parsing).
+- Launching a run reuses the governed engine in a worker thread — no new write paths/tools/shell.
+- Do NOT implement evidence or critic logic in the TUI.
 ```
 
-Minimum TUI panels:
+Cockpit panels (shipped — four zones + a nav tree):
 
 ```text
-State machine status
-Agent sessions
-Task queue
-Claim ledger
-Critic feedback
-Audit log
-Token/budget usage
-Current approval gate
+Vitals (mode · stage · gate · agent · tasks done/total · total + current-stage timers)
+Pipeline ribbon (the FSM path; done/current/pending)
+Task queue table   +   Claims/critic · Agent sessions · Budget summaries
+Audit log ticker (live)
+Run-file navigation tree (open any results/claims/audit/report file)
 ```
 
 ## 15. Licensing guidelines

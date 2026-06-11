@@ -105,8 +105,10 @@ a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui
 uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest
 ```
 
-Architecture decisions live in `PLAN/` (notably `PLAN/01_ARCHITECTURE.md` and
-`PLAN/12_ADR_orchestration_engine.md` — keep the native deterministic FSM; no LangGraph/CAO). Real
-end-to-end runs against forensic evidence are maintainer-gated (CLAUDE.md §2B).
+Architecture decisions live in `PLAN/` — notably `PLAN/01_ARCHITECTURE.md`,
+`PLAN/12_ADR_orchestration_engine.md` (keep the native deterministic FSM; no LangGraph/CAO),
+`PLAN/13` (agent-neutral connectors), and `PLAN/14` (Textual cockpit + `setup`, Textual over Ratatui).
+`PLAN/00_INDEX_AND_ROADMAP.md` is the roadmap. Real end-to-end runs against forensic evidence are
+maintainer-gated (CLAUDE.md §2B).
 
 License: **Apache-2.0**.

@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core); ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run; the live agent stays loud opt-in via `--agent claude`. **Scale fixes (post-brief):** per-family task aggregation (bd 1xy6 — a disk image yields ~10 tasks, not 200+; the floor runs the tool once per artifact with per-artifact provenance), executor tiering (heavy tool-bound disk-image/memory tasks run on the deterministic floor even under `--agent claude`, `--all-live` to override; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM — no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. **Phase 2/3 shipped:** `doctor --setup` (one-command install/config + vol-symbol-cache default), pre-flight space estimator + partition plan + `prune` + cross-run `merge` (deterministic + opt-in validated agent synthesis; PLAN/11), and the advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; lowers confidence / flags corroboration / annotates, NEVER promotes — Tier-1 stays sole promoter; logged to `audit/tier2_judgements.jsonl`). README rewritten with automated/manual/inspection command tables.)_
+_Last updated: 2026-06-11 (Epics A–N core + L + M complete; **+ Epic Q** agent-neutral connectors and **+ Epic O** Textual cockpit & unified `setup`. ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run. **Agent neutrality (Epic Q, PLAN/13):** one config-driven headless connector — `--agent claude|gemini|codex|opencode|deterministic` — with fail-closed sandboxing + onboarding via `agents list`/`doctor --agents`. **Cockpit + setup (Epic O, PLAN/14):** `siftmesh tui` Textual cockpit (read-only over run files) + `siftmesh setup` one-command onboarding (install + probe + multi-agent pick + persist to global/project config). **Scale fixes:** per-family task aggregation (a disk image yields ~10 tasks, not 200+), executor tiering (heavy tool-bound tasks → deterministic floor; `--all-live` overrides; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM — no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. Pre-flight space estimator + partition plan + `prune` + cross-run `merge` (PLAN/11); advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; never promotes — Tier-1 stays sole promoter).)_
 
 ## 1. Project identity
 
@@ -88,18 +88,20 @@ CAO does not know which forensic claims are supported, unsupported, or contradic
 
 ## 4. Current final direction
 
-The product should be built in this order:
+The product was built in this order (status as of 2026-06-11):
 
 ```text
-Priority 1: Fully working CLI engine.
-Priority 2: Evidence runtime, claim ledger, critic loop, and reports.
-Priority 3: CAO/agent adapter integration.
-Priority 4: Guided and full autonomous modes.
-Priority 5: Optional A2A Agent Card discovery and delegation (governed by the SIFTMesh policy overlay).
-Priority 6: Optional Ratatui TUI cockpit after CLI works.
+Priority 1: Fully working CLI engine.                                        ✅ shipped
+Priority 2: Evidence runtime, claim ledger, critic loop, and reports.        ✅ shipped
+Priority 3: Agent adapter integration — agent-neutral headless connectors (Epic Q).  ✅ shipped
+            CAO + LangGraph evaluated and REJECTED — native deterministic FSM kept (ADR PLAN/12).
+Priority 4: Guided and full autonomous modes (one engine, four modes).       ✅ shipped
+Priority 5: Optional A2A Agent Card discovery + delegation (policy overlay).  ⏳ stretch (Epic P)
+Priority 6: Textual TUI cockpit after the CLI works (Epic O).                 ✅ shipped (Textual, not Ratatui)
 ```
 
-The TUI is optional and last. It should never contain core investigation logic. The CLI must be the source of truth.
+The TUI is optional and last, and never contains core investigation logic — it is a thin read-only
+cockpit over the run files (launching a run reuses the governed engine). The CLI is the source of truth.
 
 ## 5. Final architectural principle
 
@@ -457,10 +459,13 @@ case_runs/
 High-level commands:
 
 ```bash
+siftmesh setup          # one-command onboarding: install + probe agents + pick a set + persist (Epic O)
 siftmesh run
 siftmesh resume
 siftmesh status
-siftmesh tui
+siftmesh tui [RUN]       # live Textual cockpit (Epic O)
+siftmesh agents list|inspect   # agent-neutral onboarding/inspection (Epic Q)
+siftmesh doctor [--setup|--agents|--protocol-sift]
 ```
 
 Stage commands:
@@ -487,23 +492,23 @@ siftmesh approve RUN-001 --gate plan
 siftmesh reject RUN-001 --gate retry
 ```
 
-## 13. TUI status
+## 13. TUI status — ✅ shipped (Epic O, `PLAN/14`)
 
-TUI is optional and last.
+Built as a **Textual** cockpit (Python, MIT — chosen over the originally-penciled Ratatui; reuses the
+existing readers, no Rust). `siftmesh tui [RUN]` is **read-only** over the run files (it renders
+`run_state.json` + the ledgers on a 1 s poll via the tested, Textual-free `tui/snapshot.build_snapshot()`);
+launching a run reuses the governed engine in a worker thread. It contains no orchestration, evidence,
+or validation logic.
 
-When built, it should be a Ratatui cockpit that reads the same run files written by the CLI and optionally triggers CLI commands. It should not contain orchestration, evidence, or validation logic.
-
-Minimum TUI panels:
+Cockpit zones (shipped):
 
 ```text
-- State machine status
-- Current approval gate
-- Agent sessions
-- Task queue
-- Claim ledger
-- Critic feedback
-- Audit log
-- Token/budget usage
+- Vitals bar: mode · stage(+spinner) · current gate · agent · tasks done/total · total + current-stage timers
+- Pipeline ribbon: the FSM path (done/current/pending) + per-stage durations
+- Task queue table (status · attempt · family · agent · claims · verdict)
+- Side panels: claims/critic counters · agent sessions · budget
+- Audit log ticker (live)
+- Run-file navigation tree (open any results/claims/audit/report file)
 ```
 
 ## 14. License policy
@@ -556,4 +561,6 @@ Do not do these in the MVP:
 - mcp-agent: https://github.com/lastmile-ai/mcp-agent
 - A2A Protocol: https://a2a-protocol.org/
 - A2A GitHub (Linux Foundation / a2aproject): https://github.com/a2aproject/A2A
-- Ratatui: https://github.com/ratatui/ratatui
+- Textual (the shipped TUI framework, Epic O): https://textual.textualize.io/
+- Agent Client Protocol (ACP, Epic Q round 2): https://agentclientprotocol.com/
+- Ratatui (evaluated, not used — Textual chosen): https://github.com/ratatui/ratatui

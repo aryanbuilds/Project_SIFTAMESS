@@ -2,7 +2,7 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-10 (Epics A–M complete (I core; I5 CAO optional remainder open): live agents (I), emergent self-correction (K), deterministic reports & replay (J), security threat model + bypass suite (L), testing & CI w/ recorded-golden determinism proof + coverage-gated hardened pipeline (M). Executed epic order: …H→I→K→J→L→M; Epic N (Docs & Submission) is next. **Maintainer-directed ROCBA refinement (post-M):** autonomous objective-driven run in one command — `--brief` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting, live agent stays loud opt-in via `--agent claude`. See `siftmesh_core/intake/brief.py`, `tests/REFINEMENT_TESTS/`, `tests/EPIC_H_TESTS/test_auto_archive_and_quarantine.py`. **Scale refinement (post-brief):** per-family task aggregation (bd 1xy6: ~10 tasks for a disk image, not 200+), executor tiering (heavy disk-image/memory tasks → deterministic floor; `--all-live` overrides), `heavy_tool_timeout_seconds`. **Orchestration ADR `PLAN/12`:** keep the native deterministic FSM — LangGraph + CAO evaluated and rejected; harvest only an advisory Tier-2 judge + Sigma. PLAN/11 (doctor --setup, space estimator, prune, merge) + the Tier-2 judge are the remaining sequenced work.)_
+_Last updated: 2026-06-11 (Epics A–N core + L + M complete, **plus Epic Q** (agent-neutral connectors, `PLAN/13`) **and Epic O** (Textual cockpit + unified `setup`, `PLAN/14`)). Executed epic order: …H→I→K→J→L→M, then the maintainer-directed refinements. **ROCBA refinement:** autonomous objective-driven run in one command — `--brief`/`--objective` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting. **Agent neutrality (Epic Q):** one config-driven headless connector — `--agent claude|gemini|codex|opencode|deterministic` — with fail-closed sandboxing + onboarding (`agents list`/`doctor --agents`); ACP client + permission gate is round 2. **Cockpit + setup (Epic O):** `siftmesh tui` (Textual, read-only over run files) + `siftmesh setup` (install + probe + multi-agent pick + persist to global/project config). **Scale:** per-family task aggregation (~10 tasks for a disk image, not 200+), executor tiering, `heavy_tool_timeout_seconds`. **Orchestration ADR `PLAN/12`:** keep the native deterministic FSM — LangGraph + CAO evaluated and rejected; harvest only an advisory Tier-2 judge + Sigma. PLAN/11 (space estimator/prune/merge) + the Tier-2 judge shipped.)_
 
 > **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
@@ -163,7 +163,7 @@ User-facing source of truth.
 Manual, guided, and automatic operation.
 ```
 
-### Layer 6: Optional TUI
+### Layer 6: TUI cockpit — ✅ shipped (Epic O, `PLAN/14`)
 
 Purpose:
 
@@ -174,7 +174,10 @@ Operator cockpit and demo visualization.
 Status:
 
 ```text
-Optional. Build last. Must not contain core logic.
+SHIPPED as `siftmesh tui` using Textual (Python, MIT — chosen over the originally-planned Ratatui;
+reuses the existing readers, no Rust). READ-ONLY over the run files (renders run_state.json + the
+ledgers); launching a run reuses the governed engine in a worker thread. Contains no core logic.
+Optional `tui` extra; lazy-imported with an install hint.
 ```
 
 ## 3. Target repo structure
@@ -252,14 +255,16 @@ siftmesh/
       audit_log.py
       injection_alerts.py
 
-    adapters/
+    adapters/                       # CAO/a2a adapters were planned but NOT built (ADR PLAN/12: CAO rejected; A2A = stretch Epic P)
       __init__.py
-      cao_adapter.py
+      base.py                       # ExecutorAdapter ABC + registry + resolve_profile/get_adapter
+      deterministic_executor.py     # the real-tool floor (always available)
       claude_adapter.py
       opencode_adapter.py
+      headless.py                   # config-driven agent-neutral connector: gemini/codex/… (Epic Q)
       generic_shell_adapter.py
-      a2a_adapter.py
-      hermes_config_generator.py
+      sandbox.py                    # cwd-pin + env-minimization for agent subprocesses (Epic Q)
+      prompt_builder.py · agent_result.py · profiles.py · spotlight.py · agent_profiles.yaml
 
     reports/
       __init__.py
@@ -296,17 +301,11 @@ siftmesh/
     test_cli_modes.py
     test_path_policy.py
 
-  siftmesh_tui/
-    Cargo.toml
-    src/
-      main.rs
-      app.rs
-      panels/
-        agents.rs
-        tasks.rs
-        claims.rs
-        logs.rs
-        report.rs
+  siftmesh_core/tui/              # the TUI is PYTHON/Textual (Epic O) — NOT a separate Rust crate
+    __init__.py                  # lazy launch + require_textual()
+    snapshot.py                  # tested, Textual-free CockpitSnapshot builder (the data layer)
+    app.py · cockpit.py · setup_screen.py · launcher_screen.py · widgets.py · runner.py
+    cockpit.tcss
 ```
 
 ## 4. CLI command design
@@ -323,16 +322,19 @@ siftmesh report RUN_PATH
 siftmesh replay RUN_PATH
 ```
 
-### Automation commands
+### Automation + onboarding/cockpit commands
 
 ```bash
+siftmesh setup [--no-tui] [--scope global|project] [--yes]      # one-command onboarding (Epic O)
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --mode manual
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto-human-loop
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-iterations 3
-siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-agent-tasks 400   # raise the dispatch cap for a real disk image (200+ derived tasks)
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --auto --max-agent-tasks 400   # raise the dispatch cap for a real disk image
+siftmesh run CASE_PATH --evidence EVIDENCE_PATH --agent claude|gemini|codex|opencode   # agent-neutral (Epic Q)
 siftmesh run CASE_PATH --evidence EVIDENCE_PATH --review-only
 siftmesh resume RUN_PATH
 siftmesh status RUN_PATH
+siftmesh tui [RUN_PATH]                                         # live Textual cockpit (Epic O)
 ```
 
 ### Inspection commands
@@ -766,12 +768,12 @@ Prompt-Injection Guard flags it.
 Agent treats it as evidence only.
 ```
 
-## Phase 12: Optional Ratatui TUI
+## Phase 12: TUI cockpit — ✅ shipped (Epic O, `PLAN/14`; Textual, not Ratatui)
 
 Goal:
 
 ```text
-Only after CLI works, build a read-only or thin-control TUI.
+Only after CLI works, build a read-only or thin-control TUI.  ✅ done with Textual (Python, MIT).
 ```
 
 Minimum panels:

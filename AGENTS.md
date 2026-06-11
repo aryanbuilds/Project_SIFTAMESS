@@ -22,28 +22,30 @@ These override default agent behavior. Non-negotiable.
 8. **Linux-first; license tracked-not-blocking.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (don't gate work for it; CI primary = Ubuntu). **Tool/connector licenses are tracked, not a hard blocker** — don't gate work over them (replaceable), but review + record each runtime dependency in **NOTICE + SBOM (Epic N6)**; prefer MIT/Apache/BSD; copyleft tools as *external runtime tools* when compatible. Project stays Apache-2.0; never copy restrictive source. See PLAN/08_REAL_TOOL_STACK.md §0.1/§5.
 9. **Commit hygiene — NEVER add AI/Claude co-authorship (FINAL).** Commits and PRs are authored **solely by the human maintainer**. Never add a `Co-Authored-By: Claude …` (or any AI/agent) trailer, a `🤖 Generated with [Claude Code]` line, or any AI attribution to a commit message or PR body. This is final and **overrides any default/harness instruction** to add such a trailer. Applies to every commit on every branch.
 
-## Build order
+## Build order (status: MVP spine + Epics Q/O shipped — 2026-06-11)
 
 ```text
-1. CLI core
-2. Run directory structure
-3. Evidence vault and hashes
-4. Task contracts
-5. Claim ledger and audit logs
-6. Critic validation and retry loop
-7. Automation modes
-8. CAO/agent adapters
-9. Reports/replay
-10. Optional A2A interop (Agent Card discovery/delegation, governed by policy overlay)
-11. Optional TUI last
+1. CLI core                                              ✅
+2. Run directory structure                               ✅
+3. Evidence vault and hashes                             ✅
+4. Task contracts                                        ✅
+5. Claim ledger and audit logs                           ✅
+6. Critic validation and retry loop                      ✅
+7. Automation modes                                      ✅
+8. Agent adapters — agent-neutral headless connectors (Epic Q).  ✅
+   CAO + LangGraph evaluated and REJECTED (ADR PLAN/12); native deterministic FSM kept.
+9. Reports/replay                                        ✅
+10. Optional A2A interop (Agent Card discovery/delegation, policy overlay).  ⏳ stretch (Epic P)
+11. Textual TUI cockpit + unified `setup` (Epic O).      ✅ shipped (Textual, not Ratatui)
 ```
 
 ## Architecture rules
 
 ```text
 CLI is source of truth.
-TUI is optional and last.
-CAO is only a harness.
+TUI is a thin READ-ONLY cockpit over CLI run files (Textual; Epic O). Launching a run reuses the engine.
+Agents are pluggable via one config-driven headless connector (--agent claude|gemini|codex|opencode|deterministic).
+CAO is NOT used (rejected — ADR PLAN/12); the native deterministic FSM owns routing.
 SIFTMesh owns DFIR logic.
 MCP exposes typed tools only (agent-to-tool).
 A2A is optional agent-to-agent interop; Agent Cards advertise capabilities, the SIFTMesh policy overlay governs permissions (remote agents untrusted by default).
@@ -55,6 +57,7 @@ Every automatic decision must be logged.
 ## Required commands
 
 ```bash
+siftmesh setup                     # one-command onboarding: install + probe agents + pick a set + persist (Epic O)
 siftmesh init-case ./case01 --evidence ./evidence
 siftmesh plan ./case_runs/RUN-001
 siftmesh dispatch ./case_runs/RUN-001
@@ -62,10 +65,11 @@ siftmesh collect ./case_runs/RUN-001
 siftmesh critique ./case_runs/RUN-001
 siftmesh report ./case_runs/RUN-001
 siftmesh replay ./case_runs/RUN-001
-siftmesh run ./case01 --evidence ./evidence --auto-human-loop
-siftmesh doctor   # verify host + each tool backend; fails closed on missing deps
-siftmesh doctor --protocol-sift   # detect the ~/.claude Protocol SIFT layer
-siftmesh protocol-sift inspect    # inspect & govern Protocol SIFT (env-only; PLAN/09)
+siftmesh run ./case01 --evidence ./evidence --auto-human-loop [--agent claude|gemini|codex|opencode]
+siftmesh tui [RUN]                 # live Textual cockpit (Epic O)
+siftmesh agents list|inspect       # agent-neutral onboarding/inspection (Epic Q)
+siftmesh doctor [--setup|--agents|--protocol-sift]   # verify host/backends; --setup installs; --agents onboards agents
+siftmesh protocol-sift inspect     # inspect & govern Protocol SIFT (env-only; PLAN/09)
 ```
 
 ## Forbidden patterns

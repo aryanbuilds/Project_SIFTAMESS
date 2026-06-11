@@ -29,14 +29,19 @@ All CLI commands are confirmed against `siftmesh … --help` and the current sou
 ## 0 — Set up + prove the host is ready (one command, no evidence touched)
 
 ```bash
+uv run siftmesh setup            # onboarding: install ALL backends + probe coding agents + pick a set + persist
+# …or just the host health check / install, no agent onboarding:
 uv run siftmesh doctor --setup
 ```
 
-`--setup` runs `uv sync --all-extras` (forensic + brief + a2a backends) and creates the Volatility
-symbol cache, then verifies the host — replacing the old `uv sync --extra …` + `mkdir/export
-SIFTMESH_VOL_SYMBOL_DIRS` steps. (Plain `uv run siftmesh doctor` just verifies, installs nothing.)
-**NOTE:** `uv sync --extra X` is *declarative* and removes extras you don't name — always
-`--all-extras` (or use `doctor --setup`).
+`siftmesh setup` (Epic O) is the recommended onboarding: it runs `uv sync --all-extras` (forensic +
+brief + a2a + **tui** backends) + creates the Volatility symbol cache, **probes which coding agents
+are installed/authenticated/sandboxed**, lets you pick a **multi-agent** set, and persists it to
+`~/.config/siftmesh/siftmesh.toml` (a project `./siftmesh.toml` overrides it). Use `setup --no-tui
+--yes` for a headless auto-pick of the ready agents. `doctor --setup` is the same install + host
+verify without agent onboarding; plain `doctor` just verifies (installs nothing); `doctor --agents`
+prints the agent onboarding report. **NOTE:** `uv sync --extra X` is *declarative* and removes extras
+you don't name — always `--all-extras` (or use `setup`/`doctor --setup`).
 
 What matters:
 
@@ -272,9 +277,12 @@ Or one-shot with the friendly flag (Claude preferred → OpenCode → floor; liv
 uv run siftmesh run ./case_disk --evidence ~/projects/ev_disk --agent claude --auto-human-loop --max-iterations 2
 ```
 
-`--agent` options: `claude` | `opencode` | `deterministic`. Default (no flag) stays the deterministic
-floor. Per-agent models come from `siftmesh_core/adapters/agent_profiles.yaml`
-(claude → `claude-opus-4-8`, opencode → `anthropic/claude-sonnet-4-6`).
+`--agent` options (Epic Q, agent-neutral): `claude` | `gemini` | `codex` | `opencode` |
+`deterministic`. Default (no flag) stays the deterministic floor; the chosen agent's only fallback is
+the floor (never a *different* live agent), and an unknown value errors. Per-agent recipes/models come
+from `siftmesh_core/adapters/agent_profiles.yaml`. Only Claude reaches the typed tools today; gemini/
+codex run sandboxed (`--sandbox read-only` / `--approval-mode default`) but their MCP tool wiring is
+`verify-live` (round 2 / ACP) — confirm with `uv run siftmesh agents list` / `agents inspect <agent>`.
 
 **4c. Watch the self-correction loop happen** (in `$RUN`):
 
@@ -305,6 +313,11 @@ uv run siftmesh reject  "$RUN" --gate retry
 uv run siftmesh retry   "$RUN" TASK-001        # re-critique one task; tighten + re-dispatch if DECIDE says so
 ```
 
+**Watch it live (Epic O):** `uv run siftmesh tui "$RUN"` attaches the Textual cockpit (vitals · pipeline
+ribbon · task table · claims/critic/agent/budget panels · live audit ticker · run-file nav tree),
+refreshed on a 1 s poll. `uv run siftmesh tui` (no arg) opens the home/run-picker — attach a run, start
+a new one, or onboard agents. The cockpit is read-only; launching a run reuses the governed engine.
+
 `tasks list` / `claims list` / `audit tail` are debug stubs — read the JSONL files directly (above).
 
 ---
@@ -319,6 +332,8 @@ uv run siftmesh retry   "$RUN" TASK-001        # re-critique one task; tighten +
   extracted artifacts.
 - **Fail-closed:** a missing SIFT-lane tool yields a clean `BackendUnavailableError` when invoked —
   install the tool; never a fake result.
-- **Config precedence:** init args > env (`SIFTMESH_*`) > `siftmesh.toml` > defaults. Useful env vars:
-  `SIFTMESH_VOL_PATH`, `SIFTMESH_VOL_SYMBOL_DIRS`, `SIFTMESH_EXECUTOR_SELECTION` (`deterministic` |
-  `live` | `auto`), `SIFTMESH_CAPS__MAX_ITERATIONS=N`.
+- **Config precedence:** init args > env (`SIFTMESH_*`) > project `./siftmesh.toml` > global
+  `~/.config/siftmesh/siftmesh.toml` > defaults. `siftmesh setup` writes the agent selection
+  (`executor_selection` + `agent_preference`) to the global file by default (project overrides it).
+  Useful env vars: `SIFTMESH_VOL_PATH`, `SIFTMESH_VOL_SYMBOL_DIRS`, `SIFTMESH_EXECUTOR_SELECTION`
+  (`deterministic` | `live` | `auto`), `SIFTMESH_CAPS__MAX_ITERATIONS=N`.

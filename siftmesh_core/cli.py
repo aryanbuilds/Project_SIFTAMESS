@@ -1130,8 +1130,29 @@ def setup(
     typer.echo(f"  tier-2 judge       = {persist_judge or 'Tier-1 only (use --judge to enable)'}")
     if model_over:
         typer.echo(f"  agent_models       = {model_over}")
+    # Guided remediation: for every not-ready live agent, the exact data-driven next step.
+    from siftmesh_core.adapters.profiles import load_profiles
+    from siftmesh_core.doctor import agent_remediation
+    from siftmesh_core.schemas.agent_capabilities import SAFETY_TIER_DESC, safety_tier_label
+
+    profiles = load_profiles()
+    not_ready = [a for a in cap.agents if a.kind != "deterministic" and a.profile_id not in ready]
+    if not_ready:
+        typer.echo("\nto enable more agents:")
+        for a in not_ready:
+            for hint in agent_remediation(a, profiles.get(a.profile_id)):
+                typer.echo(f"  {a.profile_id} [{a.safety_tier}]: {hint}")
+    typer.echo("\nsafety tiers:")
+    for tier in SAFETY_TIER_DESC:
+        typer.echo(f"  {safety_tier_label(tier)}")
     if not ready:
-        typer.echo("  (no live agent ready — runs use the deterministic floor; install/auth one)")
+        typer.echo(
+            "\nno live agent is ready — runs use the deterministic floor (T0, no keys needed)."
+        )
+    typer.echo(
+        "\nnext: `siftmesh run ./examples/demo_case "
+        "--evidence ./examples/demo_case/evidence --auto`"
+    )
     raise typer.Exit(code=0)
 
 

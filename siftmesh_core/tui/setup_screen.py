@@ -23,7 +23,8 @@ from textual.widgets.selection_list import Selection
 
 from siftmesh_core.adapters.profiles import effective_model, load_profiles
 from siftmesh_core.config import SiftmeshSettings, save_agent_selection
-from siftmesh_core.doctor import probe_agents, run_setup
+from siftmesh_core.doctor import agent_remediation, probe_agents, run_setup
+from siftmesh_core.schemas.agent_capabilities import SAFETY_TIER_DESC, safety_tier_label
 
 _FLOOR = "deterministic_executor"
 # Advisory Tier-2 JUDGE choices (a separate purpose from the executor). litellm:<model> backends are
@@ -56,11 +57,13 @@ class OnboardingScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static(
-            "Pick the agents SIFTMesh may use (live agents need a CLI + auth + a sandbox recipe). "
-            "The deterministic floor is always available.",
+            "Onboarding — steps: 1) Install backends · 2) Probe agents · 3) Fix what's not ready "
+            "(see hints below) · 4) Pick agents · 5) Save · 6) Start a run.\n"
+            "The deterministic floor (tier T0) is always available — pick a live agent for T1/T2.",
             id="intro",
         )
         yield SelectionList[str](id="agentsel")
+        yield Static(id="guidance")
         with Collapsible(title="Per-provider models (blank = default)", id="models"):
             for name, profile_id in _MODEL_AGENTS:
                 prof = load_profiles().get(profile_id)
@@ -96,14 +99,16 @@ class OnboardingScreen(Screen):
 
     def _populate(self) -> None:
         cap = probe_agents(self.settings)
+        profiles = load_profiles()
         sel = self.query_one("#agentsel", SelectionList)
         sel.clear_options()
         chosen = set(self.settings.agent_preference)
+        fix_lines: list[str] = []
         for a in cap.agents:
             if a.profile_id == _FLOOR:
                 continue  # the floor is implicit (always appended)
             badge = (
-                f"{a.profile_id:<18} "
+                f"[{a.safety_tier}] {a.profile_id:<18} "
                 f"present={'yes' if a.present else 'no '} "
                 f"auth={'yes' if a.auth_ok else 'no '} "
                 f"sandboxed={'yes' if a.sandboxed else 'NO '} "
@@ -111,10 +116,35 @@ class OnboardingScreen(Screen):
             )
             ready = a.present and a.auth_ok and a.sandboxed
             sel.add_option(Selection(badge, a.profile_id, ready or a.profile_id in chosen))
+            # Honest, data-driven remediation for whatever is not fully ready.
+            for hint in agent_remediation(a, profiles.get(a.profile_id)):
+                fix_lines.append(f"  {a.profile_id}: {hint}")
+        self._render_guidance(cap, fix_lines)
+        ready = cap.live_candidate is not None
         self._status(
             f"default agent today: {cap.chosen}"
-            + (f" · live ready: {cap.live_candidate}" if cap.live_candidate else "")
+            + (f" · live ready: {cap.live_candidate}" if ready else " · no live agent ready (T0)")
         )
+
+    def _render_guidance(self, cap: object, fix_lines: list[str]) -> None:
+        """Below the picker: what to fix, the tier legend, and the readiness summary + CTA."""
+        lines: list[str] = []
+        if fix_lines:
+            lines.append("To make an agent ready:")
+            lines += fix_lines
+        lines.append("")
+        lines.append("Safety tiers (labels only — never gate dispatch):")
+        lines += [f"  {safety_tier_label(t)}" for t in SAFETY_TIER_DESC]
+        lines.append("")
+        live = getattr(cap, "live_candidate", None)
+        if live:
+            lines.append(f"✓ Ready: pick {live} (a live T1/T2 agent), Save, then start a run.")
+        else:
+            lines.append(
+                "No live agent is ready — runs will use the deterministic floor (T0). "
+                "Fix an agent above for T1/T2, or just Save and run on the floor (no keys needed)."
+            )
+        self.query_one("#guidance", Static).update("\n".join(lines))
 
     def _status(self, msg: str) -> None:
         self.query_one("#statusline", Static).update(msg)

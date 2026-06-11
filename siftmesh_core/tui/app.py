@@ -25,6 +25,7 @@ class HomeScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("SIFTMesh cockpit — pick a run to attach, or start one.", id="hometitle")
+        yield Static(id="firstrun")  # first-run guidance banner (populated on mount)
         yield ListView(id="runs")
         with Horizontal(id="homebtns"):
             yield Button("New run", id="new", variant="success")
@@ -34,16 +35,36 @@ class HomeScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
+        self._render_firstrun()
         lv = self.query_one("#runs", ListView)
         base = Path(DEFAULT_BASE)
         runs = sorted(base.glob("RUN-*"), reverse=True) if base.is_dir() else []
         if not runs:
-            lv.append(ListItem(Label("(no runs under ./case_runs — start one with 'New run')")))
+            empty = "No runs yet — click 'New run' to start, or 'Onboard agents' first."
+            lv.append(ListItem(Label(empty)))
             return
         for r in runs:
             item = ListItem(Label(r.name))
             item.run_path = r  # type: ignore[attr-defined]
             lv.append(item)
+
+    def _render_firstrun(self) -> None:
+        """Show a one-time onboarding hint when no live agent is ready (never blocks the floor)."""
+        banner = self.query_one("#firstrun", Static)
+        try:
+            from siftmesh_core.doctor import probe_agents
+
+            cap = probe_agents(self.settings)
+        except Exception:
+            banner.display = False
+            return
+        if cap.live_candidate:
+            banner.display = False
+            return
+        banner.update(
+            "First run? No live agent is ready — runs will use the deterministic floor (tier T0, "
+            "no keys needed). Click 'Onboard agents' to enable a live T1/T2 agent."
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "new":

@@ -372,6 +372,18 @@ def _agent_safety_tier(kind: str, sandboxed: bool, tool_reachable: str) -> str:
     return "T2"
 
 
+def profile_safety_tiers() -> dict[str, str]:
+    """``{profile_id: tier}`` from the profiles alone — pure, NO ``--version`` subprocess.
+
+    Cheap enough for the cockpit to call once per mount (the full ``probe_agents`` shells each
+    present CLI; this only needs the static profile recipe to classify containment).
+    """
+    out: dict[str, str] = {}
+    for pid, prof in load_profiles().items():
+        out[pid] = _agent_safety_tier(prof.kind, _agent_sandboxed(prof), _agent_tool_reach(prof))
+    return out
+
+
 def _is_ready(c: AgentCapability) -> bool:
     """A live agent that can do forensic work: present + authed + sandboxed + tool-reaching."""
     return c.present and c.auth_ok and c.sandboxed and c.tool_reachable == "yes"
@@ -500,6 +512,17 @@ def _safety_tier_legend() -> list[str]:
     return ["  safety tiers:", *[f"    {safety_tier_label(t)}" for t in SAFETY_TIER_DESC]]
 
 
+def _auth_hint(c: AgentCapability, prof: AgentProfile | None) -> str:
+    """The exact authentication step for a present-but-unauthed agent (kind-aware, honest)."""
+    if c.kind == "claude":  # subscription OR API; auth_env is empty (handled by claude_available)
+        return "authenticate: `claude setup-token` (subscription) or export ANTHROPIC_API_KEY=…"
+    if c.kind == "opencode":
+        return "authenticate: `opencode auth login` (its own auth.json)"
+    if prof and prof.auth_env:
+        return f"authenticate: set one of [{', '.join(prof.auth_env)}] (or log in via the CLI)"
+    return "authenticate: set the vendor's API key (or log in via the CLI)"
+
+
 def agent_remediation(c: AgentCapability, prof: AgentProfile | None) -> list[str]:
     """Honest, data-driven next steps for a not-ready agent (no interactive auth driven by us)."""
     hints: list[str] = []
@@ -507,8 +530,7 @@ def agent_remediation(c: AgentCapability, prof: AgentProfile | None) -> list[str
         hints.append(f"install the `{c.profile_id.split('_')[0]}` CLI, then re-probe")
         return hints  # nothing else is actionable until the CLI exists
     if not c.auth_ok:
-        envs = ", ".join(prof.auth_env) if (prof and prof.auth_env) else "the vendor's API key"
-        hints.append(f"authenticate: set one of [{envs}] (or log in via the CLI)")
+        hints.append(_auth_hint(c, prof))
     if not c.sandboxed:
         hints.append(
             "tier T2 — native tools are NOT denied; it reaches tools unsandboxed "

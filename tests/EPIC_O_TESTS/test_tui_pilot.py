@@ -130,3 +130,39 @@ def test_onboarding_judge_picker_preselects_from_settings() -> None:
         )  # pre-selected from config
 
     _drive(app, scenario)
+
+
+def test_onboarding_shows_tier_legend_and_remediation() -> None:
+    # The guided wizard must render the honest T0-T3 legend + a fix-it block (no live agent needed).
+    app = SiftmeshTUI(settings=load_settings(), start="onboard")
+
+    async def scenario(_pilot: Any) -> None:
+        from textual.widgets import Static
+
+        guidance = app.screen.query_one("#guidance", Static)
+        text = str(guidance.render())  # Static has no .renderable in textual 8.2.7 — use render()
+        assert "Safety tiers" in text
+        assert "T2 unconstrained_live" in text  # the legend is shown
+        # either a remediation block (something not ready) or the ready CTA — both are honest states
+        assert ("To make an agent ready:" in text) or ("Ready:" in text)
+
+    _drive(app, scenario)
+
+
+def test_new_run_screen_shows_mode_help_and_agent_tiers() -> None:
+    app = SiftmeshTUI(settings=load_settings())
+
+    async def scenario(pilot: Any) -> None:
+        from siftmesh_core.tui.launcher_screen import NewRunScreen
+        from textual.widgets import Select, Static
+
+        await pilot.app.push_screen(NewRunScreen(settings=load_settings()))
+        await pilot.pause()
+        assert "auto" in str(app.screen.query_one("#modehelp", Static).render())
+        assert app.screen.query_one("#agenthelp", Static) is not None
+        # the floor option carries its [T0] tier label
+        agent = app.screen.query_one("#agent", Select)
+        labels = [str(prompt) for prompt, _ in agent._options]  # type: ignore[attr-defined]
+        assert any("[T0]" in label for label in labels)
+
+    _drive(app, scenario)

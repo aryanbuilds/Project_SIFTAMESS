@@ -98,13 +98,16 @@ def claims_text(snap: CockpitSnapshot) -> str:
     return "\n".join(lines)
 
 
-def agents_text(snap: CockpitSnapshot) -> str:
-    """Side tab: the agent-call sessions."""
+def agents_text(snap: CockpitSnapshot, tiers: dict[str, str] | None = None) -> str:
+    """Side tab: the agent-call sessions, each annotated with its honest safety tier."""
+    tiers = tiers or {}
     lines = ["[bold]Agent sessions[/]"]
     if snap.agent_sessions:
         for a in snap.agent_sessions[-12:]:
             fb = f" [$warning](←{a.fell_back_from})[/]" if a.fell_back_from else ""
-            lines.append(f"  {a.task_id}  {status_cell(a.status)}  {a.profile}{fb}")
+            tier = tiers.get(a.profile)
+            badge = f" [dim][{tier}][/]" if tier else ""
+            lines.append(f"  {a.task_id}  {status_cell(a.status)}  {a.profile}{badge}{fb}")
     else:
         lines.append("  [dim](none yet)[/]")
     return "\n".join(lines)

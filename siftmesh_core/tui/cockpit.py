@@ -72,6 +72,7 @@ class CockpitScreen(Screen):
         self._snap: CockpitSnapshot | None = None
         self._filter = ""
         self._ticker_ledger = "events"
+        self._console_offsets: dict[str, int] = {}  # agent_raw.json path -> bytes already shown
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -93,6 +94,8 @@ class CockpitScreen(Screen):
                     yield Static(id="agents")
                 with TabPane("Budget", id="tab-budget"):
                     yield Static(id="budget")
+                with TabPane("Console", id="tab-console"):
+                    yield RichLog(id="console", max_lines=2000, markup=False, highlight=False)
             with Vertical(id="navcol"):
                 yield Tree("run dir", id="nav")
                 with VerticalScroll(id="filescroll"):
@@ -290,6 +293,7 @@ class CockpitScreen(Screen):
         self._sync_tasks(snap)
         self._sync_claimlist(snap)
         self._sync_ticker(snap)
+        self._sync_console()
 
     def _sync_tasks(self, snap: CockpitSnapshot) -> None:
         table = self.query_one("#tasks", DataTable)
@@ -329,6 +333,27 @@ class CockpitScreen(Screen):
             if ev.lineno > self._last_lineno:
                 log.write(f"[dim]{ev.timestamp}[/] {ev.summary}")
                 self._last_lineno = ev.lineno
+
+    def _sync_console(self) -> None:
+        """Tail the live agent's persisted stdout (results/*.agent_raw.json) by byte offset.
+
+        Read-only file tailing — NOT a live subprocess stream (which would need core plumbing). The
+        claude adapter already persists each agent's raw envelope; this surfaces it incrementally.
+        """
+        if self.run is None:
+            return
+        log = self.query_one("#console", RichLog)
+        for path in sorted(self.run.results.glob("*.agent_raw.json")):
+            key = path.name
+            try:
+                data = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            shown = self._console_offsets.get(key, 0)
+            if len(data) > shown:
+                log.write(f"── {key} ──")
+                log.write(data[shown:])
+                self._console_offsets[key] = len(data)
 
     # ---- interactive handlers ----
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:

@@ -121,6 +121,30 @@ class SiftmeshTUI(App):
 
         self.theme = SIFTMESH_LIGHT.name if self.theme == SIFTMESH_DARK.name else SIFTMESH_DARK.name
 
+    def get_system_commands(self, screen):  # type: ignore[no-untyped-def]
+        """Add SIFTMesh operator actions to the built-in ctrl+p command palette (opencode-style).
+
+        Cockpit actions are offered only when a CockpitScreen is active; they dispatch to that
+        screen's already-governed actions (each runs in a worker thread where needed).
+        """
+        from textual.app import SystemCommand
+
+        from siftmesh_core.tui.cockpit import CockpitScreen
+
+        yield from super().get_system_commands(screen)
+        if isinstance(screen, CockpitScreen):
+            yield SystemCommand(
+                "Resolve a gate", "Approve/reject any gate", screen.action_gate_selector
+            )
+            yield SystemCommand(
+                "Retry selected task", "Re-critique + re-dispatch", screen.action_retry_task
+            )
+            yield SystemCommand(
+                "Resume / next step", "Drive the engine one step", screen.action_resume
+            )
+            yield SystemCommand("Replay", "Show the audit replay", screen.action_replay)
+            yield SystemCommand("Switch run", "Pick another run", screen.action_switch_run)
+
     def on_mount(self) -> None:
         from siftmesh_core.tui.cockpit import CockpitScreen
         from siftmesh_core.tui.theme import DEFAULT_THEME, SIFTMESH_THEMES

@@ -5,11 +5,20 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Input, Label, Select, Static
+from textual.widgets import Button, Collapsible, Footer, Header, Input, Label, Select, Static
 
 from siftmesh_core.config import SiftmeshSettings
 
 _MODES = ("manual", "review_only", "auto_human_loop", "auto")
+_JUDGE_CHOICES = [
+    ("(persisted default)", ""),
+    ("Tier-1 only", "none"),
+    ("claude", "cli:claude"),
+    ("gemini", "cli:gemini"),
+    ("codex", "cli:codex"),
+    ("opencode", "cli:opencode"),
+]
+_MODEL_AGENTS = ("claude", "gemini", "codex", "opencode")
 # One-line help for each mode (shown inline + as a tooltip; smooths the new-user choice).
 _MODE_HELP = {
     "manual": "manual — one stage per command (max control / debugging)",
@@ -62,6 +71,16 @@ class NewRunScreen(Screen):
                 "(Home → Onboard agents).",
                 id="agenthelp",
             )
+            with Collapsible(title="Advanced (per-run overrides)", id="advanced"):
+                yield Label("Tier-2 judge (advisory)")
+                yield Select(_JUDGE_CHOICES, value="", id="judge", allow_blank=False)
+                yield Label("max iterations (blank = default)")
+                yield Input(placeholder="3", id="max-iterations")
+                yield Label("max agent tasks (blank = default)")
+                yield Input(placeholder="10", id="max-agent-tasks")
+                yield Label("per-provider models (blank = default)")
+                for name in _MODEL_AGENTS:
+                    yield Input(placeholder=f"{name} model", id=f"model-{name}")
             yield Button("Launch run", id="launch", variant="success")
         yield Footer()
 
@@ -89,19 +108,43 @@ class NewRunScreen(Screen):
             return
         objective = self.query_one("#objective", Input).value.strip() or None
         mode = self.query_one("#mode", Select).value
-        agent = self.query_one("#agent", Select).value
-
-        from siftmesh_core.cli import _agent_overrides  # lazy: avoid an import cycle
-        from siftmesh_core.config import load_settings
         from siftmesh_core.tui.cockpit import CockpitScreen
 
-        settings = load_settings(
-            **_agent_overrides(None if agent == "deterministic" else str(agent))
-        )
+        settings, max_iterations = self._build_settings()
         params = {
             "case_dir": case,
             "evidence": evidence,
             "objective": objective,
             "mode": mode,
+            "max_iterations": max_iterations,
         }
         self.app.switch_screen(CockpitScreen(None, settings=settings, launch_params=params))
+
+    def _build_settings(self) -> tuple[SiftmeshSettings, int | None]:
+        """Apply the per-run overrides via the SAME CLI helpers (testable, no terminal needed)."""
+        from siftmesh_core.cli import _agent_overrides, _judge_overrides
+        from siftmesh_core.config import load_settings
+
+        agent = str(self.query_one("#agent", Select).value)
+        judge = str(self.query_one("#judge", Select).value)
+        overrides = dict(_agent_overrides(None if agent == "deterministic" else agent))
+        if judge:  # "" = keep the persisted default; "none"/"cli:…" = explicit override
+            overrides.update(_judge_overrides("off" if judge == "none" else judge))
+        settings = load_settings(**overrides)
+
+        models = {
+            f"{name}_headless": v
+            for name in _MODEL_AGENTS
+            if (v := self.query_one(f"#model-{name}", Input).value.strip())
+        }
+        if models:
+            settings = settings.model_copy(
+                update={"agent_models": {**settings.agent_models, **models}}
+            )
+        cap = self.query_one("#max-agent-tasks", Input).value.strip()
+        if cap.isdigit():
+            settings = settings.model_copy(
+                update={"caps": settings.caps.model_copy(update={"max_agent_tasks": int(cap)})}
+            )
+        mi = self.query_one("#max-iterations", Input).value.strip()
+        return settings, (int(mi) if mi.isdigit() else None)

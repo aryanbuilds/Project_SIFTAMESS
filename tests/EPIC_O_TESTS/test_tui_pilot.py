@@ -105,6 +105,50 @@ def test_cockpit_task_and_claim_drilldown_and_console() -> None:
     _drive(app, scenario)
 
 
+def test_command_palette_lists_operator_actions() -> None:
+    app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
+
+    async def scenario(_pilot: Any) -> None:
+        titles = {cmd.title for cmd in app.get_system_commands(app.screen)}
+        assert {"Resolve a gate", "Retry selected task", "Replay", "Switch run"} <= titles
+
+    _drive(app, scenario)
+
+
+def test_console_tab_mounts() -> None:
+    app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
+
+    async def scenario(_pilot: Any) -> None:
+        from textual.widgets import RichLog
+
+        assert app.screen.query_one("#console", RichLog) is not None  # agent-stdout tail tab
+
+    _drive(app, scenario)
+
+
+def test_new_run_overrides_build_settings() -> None:
+    app = SiftmeshTUI(settings=load_settings())
+
+    async def scenario(pilot: Any) -> None:
+        from siftmesh_core.tui.launcher_screen import NewRunScreen
+        from textual.widgets import Input, Select
+
+        await pilot.app.push_screen(NewRunScreen(settings=load_settings()))
+        await pilot.pause()
+        screen = app.screen
+        screen.query_one("#model-gemini", Input).value = "gemini-3-pro"
+        screen.query_one("#max-agent-tasks", Input).value = "42"
+        screen.query_one("#max-iterations", Input).value = "5"
+        screen.query_one("#judge", Select).value = "cli:gemini"
+        settings, max_iter = screen._build_settings()
+        assert settings.agent_models.get("gemini_headless") == "gemini-3-pro"
+        assert settings.caps.max_agent_tasks == 42
+        assert settings.judge == "cli:gemini"
+        assert max_iter == 5
+
+    _drive(app, scenario)
+
+
 def test_app_registers_siftmesh_themes() -> None:
     app = SiftmeshTUI(settings=load_settings(), run_dir=GOLDEN)
 

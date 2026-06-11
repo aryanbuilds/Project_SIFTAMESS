@@ -30,6 +30,9 @@ dependencies = [
     "jinja2>=3.1,<4",
     "mcp>=1.27,<2",
     "regipy==6.2.1",
+    # Read-merge-write the persisted agent selection into siftmesh.toml (preserves other keys);
+    # used by `siftmesh setup` even without the optional TUI extra.
+    "tomlkit>=0.13,<1",
 ]
 
 [project.optional-dependencies]
@@ -53,6 +56,11 @@ brief = [
     "python-pptx>=1.0,<2",
     "python-docx>=1.1,<2",
     "pypdf>=5.1,<6",
+]
+# Optional Textual cockpit TUI (Epic O). Pure-Python, MIT; base install stays lean. The CLI
+# lazily imports it and prints an install hint if absent. Included by `doctor --setup` (--all-extras).
+tui = [
+    "textual>=8,<9",
 ]
 
 [project.scripts]
@@ -96,6 +104,9 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["B011"]
+# Textual class attributes (BINDINGS, HORIZONTAL_BREAKPOINTS, SCREENS) are framework idioms
+# declared as plain class-level lists; RUF012 (require ClassVar) is noise for the TUI layer.
+"siftmesh_core/tui/*" = ["RUF012"]
 
 # ── mypy ──────────────────────────────────────────────────────────────────
 [tool.mypy]

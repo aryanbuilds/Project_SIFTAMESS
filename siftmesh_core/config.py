@@ -1,20 +1,25 @@
 """SIFTMesh global configuration and caps (pydantic-settings 2.14.x).
 
 Deterministic, auditable precedence (highest -> lowest):
-    init args > env vars (SIFTMESH_ prefix) > siftmesh.toml > model defaults
+    init args > env vars (SIFTMESH_ prefix) > ./siftmesh.toml (project) >
+    ~/.config/siftmesh/siftmesh.toml (global) > model defaults
 
 Nested caps are overridden via env with the prefix + delimiter form, e.g.
     SIFTMESH_CAPS__MAX_ITERATIONS=7
 (NOT SIFTMESH_MAX_ITERATIONS).
 
-FAIL-CLOSED NOTE: a missing `siftmesh.toml` does NOT raise here —
-TomlConfigSettingsSource silently returns {}. Config-presence enforcement must
-live separately (e.g. an explicit Path("siftmesh.toml").exists() check in
-`siftmesh doctor`). `extra="forbid"` makes a typo'd key fail at load.
+`siftmesh setup` (Epic O onboarding) persists the chosen agent set: by default to the GLOBAL
+file ("select once"); a PROJECT `./siftmesh.toml` overrides it for a specific case. See
+``save_agent_selection`` / ``global_config_path``.
+
+FAIL-CLOSED NOTE: a missing TOML does NOT raise here — TomlConfigSettingsSource silently
+returns {}. Config-presence enforcement lives separately (e.g. `siftmesh doctor`).
+`extra="forbid"` makes a typo'd key fail at load.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Literal
 
@@ -27,6 +32,12 @@ from pydantic_settings import (
 )
 
 CONFIG_FILENAME = "siftmesh.toml"
+
+
+def global_config_path() -> Path:
+    """The user-global config file: ``${XDG_CONFIG_HOME:-~/.config}/siftmesh/siftmesh.toml``."""
+    base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    return Path(base) / "siftmesh" / CONFIG_FILENAME
 
 
 class Caps(BaseModel):
@@ -119,13 +130,46 @@ class SiftmeshSettings(BaseSettings):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         # First element = highest precedence. dotenv/file-secret intentionally
         # omitted (disabled); add them back if .env / Docker secrets are needed.
+        # Project (CWD) TOML overrides the user-global TOML (which `setup` writes by default).
         return (
             init_settings,
             env_settings,
-            TomlConfigSettingsSource(settings_cls),
+            TomlConfigSettingsSource(settings_cls),  # ./siftmesh.toml (project)
+            TomlConfigSettingsSource(settings_cls, toml_file=global_config_path()),  # ~/.config
         )
 
 
 def load_settings(**overrides: Any) -> SiftmeshSettings:
     """Load settings; `overrides` act as highest-precedence init args."""
     return SiftmeshSettings(**overrides)
+
+
+def save_agent_selection(
+    executor_selection: str,
+    agent_preference: list[str],
+    *,
+    scope: Literal["global", "project"] = "global",
+    role_profiles: dict[str, str] | None = None,
+) -> Path:
+    """Persist the onboarding agent choice to a TOML file; return the path written.
+
+    Read-merge-write via tomlkit so any other keys (and comments) the operator has are preserved —
+    only ``executor_selection`` / ``agent_preference`` (+ ``role_profiles`` if given) are set. The
+    GLOBAL file is the "select once" default; a PROJECT ``./siftmesh.toml`` overrides it (loader
+    precedence above). The values are validated by re-loading SiftmeshSettings on next use.
+    """
+    import tomlkit
+
+    target = global_config_path() if scope == "global" else Path(CONFIG_FILENAME)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    doc = (
+        tomlkit.parse(target.read_text(encoding="utf-8"))
+        if target.is_file()
+        else tomlkit.document()
+    )
+    doc["executor_selection"] = executor_selection
+    doc["agent_preference"] = list(agent_preference)
+    if role_profiles is not None:
+        doc["role_profiles"] = dict(role_profiles)
+    target.write_text(tomlkit.dumps(doc), encoding="utf-8")
+    return target

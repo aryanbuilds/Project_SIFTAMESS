@@ -1,0 +1,110 @@
+"""Onboarding screen (Epic O) — install backends, probe agents, pick a multi-agent set, persist."""
+
+from __future__ import annotations
+
+from textual import work
+from textual.app import ComposeResult
+from textual.containers import Horizontal, VerticalScroll
+from textual.screen import Screen
+from textual.widgets import (
+    Button,
+    Footer,
+    Header,
+    Label,
+    RadioButton,
+    RadioSet,
+    SelectionList,
+    Static,
+)
+from textual.widgets.selection_list import Selection
+
+from siftmesh_core.config import SiftmeshSettings, save_agent_selection
+from siftmesh_core.doctor import probe_agents, run_setup
+
+_FLOOR = "deterministic_executor"
+
+
+class OnboardingScreen(Screen):
+    """Detect installed/authenticated/sandboxed agents and persist the chosen set."""
+
+    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
+
+    def __init__(self, *, settings: SiftmeshSettings) -> None:
+        super().__init__()
+        self.settings = settings
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Static(
+            "Pick the agents SIFTMesh may use (live agents need a CLI + auth + a sandbox recipe). "
+            "The deterministic floor is always available.",
+            id="intro",
+        )
+        yield SelectionList[str](id="agentsel")
+        with Horizontal(id="scoperow"):
+            yield Label("Save to:")
+            with RadioSet(id="scope"):
+                yield RadioButton("global (~/.config)", value=True, id="scope-global")
+                yield RadioButton("project (./siftmesh.toml)", id="scope-project")
+        with Horizontal(id="setupbtns"):
+            yield Button("Install all backends", id="install", variant="primary")
+            yield Button("Re-probe", id="reprobe")
+            yield Button("Save selection", id="save", variant="success")
+        with VerticalScroll(id="setupstatus"):
+            yield Static(id="statusline")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        self._populate()
+
+    def _populate(self) -> None:
+        cap = probe_agents(self.settings)
+        sel = self.query_one("#agentsel", SelectionList)
+        sel.clear_options()
+        chosen = set(self.settings.agent_preference)
+        for a in cap.agents:
+            if a.profile_id == _FLOOR:
+                continue  # the floor is implicit (always appended)
+            badge = (
+                f"{a.profile_id:<18} "
+                f"present={'yes' if a.present else 'no '} "
+                f"auth={'yes' if a.auth_ok else 'no '} "
+                f"sandboxed={'yes' if a.sandboxed else 'NO '} "
+                f"tools={a.tool_reachable}"
+            )
+            ready = a.present and a.auth_ok and a.sandboxed
+            sel.add_option(Selection(badge, a.profile_id, ready or a.profile_id in chosen))
+        self._status(
+            f"default agent today: {cap.chosen}"
+            + (f" · live ready: {cap.live_candidate}" if cap.live_candidate else "")
+        )
+
+    def _status(self, msg: str) -> None:
+        self.query_one("#statusline", Static).update(msg)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "install":
+            self._status("installing backends (uv sync --all-extras)…")
+            self._install()
+        elif event.button.id == "reprobe":
+            self._populate()
+        elif event.button.id == "save":
+            self._save()
+
+    @work(thread=True, exclusive=True)
+    def _install(self) -> None:
+        code = run_setup(self.settings)
+        msg = "install complete — re-probing." if code == 0 else "install FAILED (see terminal)."
+        self.app.call_from_thread(self._after_install, msg)
+
+    def _after_install(self, msg: str) -> None:
+        self._status(msg)
+        self._populate()
+
+    def _save(self) -> None:
+        selected = list(self.query_one("#agentsel", SelectionList).selected)
+        preference = [*selected, _FLOOR] if selected else [_FLOOR]
+        executor = "auto" if selected else "deterministic"
+        scope = "project" if self.query_one("#scope", RadioSet).pressed_index == 1 else "global"
+        path = save_agent_selection(executor, preference, scope=scope)  # type: ignore[arg-type]
+        self._status(f"saved → {path}  (executor={executor}, preference={preference})")

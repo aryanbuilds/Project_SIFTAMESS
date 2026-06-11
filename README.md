@@ -5,17 +5,20 @@ Protocol SIFT. **The LLM proposes; deterministic code decides** — every findin
 claim, every claim is critiqued by deterministic code, and every run is a replayable, audited chain of
 custody. (`uv`-managed; do not use pip/venv.)
 
-## Setup (two commands)
+## Setup + onboarding (one command)
 
 ```bash
-uv sync                       # base deps + dev tools (ruff/mypy/pytest)
-uv run siftmesh doctor --setup   # installs ALL backends (forensic + brief + a2a) + the Volatility
-                                 # symbol cache, then verifies the host. Fails closed on a missing dep.
+uv sync                  # base deps + dev tools (ruff/mypy/pytest)
+uv run siftmesh setup    # installs ALL backends + the Volatility symbol cache, probes the coding
+                         # agents, lets you pick which to use, and remembers the choice.
 ```
 
-`doctor --setup` replaces the old `uv sync --extra …` / `export SIFTMESH_VOL_SYMBOL_DIRS=…` dance.
-(Note: plain `uv sync --extra X` is *declarative* — it removes extras you don't name; `--setup`
-runs `uv sync --all-extras`.)
+`siftmesh setup` is the single onboarding entry: it installs everything (`uv sync --all-extras`),
+probes which agents are installed + authenticated + sandboxed, opens a TUI to pick a **multi-agent**
+set (or `setup --no-tui`/`--yes` for a headless auto-pick of the ready agents), and persists it to
+`~/.config/siftmesh/siftmesh.toml` (a project `./siftmesh.toml` overrides it). `doctor [--setup]`
+remains for a pure host/backend health check. (Plain `uv sync --extra X` is *declarative* — it
+removes extras you don't name; `setup`/`doctor --setup` run `uv sync --all-extras`.)
 
 ## Run an investigation — automated (the headline)
 
@@ -45,6 +48,20 @@ writes a report whose "Answer to the incident objective" section is anchored to 
   `--all-live` overrides. A pre-flight check estimates derived-data size vs free disk and, if it won't
   fit, prints a partition plan (run portions → `prune` → `merge`); `--force` skips it.
 
+## Watch it live — the cockpit (TUI)
+
+```bash
+uv run siftmesh tui                 # home: pick a run to attach, start a new one, or onboard agents
+uv run siftmesh tui case_runs/RUN-… # attach the live cockpit to a run
+```
+
+The Textual cockpit is a **read-only** view over the run dir (it renders `run_state.json` + the
+ledgers on a 1 s poll; launching a run uses the same governed engine). Four zones: a **vitals** bar
+(mode · stage · gate · agent · tasks done/total · total & current-stage timers), a **pipeline ribbon**
+(the FSM path, done/current/pending), a **task table** (per-task status · attempt · family · agent ·
+claims · verdict) beside claims/critic/agent/budget summaries, and a live **audit-log** ticker — plus
+a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui`, or `setup`).
+
 ## Command reference
 
 **Automated (one deterministic engine; modes are config):**
@@ -56,6 +73,8 @@ writes a report whose "Answer to the incident objective" section is anchored to 
 | `status RUN` | Show state, mode, iteration, gates, per-task attempts, quarantined tasks. |
 | `approve RUN --gate G` / `reject RUN --gate G` | Resolve a gate (plan\|dispatch\|retry\|report) in guided mode. |
 | `merge CASE --run RUN_A --run RUN_B … [--agent claude]` | Combine ≥2 completed runs into one provenance-tracked report (opt-in advisory synthesis). |
+| `setup [--no-tui] [--scope global\|project] [--yes]` | One-command onboarding: install backends + probe agents + pick a multi-agent set + persist it. |
+| `tui [RUN]` | Live Textual cockpit: attach to a run, or the home/run-picker (start a run, onboard agents). |
 | `doctor [--setup] [--protocol-sift] [--agents]` | Verify the host/backends (fail-closed); `--setup` installs + configures them; `--agents` onboards the coding agents. |
 
 **Manual / deterministic (staged — full control; `run --auto` does all of this for you):**

@@ -969,6 +969,90 @@ def doctor(
     raise typer.Exit(code=run_doctor(protocol_sift=protocol_sift, agents=agents, setup=setup))
 
 
+@app.command()
+def setup(
+    no_tui: Annotated[
+        bool,
+        typer.Option(
+            "--no-tui", help="Headless: install + auto-select ready agents, no TUI screen."
+        ),
+    ] = False,
+    scope: Annotated[
+        str,
+        typer.Option("--scope", help="Persist the selection to 'global' (~/.config) or 'project'."),
+    ] = "global",
+    yes: Annotated[
+        bool, typer.Option("--yes", "-y", help="Non-interactive: accept the ready agents.")
+    ] = False,
+) -> None:
+    """One-command onboarding: install backends, probe agents, pick a set, and remember it."""
+    import importlib
+
+    from siftmesh_core.config import load_settings, save_agent_selection
+    from siftmesh_core.doctor import probe_agents, run_setup
+
+    if scope not in ("global", "project"):
+        typer.echo("setup failed: --scope must be 'global' or 'project'", err=True)
+        raise typer.Exit(code=1)
+
+    settings = load_settings()
+    headless = no_tui or yes
+    if not headless:
+        from siftmesh_core import tui as _tui
+
+        try:
+            _tui.require_textual()
+        except _tui.TextualMissingError:
+            headless = True  # no Textual → fall back to the headless flow (still installs it)
+
+    if not headless:
+        from siftmesh_core import tui as _tui
+
+        raise typer.Exit(code=_tui.launch(settings=settings, start="onboard"))
+
+    # Headless: install everything, then auto-select the agents that are actually ready.
+    if run_setup(settings) != 0:
+        raise typer.Exit(code=1)
+    importlib.invalidate_caches()
+    cap = probe_agents(load_settings())
+    ready = [
+        a.profile_id
+        for a in cap.agents
+        if a.kind != "deterministic" and a.present and a.auth_ok and a.sandboxed
+    ]
+    preference = [*ready, "deterministic_executor"]
+    executor = "auto" if ready else "deterministic"
+    path = save_agent_selection(executor, preference, scope=scope)  # type: ignore[arg-type]
+    typer.echo(f"setup: saved {path}")
+    typer.echo(f"  executor_selection = {executor}")
+    typer.echo(f"  agent_preference   = {preference}")
+    if not ready:
+        typer.echo("  (no live agent ready — runs use the deterministic floor; install/auth one)")
+    raise typer.Exit(code=0)
+
+
+@app.command()
+def tui(
+    run_dir: Annotated[
+        str | None,
+        typer.Argument(help="Attach to this run dir; omit for the home/run-picker."),
+    ] = None,
+) -> None:
+    """Launch the live Textual cockpit (attach to a run, or browse/start one)."""
+    from siftmesh_core import tui as _tui
+    from siftmesh_core.config import load_settings
+
+    try:
+        _tui.require_textual()
+    except _tui.TextualMissingError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    if run_dir is not None and not Path(run_dir).is_dir():
+        typer.echo(f"run directory does not exist: {run_dir}", err=True)
+        raise typer.Exit(code=1)
+    raise typer.Exit(code=_tui.launch(run_dir, settings=load_settings()))
+
+
 @agents_app.command("list")
 def agents_list() -> None:
     """List coding agents: installed? authenticated? can reach the typed tools? which is default?"""

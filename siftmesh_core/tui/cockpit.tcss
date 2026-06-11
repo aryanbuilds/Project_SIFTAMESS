@@ -1,0 +1,85 @@
+/* SIFTMesh cockpit layout (Epic O). Four zones by attention priority + a nav column. */
+
+Screen {
+    layout: vertical;
+}
+
+#vitals {
+    dock: top;
+    height: 1;
+    padding: 0 1;
+    background: $boost;
+    color: $text;
+}
+
+#ribbon {
+    height: 1;
+    padding: 0 1;
+    color: $text-muted;
+}
+
+#working {
+    height: 1fr;
+}
+
+#tasks {
+    width: 2fr;
+    height: 1fr;
+    border: round $primary;
+}
+
+#side {
+    width: 1fr;
+    height: 1fr;
+    border: round $secondary;
+}
+
+#navcol {
+    width: 1fr;
+    height: 1fr;
+}
+
+#nav {
+    height: 2fr;
+    border: round $accent;
+}
+
+#fileview {
+    height: 1fr;
+    border: round $accent;
+    padding: 0 1;
+    overflow: auto scroll;
+}
+
+#ticker {
+    dock: bottom;
+    height: 10;
+    border: round $warning;
+    background: $surface;
+}
+
+/* Responsive: stack the right column under the task table on narrow terminals. */
+Screen.-narrow #working {
+    layout: vertical;
+}
+Screen.-narrow #tasks,
+Screen.-narrow #side,
+Screen.-narrow #navcol {
+    width: 1fr;
+}
+
+/* Onboarding + launcher + home spacing. */
+#intro, #hometitle {
+    padding: 1 1;
+}
+#setupbtns, #homebtns, #scoperow {
+    height: auto;
+    padding: 1 0;
+}
+#agentsel {
+    height: 1fr;
+    border: round $primary;
+}
+#newrun {
+    padding: 1 2;
+}

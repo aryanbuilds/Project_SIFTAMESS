@@ -133,6 +133,8 @@ siftmesh run ./case01 --evidence ./evidence --auto --max-iterations 3
 siftmesh run ./case01 --evidence ./evidence --review-only
 siftmesh resume RUN-001
 siftmesh status RUN-001
+siftmesh setup                                      # one-command onboarding: install + probe agents + pick a set + persist (Epic O)
+siftmesh tui [RUN]                                  # live Textual cockpit (attach to a run, or home/run-picker; Epic O)
 siftmesh doctor                                     # verify host + each tool backend; fails closed on missing deps
 siftmesh doctor --protocol-sift                     # detect the ~/.claude Protocol SIFT layer (Claude Code, skills, tools)
 siftmesh doctor --agents                            # onboard coding agents (installed/authed/sandboxed; Epic Q)

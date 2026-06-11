@@ -18,6 +18,7 @@ from __future__ import annotations
 import errno
 import os
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 
 
@@ -37,7 +38,7 @@ def _link_or_copy(src: Path, dst: Path) -> None:
             raise
 
 
-def curate_evidence(selected_paths: list[Path | str], dest_dir: Path | str) -> Path:
+def curate_evidence(selected_paths: Sequence[Path | str], dest_dir: Path | str) -> Path:
     """Assemble an evidence root from the selected files/folders; return the root to ingest.
 
     - exactly one directory selected → return it as-is (no curation).

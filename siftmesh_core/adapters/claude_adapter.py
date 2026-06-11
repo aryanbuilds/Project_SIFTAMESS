@@ -32,6 +32,7 @@ from pathlib import Path
 from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
+from siftmesh_core.adapters.sandbox import scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
@@ -72,6 +73,32 @@ _DISALLOWED_TOOLS = (
 )
 
 
+def claude_sandbox_flags(
+    allowed_tools: list[str] | tuple[str, ...], *, permission_mode: str = "dontAsk"
+) -> list[str]:
+    """The Claude-CLI sandbox flag block (shared by the claude adapter + the headless claude_flag).
+
+    Confirmed on Claude Code v2.1.x: ``--tools ""`` disables ALL built-in tools (a future-proof
+    kill-switch that, unlike a hand-maintained ``--disallowedTools`` list, also covers new built-ins
+    like Workflow/ToolSearch/ScheduleWakeup) while leaving the MCP tools available; ``--allowedTools
+    mcp__siftmesh__*`` pre-approves only the contract's typed tools; ``--disallowedTools`` stays as
+    defence-in-depth; ``--permission-mode dontAsk`` auto-denies anything else with no prompt/hang.
+    Wiring the typed tools (``--mcp-config``) WITHOUT this block would leave native tools enabled —
+    so the two must never be separated.
+    """
+    tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
+    return [
+        "--tools",
+        "",
+        "--allowedTools",
+        tools,
+        "--disallowedTools",
+        *_DISALLOWED_TOOLS,
+        "--permission-mode",
+        permission_mode,
+    ]
+
+
 def _claude_logged_in() -> bool:
     """True if the Claude Code CLI is already logged in (its own credential store exists).
 
@@ -101,12 +128,18 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
     cli = getattr(settings, "claude_cli_path", "claude")
     if shutil.which(cli) is None:
         return None
+    # --strict-mcp-config WITHOUT --mcp-config => zero MCP servers (v2.1.x), closing the leak where
+    # ambient claude.ai-hosted / user / project MCP servers would otherwise load into this advisory,
+    # tool-less call; --tools "" denies every built-in. The advisory agent reasons over text only.
     argv = [
         cli,
         "-p",
         prompt,
         "--output-format",
         "json",
+        "--strict-mcp-config",
+        "--tools",
+        "",
         "--disallowedTools",
         *_DISALLOWED_TOOLS,
         "--permission-mode",
@@ -150,7 +183,6 @@ def _build_claude_argv(
     auto-denies anything else with no prompt/hang, and ``--strict-mcp-config`` ignores ambient MCP
     servers. ``--model`` (when set) pins the model. Re-confirm ``claude --help`` on version bumps.
     """
-    tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
     argv = [
         cli_path,
         "-p",
@@ -160,12 +192,7 @@ def _build_claude_argv(
         "--mcp-config",
         str(mcp_config),
         "--strict-mcp-config",
-        "--allowedTools",
-        tools,
-        "--disallowedTools",
-        *_DISALLOWED_TOOLS,
-        "--permission-mode",
-        permission_mode,
+        *claude_sandbox_flags(allowed_tools, permission_mode=permission_mode),
     ]
     if model:
         argv += ["--model", model]
@@ -214,6 +241,9 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
                 timeout=self.settings.agent_timeout_seconds,
                 shell=False,
                 check=False,
+                cwd=scratch_cwd(
+                    ctx.run, contract.task_id
+                ),  # never the operator CWD (injection/escape)
             )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return self._error(contract, ctx, started, "agent_failed_or_timeout")

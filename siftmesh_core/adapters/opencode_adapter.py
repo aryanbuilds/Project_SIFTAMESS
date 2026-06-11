@@ -1,9 +1,10 @@
 """OpenCode headless adapter (Epic F, F8) — secondary live executor.
 
-Thin wrapper around ``opencode run … --output-format json``. OpenCode has no MCP
-support, so it cannot be constrained to the typed tools as tightly as the Claude
-adapter — it is the secondary path. Unavailable (→ floor) when the CLI is absent.
-Live validation is HUMAN-GATED; unit tests mock the subprocess boundary only.
+Thin wrapper around ``opencode run … --format json``. OpenCode DOES support MCP servers (via the
+``mcp`` key in an ``opencode.json`` config), but SIFTMesh does not yet wire the run-scoped typed
+server for it (round-2 work), so today it cannot be constrained to the typed tools as tightly as the
+Claude adapter — it is the secondary path. Unavailable (→ floor) when the CLI is absent. Live
+validation is HUMAN-GATED; unit tests mock the subprocess boundary only.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from datetime import UTC, datetime
 from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
+from siftmesh_core.adapters.sandbox import scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
 from siftmesh_core.schemas.injection_alert import InjectionAlert
@@ -39,9 +41,10 @@ def _build_opencode_argv(cli_path: str, prompt: str, model: str) -> list[str]:
 def _collect_text(stdout: str) -> str:
     """Concatenate the agent's text from OpenCode's line-delimited JSON events (best-effort).
 
-    OpenCode streams ``{type, ...}`` events; the assistant's answer arrives as ``text`` events.
-    Tolerant of shape drift (re-confirm at live time): any line with a ``text`` (or ``part.text``)
-    field contributes; if nothing parses as line-JSON, the raw stdout is used as the message.
+    OpenCode streams ``{"type": <kind>, ..., "part": {"text": ...}}`` events; the assistant's answer
+    arrives as ``type == "text"`` events. We take ``part.text`` ONLY from those (skipping
+    ``reasoning`` / ``tool_use`` / ``step_*`` events) so chain-of-thought — which may hold a draft
+    ``{claims:[…]}`` — never leaks into the parsed answer. If nothing parses, raw stdout is used.
     """
     parts: list[str] = []
     for raw_line in stdout.splitlines():
@@ -52,12 +55,10 @@ def _collect_text(stdout: str) -> str:
             event = json.loads(line)
         except (json.JSONDecodeError, ValueError):
             continue
-        if not isinstance(event, dict):
+        if not isinstance(event, dict) or event.get("type") != "text":
             continue
-        text = event.get("text")
-        if not isinstance(text, str):
-            part = event.get("part")
-            text = part.get("text") if isinstance(part, dict) else None
+        part = event.get("part")
+        text = part.get("text") if isinstance(part, dict) else event.get("text")
         if isinstance(text, str):
             parts.append(text)
     return "".join(parts) if parts else stdout
@@ -92,6 +93,9 @@ class OpenCodeHeadlessAdapter(ExecutorAdapter):
                 timeout=self.settings.agent_timeout_seconds,
                 shell=False,
                 check=False,
+                cwd=scratch_cwd(
+                    ctx.run, contract.task_id
+                ),  # never the operator CWD (injection/escape)
             )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return self._error(contract, ctx, started, "agent_failed_or_timeout")

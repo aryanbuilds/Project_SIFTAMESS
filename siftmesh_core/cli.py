@@ -419,36 +419,35 @@ _AGENT_ALIASES = {
     "opencode": "opencode_headless",
     "gemini": "gemini_headless",
     "codex": "codex_headless",
-    "openclaw": "openclaw_headless",
     "deterministic": "deterministic_executor",
     "floor": "deterministic_executor",
 }
-# Every live connector, in default preference order (the floor is always appended last).
-_LIVE_PROFILES = (
-    "claude_headless",
-    "opencode_headless",
-    "gemini_headless",
-    "codex_headless",
-    "openclaw_headless",
-)
 
 
 def _agent_overrides(agent: str | None) -> dict[str, object]:
     """Translate a friendly --agent choice into settings overrides (opt into the live chain).
 
-    Any live agent (claude/opencode/gemini/codex/openclaw) is put first in the preference chain
-    (the others stay fallbacks, floor last) and flips executor_selection to ``auto``.
-    ``deterministic`` pins the floor.
+    The chosen agent is put first; the ONLY fallback is the deterministic floor — never another live
+    agent (an operator who explicitly chose the sandboxed Claude must not be silently downgraded to
+    a different live agent with a different safety posture). ``deterministic`` pins the floor. An
+    unknown value is a hard error (no silent passthrough that could dispatch the wrong agent).
     """
     if not agent:
         return {}
-    profile = _AGENT_ALIASES.get(agent, agent)  # passthrough if already a full profile_id
+    from siftmesh_core.adapters.profiles import load_profiles
+
+    profile = _AGENT_ALIASES.get(agent, agent)  # accept a friendly alias or a full profile_id
+    if profile not in load_profiles():
+        valid = ", ".join(sorted(_AGENT_ALIASES))
+        raise typer.BadParameter(
+            f"unknown agent '{agent}'. Choose one of: {valid} (or a profile_id). "
+            "See `siftmesh agents list`."
+        )
     if profile == "deterministic_executor":
         return {"executor_selection": "deterministic"}
-    others = [p for p in _LIVE_PROFILES if p != profile]
     return {
         "executor_selection": "auto",
-        "agent_preference": [profile, *others, "deterministic_executor"],
+        "agent_preference": [profile, "deterministic_executor"],
     }
 
 
@@ -567,7 +566,11 @@ def run(
     ] = None,
     agent: Annotated[
         str | None,
-        typer.Option("--agent", help="Opt into a live agent: claude | opencode | deterministic."),
+        typer.Option(
+            "--agent",
+            help="Opt into a live agent: claude | gemini | codex | opencode | deterministic "
+            "(see `siftmesh agents list`).",
+        ),
     ] = None,
     brief: Annotated[
         str | None,
@@ -949,8 +952,8 @@ def doctor(
         bool,
         typer.Option(
             "--agents",
-            help="Also probe the coding agents (claude/gemini/codex/opencode/openclaw): "
-            "which are installed + authenticated, and which is the live default.",
+            help="Also probe the coding agents (claude/gemini/codex/opencode): "
+            "which are installed + authenticated + sandboxed, and which is the live default.",
         ),
     ] = False,
     setup: Annotated[
@@ -973,17 +976,20 @@ def agents_list() -> None:
     from siftmesh_core.doctor import probe_agents
 
     cap = probe_agents(load_settings())
-    typer.echo(f"{'agent':<22} {'present':<8} {'auth':<8} {'tools':<12} version")
+    typer.echo(f"{'agent':<22} {'present':<8} {'auth':<8} {'sandbox':<11} {'tools':<12} version")
     for c in cap.agents:
         sel = "  <- default" if c.selected else ""
         typer.echo(
             f"{c.profile_id:<22} {('yes' if c.present else 'no'):<8} "
-            f"{('yes' if c.auth_ok else 'no'):<8} {c.tool_reachable:<12} "
+            f"{('yes' if c.auth_ok else 'no'):<8} "
+            f"{('yes' if c.sandboxed else 'NO'):<11} {c.tool_reachable:<12} "
             f"{(c.version if c.present else 'absent')}{sel}"
         )
-    typer.echo(f"\ndefault agent: {cap.chosen}")
+    typer.echo(f"\ndefault agent (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        typer.echo("(no live agent ready — runs use the deterministic real-tool floor)")
+        typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor)")
+    if cap.live_candidate and cap.live_candidate != cap.chosen:
+        typer.echo(f"live agent ready — opt in with `--agent`: {cap.live_candidate}")
     typer.echo("select one for a run with `--agent <name>` (e.g. --agent gemini).")
 
 
@@ -1019,12 +1025,17 @@ def agents_inspect(profile_id: str) -> None:
             recipe += [prof.model_flag, prof.model]
         recipe += [*prof.extra_argv, *prof.native_tool_argv]
         typer.echo(f"launch          : {' '.join(recipe)}")
+        typer.echo(
+            f"native deny     : {' '.join(prof.native_tool_argv) or '(none — NOT dispatchable)'}"
+        )
         typer.echo(f"auth_env        : {', '.join(prof.auth_env) or '(none)'}")
+        typer.echo(f"auth_files      : {', '.join(prof.auth_files) or '(none)'}")
         typer.echo(f"mcp_strategy    : {prof.mcp_strategy}")
     if cap is not None:
         typer.echo(
             f"status          : present={cap.present} auth={cap.auth_ok} "
-            f"tools={cap.tool_reachable}{' (default)' if cap.selected else ''}"
+            f"sandboxed={cap.sandboxed} tools={cap.tool_reachable}"
+            f"{' (default)' if cap.selected else ''}"
         )
     typer.echo("allowed tools   : per-task (the contract's allowed_tools); native tools denied.")
 

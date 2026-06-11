@@ -17,7 +17,6 @@ _EXPECTED = {
     # Epic Q — agent-neutral headless connectors.
     "gemini_headless",
     "codex_headless",
-    "openclaw_headless",
 }
 
 

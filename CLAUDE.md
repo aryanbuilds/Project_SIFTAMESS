@@ -135,7 +135,10 @@ siftmesh resume RUN-001
 siftmesh status RUN-001
 siftmesh doctor                                     # verify host + each tool backend; fails closed on missing deps
 siftmesh doctor --protocol-sift                     # detect the ~/.claude Protocol SIFT layer (Claude Code, skills, tools)
+siftmesh doctor --agents                            # onboard coding agents (installed/authed/sandboxed; Epic Q)
 siftmesh protocol-sift inspect                      # inspect & govern Protocol SIFT (env-only capability map; PLAN/09)
+siftmesh agents list                                # agent-neutral onboarding: which agents are usable + the default
+siftmesh agents inspect <agent>                     # one agent's launch recipe + sandbox/auth/tool-reach status
 ```
 
 Debug commands:

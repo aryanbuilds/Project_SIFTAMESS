@@ -73,6 +73,48 @@ Two integration surfaces exist. We ship them in order:
   `--agent` reorder, probe map (present/absent/auth), byte-stable map, `doctor --agents`, `agents`
   CLI. No live agent, no SANS evidence (CLAUDE §2B).
 
+### Round-1 audit corrections (2026-06-11, workflow-verified)
+
+A 22-agent MCP/web-grounded audit of the first round found and fixed several real issues (the live
+CLI facts were confirmed against current docs; flags stay `verify-live` per CLAUDE §2B):
+
+**Evidence safety (the agents ran weaker than the Claude adapter):**
+- **Fail closed on un-sandboxed recipes.** A headless profile is dispatchable ONLY if it carries
+  native-tool deny/sandbox flags (`native_tool_argv`) or reaches tools via `claude_flag` — else
+  `available()` is False → floor. Shipped flags: codex `--sandbox read-only --ask-for-approval never
+  --ephemeral` (+ mandatory `--skip-git-repo-check`); gemini `--approval-mode default` (auto-denies
+  shell/write/web_fetch; never `--yolo`).
+- **Pinned, run-scoped cwd** for every agent subprocess (claude/opencode/headless) via a fresh
+  `run/scratch/<task>` dir — never the operator's CWD, from which these CLIs auto-load TRUSTED
+  `GEMINI.md`/`AGENTS.md`/`CLAUDE.md` (a prompt-injection channel) and where workspace writes would
+  escape the run-dir policy.
+- **Minimized child env** (headless): only the agent's own `auth_env`/`env_passthrough` + an
+  allowlisted base — so a gemini child can't read `ANTHROPIC_API_KEY`/cloud creds.
+- **`claude_flag` now injects the full Claude sandbox block** (shared `claude_sandbox_flags`), not
+  just `--mcp-config` — typed-tool wiring and native-tool denial can never be separated.
+- **`--agent X` falls back only to the deterministic floor**, never to a *different* live agent
+  (an operator who chose sandboxed Claude is never silently downgraded). Unknown `--agent` is a hard
+  error, not a silent passthrough.
+- **Claude adapter hardening:** added `--tools ""` (future-proof built-in kill-switch covering new
+  tools the deny-list misses); `invoke_claude_text` (advisory path) gained `--strict-mcp-config` +
+  `--tools ""` (it was leaking ambient claude.ai/user MCP servers into the tool-less call).
+
+**Correctness:**
+- **Codex `exec --json` is a JSONL event stream** — the old whole-stdout `json.loads` always failed,
+  so every codex run would have been `retry_required`. `extract_agent_text` is now JSONL-aware (codex
+  `item.completed` agent-message, gemini stream-json, opencode `type:text`) and recovers nested/
+  escaped `{claims}` envelopes. Codex `--model` is now actually sent (was silently dropped).
+- **Auth fidelity:** dropped `OPENAI_API_KEY` from codex (it's a false positive — codex reads
+  `CODEX_API_KEY`); added cached-credential detection (`auth_files`: `~/.codex/auth.json`,
+  `~/.gemini/oauth_creds.json`). Gemini model unpinned (CLI auto-routes; drift-proof).
+- **`doctor --agents` honesty:** reports a `sandboxed` column; the default mirrors real dispatch
+  (under the `deterministic` default it's the floor) and the ready live agent is surfaced separately
+  as the `--agent` opt-in.
+
+**Removed:** `openclaw` — research showed it is a personal-assistant gateway daemon (messaging
+bridge with by-design shell + external delivery), not a workspace-scoped coding agent, and
+`openclaw run` is not a real command; its delivery/shell surface conflicts with evidence safety.
+
 ### Honest tool-reachability (round 1)
 
 Only Claude's `--mcp-config` (`mcp_strategy: claude_flag`) is **verified** to reach the run-scoped

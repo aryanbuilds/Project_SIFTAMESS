@@ -35,19 +35,26 @@ profiles:
     max_runtime_seconds: 300
 
   # Agent-neutral headless connectors (Epic Q). One config-driven adapter; adding an agent is a row.
-  # Drift-prone fields (model ids, launch flags, auth env names) are best-current and tagged
-  # `verify-live` — confirm on the maintainer box before relying on them (CLAUDE §2B; PLAN/13 §10).
-  # mcp_strategy: only `claude_flag` is verified to reach the run-scoped typed tools today; these
-  # default to `none` (run, but no typed tools until per-run MCP wiring lands in round 2 / ACP).
+  # Recipes are research-grounded (2026-06-11, PLAN/13) but drift; flags/ids tagged `verify-live` are
+  # confirmed on the maintainer box before a live run (CLAUDE §2B). native_tool_argv carries the
+  # native-tool DENY/sandbox flags and is REQUIRED — a recipe without it fails closed (not dispatched).
+  # mcp_strategy: only `claude_flag` reaches the run-scoped typed tools today; these are `none`
+  # (run sandboxed, but no typed tools until per-run MCP wiring lands in round 2 / ACP).
   - profile_id: gemini_headless          # live Gemini CLI: `gemini -p "<prompt>" --output-format json`
     kind: headless
     model_tier: high
     cost_class: cheap
-    model: gemini-2.5-pro                 # verify-live (model ids drift)
-    launch_argv: ["gemini", "-p"]         # verify-live
-    model_flag: "--model"                 # verify-live
-    extra_argv: ["--output-format", "json"]   # verify-live
-    auth_env: ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+    # model omitted on purpose: the Gemini CLI auto-routes to the current model (gemini-2.5/3.x),
+    # so we don't pin a drift-prone id. Set `model:` + keep model_flag to override.
+    launch_argv: ["gemini", "-p"]         # confirmed v0.45.x (headless: -p / non-TTY)
+    model_flag: "--model"                 # confirmed (-m/--model)
+    extra_argv: ["--output-format", "json"]   # confirmed (JSON envelope: {response, stats, ...})
+    # Deny mutating native tools: headless `default` approval auto-DENIES shell/write/web_fetch.
+    # (Read-only tools stay, but the run-scoped cwd bounds them; full deny is round-2 settings.json.)
+    native_tool_argv: ["--approval-mode", "default"]   # yolo-proof; never pass --yolo/--approval-mode yolo
+    auth_env: ["GEMINI_API_KEY", "GOOGLE_API_KEY"]   # GOOGLE_API_KEY = Vertex express; paid key only after 2026-06-18
+    auth_files: ["~/.gemini/oauth_creds.json"]       # cached OAuth login (consumer OAuth ends 2026-06-18)
+    env_passthrough: ["GOOGLE_GENAI_USE_VERTEXAI", "GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION", "GOOGLE_GENAI_USE_GCA"]
     output_format: agent_json
     mcp_strategy: none                    # verify-live: per-run MCP wiring (round 2 / ACP)
     max_runtime_seconds: 600
@@ -56,19 +63,19 @@ profiles:
     kind: headless
     model_tier: high
     cost_class: expensive
-    model: gpt-5-codex                    # verify-live
-    launch_argv: ["codex", "exec"]        # verify-live
-    extra_argv: ["--json"]                # verify-live
-    auth_env: ["CODEX_API_KEY", "OPENAI_API_KEY"]
+    model: gpt-5.5                        # verify-live (gpt-5.5 default; gpt-5.4-mini cheaper)
+    launch_argv: ["codex", "exec"]        # confirmed (codex exec = non-interactive)
+    model_flag: "--model"                 # confirmed (-m/--model) — without this the model was silently never sent
+    # --skip-git-repo-check is MANDATORY (codex exec refuses to run outside a git repo; run dirs aren't).
+    extra_argv: ["--json", "--skip-git-repo-check"]   # confirmed
+    # Sandbox: read-only (no writes/network, OS-enforced) + never escalate approvals + --ephemeral
+    # (don't persist a session rollout with case data outside the run dir). Don't rely on config defaults.
+    native_tool_argv: ["--sandbox", "read-only", "--ask-for-approval", "never", "--ephemeral"]
+    auth_env: ["CODEX_API_KEY"]          # OPENAI_API_KEY is NOT read by codex (was a false positive)
+    auth_files: ["~/.codex/auth.json"]   # cached `codex login` (ChatGPT OAuth or API key)
     output_format: agent_json
     mcp_strategy: none                    # verify-live
     max_runtime_seconds: 600
-
-  - profile_id: openclaw_headless        # live OpenClaw CLI (launch + flags unconfirmed)
-    kind: headless
-    model_tier: low
-    cost_class: cheap
-    launch_argv: ["openclaw", "run"]      # verify-live
-    output_format: agent_json
-    mcp_strategy: none                    # verify-live
-    max_runtime_seconds: 600
+  # OpenClaw intentionally NOT shipped: it is a personal-assistant gateway daemon (messaging bridge
+  # with by-design shell + external delivery), not a workspace-scoped coding agent, and `openclaw run`
+  # is not a real subcommand. Its delivery/shell surface conflicts with evidence safety (PLAN/13).

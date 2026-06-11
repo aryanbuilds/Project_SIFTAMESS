@@ -10,7 +10,6 @@ one is fine here; it only fails closed when the corresponding tool is actually
 from __future__ import annotations
 
 import importlib.util
-import os
 import platform
 import shutil
 import subprocess
@@ -259,7 +258,6 @@ _DEFAULT_AGENT_ORDER = (
     "opencode_headless",
     "gemini_headless",
     "codex_headless",
-    "openclaw_headless",
 )
 
 
@@ -275,10 +273,18 @@ def _profile_cli(prof: AgentProfile, settings: SiftmeshSettings) -> str | None:
 
 
 def _agent_version(cli: str) -> str:
-    """Best-effort ``<cli> --version`` first line (fast, fixed-argv, never raises)."""
+    """Best-effort ``<cli> --version`` first line (fast, fixed-argv, abs-path, never raises)."""
+    resolved = shutil.which(cli)
+    if resolved is None:
+        return "absent"
     try:
         proc = subprocess.run(
-            [cli, "--version"], capture_output=True, text=True, timeout=5, shell=False, check=False
+            [resolved, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            shell=False,
+            check=False,
         )
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
         return "unknown"
@@ -287,7 +293,7 @@ def _agent_version(cli: str) -> str:
 
 
 def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
-    """Whether the agent is authenticated (env/credential present, or none required)."""
+    """Whether the agent is authenticated (env var / cached credentials, or none required)."""
     if prof.kind == "claude":
         try:
             from siftmesh_core.adapters.claude_adapter import claude_available
@@ -295,11 +301,28 @@ def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
             return bool(claude_available(settings))
         except Exception:
             return False
-    if prof.kind == "opencode":  # OpenCode uses its own config; presence is treated as usable
+    if (
+        prof.kind == "opencode"
+    ):  # OpenCode uses its own login (auth.json); presence is treated usable
         return shutil.which(settings.opencode_cli_path) is not None
     if prof.kind == "headless":
-        return (not prof.auth_env) or any(os.environ.get(v) for v in prof.auth_env)
+        from siftmesh_core.adapters.headless import profile_authed
+
+        return profile_authed(prof)
     return True
+
+
+def _agent_sandboxed(prof: AgentProfile) -> bool:
+    """Whether the agent's native tools are denied (claude yes; opencode no; headless: recipe)."""
+    if prof.kind in ("deterministic", "claude"):
+        return True
+    if prof.kind == "opencode":
+        return False  # secondary path; no native-tool deny wired (its adapter notes this)
+    if prof.kind == "headless":
+        from siftmesh_core.adapters.headless import is_sandboxed
+
+        return is_sandboxed(prof)
+    return False
 
 
 def _agent_tool_reach(prof: AgentProfile) -> str:
@@ -307,29 +330,38 @@ def _agent_tool_reach(prof: AgentProfile) -> str:
     if prof.kind in ("deterministic", "claude"):
         return "yes"
     if prof.kind == "opencode":
-        return "no"  # OpenCode has no MCP support (its adapter notes this)
+        return "no"  # OpenCode MCP wiring not done yet (round-2)
     if prof.kind == "headless":
         return "yes" if prof.mcp_strategy == "claude_flag" else "verify-live"
     return "verify-live"
 
 
-def _choose_default(caps: list[AgentCapability], settings: SiftmeshSettings) -> str:
-    """The profile SIFTMesh would dispatch to by default: first ready live agent, else the floor.
+def _is_ready(c: AgentCapability) -> bool:
+    """A live agent that can do forensic work: present + authed + sandboxed + tool-reaching."""
+    return c.present and c.auth_ok and c.sandboxed and c.tool_reachable == "yes"
 
-    "Ready" requires present + authenticated + actually able to reach the typed tools, so an agent
-    that can't reach the tools yet (``verify-live``) is never the silent default (the operator can
-    still select it explicitly with ``--agent``).
-    """
-    ready = {c.profile_id for c in caps if c.present and c.auth_ok and c.tool_reachable == "yes"}
+
+def _live_candidate(caps: list[AgentCapability], settings: SiftmeshSettings) -> str | None:
+    """Best ready LIVE agent to opt into via ``--agent`` (ignores executor_selection; not floor)."""
+    ready = {c.profile_id for c in caps if _is_ready(c) and c.kind != "deterministic"}
     order = settings.agent_preference or list(_DEFAULT_AGENT_ORDER)
-    for pid in order:
-        if pid in ready:
-            return pid
-    return "deterministic_executor"
+    return next((pid for pid in order if pid in ready), None)
+
+
+def _choose_default(caps: list[AgentCapability], settings: SiftmeshSettings) -> str:
+    """What a plain ``siftmesh run`` dispatches IN THIS CONFIG — mirrors ``resolve_profile``.
+
+    When ``executor_selection == "deterministic"`` (the shipped default) that is the floor, even if
+    a live agent is installed — so the map never claims a live agent will run when it won't. The
+    ready live agent is surfaced separately as ``live_candidate`` (the ``--agent`` opt-in).
+    """
+    if settings.executor_selection == "deterministic":
+        return "deterministic_executor"
+    return _live_candidate(caps, settings) or "deterministic_executor"
 
 
 def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap:
-    """Env-only onboarding probe: which agent CLIs are installed/authed + which is the default.
+    """Env-only onboarding probe: which agent CLIs are installed/authed/sandboxed + the default.
 
     Pure function of the host + the profile registry (no agent is launched beyond ``--version``),
     so the map is fully snapshot-stable. Fails closed via ``StrictModel`` validation.
@@ -345,6 +377,7 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
                     present=True,
                     version="builtin",
                     auth_ok=True,
+                    sandboxed=True,
                     tool_reachable="yes",
                     selected=False,
                 )
@@ -361,15 +394,17 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
                 present=present,
                 version=_agent_version(cli) if present and cli else "absent",
                 auth_ok=_agent_auth_ok(prof, settings),
+                sandboxed=_agent_sandboxed(prof),
                 tool_reachable=_agent_tool_reach(prof),
                 selected=False,
             )
         )
     chosen = _choose_default(caps, settings)
+    live = _live_candidate(caps, settings)
     caps.sort(key=lambda c: c.profile_id)
     for c in caps:
         c.selected = c.profile_id == chosen
-    return AgentCapabilityMap(agents=caps, chosen=chosen)
+    return AgentCapabilityMap(agents=caps, chosen=chosen, live_candidate=live)
 
 
 def write_agent_capability_map(
@@ -394,14 +429,17 @@ def _format_agents(cap: AgentCapabilityMap) -> list[str]:
         mark = OK if (c.present and c.auth_ok) else WARN
         sel = "  <- default" if c.selected else ""
         auth = "auth ok" if c.auth_ok else "no auth"
+        box = "sandboxed" if c.sandboxed else "UNSANDBOXED"
         present = c.version if c.present else "absent"
         lines.append(
             f"  {_MARK[mark]} {c.profile_id:<22} {present:<26} "
-            f"{auth:<8} tools:{c.tool_reachable}{sel}"
+            f"{auth:<8} {box:<11} tools:{c.tool_reachable}{sel}"
         )
-    lines.append(f"  default agent: {cap.chosen}")
+    lines.append(f"  default agent (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        lines.append("  (no live agent ready — runs use the deterministic real-tool floor)")
+        lines.append("  (a plain `siftmesh run` uses the deterministic real-tool floor)")
+    if cap.live_candidate and cap.live_candidate != cap.chosen:
+        lines.append(f"  live agent ready — opt in with `--agent`: {cap.live_candidate}")
     lines.append("  install/auth an absent agent, then re-run `siftmesh doctor --agents`.")
     return lines
 

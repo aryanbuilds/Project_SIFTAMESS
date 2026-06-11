@@ -25,13 +25,15 @@ class AgentCapability(StrictModel):
     kind: str  # "claude" | "opencode" | "headless" | "deterministic"
     present: bool  # the CLI is on PATH
     version: str  # `--version` first line, or "absent" / "unknown"
-    auth_ok: bool  # an auth env var is set (or none required)
+    auth_ok: bool  # an auth env var is set / cached credentials exist (or none required)
+    sandboxed: bool  # native agent tools are denied (REQUIRED to dispatch; honest evidence-safety)
     tool_reachable: str  # one of ToolReachability — can it reach the typed MCP tools?
-    selected: bool  # SIFTMesh would dispatch to this profile by default
+    selected: bool  # SIFTMesh would dispatch to this profile by default IN THIS CONFIG
 
 
 class AgentCapabilityMap(StrictModel):
-    """Validated onboarding map: every connector's status + the chosen live default."""
+    """Validated onboarding map: every connector's status + the dispatch default + the opt-in."""
 
     agents: list[AgentCapability] = Field(default_factory=list)  # sorted by profile_id
-    chosen: str  # the default profile_id (``deterministic_executor`` when no live agent is ready)
+    chosen: str  # what a plain `siftmesh run` dispatches in THIS config (honors executor_selection)
+    live_candidate: str | None = None  # best ready live agent to opt into via `--agent` (if any)

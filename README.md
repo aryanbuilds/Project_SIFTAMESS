@@ -34,11 +34,12 @@ under the deterministic critic → quarantines any single flagged task (the run 
 writes a report whose "Answer to the incident objective" section is anchored to real tool calls.
 
 - **No briefing file?** Use `--objective "was host X compromised? find initial access"`.
-- **Agent-neutral.** `--agent claude|gemini|codex|opencode|openclaw` (or `deterministic`). SIFTMesh is
+- **Agent-neutral.** `--agent claude|gemini|codex|opencode` (or `deterministic`). SIFTMesh is
   not Claude-only: any agent is a swap-in connector under the same deterministic governance. Run
   `siftmesh doctor --agents` (or `siftmesh agents list`) to onboard — it shows which agents are
-  installed + authenticated and picks the best default. (Only Claude reaches the typed tools today;
-  others run but their tool wiring is `verify-live` — see `PLAN/13`.)
+  installed + authenticated + sandboxed and picks the best default. (Only Claude reaches the typed
+  tools today; others run sandboxed but their tool wiring is `verify-live` — see `PLAN/13`. A live
+  agent is opt-in: a plain `run` uses the deterministic floor unless you pass `--agent`.)
 - **Free, no keys?** Omit `--agent …` — the deterministic real-tool floor runs the whole pipeline.
 - **Heavy tasks (disk-image extract, memory triage)** always run on the floor (the tool does the work);
   `--all-live` overrides. A pre-flight check estimates derived-data size vs free disk and, if it won't

@@ -22,7 +22,12 @@ from siftmesh_core.adapters.profiles import load_profiles
 from siftmesh_core.config import SiftmeshSettings, load_settings
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.protocol_sift import ProtocolSiftStatus, detect_protocol_sift
-from siftmesh_core.schemas.agent_capabilities import AgentCapability, AgentCapabilityMap
+from siftmesh_core.schemas.agent_capabilities import (
+    SAFETY_TIER_DESC,
+    AgentCapability,
+    AgentCapabilityMap,
+    safety_tier_label,
+)
 from siftmesh_core.schemas.agent_profile import AgentProfile
 
 OK = "ok"
@@ -354,6 +359,19 @@ def _agent_tool_reach(prof: AgentProfile) -> str:
     return "verify-live"
 
 
+def _agent_safety_tier(kind: str, sandboxed: bool, tool_reachable: str) -> str:
+    """Honest containment label derived from the capability facts (labels only — never gates).
+
+    T0 = the deterministic floor; T1 = sandboxed AND typed tools via strict-MCP (claude today);
+    T2 = any other live agent (unsandboxed, or tool-reach unproven/native — explicit opt-in).
+    """
+    if kind == "deterministic":
+        return "T0"
+    if sandboxed and tool_reachable == "yes":
+        return "T1"
+    return "T2"
+
+
 def _is_ready(c: AgentCapability) -> bool:
     """A live agent that can do forensic work: present + authed + sandboxed + tool-reaching."""
     return c.present and c.auth_ok and c.sandboxed and c.tool_reachable == "yes"
@@ -397,6 +415,7 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
                     auth_ok=True,
                     sandboxed=True,
                     tool_reachable="yes",
+                    safety_tier="T0",
                     selected=False,
                 )
             )
@@ -405,6 +424,8 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
             continue  # generic_shell / future kinds are not onboarding targets
         cli = _profile_cli(prof, settings)
         present = bool(cli and shutil.which(cli))
+        sandboxed = _agent_sandboxed(prof)
+        tool_reachable = _agent_tool_reach(prof)
         caps.append(
             AgentCapability(
                 profile_id=pid,
@@ -412,8 +433,9 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
                 present=present,
                 version=_agent_version(cli) if present and cli else "absent",
                 auth_ok=_agent_auth_ok(prof, settings),
-                sandboxed=_agent_sandboxed(prof),
-                tool_reachable=_agent_tool_reach(prof),
+                sandboxed=sandboxed,
+                tool_reachable=tool_reachable,
+                safety_tier=_agent_safety_tier(prof.kind, sandboxed, tool_reachable),
                 selected=False,
             )
         )
@@ -443,6 +465,7 @@ def write_agent_capability_map(
 
 def _format_agents(cap: AgentCapabilityMap) -> list[str]:
     lines = ["", "-- Coding agents (onboarding) --"]
+    profiles = load_profiles()
     for c in cap.agents:
         mark = OK if (c.present and c.auth_ok) else WARN
         sel = "  <- default" if c.selected else ""
@@ -450,16 +473,53 @@ def _format_agents(cap: AgentCapabilityMap) -> list[str]:
         box = "sandboxed" if c.sandboxed else "UNSANDBOXED"
         present = c.version if c.present else "absent"
         lines.append(
-            f"  {_MARK[mark]} {c.profile_id:<22} {present:<26} "
+            f"  {_MARK[mark]} {c.profile_id:<22} [{c.safety_tier}] {present:<22} "
             f"{auth:<8} {box:<11} tools:{c.tool_reachable}{sel}"
         )
+        # Guided remediation: for a not-ready agent, the exact fix (data-driven from its profile).
+        if not _is_ready(c) and c.kind != "deterministic":
+            for hint in agent_remediation(c, profiles.get(c.profile_id)):
+                lines.append(f"      → {hint}")
     lines.append(f"  default agent (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        lines.append("  (a plain `siftmesh run` uses the deterministic real-tool floor)")
+        lines.append("  (a plain `siftmesh run` uses the deterministic real-tool floor — tier T0)")
     if cap.live_candidate and cap.live_candidate != cap.chosen:
         lines.append(f"  live agent ready — opt in with `--agent`: {cap.live_candidate}")
+    else:
+        lines.append(
+            "  no live agent is ready — runs use the deterministic floor (T0); "
+            "onboard one above for T1/T2."
+        )
+    lines += _safety_tier_legend()
     lines.append("  install/auth an absent agent, then re-run `siftmesh doctor --agents`.")
     return lines
+
+
+def _safety_tier_legend() -> list[str]:
+    """The shared T0-T3 legend (CLI / doctor / TUI render the same honest definitions)."""
+    return ["  safety tiers:", *[f"    {safety_tier_label(t)}" for t in SAFETY_TIER_DESC]]
+
+
+def agent_remediation(c: AgentCapability, prof: AgentProfile | None) -> list[str]:
+    """Honest, data-driven next steps for a not-ready agent (no interactive auth driven by us)."""
+    hints: list[str] = []
+    if not c.present:
+        hints.append(f"install the `{c.profile_id.split('_')[0]}` CLI, then re-probe")
+        return hints  # nothing else is actionable until the CLI exists
+    if not c.auth_ok:
+        envs = ", ".join(prof.auth_env) if (prof and prof.auth_env) else "the vendor's API key"
+        hints.append(f"authenticate: set one of [{envs}] (or log in via the CLI)")
+    if not c.sandboxed:
+        hints.append(
+            "tier T2 — native tools are NOT denied; it reaches tools unsandboxed "
+            "(explicit `--agent` opt-in; never treated as constrained)"
+        )
+    elif c.tool_reachable != "yes":
+        hints.append(
+            f"tier T2 — typed-tool reach is `{c.tool_reachable}` (sandboxed, but MCP wiring "
+            "unproven; confirm with a live run before relying on it)"
+        )
+    return hints
 
 
 def run_doctor(

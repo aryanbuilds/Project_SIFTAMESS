@@ -29,6 +29,25 @@ The CLI calls the typed tool **service** directly (CLI-first); a live agent reac
 same functions over MCP. The TUI (optional, last) would be a read-only cockpit over the
 same run-dir files — never a second copy of the logic.
 
+### 2a. Agent safety tiers (honest labels, never a gate)
+
+Layer 4 is **agent-agnostic but not safety-blind.** Each connector carries a `safety_tier`
+derived purely from the probed capability facts (`schemas/agent_capabilities.py`,
+`doctor._agent_safety_tier`), so the label can never disagree with what dispatch actually does:
+
+| Tier | Definition | Today |
+|---|---|---|
+| **T0** deterministic_floor | real tools, no LLM execution — the safe default | deterministic executor |
+| **T1** constrained_live | sandboxed **and** typed tools via strict-MCP | `claude` |
+| **T2** unconstrained_live | capable but unsandboxed / tool-reach unproven (explicit opt-in) | `opencode`, `gemini`, `codex` |
+| **T3** advisory_llm | tool-less Tier-2 judge — never promotes | `--judge …` / `litellm:<model>` |
+
+Tiers are **labels only** — they never gate dispatch (`--agent opencode` is unchanged); they make
+the containment posture visible in `agents list` / `doctor --agents` / the cockpit and in
+`context/agent_capabilities.json`. This is the "measure capability, label risk" posture: the floor
+is the default, Claude is the constrained executor, opencode/codex/gemini are explicit
+unconstrained opt-ins, and LiteLLM is advisory-only (it never executes a tool).
+
 ## 3. State machine
 
 ```

@@ -43,6 +43,19 @@ writes a report whose "Answer to the incident objective" section is anchored to 
   installed + authenticated + sandboxed and picks the best default. (Only Claude reaches the typed
   tools today; others run sandboxed but their tool wiring is `verify-live` — see `PLAN/13`. A live
   agent is opt-in: a plain `run` uses the deterministic floor unless you pass `--agent`.)
+- **Honest agent safety tiers.** SIFTMesh does not pretend every agent is equally safe — it measures
+  capability and **labels risk** (`siftmesh agents list` shows a `tier` column + legend). The tier is
+  derived purely from the probed facts, so the label can never disagree with what dispatch does:
+
+  | Tier | What it is | Examples |
+  |---|---|---|
+  | **T0** `deterministic_floor` | real tools, no LLM execution — the safe default | the deterministic executor |
+  | **T1** `constrained_live` | sandboxed **and** typed tools via the strict-MCP boundary | `claude` (`--strict-mcp-config`) |
+  | **T2** `unconstrained_live` | capable but unsandboxed or tool-reach unproven/native — **explicit `--agent` opt-in**, never described as sandboxed | `opencode`, `gemini`, `codex` |
+  | **T3** `advisory_llm` | tool-less Tier-2 judge — never promotes, may only lower confidence / annotate | `--judge …`, `litellm:<model>` |
+
+  Tiers are **labels only** — they never gate dispatch. `--agent opencode` works exactly as before;
+  you just always see that it is T2.
 - **Pick a model per provider.** `--model gemini=gemini-3-pro --model codex=gpt-5.5` (repeatable)
   overrides the model for that run; persist it via `siftmesh setup` (CLI flag or the onboarding TUI's
   per-provider fields). `siftmesh agents inspect gemini` shows the effective model.

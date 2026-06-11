@@ -1162,22 +1162,29 @@ def agents_list() -> None:
     """List coding agents: installed? authenticated? can reach the typed tools? which is default?"""
     from siftmesh_core.config import load_settings
     from siftmesh_core.doctor import probe_agents
+    from siftmesh_core.schemas.agent_capabilities import SAFETY_TIER_DESC, safety_tier_label
 
     cap = probe_agents(load_settings())
-    typer.echo(f"{'agent':<22} {'present':<8} {'auth':<8} {'sandbox':<11} {'tools':<12} version")
+    header = (
+        f"{'agent':<22} {'tier':<5} {'present':<8} {'auth':<8} "
+        f"{'sandbox':<11} {'tools':<12} version"
+    )
+    typer.echo(header)
     for c in cap.agents:
         sel = "  <- default" if c.selected else ""
         typer.echo(
-            f"{c.profile_id:<22} {('yes' if c.present else 'no'):<8} "
+            f"{c.profile_id:<22} {c.safety_tier:<5} {('yes' if c.present else 'no'):<8} "
             f"{('yes' if c.auth_ok else 'no'):<8} "
             f"{('yes' if c.sandboxed else 'NO'):<11} {c.tool_reachable:<12} "
             f"{(c.version if c.present else 'absent')}{sel}"
         )
     typer.echo(f"\nexecutor default (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor)")
+        typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor — tier T0)")
     if cap.live_candidate and cap.live_candidate != cap.chosen:
         typer.echo(f"live agent ready — opt in with `--agent`: {cap.live_candidate}")
+    elif cap.chosen == "deterministic_executor":
+        typer.echo("no live agent is ready — onboard one (`siftmesh setup`) for tier T1/T2.")
     # Advisory Tier-2 judge (separate purpose from the executor; off unless llm_critic_enabled).
     from siftmesh_core.adapters.judge import judge_ready
 
@@ -1187,7 +1194,10 @@ def agents_list() -> None:
         "on" if settings.llm_critic_enabled else "off (set llm_critic_enabled / --judge to enable)"
     )
     state = "ready" if ready else "NOT ready"
-    typer.echo(f"tier-2 judge: {label} — {state}; advisory layer {gate}")
+    typer.echo(f"tier-2 judge [T3]: {label} — {state}; advisory layer {gate}")
+    typer.echo("\nsafety tiers:")
+    for tier in SAFETY_TIER_DESC:
+        typer.echo(f"  {safety_tier_label(tier)}")
     typer.echo(
         "pick per purpose: `--agent <name>` (executor) · `--judge <name|litellm:model>` (judge)."
     )
@@ -1239,11 +1249,18 @@ def agents_inspect(profile_id: str) -> None:
         typer.echo(f"auth_files      : {', '.join(prof.auth_files) or '(none)'}")
         typer.echo(f"mcp_strategy    : {prof.mcp_strategy}")
     if cap is not None:
+        from siftmesh_core.schemas.agent_capabilities import safety_tier_label
+
+        typer.echo(f"safety_tier     : {safety_tier_label(cap.safety_tier)}")
         typer.echo(
             f"status          : present={cap.present} auth={cap.auth_ok} "
             f"sandboxed={cap.sandboxed} tools={cap.tool_reachable}"
             f"{' (default)' if cap.selected else ''}"
         )
+        from siftmesh_core.doctor import agent_remediation
+
+        for hint in agent_remediation(cap, prof):
+            typer.echo(f"  → {hint}")
     typer.echo("allowed tools   : per-task (the contract's allowed_tools); native tools denied.")
 
 

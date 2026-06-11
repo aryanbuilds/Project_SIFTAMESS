@@ -48,6 +48,60 @@ def test_probe_reports_present_absent_auth_and_sandbox(monkeypatch, tmp_path) ->
     )  # removed (personal-assistant gateway, not a coding agent)
 
 
+def test_safety_tier_classification_is_honest(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
+    # The tier is derived purely from (kind, sandboxed, tool_reachable) so the label can never
+    # disagree with what dispatch actually does: T0 floor, T1 = sandboxed + tools-yes (claude),
+    # T2 = every other live agent (opencode unsandboxed; gemini/codex verify-live).
+    _isolate_host(monkeypatch, present={"gemini", "codex", "opencode"}, home=tmp_path)
+    monkeypatch.setattr(
+        "siftmesh_core.adapters.claude_adapter.claude_available", lambda settings: True
+    )
+    monkeypatch.setattr(shutil, "which", lambda c: f"/usr/bin/{c}")  # make claude present too
+    by_id = {c.profile_id: c for c in probe_agents(load_settings()).agents}
+    assert by_id["deterministic_executor"].safety_tier == "T0"
+    assert by_id["claude_headless"].safety_tier == "T1"
+    assert by_id["opencode_headless"].safety_tier == "T2"  # unsandboxed
+    assert by_id["gemini_headless"].safety_tier == "T2"  # sandboxed but tool-reach verify-live
+    assert by_id["codex_headless"].safety_tier == "T2"
+
+
+def test_safety_tier_round_trips_in_capability_map_json(  # type: ignore[no-untyped-def]
+    real_case: RealCase, monkeypatch, tmp_path
+) -> None:
+    _isolate_host(monkeypatch, present=set(), home=tmp_path)
+    run, evidence = real_case()
+    target = write_agent_capability_map(run.root, settings=load_settings(), evidence_root=evidence)
+    reloaded = AgentCapabilityMap.model_validate_json(target.read_text(encoding="utf-8"))
+    tiers = {c.profile_id: c.safety_tier for c in reloaded.agents}
+    assert tiers["deterministic_executor"] == "T0"
+    assert all(t in ("T0", "T1", "T2") for t in tiers.values())
+
+
+def test_agent_remediation_is_data_driven(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
+    from siftmesh_core.adapters.profiles import load_profiles
+    from siftmesh_core.doctor import agent_remediation
+
+    _isolate_host(
+        monkeypatch, present={"opencode"}, home=tmp_path
+    )  # opencode present, others absent
+    profiles = load_profiles()
+    by_id = {c.profile_id: c for c in probe_agents(load_settings()).agents}
+
+    # Absent CLI → "install" is the only actionable step.
+    codex_hints = agent_remediation(by_id["codex_headless"], profiles.get("codex_headless"))
+    assert any("install" in h and "codex" in h for h in codex_hints)
+
+    # Present but unauthed → name the exact auth env vars from the profile (not a guessed key).
+    monkeypatch.setattr(shutil, "which", lambda c: f"/usr/bin/{c}")  # pretend every CLI present
+    fresh = {c.profile_id: c for c in probe_agents(load_settings()).agents}
+    g_hints = agent_remediation(fresh["gemini_headless"], profiles.get("gemini_headless"))
+    assert any("GEMINI_API_KEY" in h for h in g_hints)
+
+    # Present + authed but unsandboxed (opencode) → the honest T2 note, no fake "ready".
+    oc_hints = agent_remediation(by_id["opencode_headless"], profiles.get("opencode_headless"))
+    assert any("T2" in h and "unsandboxed" in h for h in oc_hints)
+
+
 def test_default_is_floor_under_deterministic_default(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
     # executor_selection defaults to "deterministic" → a plain `siftmesh run` uses the floor, so the
     # map's chosen MUST be the floor even though gemini is installed (matches real dispatch).
@@ -112,7 +166,9 @@ def test_cli_agents_list_and_inspect(monkeypatch, tmp_path) -> None:  # type: ig
     assert listed.exit_code == 0
     assert "gemini_headless" in listed.stdout
     assert "executor default (this config):" in listed.stdout
-    assert "tier-2 judge:" in listed.stdout  # the judge purpose is surfaced too (Epic Q judge)
+    assert "tier-2 judge [T3]:" in listed.stdout  # the judge purpose is surfaced too (Epic Q judge)
+    assert "safety tiers:" in listed.stdout  # the honest T0-T3 legend is shown
+    assert "T2 unconstrained_live" in listed.stdout
 
     inspected = runner.invoke(app, ["agents", "inspect", "gemini"])  # friendly alias accepted
     assert inspected.exit_code == 0

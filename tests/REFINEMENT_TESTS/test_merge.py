@@ -61,7 +61,7 @@ def test_agent_synthesis_validates_claim_refs(
             "The runs corroborate program execution and registry autostart activity.",  # clean
         ]
     )
-    monkeypatch.setattr(merge_report, "invoke_claude_text", lambda *a, **k: next(replies, None))
+    monkeypatch.setattr(merge_report, "invoke_judge_text", lambda *a, **k: next(replies, None))
     merged = merge_runs(
         tmp_path / "m", [run_a.root, run_b.root], settings=load_settings(), agent_synthesis=True
     )
@@ -77,7 +77,7 @@ def test_agent_synthesis_failsoft_when_agent_unavailable(
     run_b, _ = make_real_run(dispatch=True, critique=True)
     from siftmesh_core.reports import merge_report
 
-    monkeypatch.setattr(merge_report, "invoke_claude_text", lambda *a, **k: None)  # absent
+    monkeypatch.setattr(merge_report, "invoke_judge_text", lambda *a, **k: None)  # absent
     merged = merge_runs(
         tmp_path / "m", [run_a.root, run_b.root], settings=load_settings(), agent_synthesis=True
     )

@@ -111,7 +111,8 @@ def test_cli_agents_list_and_inspect(monkeypatch, tmp_path) -> None:  # type: ig
     listed = runner.invoke(app, ["agents", "list"])
     assert listed.exit_code == 0
     assert "gemini_headless" in listed.stdout
-    assert "default agent (this config):" in listed.stdout
+    assert "executor default (this config):" in listed.stdout
+    assert "tier-2 judge:" in listed.stdout  # the judge purpose is surfaced too (Epic Q judge)
 
     inspected = runner.invoke(app, ["agents", "inspect", "gemini"])  # friendly alias accepted
     assert inspected.exit_code == 0

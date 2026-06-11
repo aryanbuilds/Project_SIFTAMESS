@@ -146,6 +146,27 @@ operator can still pick it explicitly with `--agent`).
   native-tool-disable flag + MCP-config shape; current `--model` strings + auth env names; the ACP
   `PROTOCOL_VERSION` in force.
 
+## Round-2 research (verified 2026-06-11) — grounds the deferred ACP work + the judge split
+
+- **ACP is orthogonal to provider/auth.** Each ACP/CLI agent owns its own model + auth — subscription
+  (vendor CLI OAuth) *and* API (env key) both work because ACP delegates to the agent's own auth.
+  ACP's value is process isolation + a programmatic `session/request_permission` gate, NOT provider
+  routing. (So ACP and a model gateway like LiteLLM are alternative layers, not "use ACP for models".)
+- **ACP Python SDK** `agent-client-protocol` is production-ready (~0.10.x, MIT, async, Pydantic):
+  `Client`/`ClientSideConnection`, `session/new(mcpServers=…)`, `session/prompt`,
+  `session/request_permission` (programmatic deny), `fs/*` handlers.
+- **Caveats that shape round 2:** (a) `mcpServers` passed via `session/new` is **widely ignored**
+  (Cursor/OpenClaw/Hermes/Copilot, June 2026) → a gated ACP agent can end up with **no typed tools**
+  → keep the fail-closed fallback to headless/floor; (b) **claude-code-acp needs an API key, not
+  subscription OAuth**. Launchers: `gemini --acp`, `opencode acp`, `codex acp`/`@zed-industries/codex-acp`,
+  `@zed-industries/claude-code-acp`.
+- **LiteLLM = API-key/cloud only, in practice.** SDK is MIT, in-process, no service. **Consumer
+  subscription routing through LiteLLM is broken upstream** (#19618, header-stripping) → subscription
+  is only reachable via the vendor CLIs. ⇒ The **judge multi-provider work shipped via the LiteLLM
+  SDK (API/cloud) + the vendor CLIs (subscription)** — see `adapters/judge.py`,
+  `PLAN/14`-adjacent. The LiteLLM **proxy** (Docker/Redis/OAuth) and a **native-LLM executor** were
+  rejected (evidence-safety + the subscription-broken finding); the live executor stays vendor-CLI.
+
 ## Drift-prone facts (verify on the maintainer box before a live run; CLAUDE §2B)
 
 Model ids, launch flags, and auth env names are best-current (2026-06) and tagged `verify-live` in

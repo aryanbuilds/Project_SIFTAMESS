@@ -118,6 +118,12 @@ class SiftmeshSettings(BaseSettings):
     # Optional Layer-2 LLM adversarial critic (Epic G8). Off by default; the Layer-1
     # deterministic critic is always sufficient. The real pass needs the F8 agent.
     llm_critic_enabled: bool = False
+    # Provider-flexible Tier-2 judge + merge-synthesis backend (advisory only; never promotes).
+    # None => Claude CLI (back-compat). Forms: "cli:claude|gemini|codex|opencode" (vendor CLI,
+    # tool-less, subscription OR API via its own auth) or "litellm:<model>" (LiteLLM SDK, API/cloud,
+    # e.g. "litellm:gemini/gemini-2.5-pro", "litellm:vertex_ai/...", "litellm:openai/gpt-5.5").
+    # A bare name ("gemini") => "cli:gemini". Fails SOFT: an unavailable judge is skipped.
+    judge: str | None = None
 
     @classmethod
     def settings_customise_sources(
@@ -150,13 +156,15 @@ def save_agent_selection(
     *,
     scope: Literal["global", "project"] = "global",
     role_profiles: dict[str, str] | None = None,
+    judge: str | None = None,
+    llm_critic_enabled: bool | None = None,
 ) -> Path:
     """Persist the onboarding agent choice to a TOML file; return the path written.
 
     Read-merge-write via tomlkit so any other keys (and comments) the operator has are preserved —
-    only ``executor_selection`` / ``agent_preference`` (+ ``role_profiles`` if given) are set. The
-    GLOBAL file is the "select once" default; a PROJECT ``./siftmesh.toml`` overrides it (loader
-    precedence above). The values are validated by re-loading SiftmeshSettings on next use.
+    only ``executor_selection``/``agent_preference`` (+ ``role_profiles``/``judge`` if set) are
+    set. The GLOBAL file is the "select once" default; a PROJECT ``./siftmesh.toml`` overrides it
+    (loader precedence above). The values are validated by re-loading SiftmeshSettings on next use.
     """
     import tomlkit
 
@@ -171,5 +179,9 @@ def save_agent_selection(
     doc["agent_preference"] = list(agent_preference)
     if role_profiles is not None:
         doc["role_profiles"] = dict(role_profiles)
+    if judge is not None:
+        doc["judge"] = judge
+    if llm_critic_enabled is not None:
+        doc["llm_critic_enabled"] = llm_critic_enabled
     target.write_text(tomlkit.dumps(doc), encoding="utf-8")
     return target

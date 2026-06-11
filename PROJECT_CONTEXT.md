@@ -300,6 +300,8 @@ every action SHA-pinned (verified live: checkout v6.0.3, setup-uv v8.2.0, upload
 
 Validates outputs, rejects unsupported claims, finds contradictions, lowers confidence, and recommends retry or escalation.
 
+**Provider-flexible Tier-2 judge (post-Epic-Q).** The advisory Tier-2 judge + the cross-run merge synthesis now route through `adapters/judge.invoke_judge_text(prompt, settings)` (was Claude-only). `settings.judge` selects the backend: `None`/`cli:claude` (back-compat), `cli:gemini|codex|opencode` (the vendor CLI in **tool-less** mode — subscription OR API via the agent's own auth), or `litellm:<model>` (the **LiteLLM SDK**, optional `llm` extra — Gemini API/Vertex, OpenAI, Anthropic, Kimi, MiniMax). It is **fail-SOFT**: a missing CLI/key/extra or any error → skip + log `tier2_judge_skipped`, the run continues on Tier-1 (the deterministic critic stays the **sole promoter**; the judge still never promotes). Per-purpose selection: `--agent` picks the executor, `--judge` picks the judge (or pick both in `siftmesh setup`/`agents list`); off by default (`llm_critic_enabled`). Subscription stays on the vendor CLIs — LiteLLM is API-key/cloud only and is used **only** for the tool-less judge/synthesis, never the live executor (ADR research in `PLAN/13`). Kimi/MiniMax are flagged data-residency (operator opt-in).
+
 ### Evidence Manager
 
 Hashes evidence, enforces read-only handling, records derived artifacts, and maps every claim to evidence references.

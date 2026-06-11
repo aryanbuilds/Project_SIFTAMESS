@@ -13,6 +13,7 @@ from textual.widgets import (
     Label,
     RadioButton,
     RadioSet,
+    Select,
     SelectionList,
     Static,
 )
@@ -22,6 +23,15 @@ from siftmesh_core.config import SiftmeshSettings, save_agent_selection
 from siftmesh_core.doctor import probe_agents, run_setup
 
 _FLOOR = "deterministic_executor"
+# Advisory Tier-2 JUDGE choices (a separate purpose from the executor). litellm:<model> backends are
+# set via the CLI/config (a Select can't free-type a model id).
+_JUDGE_CHOICES = [
+    ("Tier-1 only (no advisory judge)", "none"),
+    ("claude (CLI — subscription or API)", "cli:claude"),
+    ("gemini (CLI)", "cli:gemini"),
+    ("codex (CLI)", "cli:codex"),
+    ("opencode (CLI)", "cli:opencode"),
+]
 
 
 class OnboardingScreen(Screen):
@@ -41,6 +51,14 @@ class OnboardingScreen(Screen):
             id="intro",
         )
         yield SelectionList[str](id="agentsel")
+        with Horizontal(id="judgerow"):
+            yield Label("Tier-2 judge (advisory):")
+            yield Select(
+                _JUDGE_CHOICES,
+                value=self._initial_judge(),
+                id="judge",
+                allow_blank=False,
+            )
         with Horizontal(id="scoperow"):
             yield Label("Save to:")
             with RadioSet(id="scope"):
@@ -101,10 +119,29 @@ class OnboardingScreen(Screen):
         self._status(msg)
         self._populate()
 
+    def _initial_judge(self) -> str:
+        """Pre-select the Select from the current settings.judge (bare name → cli:name)."""
+        j = getattr(self.settings, "judge", None)
+        if not j:
+            return "none"
+        norm = j if ":" in j else f"cli:{j}"
+        return norm if norm in {v for _, v in _JUDGE_CHOICES} else "none"
+
     def _save(self) -> None:
         selected = list(self.query_one("#agentsel", SelectionList).selected)
         preference = [*selected, _FLOOR] if selected else [_FLOOR]
         executor = "auto" if selected else "deterministic"
         scope = "project" if self.query_one("#scope", RadioSet).pressed_index == 1 else "global"
-        path = save_agent_selection(executor, preference, scope=scope)  # type: ignore[arg-type]
-        self._status(f"saved → {path}  (executor={executor}, preference={preference})")
+        judge_choice = str(self.query_one("#judge", Select).value)
+        judge = None if judge_choice == "none" else judge_choice
+        path = save_agent_selection(
+            executor,
+            preference,
+            scope=scope,  # type: ignore[arg-type]
+            judge=judge,
+            llm_critic_enabled=judge is not None,  # picking a judge enables the advisory layer
+        )
+        jlabel = judge or "Tier-1 only"
+        self._status(
+            f"saved → {path}  (executor={executor}, judge={jlabel}, preference={preference})"
+        )

@@ -24,7 +24,7 @@ from pathlib import Path
 
 from structlog.typing import FilteringBoundLogger
 
-from siftmesh_core.adapters.claude_adapter import invoke_claude_text
+from siftmesh_core.adapters.judge import invoke_judge_text
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.derived import read_derived
@@ -745,8 +745,11 @@ def run_tier2_judge(
         else None
     )
     objective = manifest.incident_objective if manifest else None
-    text = invoke_claude_text(_tier2_prompt(promoted, objective), settings)
+    # Advisory + OPTIONAL: a missing judge backend/key/CLI → skip + log, never fail the run (Tier-1
+    # remains the sole promoter and is untouched). invoke_judge_text returns None on any failure.
+    text = invoke_judge_text(_tier2_prompt(promoted, objective), settings)
     if not text:
+        log_event(audit, "tier2_judge_skipped", reason="backend_unavailable_or_no_output")
         return 0
     try:
         parsed = json.loads(text)

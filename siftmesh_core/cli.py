@@ -451,6 +451,21 @@ def _agent_overrides(agent: str | None) -> dict[str, object]:
     }
 
 
+def _judge_overrides(judge: str | None) -> dict[str, object]:
+    """Translate a friendly --judge choice into a settings override for the advisory Tier-2 judge.
+
+    Accepts a bare agent (``claude|gemini|codex|opencode`` → ``cli:<agent>``), an explicit
+    ``cli:<agent>`` / ``litellm:<model>`` string, or ``deterministic``/``off`` (disable the judge).
+    Selecting a judge also enables the (off-by-default) Tier-2 layer for that run.
+    """
+    if not judge:
+        return {}
+    if judge in ("off", "none", "deterministic"):
+        return {"llm_critic_enabled": False}
+    backend = judge if ":" in judge else f"cli:{judge}"
+    return {"judge": backend, "llm_critic_enabled": True}
+
+
 def _claude_available(settings: object) -> bool:
     """Best-effort check of whether the live Claude agent could run here (CLI + auth present)."""
     from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
@@ -568,8 +583,17 @@ def run(
         str | None,
         typer.Option(
             "--agent",
-            help="Opt into a live agent: claude | gemini | codex | opencode | deterministic "
-            "(see `siftmesh agents list`).",
+            help="Opt into a live agent (the EXECUTOR): claude | gemini | codex | opencode | "
+            "deterministic (see `siftmesh agents list`).",
+        ),
+    ] = None,
+    judge: Annotated[
+        str | None,
+        typer.Option(
+            "--judge",
+            help="Advisory Tier-2 JUDGE backend: claude|gemini|codex|opencode (their CLI), or "
+            "litellm:<model> (e.g. litellm:gemini/gemini-2.5-pro), or off. Enables the judge for "
+            "this run; fails soft if unavailable.",
         ),
     ] = None,
     brief: Annotated[
@@ -621,7 +645,7 @@ def run(
     if resolved is None:
         typer.echo(f"run failed: unknown mode {mode!r} (use {', '.join(_RUN_MODES)})", err=True)
         raise typer.Exit(code=1)
-    settings = load_settings(**_agent_overrides(agent))
+    settings = load_settings(**{**_agent_overrides(agent), **_judge_overrides(judge)})
     if max_agent_tasks is not None:
         # Caps stay enforced (CLAUDE §11) — the operator just sets the ceiling explicitly.
         settings = settings.model_copy(
@@ -1069,12 +1093,24 @@ def agents_list() -> None:
             f"{('yes' if c.sandboxed else 'NO'):<11} {c.tool_reachable:<12} "
             f"{(c.version if c.present else 'absent')}{sel}"
         )
-    typer.echo(f"\ndefault agent (this config): {cap.chosen}")
+    typer.echo(f"\nexecutor default (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
         typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor)")
     if cap.live_candidate and cap.live_candidate != cap.chosen:
         typer.echo(f"live agent ready — opt in with `--agent`: {cap.live_candidate}")
-    typer.echo("select one for a run with `--agent <name>` (e.g. --agent gemini).")
+    # Advisory Tier-2 judge (separate purpose from the executor; off unless llm_critic_enabled).
+    from siftmesh_core.adapters.judge import judge_ready
+
+    settings = load_settings()
+    ready, label = judge_ready(settings)
+    gate = (
+        "on" if settings.llm_critic_enabled else "off (set llm_critic_enabled / --judge to enable)"
+    )
+    state = "ready" if ready else "NOT ready"
+    typer.echo(f"tier-2 judge: {label} — {state}; advisory layer {gate}")
+    typer.echo(
+        "pick per purpose: `--agent <name>` (executor) · `--judge <name|litellm:model>` (judge)."
+    )
 
 
 @agents_app.command("inspect")

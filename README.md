@@ -68,7 +68,7 @@ a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui
 
 | Command | What it does |
 |---|---|
-| `run CASE --evidence DIR [--brief/--objective] [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent claude\|gemini\|codex\|opencode]` | Init → plan → dispatch → collect → critique → decide → report, end to end. |
+| `run CASE --evidence DIR [--brief/--objective] [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent claude\|gemini\|codex\|opencode] [--judge …]` | Init → plan → dispatch → collect → critique → decide → report, end to end. `--agent` picks the executor; `--judge claude\|gemini\|codex\|opencode\|litellm:<model>` picks the advisory Tier-2 judge (fail-soft, off by default). |
 | `resume RUN` | Continue an interrupted run from its persisted state (skips hashing + decompress). |
 | `status RUN` | Show state, mode, iteration, gates, per-task attempts, quarantined tasks. |
 | `approve RUN --gate G` / `reject RUN --gate G` | Resolve a gate (plan\|dispatch\|retry\|report) in guided mode. |

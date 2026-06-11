@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from siftmesh_core.adapters.claude_adapter import invoke_claude_text
+from siftmesh_core.adapters.judge import invoke_judge_text
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.ledgers.audit_log import log_event, open_orchestration_log
 from siftmesh_core.reports.loader import load_report_view
@@ -171,7 +171,7 @@ def _synthesize(
         + "\n".join(lines)
     )
     for _attempt in range(2):
-        text = invoke_claude_text(base, settings)
+        text = invoke_judge_text(base, settings)
         if not text:
             return None
         cited = set(_CLAIM_ID_RE.findall(text))

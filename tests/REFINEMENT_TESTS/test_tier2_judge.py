@@ -46,7 +46,7 @@ def test_tier2_lowers_confidence_and_never_promotes(
     assert before, "need promoted claims to judge"
     target = before[0]
     monkeypatch.setattr(
-        critic_mod, "invoke_claude_text", lambda *a, **k: _judge_reply(target.claim_id)
+        critic_mod, "invoke_judge_text", lambda *a, **k: _judge_reply(target.claim_id)
     )
 
     acted = run_tier2_judge(
@@ -78,7 +78,7 @@ def test_tier2_cannot_raise_confidence(make_real_run: MakeRealRun, monkeypatch) 
             ]
         }
     )
-    monkeypatch.setattr(critic_mod, "invoke_claude_text", lambda *a, **k: reply)
+    monkeypatch.setattr(critic_mod, "invoke_judge_text", lambda *a, **k: reply)
     run_tier2_judge(run, settings=load_settings(), evidence_root=evidence, audit=_audit(run))
     # judgement is logged, but NO confidence change was written (cannot raise)
     assert not run.confidence_changes.exists() or "tier2" not in run.confidence_changes.read_text(
@@ -88,7 +88,7 @@ def test_tier2_cannot_raise_confidence(make_real_run: MakeRealRun, monkeypatch) 
 
 def test_tier2_failsoft_when_agent_absent(make_real_run: MakeRealRun, monkeypatch) -> None:
     run, evidence = make_real_run(dispatch=True, critique=True)
-    monkeypatch.setattr(critic_mod, "invoke_claude_text", lambda *a, **k: None)
+    monkeypatch.setattr(critic_mod, "invoke_judge_text", lambda *a, **k: None)
     assert (
         run_tier2_judge(run, settings=load_settings(), evidence_root=evidence, audit=_audit(run))
         == 0

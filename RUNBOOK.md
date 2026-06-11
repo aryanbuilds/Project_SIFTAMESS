@@ -284,6 +284,18 @@ from `siftmesh_core/adapters/agent_profiles.yaml`. Only Claude reaches the typed
 codex run sandboxed (`--sandbox read-only` / `--approval-mode default`) but their MCP tool wiring is
 `verify-live` (round 2 / ACP) — confirm with `uv run siftmesh agents list` / `agents inspect <agent>`.
 
+**`--judge` (advisory Tier-2 judge, separate purpose from the executor).** `--agent` picks the
+forensic EXECUTOR; `--judge` picks the optional Tier-2 judge that reviews the *promoted* claims (it is
+advisory — it may only lower confidence / flag corroboration; **Tier-1 stays the sole promoter**).
+Forms: `--judge claude|gemini|codex|opencode` (that vendor CLI, tool-less — **subscription OR API** via
+its own login) or `--judge litellm:<model>` (the LiteLLM SDK — API/cloud: `litellm:gemini/gemini-2.5-pro`,
+`litellm:vertex_ai/gemini-2.5-pro`, `litellm:openai/gpt-5.5`, `litellm:anthropic/…`, `litellm:moonshot/…`).
+It is **fail-soft**: a missing CLI/key/extra → the judge is skipped (`tier2_judge_skipped` logged) and
+the run still completes on Tier-1. Install the SDK with `uv sync --extra llm` (or `siftmesh setup`).
+Persist a default with `siftmesh setup` (TUI judge picker) → `siftmesh.toml`. **Data-residency:**
+`litellm:moonshot/*` (Kimi) and `litellm:minimax/*` are China-hosted — sending case-derived claim text
+there is an operator decision; the judge is off by default.
+
 **4c. Watch the self-correction loop happen** (in `$RUN`):
 
 ```bash

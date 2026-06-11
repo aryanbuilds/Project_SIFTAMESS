@@ -139,6 +139,16 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             "installed" if tui_ok else "absent: uv sync --extra tui (for `siftmesh tui`)",
         )
     )
+    litellm_ok = _module_available("litellm")
+    checks.append(
+        Check(
+            OK if litellm_ok else WARN,
+            "judge: LiteLLM (multi-provider)",
+            "installed"
+            if litellm_ok
+            else "absent: uv sync --extra llm (optional — for a litellm: Tier-2 judge)",
+        )
+    )
     checks.append(Check(OK if _cwd_writable() else FAIL, "run-dir writable", "case_runs/ (cwd)"))
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS

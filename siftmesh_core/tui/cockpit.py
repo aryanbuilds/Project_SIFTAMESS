@@ -62,11 +62,14 @@ class CockpitScreen(Screen):
         *,
         settings: SiftmeshSettings,
         launch_params: dict | None = None,
+        auto_resume: bool = False,
     ) -> None:
         super().__init__()
         self.settings = settings
         self.run: RunPaths | None = RunPaths(root=Path(run_dir)) if run_dir else None
         self.launch_params = launch_params
+        self.auto_resume = auto_resume  # one-click resume from the home screen
+        self.portions_params: dict | None = None  # set by the wizard for the low-disk portions run
         self._last_lineno = -1
         self._spin = 0
         self._nav_built = False
@@ -130,8 +133,39 @@ class CockpitScreen(Screen):
         self._build_nav()
         if self.launch_params is not None:
             self._launch_run()
+        elif self.portions_params is not None:
+            self._launch_portions()
+        elif self.auto_resume and self.run is not None:
+            self._resume_engine()  # one-click resume: drive the persisted state forward
         self.set_interval(1.0, self._refresh)
         self._refresh()
+
+    @work(thread=True, exclusive=True)
+    def _launch_portions(self) -> None:
+        from siftmesh_core.tui import actions
+
+        p = self.portions_params or {}
+
+        def _progress(msg: str) -> None:
+            self.app.call_from_thread(self.notify, msg)
+
+        def _attach(run: RunPaths) -> None:
+            self.run = run  # point the live poll at the current portion's run
+
+        res = actions.run_in_portions(
+            p["case_dir"],
+            p["portion_plan"],
+            p["evidence_root"],
+            settings=self.settings,
+            mode=p.get("mode", "auto"),
+            brief=p.get("brief"),
+            objective=p.get("objective"),
+            progress=_progress,
+            on_run=_attach,
+        )
+        self.app.call_from_thread(
+            self.notify, res.message, severity="information" if res.ok else "error"
+        )
 
     # ---- live launch (this screen owns the engine) ----
     @work(thread=True, exclusive=True)

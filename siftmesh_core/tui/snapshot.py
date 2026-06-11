@@ -446,6 +446,44 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
     )
 
 
+def run_badge(run: RunPaths) -> str:
+    """A one-word status for the home run-list (Textual-free, tolerant): what state is this run in?
+
+    ``terminal`` (done) · ``blocked:<gate>`` (awaiting approval) · ``paused`` (cooperatively
+    halted) · ``running`` (mid-flight) · ``new`` (no state yet). Badges runs + offers Resume.
+    """
+    if not run.run_state.is_file():
+        return "new"
+    try:
+        state = read_run_state(run)
+    except Exception:
+        return "new"
+    if state.terminal:
+        return "terminal"
+    if state.blocked_gate:
+        return f"blocked:{state.blocked_gate}"
+    # paused = the last orchestration event is a cooperative pause (no later transition/completion).
+    if run.orchestration_events.is_file():
+        for line in reversed(run.orchestration_events.read_text(encoding="utf-8").splitlines()):
+            if not line.strip():
+                continue
+            try:
+                ev = json.loads(line)
+            except (json.JSONDecodeError, ValueError):
+                continue
+            if ev.get("event") in ("transition", "run_complete", "halted", "gate_blocked"):
+                break
+            if ev.get("event") == "paused":
+                return "paused"
+            break
+    return "running"
+
+
+def resumable(run: RunPaths) -> bool:
+    """True if the run can be resumed/driven from the home screen (not terminal, has state)."""
+    return run_badge(run) not in ("terminal", "new")
+
+
 def _event_summary(ev: object) -> str:
     """A compact one-line summary of an orchestration event for the ticker."""
     name = getattr(ev, "event", "")

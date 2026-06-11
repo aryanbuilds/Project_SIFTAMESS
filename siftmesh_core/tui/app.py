@@ -30,6 +30,7 @@ class HomeScreen(Screen):
         with Horizontal(id="homebtns"):
             yield Button("New run", id="new", variant="success")
             yield Button("Attach", id="attach", variant="primary")
+            yield Button("Resume", id="resume", variant="warning")
             yield Button("Onboard agents", id="onboard")
             yield Button("Quit", id="quit")
         yield Footer()
@@ -43,8 +44,15 @@ class HomeScreen(Screen):
             empty = "No runs yet — click 'New run' to start, or 'Onboard agents' first."
             lv.append(ListItem(Label(empty)))
             return
+        from siftmesh_core.run_dir import RunPaths
+        from siftmesh_core.tui.snapshot import run_badge
+
         for r in runs:
-            item = ListItem(Label(r.name))
+            try:
+                badge = run_badge(RunPaths(root=r))
+            except Exception:
+                badge = "?"
+            item = ListItem(Label(f"{r.name}  [{badge}]"))
             item.run_path = r  # type: ignore[attr-defined]
             lv.append(item)
 
@@ -68,15 +76,17 @@ class HomeScreen(Screen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "new":
-            from siftmesh_core.tui.launcher_screen import NewRunScreen
+            from siftmesh_core.tui.wizard import Step1ProjectScreen
 
-            self.app.push_screen(NewRunScreen(settings=self.settings))
+            self.app.push_screen(Step1ProjectScreen(settings=self.settings))
         elif event.button.id == "onboard":
             from siftmesh_core.tui.setup_screen import OnboardingScreen
 
             self.app.push_screen(OnboardingScreen(settings=self.settings))
         elif event.button.id == "attach":
             self._attach_selected()
+        elif event.button.id == "resume":
+            self._resume_selected()
         elif event.button.id == "quit":
             self.app.exit()
 
@@ -90,6 +100,21 @@ class HomeScreen(Screen):
         from siftmesh_core.tui.cockpit import CockpitScreen
 
         self.app.push_screen(CockpitScreen(path, settings=self.settings))
+
+    def _resume_selected(self) -> None:
+        lv = self.query_one("#runs", ListView)
+        path = getattr(lv.highlighted_child, "run_path", None)
+        if path is None:
+            self.notify("select a run to resume")
+            return
+        from siftmesh_core.run_dir import RunPaths
+        from siftmesh_core.tui.cockpit import CockpitScreen
+        from siftmesh_core.tui.snapshot import resumable
+
+        if not resumable(RunPaths(root=path)):
+            self.notify("that run is terminal / has no state — use Attach")
+            return
+        self.app.push_screen(CockpitScreen(path, settings=self.settings, auto_resume=True))
 
 
 class SiftmeshTUI(App):

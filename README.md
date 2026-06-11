@@ -80,6 +80,17 @@ ledgers on a 1 s poll; launching a run uses the same governed engine). Four zone
 claims · verdict) beside claims/critic/agent/budget summaries, and a live **audit-log** ticker — plus
 a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui`, or `setup`).
 
+**Create a whole investigation from the TUI — "New run" launches a guided wizard:** name the case →
+**browse the filesystem and add evidence files/folders** (assembled into a hardlinked curated dir,
+originals untouched) → give the brief/objective → a **Verify + Space** step synthesizes host-backend
+readiness + estimated derived size vs free disk and recommends **Full (parallel)** / **Single op** /
+**Run in portions** (low-disk: it runs portions, prunes between, and merges into one report) → set the
+toggles → launch. The cockpit is a full operator console: drill into any task/claim (`Enter`), pick
+the audit ledger, filter tasks, **`P` pause** (cooperative — stops at the next safe checkpoint, fully
+resumable) / **`R` resume**, approve any gate (`g`), retry (`t`), replay (`p`), and `ctrl+p` for the
+command palette. The home screen badges each run (`terminal`/`blocked:<gate>`/`paused`/`running`) and
+a **Resume** button drives an interrupted run one-click from its persisted state.
+
 ## Command reference
 
 **Automated (one deterministic engine; modes are config):**

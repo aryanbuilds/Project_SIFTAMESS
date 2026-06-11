@@ -657,6 +657,14 @@ def run(
             "evidence and refuses if it won't fit).",
         ),
     ] = False,
+    parallel: Annotated[
+        bool,
+        typer.Option(
+            "--parallel",
+            help="Dispatch tasks concurrently (up to caps.max_parallel_tasks) — deterministic "
+            "(byte-identical to sequential). The real win is the live-agent path. Default: off.",
+        ),
+    ] = False,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -687,6 +695,8 @@ def run(
         )
     if all_live:
         settings = settings.model_copy(update={"live_extraction": True})
+    if parallel:
+        settings = settings.model_copy(update={"parallel_dispatch": True})
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     if not force and not _space_preflight_ok(case_dir, evidence):

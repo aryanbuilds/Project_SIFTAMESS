@@ -103,6 +103,13 @@ class SiftmeshSettings(BaseSettings):
     # dump legitimately takes many minutes.
     live_extraction: bool = False
     heavy_tool_timeout_seconds: int = 1800
+    # Deterministic parallel dispatch (Epic B5 / bd vd2t). OFF by default → strictly sequential,
+    # byte-identical (golden + manual==auto unaffected). When on AND >1 task AND
+    # caps.max_parallel_tasks > 1, tasks execute concurrently into per-task staging dirs and are
+    # committed in contract order with renumbered ids — byte-identical to sequential (proven by
+    # test_parallel_dispatch). Tasks with a derived-origin input fall back to sequential. Opt in
+    # via `run --parallel`. The real win is the live-agent path (minutes-long subprocesses).
+    parallel_dispatch: bool = False
 
     # Multi-agent layer (Epic I). When live is selected, profiles are tried in this order and the
     # first available() wins; the deterministic floor is always the final fall-back. role_profiles

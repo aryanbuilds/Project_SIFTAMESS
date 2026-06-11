@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from siftmesh_core.adapters import AdapterContext, ResultRef, get_adapter, resolve_profile
-from siftmesh_core.adapters.base import DEFAULT_PROFILE, write_task_result
+from siftmesh_core.adapters.base import DEFAULT_PROFILE, ExecutorAdapter, write_task_result
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.evidence.path_policy import assert_run_outside_evidence
 from siftmesh_core.ledgers.agent_calls import append_agent_call, next_agent_call_id
@@ -34,6 +34,11 @@ from siftmesh_core.schemas.yaml_io import read_yaml_model
 # out its wrapper — run on the deterministic floor even when a live agent is selected, unless the
 # operator forces `live_extraction` (`run --all-live`). Executor tiering (scale fixes).
 _HEAVY_TOOL_BOUND = frozenset({"extract_artifacts_from_image", "analyze_memory"})
+
+
+def _has_derived_input(contract: TaskContract) -> bool:
+    """True if any input is a derived artifact (resolved under the run dir, not staging)."""
+    return any(getattr(a, "origin", "evidence") == "derived" for a in contract.input_artifacts)
 
 
 class PolicyError(RuntimeError):
@@ -166,24 +171,30 @@ def dispatch_run(
     incident_objective = _incident_objective(run)
 
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
+
+    # Deterministic parallel dispatch (B5) — opt-in, byte-identical to sequential. Skipped when any
+    # task has a derived-origin input (those resolve under the run dir, not staging).
+    if (
+        settings.parallel_dispatch
+        and len(contracts) > 1
+        and settings.caps.max_parallel_tasks > 1
+        and not any(_has_derived_input(c) for c in contracts)
+    ):
+        return _dispatch_parallel(
+            run,
+            contracts,
+            settings=settings,
+            evidence_root=evidence_root,
+            agent_profile=agent_profile,
+            attempt=attempt,
+            critic_feedback=critic_feedback,
+            incident_objective=incident_objective,
+            audit=audit,
+        )
+
     refs: list[ResultRef] = []
     for contract in contracts:
-        profile = resolve_profile(contract.role, settings=settings, cli_override=agent_profile)
-        # Executor tiering: a heavy tool-bound task runs on the floor even under a live agent
-        # (the tool does the work; the agent only times out) unless --all-live is set.
-        if (
-            profile != DEFAULT_PROFILE
-            and not settings.live_extraction
-            and any(t in _HEAVY_TOOL_BOUND for t in contract.allowed_tools)
-        ):
-            log_event(
-                audit,
-                "tier_floor_forced",
-                task_id=contract.task_id,
-                tool=",".join(contract.allowed_tools),
-                reason="heavy_tool_bound",
-            )
-            profile = DEFAULT_PROFILE
+        profile = _resolve_with_tiering(contract, settings, agent_profile, audit)
         adapter = get_adapter(profile, settings=settings, run=run)
         ctx = AdapterContext(
             run=run,
@@ -209,6 +220,88 @@ def dispatch_run(
             status=ref.status,
         )
         refs.append(ref)
+    return refs
+
+
+def _resolve_with_tiering(
+    contract: TaskContract,
+    settings: SiftmeshSettings,
+    agent_profile: str | None,
+    audit: object,
+) -> str:
+    """Resolve a contract's profile, forcing the deterministic floor for heavy tool-bound tasks."""
+    profile = resolve_profile(contract.role, settings=settings, cli_override=agent_profile)
+    if (
+        profile != DEFAULT_PROFILE
+        and not settings.live_extraction
+        and any(t in _HEAVY_TOOL_BOUND for t in contract.allowed_tools)
+    ):
+        log_event(
+            audit,  # type: ignore[arg-type]
+            "tier_floor_forced",
+            task_id=contract.task_id,
+            tool=",".join(contract.allowed_tools),
+            reason="heavy_tool_bound",
+        )
+        profile = DEFAULT_PROFILE
+    return profile
+
+
+def _dispatch_parallel(
+    run: RunPaths,
+    contracts: list[TaskContract],
+    *,
+    settings: SiftmeshSettings,
+    evidence_root: Path,
+    agent_profile: str | None,
+    attempt: int,
+    critic_feedback: tuple[str, ...],
+    incident_objective: str | None,
+    audit: object,
+) -> list[ResultRef]:
+    """Execute tasks concurrently into per-task staging, then commit in contract order (B5)."""
+    from siftmesh_core.orchestrator.parallel_dispatch import (
+        cleanup_staging,
+        commit_staged_task,
+        execute_parallel,
+    )
+
+    # Serial pre-pass: resolve profile + adapter per contract (get_adapter logs to the real run).
+    plan: list[tuple[TaskContract, str, ExecutorAdapter]] = []
+    for contract in contracts:
+        profile = _resolve_with_tiering(contract, settings, agent_profile, audit)
+        plan.append((contract, profile, get_adapter(profile, settings=settings, run=run)))
+
+    workers = min(settings.caps.max_parallel_tasks, len(contracts))
+    log_event(audit, "parallel_dispatch_started", tasks=len(contracts), workers=workers)  # type: ignore[arg-type]
+    staged = execute_parallel(
+        plan,
+        run,
+        evidence_root=evidence_root,
+        settings=settings,
+        attempt=attempt,
+        critic_feedback=critic_feedback,
+        incident_objective=incident_objective,
+        max_workers=workers,
+    )
+
+    # Serial commit in contract order → ledgers byte-identical to sequential.
+    refs: list[ResultRef] = []
+    for s in staged:
+        if s.error is not None:
+            ref = _record_failed(run, s.contract, s.profile, s.error, evidence_root)
+        else:
+            ref = commit_staged_task(run, s, evidence_root=evidence_root)
+        log_event(
+            audit,  # type: ignore[arg-type]
+            "task_dispatched",
+            task_id=s.contract.task_id,
+            profile=s.profile,
+            adapter=s.adapter_id,
+            status=ref.status,
+        )
+        refs.append(ref)
+    cleanup_staging(run)
     return refs
 
 

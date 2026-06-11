@@ -54,14 +54,19 @@ def drive_engine(
     mode: RunMode,
     settings: SiftmeshSettings,
     on_error: Callable[[str], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> None:
-    """Run the deterministic engine to completion/halt (blocking — call from a worker thread)."""
+    """Run the deterministic engine to completion/halt (blocking — call from a worker thread).
+
+    ``should_stop`` is forwarded to ``run_engine`` as the cooperative pause hook (TUI Pause button).
+    """
     try:
         run_engine(
             run,
             settings=settings,
             evidence_root=Path(evidence),
             single_step=(mode == "manual"),
+            should_stop=should_stop,
         )
     except Exception as exc:  # surface to the UI; the run dir holds the real state
         if on_error is not None:

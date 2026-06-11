@@ -15,7 +15,7 @@ Mode policy (set by the caller via ``RunState.mode`` + ``single_step``):
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -300,8 +300,16 @@ def run_engine(
     settings: SiftmeshSettings,
     evidence_root: Path | str | None = None,
     single_step: bool = False,
+    should_stop: Callable[[], bool] | None = None,
 ) -> RunState:
-    """Drive the persisted RunState forward; return the (possibly halted/terminal) state."""
+    """Drive the persisted RunState forward; return the (possibly halted/terminal) state.
+
+    ``should_stop`` (the TUI pause hook) is a cooperative checkpoint: when it returns True the
+    engine stops at the next SAFE boundary — only ever between FSM transitions, after the durable
+    ``write_run_state`` — so the returned/persisted state is consistent and a later ``run_engine``
+    call resumes from exactly the next state (identical artifacts to an uninterrupted run). Default
+    ``None`` is byte-identical to the prior behaviour (golden + manual==auto unaffected).
+    """
     state = read_run_state(run)
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
     gates_enforced = state.mode == "auto_human_loop"
@@ -351,6 +359,11 @@ def run_engine(
         if terminal:
             log_event(audit, "run_complete", run=run.run_id)
             break
+        # Cooperative pause (TUI): stop at this safe checkpoint — state is durable + consistent, so
+        # the run is fully resumable. Only between transitions, never mid-_advance.
+        if should_stop is not None and should_stop():
+            log_event(audit, "paused", state=state.state, iteration=state.iteration)
+            return state
         if single_step:
             break
     return state

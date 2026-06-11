@@ -49,6 +49,7 @@ class CockpitScreen(Screen):
         ("g", "gate_selector", "Gate…"),
         ("t", "retry_task", "Retry task"),
         ("R", "resume", "Resume/step"),
+        ("P", "pause", "Pause"),
         ("p", "replay", "Replay"),
         ("s", "switch_run", "Switch run"),
         ("escape", "app.pop_screen", "Back"),
@@ -73,6 +74,9 @@ class CockpitScreen(Screen):
         self._filter = ""
         self._ticker_ledger = "events"
         self._console_offsets: dict[str, int] = {}  # agent_raw.json path -> bytes already shown
+        import threading
+
+        self._stop_event = threading.Event()  # cooperative pause flag for the engine worker
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -154,6 +158,7 @@ class CockpitScreen(Screen):
             mode=mode,
             settings=self.settings,
             on_error=lambda m: self.app.call_from_thread(self.notify, m, severity="error"),
+            should_stop=self._stop_event.is_set,
         )
 
     @work(thread=True, exclusive=True)
@@ -165,7 +170,12 @@ class CockpitScreen(Screen):
         # Manual mode = exactly one transition per resume (matches `siftmesh resume`).
         single = (self._snap.mode if self._snap else "") == "manual"
         try:
-            run_engine(self.run, settings=self.settings, single_step=single)
+            run_engine(
+                self.run,
+                settings=self.settings,
+                single_step=single,
+                should_stop=self._stop_event.is_set,
+            )
         except Exception as exc:
             self.app.call_from_thread(self.notify, f"resume failed: {exc}", severity="error")
 
@@ -238,8 +248,17 @@ class CockpitScreen(Screen):
         if self.run is None or (self._snap and self._snap.terminal):
             self.notify("nothing to resume")
             return
+        self._stop_event.clear()  # un-pause before re-driving
         self.notify("resuming…")
         self._resume_engine()
+
+    def action_pause(self) -> None:
+        """Request a cooperative pause — the engine stops at the next safe checkpoint (durable)."""
+        if self.run is None or (self._snap and self._snap.terminal):
+            self.notify("nothing to pause")
+            return
+        self._stop_event.set()
+        self.notify("pausing at the next safe checkpoint… (R to resume)")
 
     def action_replay(self) -> None:
         if self.run is None:

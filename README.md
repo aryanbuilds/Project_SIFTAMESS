@@ -117,6 +117,16 @@ a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui
 | `agents list` · `agents inspect <id>` | Onboard/inspect the coding-agent connectors (installed? authed? tool-reachable? default?). |
 | `protocol-sift inspect` · `protocol-sift skills list` | Inspect/govern the `~/.claude` Protocol SIFT layer. |
 
+## Try it / docs
+
+- **Zero-keys demo:** `bash examples/demo_case/run_demo.sh` (full pipeline on the deterministic floor,
+  no API keys) — see [`examples/demo_case/README.md`](examples/demo_case/README.md).
+- **[`docs/try_it_out.md`](docs/try_it_out.md)** — local deploy in 3 minutes.
+- **[`docs/judge_runbook.md`](docs/judge_runbook.md)** — evaluator quick-start, mapped to the judging criteria.
+- **[`docs/demo_script.md`](docs/demo_script.md)** — ≤5-min video shot list + narration.
+- **[`docs/execution_logs_sample.md`](docs/execution_logs_sample.md)** — annotated JSONL audit-trail walkthrough.
+- **[`docs/architecture.md`](docs/architecture.md)** (incl. agent safety tiers) · **[`docs/threat_model.md`](docs/threat_model.md)** · **[`docs/evidence_integrity.md`](docs/evidence_integrity.md)** · **[`docs/dataset_documentation.md`](docs/dataset_documentation.md)** · **[`docs/accuracy_report.md`](docs/accuracy_report.md)**.
+
 ## Develop
 
 ```bash

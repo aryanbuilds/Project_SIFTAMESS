@@ -36,6 +36,14 @@ _JUDGE_CHOICES = [
     ("codex (CLI)", "cli:codex"),
     ("opencode (CLI)", "cli:opencode"),
 ]
+# One-line description per judge choice (shown under the picker — codex/opencode-style).
+_JUDGE_DESC = {
+    "none": "Tier-1 deterministic critic only (the sole promoter). Recommended default.",
+    "cli:claude": "Advisory second opinion via the claude CLI (tool-less). Never promotes.",
+    "cli:gemini": "Advisory second opinion via the gemini CLI (tool-less). Never promotes.",
+    "cli:codex": "Advisory second opinion via the codex CLI (tool-less). Never promotes.",
+    "cli:opencode": "Advisory second opinion via the opencode CLI (tool-less). Never promotes.",
+}
 # Live agents that take a per-provider model override (friendly name → profile_id).
 _MODEL_AGENTS = [
     ("claude", "claude_headless"),
@@ -62,6 +70,9 @@ class OnboardingScreen(Screen):
             "The deterministic floor (tier T0) is always available — pick a live agent for T1/T2.",
             id="intro",
         )
+        yield Static(
+            id="readiness"
+        )  # prominent colored ready/floor-only badge (populated on probe)
         yield SelectionList[str](id="agentsel")
         yield Static(id="guidance")
         with Collapsible(title="Per-provider models (blank = default)", id="models"):
@@ -81,6 +92,7 @@ class OnboardingScreen(Screen):
                 id="judge",
                 allow_blank=False,
             )
+        yield Static(_JUDGE_DESC.get(self._initial_judge(), ""), id="judgedesc")
         with Horizontal(id="scoperow"):
             yield Label("Save to:")
             with RadioSet(id="scope"):
@@ -121,6 +133,14 @@ class OnboardingScreen(Screen):
                 fix_lines.append(f"  {a.profile_id}: {hint}")
         self._render_guidance(cap, fix_lines)
         ready = cap.live_candidate is not None
+        readiness = self.query_one("#readiness", Static)
+        if ready:
+            readiness.update(f"[$success]✓ Live agent ready:[/] {cap.live_candidate} (tier T1/T2)")
+        else:
+            readiness.update(
+                "[$warning]● Floor only (tier T0):[/] no live agent ready — runs use the "
+                "deterministic real-tool floor (no keys needed). Fix one below for T1/T2."
+            )
         self._status(
             f"default agent today: {cap.chosen}"
             + (f" · live ready: {cap.live_candidate}" if ready else " · no live agent ready (T0)")
@@ -149,9 +169,16 @@ class OnboardingScreen(Screen):
     def _status(self, msg: str) -> None:
         self.query_one("#statusline", Static).update(msg)
 
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Show the chosen judge's one-line description (codex/opencode-style)."""
+        if event.select.id == "judge":
+            self.query_one("#judgedesc", Static).update(_JUDGE_DESC.get(str(event.value), ""))
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "install":
-            self._status("installing backends (uv sync --all-extras)…")
+            self._status("installing backends (uv sync --all-extras)… this can take a minute.")
+            self.query_one("#install", Button).disabled = True  # contextual: no double-install
+            self.query_one("#reprobe", Button).disabled = True
             self._install()
         elif event.button.id == "reprobe":
             self._populate()
@@ -166,6 +193,9 @@ class OnboardingScreen(Screen):
 
     def _after_install(self, msg: str) -> None:
         self._status(msg)
+        self.query_one("#reprobe", Button).disabled = False
+        # leave Install disabled after a success (no double-install); re-enable on failure to retry
+        self.query_one("#install", Button).disabled = "complete" in msg
         self._populate()
 
     def _initial_judge(self) -> str:

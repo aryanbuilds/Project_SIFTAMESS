@@ -1191,24 +1191,37 @@ def tui(
 @agents_app.command("list")
 def agents_list() -> None:
     """List coding agents: installed? authenticated? can reach the typed tools? which is default?"""
+    from rich.console import Console
+    from rich.table import Table
+
     from siftmesh_core.config import load_settings
     from siftmesh_core.doctor import probe_agents
     from siftmesh_core.schemas.agent_capabilities import SAFETY_TIER_DESC, safety_tier_label
 
     cap = probe_agents(load_settings())
-    header = (
-        f"{'agent':<22} {'tier':<5} {'present':<8} {'auth':<8} "
-        f"{'sandbox':<11} {'tools':<12} version"
-    )
-    typer.echo(header)
+    table = Table(title="Coding agents", title_style="bold", expand=False, pad_edge=False)
+    table.add_column("agent", style="bold", no_wrap=True)
+    table.add_column("tier", no_wrap=True)
+    table.add_column("present")
+    table.add_column("auth")
+    table.add_column("sandbox")
+    table.add_column("tools")
+    table.add_column("version", overflow="fold")
+    _tier_color = {"T0": "green", "T1": "cyan", "T2": "yellow", "T3": "magenta"}
+    _yn = lambda ok: "[green]✓[/]" if ok else "[red]✗[/]"  # noqa: E731
     for c in cap.agents:
-        sel = "  <- default" if c.selected else ""
-        typer.echo(
-            f"{c.profile_id:<22} {c.safety_tier:<5} {('yes' if c.present else 'no'):<8} "
-            f"{('yes' if c.auth_ok else 'no'):<8} "
-            f"{('yes' if c.sandboxed else 'NO'):<11} {c.tool_reachable:<12} "
-            f"{(c.version if c.present else 'absent')}{sel}"
+        name = f"{c.profile_id}  [dim]← default[/]" if c.selected else c.profile_id
+        table.add_row(
+            name,
+            f"[{_tier_color.get(c.safety_tier, 'white')}]{c.safety_tier}[/]",
+            _yn(c.present),
+            _yn(c.auth_ok),
+            _yn(c.sandboxed),
+            c.tool_reachable,
+            c.version if c.present else "absent",
         )
+    # width=100 so profile_ids never truncate under CliRunner (no TTY); plain text out of a pipe.
+    Console(width=100).print(table)
     typer.echo(f"\nexecutor default (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
         typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor — tier T0)")

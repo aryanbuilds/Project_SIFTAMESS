@@ -55,6 +55,8 @@ def grade_claim_against_run(
     claim: Claim | Mapping[str, Any],
     *,
     evidence_root: Path | str | None = None,
+    manifest_hashes: dict[str, str] | None = None,
+    tool_results_by_id: dict[str, ToolResult] | None = None,
 ) -> list[str]:
     """Evidence-discipline violations for a claim vs the run's manifest + tool ledger.
 
@@ -62,11 +64,21 @@ def grade_claim_against_run(
     Critic (Epic G) calls it directly per claim so grading does NOT spam
     ``tool_calls.jsonl`` with a TOOL-NNN per claim. ``evidence_root`` is accepted for
     signature parity (the manifest already lives under the run dir).
+
+    ``manifest_hashes`` / ``tool_results_by_id`` are an optional pre-loaded grading
+    context: when grading many claims in one pass (the Critic), the caller builds these
+    ONCE and threads them in, so this function does not re-read the whole manifest +
+    ``tool_calls.jsonl`` per claim. ``None`` (the default) builds them inline — then the
+    result is byte-identical to reading them here, so every existing caller is unchanged.
     """
     problems = list(grade_claim_schema(claim))  # C2 grader: accepts Claim or mapping
     if _field(claim, "status") != "unsupported":
-        hashes = _manifest_hashes(run_root)
-        results = {r.tool_call_id: r for r in read_tool_results(run_root)}
+        hashes = _manifest_hashes(run_root) if manifest_hashes is None else manifest_hashes
+        results = (
+            {r.tool_call_id: r for r in read_tool_results(run_root)}
+            if tool_results_by_id is None
+            else tool_results_by_id
+        )
         artifact = _field(claim, "source_artifact")
         source_sha256 = _field(claim, "source_sha256")
         tool_call_id = _field(claim, "tool_call_id")

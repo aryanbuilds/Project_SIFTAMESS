@@ -15,6 +15,8 @@ Mode policy (set by the caller via ``RunState.mode`` + ``single_step``):
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 
 from structlog.typing import FilteringBoundLogger
@@ -38,8 +40,10 @@ from siftmesh_core.orchestrator.state_machine import IllegalTransitionError, nex
 from siftmesh_core.orchestrator.ultraworker import (
     aggregate_decision,
     latest_verdict_by_task,
+    undispatched_task_ids,
 )
 from siftmesh_core.run_dir import RunPaths
+from siftmesh_core.schemas.audit import CriticVerdict
 from siftmesh_core.schemas.evidence import EvidenceManifest
 from siftmesh_core.schemas.run import GateName, PerTaskState, RunState, RunStateName
 from siftmesh_core.schemas.task import TaskContract
@@ -186,6 +190,14 @@ def _advance(
     raise IllegalTransitionError(f"no action defined for state {current!r}")
 
 
+def _verdict_tally(verdicts: Mapping[str, CriticVerdict]) -> dict[str, int]:
+    """Sorted verdict-type -> count (B4). Deterministic JSON (sorted keys, counts only)."""
+    counts: dict[str, int] = {}
+    for v in verdicts.values():
+        counts[v.verdict] = counts.get(v.verdict, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def _decide(
     run: RunPaths,
     state: RunState,
@@ -202,13 +214,21 @@ def _decide(
     findings ledger by the critic (``_maybe_promote`` refuses ``_HUMAN``/``_REJECT``), so quarantine
     can never leak a fact; the items surface in the report's unsupported/injection appendices.
     """
-    decision = aggregate_decision(run, state, settings=settings)
+    # B2: read the verdict map ONCE and reuse it across every aggregate_decision call below (the
+    # quarantine loop would otherwise re-read + re-validate critic_verdicts.jsonl each pass). Map
+    # is read-only here; only `exclude` changes per pass, so reuse is identical.
+    verdicts = latest_verdict_by_task(run)
+    tally = _verdict_tally(verdicts)  # B4: sorted/count-only enrichment (deterministic JSON)
+    decision = aggregate_decision(run, state, settings=settings, verdicts=verdicts)
     log_event(
         audit,
         "decision",
         action=decision.action,
         reason=decision.reason,
         tasks=list(decision.task_ids),
+        verdict_tally=tally,
+        pending_count=len(undispatched_task_ids(run)),
+        quarantined_count=len(state.quarantined_tasks),
     )
     # Full-auto: quarantine flagged task(s) and re-aggregate so the rest still runs. Each pass
     # quarantines ≥1 new task and excludes it from the next fold, so this terminates.
@@ -222,13 +242,16 @@ def _decide(
             action=decision.action,
         )
         state = state.model_copy(update={"quarantined_tasks": quarantined})
-        decision = aggregate_decision(run, state, settings=settings, exclude=frozenset(quarantined))
+        decision = aggregate_decision(
+            run, state, settings=settings, exclude=frozenset(quarantined), verdicts=verdicts
+        )
         log_event(
             audit,
             "decision",
             action=decision.action,
             reason=decision.reason,
             tasks=list(decision.task_ids),
+            quarantined_count=len(quarantined),
             residual=True,
         )
     if decision.action == "done":
@@ -301,9 +324,11 @@ def run_engine(
             reset[gate] = "pending"  # re-gate the next loop (matters for retry)
             state = state.model_copy(update={"gates": reset, "blocked_gate": None})
 
+        stage_start = datetime.now(UTC)
         new_state, target = _advance(
             run, state, settings=settings, evidence_root=evidence, audit=audit
         )
+        duration_ms = int((datetime.now(UTC) - stage_start).total_seconds() * 1000)
         if target == current:  # halt (escalate / human_review / cap)
             log_event(audit, "halted", state=current, blocked_gate=new_state.blocked_gate)
             return write_run_state(run, new_state)
@@ -313,8 +338,15 @@ def run_engine(
         state = write_run_state(
             run, new_state.model_copy(update={"state": target, "terminal": terminal})
         )
+        # B3: per-stage wall-clock on the transition event. Engine-only channel — the golden
+        # recorder never runs run_engine, so these timed events never enter the golden bodies.
         log_event(
-            audit, "transition", from_state=current, to_state=target, iteration=state.iteration
+            audit,
+            "transition",
+            from_state=current,
+            to_state=target,
+            iteration=state.iteration,
+            duration_ms=duration_ms,
         )
         if terminal:
             log_event(audit, "run_complete", run=run.run_id)

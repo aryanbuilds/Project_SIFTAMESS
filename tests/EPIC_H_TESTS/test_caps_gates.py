@@ -35,7 +35,9 @@ def test_auto_mode_stops_at_max_iterations(
     monkeypatch.setattr(
         workflow_runner,
         "aggregate_decision",
-        lambda run, state, *, settings: RunDecision("retry", "forced", ("TASK-001",)),
+        lambda run, state, *, settings, exclude=frozenset(), verdicts=None: RunDecision(
+            "retry", "forced", ("TASK-001",)
+        ),
     )
     state = run_engine(run, settings=load_settings(), evidence_root=evidence)
     assert state.iteration == 1  # exactly one retry loop, then the cap halts it

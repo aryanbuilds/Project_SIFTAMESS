@@ -53,13 +53,18 @@ def aggregate_decision(
     *,
     settings: SiftmeshSettings,
     exclude: frozenset[str] = frozenset(),
+    verdicts: dict[str, CriticVerdict] | None = None,
 ) -> RunDecision:
     """Fold the per-task ``decide`` outcomes into one run-level :class:`RunDecision`.
 
     ``exclude`` drops task_ids from the fold — full-auto passes the quarantined tasks so one
     flagged task's ``human_review``/``escalate`` does not starve the others' retries/follow-ups.
+    ``verdicts`` lets the caller pass a pre-read verdict map (B2): the quarantine loop calls this
+    repeatedly and would otherwise re-read + re-validate ``critic_verdicts.jsonl`` each pass. The
+    map is read-only here (only ``exclude`` changes between passes), so reuse is identical.
     """
-    verdicts = latest_verdict_by_task(run)
+    if verdicts is None:
+        verdicts = latest_verdict_by_task(run)
     per_action: dict[str, DecisionAction] = {}
     for task_id, verdict in verdicts.items():
         if task_id in exclude:

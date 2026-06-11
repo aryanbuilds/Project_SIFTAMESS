@@ -96,7 +96,12 @@ def _human_review_then_done() -> Callable[..., RunDecision]:
     """A fake aggregator: TASK-001 flips human_review until excluded, then the rest is done."""
 
     def _fake(
-        run: RunPaths, state: RunState, *, settings: object, exclude: frozenset[str] = frozenset()
+        run: RunPaths,
+        state: RunState,
+        *,
+        settings: object,
+        exclude: frozenset[str] = frozenset(),
+        verdicts: object = None,
     ) -> RunDecision:
         if "TASK-001" in exclude:
             return RunDecision("done", "rest accepted", ())
@@ -125,7 +130,12 @@ def test_decide_guided_mode_halts_without_quarantine(
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
 
     def _always_human(
-        run: RunPaths, state: RunState, *, settings: object, exclude: frozenset[str] = frozenset()
+        run: RunPaths,
+        state: RunState,
+        *,
+        settings: object,
+        exclude: frozenset[str] = frozenset(),
+        verdicts: object = None,
     ) -> RunDecision:
         return RunDecision("human_review", "forced", ("TASK-001",))
 

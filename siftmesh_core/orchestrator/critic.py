@@ -49,7 +49,11 @@ from siftmesh_core.ledgers.injection_alerts import (
     read_injection_alerts,
 )
 from siftmesh_core.ledgers.retries import append_retry, next_retry_id
-from siftmesh_core.mcp_gateway.tools.validation_tools import grade_claim_against_run
+from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
+from siftmesh_core.mcp_gateway.tools.validation_tools import (
+    _manifest_hashes,
+    grade_claim_against_run,
+)
 from siftmesh_core.orchestrator.artifact_router import (
     FineFamily,
     RoutedArtifact,
@@ -72,6 +76,7 @@ from siftmesh_core.schemas.injection_alert import InjectionAlert
 from siftmesh_core.schemas.plan import InvestigationPlan
 from siftmesh_core.schemas.task import ArtifactOrigin, TaskContract
 from siftmesh_core.schemas.task_result import TaskResult
+from siftmesh_core.schemas.tool_result import ToolResult
 from siftmesh_core.schemas.yaml_io import dump_yaml_model, read_yaml_model
 
 # Per-claim outcomes (the verdict is derived from these + cross-cutting flags).
@@ -175,8 +180,21 @@ def _contradiction_rule(a: Claim, b: Claim) -> str | None:
     return None
 
 
-def _classify_claim(run: RunPaths, claim: Claim, *, injection: bool, contradicted: bool) -> str:
-    problems = grade_claim_against_run(run.root, claim)
+def _classify_claim(
+    run: RunPaths,
+    claim: Claim,
+    *,
+    injection: bool,
+    contradicted: bool,
+    manifest_hashes: dict[str, str] | None = None,
+    tool_results_by_id: dict[str, ToolResult] | None = None,
+) -> str:
+    problems = grade_claim_against_run(
+        run.root,
+        claim,
+        manifest_hashes=manifest_hashes,
+        tool_results_by_id=tool_results_by_id,
+    )
     if problems:
         return _REJECT
     if injection:
@@ -228,6 +246,10 @@ def critique_run(
             all_claims.extend(tr.claims)
     contradictions = _detect_contradictions(all_claims)
     alerts = read_injection_alerts(run.root)
+    # Grading context built ONCE for the whole pass (B1): grade_claim_against_run would otherwise
+    # re-read the manifest + tool_calls.jsonl per claim. Pre-loading is byte-identical to inline.
+    grade_hashes = _manifest_hashes(run.root)
+    grade_results = {r.tool_call_id: r for r in read_tool_results(run.root)}
     already = [*read_claims(run.root), *read_unsupported_claims(run.root)]
     persisted_ids = {c.claim_id for c in already}
     # Content keys defeat the dual id scheme (floor TASK-CLAIM-NNN vs live TASK-A{n}-CLAIM-NNN):
@@ -284,7 +306,14 @@ def critique_run(
         for claim in tr.claims:
             injected = _injection_affected(claim, alerts)
             contradicted = claim.claim_id in contradictions
-            outcome = _classify_claim(run, claim, injection=injected, contradicted=contradicted)
+            outcome = _classify_claim(
+                run,
+                claim,
+                injection=injected,
+                contradicted=contradicted,
+                manifest_hashes=grade_hashes,
+                tool_results_by_id=grade_results,
+            )
             outcomes.append(outcome)
             if outcome != _ACCEPT:
                 affected.append(claim.claim_id)

@@ -178,18 +178,19 @@ def test_onboarding_screen_mounts() -> None:
 
     async def scenario(_pilot: Any) -> None:
         from siftmesh_core.tui.setup_screen import OnboardingScreen
-        from textual.widgets import Select, SelectionList
+        from textual.widgets import Input, RadioSet, SelectionList, TabbedContent
 
         assert isinstance(app.screen, OnboardingScreen)
-        assert app.screen.query_one("#agentsel", SelectionList) is not None  # executor multi-select
+        assert app.screen.query_one(TabbedContent) is not None  # Agents | Tier-2 judge tabs
+        assert app.screen.query_one("#agentsel", SelectionList) is not None  # agent multi-select
         assert (
-            app.screen.query_one("#judge", Select) is not None
-        )  # Tier-2 judge picker (Epic Q judge)
-        # per-provider model inputs (Epic O redesign — finer control)
-        from textual.widgets import Input
-
+            app.screen.query_one("#judgeprov", RadioSet) is not None
+        )  # Tier-2 judge provider radio
+        assert app.screen.query_one("#apikey", Input) is not None  # judge API-key input
+        # per-provider model + rename inputs live in the Advanced section
         for name in ("claude", "gemini", "codex", "opencode"):
             assert app.screen.query_one(f"#model-{name}", Input) is not None
+            assert app.screen.query_one(f"#rename-{name}", Input) is not None
 
     _drive(app, scenario)
 
@@ -207,32 +208,29 @@ def test_onboarding_model_input_prefills_from_settings() -> None:
     _drive(app, scenario)
 
 
-def test_onboarding_judge_picker_preselects_from_settings() -> None:
-    app = SiftmeshTUI(settings=load_settings(judge="cli:gemini"), start="onboard")
+def test_onboarding_judge_radio_preselects_from_settings() -> None:
+    app = SiftmeshTUI(settings=load_settings(judge="cli:codex"), start="onboard")
 
     async def scenario(_pilot: Any) -> None:
-        from textual.widgets import Select
+        from textual.widgets import RadioButton
 
         assert (
-            app.screen.query_one("#judge", Select).value == "cli:gemini"
+            app.screen.query_one("#j-codex", RadioButton).value is True
         )  # pre-selected from config
 
     _drive(app, scenario)
 
 
-def test_onboarding_shows_tier_legend_and_remediation() -> None:
-    # The guided wizard must render the honest T0-T3 legend + a fix-it block (no live agent needed).
+def test_onboarding_shows_tier_legend() -> None:
+    # The guided onboarding must render the honest T0-T3 legend (no live agent needed).
     app = SiftmeshTUI(settings=load_settings(), start="onboard")
 
     async def scenario(_pilot: Any) -> None:
         from textual.widgets import Static
 
-        guidance = app.screen.query_one("#guidance", Static)
-        text = str(guidance.render())  # Static has no .renderable in textual 8.2.7 — use render()
+        text = str(app.screen.query_one("#guidance", Static).render())
         assert "Safety tiers" in text
         assert "T2 unconstrained_live" in text  # the legend is shown
-        # either a remediation block (something not ready) or the ready CTA — both are honest states
-        assert ("To make an agent ready:" in text) or ("Ready:" in text)
 
     _drive(app, scenario)
 

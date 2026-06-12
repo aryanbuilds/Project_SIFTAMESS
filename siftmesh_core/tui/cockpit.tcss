@@ -111,13 +111,22 @@ Screen.-narrow #navcol {
 #intro, #hometitle {
     padding: 1 1;
 }
-#setupbtns, #homebtns, #scoperow, #judgerow {
+#setupbtns, #homebtns, #scoperow, #judgerow, #agentbtns {
     height: auto;
     padding: 1 0;
 }
 #agentsel {
     height: 1fr;
+    min-height: 6;
     border: round $primary;
+}
+/* Onboarding: readiness badge, guidance, judge tab. */
+#readiness, #intro, #judgeintro, #judgedesc, #judgestatus, #guidance {
+    height: auto;
+    padding: 0 1;
+}
+#judgedesc {
+    color: $text-muted;
 }
 #newrun {
     padding: 1 2;

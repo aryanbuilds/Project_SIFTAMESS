@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>CLI-first DFIR orchestration with governed agents.</b><br>
+  <b>Orchestration of chaos to Find evil, not more agent noise with pro/max...</b><br>
   The LLM proposes; the code decides. Every finding is anchored to a real tool call, and every run is replayable.
 </p>
 

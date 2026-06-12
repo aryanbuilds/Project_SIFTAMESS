@@ -1,4 +1,4 @@
-"""New-investigation wizard — WizardDraft (headless) + the stepped screens (pilot)."""
+"""New-investigation wizard — WizardDraft (headless) + the hybrid 2-screen flow (pilot)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ pytest.importorskip("textual")
 
 from siftmesh_core.config import load_settings
 from siftmesh_core.tui.app import SiftmeshTUI
-from siftmesh_core.tui.wizard import Step1ProjectScreen, WizardDraft
+from siftmesh_core.tui.wizard import RunSetupScreen, WizardDraft
 
 # ── headless: the load-bearing WizardDraft ───────────────────────────────────
 
@@ -61,45 +61,73 @@ def _drive(app: SiftmeshTUI, scenario: Callable[[Any], Awaitable[None]]) -> None
     asyncio.run(run())
 
 
-def test_step1_to_step2_navigation(tmp_path: Path) -> None:
+def test_setup_screen_browses_above_project_root(tmp_path: Path) -> None:
+    """The evidence DirectoryTree must be re-rootable anywhere (the bug: stuck at base_dir)."""
     app = SiftmeshTUI(settings=load_settings())
 
     async def scenario(pilot: Any) -> None:
-        from siftmesh_core.tui.wizard import Step2EvidenceScreen
-        from textual.widgets import DirectoryTree, Input
+        from textual.widgets import DirectoryTree, Input, OptionList
 
-        await pilot.app.push_screen(Step1ProjectScreen(settings=load_settings()))
+        await pilot.app.push_screen(RunSetupScreen(settings=load_settings()))
         await pilot.pause()
-        app.screen.query_one("#case", Input).value = "case_x"
-        app.screen.query_one("#base", Input).value = str(tmp_path)
+        screen = app.screen
+        assert isinstance(screen, RunSetupScreen)
+        tree = screen.query_one("#fstree", DirectoryTree)
+        # default root is HOME (above any project dir), not the cwd
+        assert str(tree.path) == str(Path.home())
+        # re-root to an arbitrary path ABOVE/aside the project (the fix)
+        screen.query_one("#evroot", Input).value = str(tmp_path)
+        screen._reroot(tmp_path)
         await pilot.pause()
-        await pilot.click("#next")
-        await pilot.pause()
-        assert isinstance(app.screen, Step2EvidenceScreen)
-        assert app.screen.draft.case_name == "case_x"
-        assert app.screen.query_one("#fstree", DirectoryTree) is not None  # filesystem browser
+        assert str(tree.path) == str(tmp_path.resolve())
+        assert screen.query_one("#evhits", OptionList) is not None  # fuzzy results widget present
 
     _drive(app, scenario)
 
 
-def test_step2_add_evidence_grows_draft(tmp_path: Path) -> None:
+def test_setup_add_evidence_grows_draft(tmp_path: Path) -> None:
     (tmp_path / "Security.evtx").write_bytes(b"x")
     app = SiftmeshTUI(settings=load_settings())
 
     async def scenario(pilot: Any) -> None:
-        from siftmesh_core.tui.wizard import Step2EvidenceScreen
+        from textual.widgets import ListView
 
         draft = WizardDraft(case_name="c", base_dir=str(tmp_path))
-        await pilot.app.push_screen(Step2EvidenceScreen(settings=load_settings(), draft=draft))
+        await pilot.app.push_screen(RunSetupScreen(settings=load_settings(), draft=draft))
         await pilot.pause()
         screen = app.screen
-        assert isinstance(screen, Step2EvidenceScreen)
-        screen._current = tmp_path / "Security.evtx"  # simulate a tree selection
+        assert isinstance(screen, RunSetupScreen)
+        screen._set_current(tmp_path / "Security.evtx")  # simulate a tree selection
         await pilot.click("#add")
         await pilot.pause()
         assert (tmp_path / "Security.evtx") in screen.draft.selected_paths
-        from textual.widgets import ListView
-
         assert screen.query_one("#picked", ListView).children  # rendered in the picked list
+
+
+def test_setup_fuzzy_search_populates_and_adds(tmp_path: Path) -> None:
+    (tmp_path / "Security.evtx").write_bytes(b"x")
+    (tmp_path / "System.evtx").write_bytes(b"x")
+    app = SiftmeshTUI(settings=load_settings())
+
+    async def scenario(pilot: Any) -> None:
+        from textual.widgets import OptionList
+
+        draft = WizardDraft(case_name="c", base_dir=str(tmp_path))
+        screen = RunSetupScreen(settings=load_settings(), draft=draft)
+        await pilot.app.push_screen(screen)
+        await pilot.pause()
+        screen.query_one("#evroot").value = str(tmp_path)
+        screen._search("#file evtx")  # kicks the worker
+        # wait for the @work(thread) result to land
+        for _ in range(40):
+            await pilot.pause()
+            if screen._hits:
+                break
+        assert screen._hits, "fuzzy search returned no hits"
+        opts = app.screen.query_one("#evhits", OptionList)
+        assert opts.option_count >= 2
+        # selecting a hit adds it to the picked list (Enter on a result → _add_hit)
+        screen._add_hit(0)
+        assert screen._hits[0] in screen.draft.selected_paths
 
     _drive(app, scenario)

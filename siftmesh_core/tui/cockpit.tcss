@@ -122,3 +122,55 @@ Screen.-narrow #navcol {
 #newrun {
     padding: 1 2;
 }
+
+/* Evidence picker (RunSetupScreen): breadcrumb + 3-pane (showcase | tree | picked) + search. */
+#idrow, #navrow, #searchrow {
+    height: auto;
+    padding: 0 1;
+}
+#navrow Button {
+    min-width: 6;
+}
+#evroot, #evsearch, #case, #base, #brief, #objective {
+    width: 1fr;
+}
+#pickrow {
+    height: 1fr;
+    min-height: 12;
+}
+#showcase {
+    width: 1fr;
+    border: round $accent;
+}
+#pickrow #fstree {
+    width: 1fr;
+    border: round $primary;
+}
+#pickedcol {
+    width: 1fr;
+}
+#picked {
+    height: 1fr;
+    border: round $primary;
+}
+#pickbtns {
+    height: auto;
+}
+#evhits {
+    height: auto;
+    max-height: 10;
+    border: round $accent;
+}
+#pickstatus {
+    height: auto;
+    color: $text-muted;
+}
+/* Narrow terminals: stack the picker panes vertically. */
+Screen.-narrow #pickrow {
+    layout: vertical;
+}
+Screen.-narrow #showcase,
+Screen.-narrow #pickrow #fstree,
+Screen.-narrow #pickedcol {
+    width: 1fr;
+}

@@ -76,9 +76,9 @@ class HomeScreen(Screen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "new":
-            from siftmesh_core.tui.wizard import Step1ProjectScreen
+            from siftmesh_core.tui.wizard import RunSetupScreen
 
-            self.app.push_screen(Step1ProjectScreen(settings=self.settings))
+            self.app.push_screen(RunSetupScreen(settings=self.settings))
         elif event.button.id == "onboard":
             from siftmesh_core.tui.setup_screen import OnboardingScreen
 

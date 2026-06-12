@@ -1,16 +1,20 @@
-"""New-investigation wizard (Epic C+) — a stepped TUI flow that wires the existing core fns.
+"""New-investigation wizard (hybrid 2-screen flow) — thin wiring over the governed engine.
 
-Project → Evidence (DirectoryTree browse → add files/folders → curated hardlink dir) → Brief →
-Verify+Space synthesis (options) → Toggles → Launch. The load-bearing, Textual-FREE unit is
-``WizardDraft`` (every step reads/writes it; ``build_settings`` is the single source the legacy
-``NewRunScreen`` also delegates to), so step logic is unit-tested without a terminal. Screens are
-thin renderers; heavy work (curate, readiness) runs in ``@work`` threads. No orchestration here.
+Screen 1 ``RunSetupScreen``: name the case + **browse the whole filesystem** for evidence (a
+re-rootable ``DirectoryTree`` reachable ABOVE the project dir, a left showcase, and a ``#file`` /
+``#folder`` fuzzy search box) + the brief/objective. Screen 2 ``RunLaunchScreen``: host/space
+synthesis + the run options + Launch. The load-bearing, Textual-FREE unit is ``WizardDraft`` (every
+screen reads/writes it; ``build_settings`` is the single source the legacy ``NewRunScreen`` also
+delegates to). Screens are thin renderers; heavy work (curate, readiness, fuzzy search) runs in
+``@work`` threads. No orchestration here — launch routes through ``CockpitScreen`` as before.
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from textual import work
 from textual.app import ComposeResult
@@ -27,11 +31,13 @@ from textual.widgets import (
     ListItem,
     ListView,
     LoadingIndicator,
+    OptionList,
     RadioButton,
     RadioSet,
     Select,
     Static,
 )
+from textual.widgets.option_list import Option
 
 from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.schemas.run import RunMode
@@ -46,6 +52,11 @@ _JUDGE_CHOICES = [
     ("opencode", "cli:opencode"),
 ]
 _MODEL_AGENTS = ("claude", "gemini", "codex", "opencode")
+# Files small + texty enough to preview in the showcase (NEVER read a 22 GB .E01 into memory).
+_SHOWCASE_TEXT = frozenset(
+    {".md", ".markdown", ".json", ".jsonl", ".yaml", ".yml", ".txt", ".log", ".csv", ".ini", ".xml"}
+)
+_SHOWCASE_MAX_BYTES = 256 * 1024
 
 
 @dataclass
@@ -120,103 +131,216 @@ class WizardDraft:
         return settings, (int(mi) if mi.isdigit() else None)
 
 
-# ── Step 1: project / case ──────────────────────────────────────────────────
+def _render_showcase(path: Path) -> Any:
+    """A safe preview of the highlighted path for the picker's LEFT showcase.
+
+    Directories → child count + first names; small text files → rendered content; everything else
+    (binary / large / a 22 GB image) → metadata only. NEVER reads a big/binary file into memory.
+    """
+    from siftmesh_core.evidence.space import human_bytes
+    from siftmesh_core.tui.widgets import render_file
+
+    try:
+        st = path.stat()
+    except OSError as exc:
+        return f"cannot stat {path.name}: {exc}"
+    if path.is_dir():
+        try:
+            names = sorted(e.name for e in os.scandir(path))
+        except OSError as exc:
+            return f"{path}\n(cannot list: {exc})"
+        shown = "\n".join(f"  {n}" for n in names[:40])
+        more = f"\n  … (+{len(names) - 40} more)" if len(names) > 40 else ""
+        return f"{path}\n[dir · {len(names)} entries]\n{shown}{more}"
+    header = f"{path}\n[file · {human_bytes(st.st_size)}]\n"
+    if path.suffix.lower() in _SHOWCASE_TEXT and st.st_size <= _SHOWCASE_MAX_BYTES:
+        return render_file(path)
+    return header + "(binary or large — not previewed; it can still be added as evidence)"
 
 
-class Step1ProjectScreen(Screen):
-    """Name the case + base dir + optional config scope."""
+# ── Screen 1: setup (case + filesystem-wide evidence picker + brief) ──────────
 
-    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
+
+class RunSetupScreen(Screen):
+    """Name the case, browse the whole filesystem for evidence, give the brief; then curate."""
+
+    BINDINGS = [
+        ("escape", "app.pop_screen", "Back"),
+        ("up", "go_up", "Up dir"),
+        ("ctrl+f", "focus_search", "Search"),
+        ("q", "quit", "Quit"),
+    ]
 
     def __init__(self, *, settings: SiftmeshSettings, draft: WizardDraft | None = None) -> None:
         super().__init__()
         self.settings = settings
         self.draft = draft or WizardDraft()
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        with Vertical(id="newrun"):
-            yield Static("New investigation — Step 1/6: Project", id="wizstep")
-            yield Label("Case name")
-            yield Input(value=self.draft.case_name, placeholder="case_rocba", id="case")
-            yield Label("Base directory")
-            yield Input(value=self.draft.base_dir, placeholder=".", id="base")
-            yield Label("Save agent config to:")
-            with RadioSet(id="scope"):
-                yield RadioButton("don't save", value=True, id="scope-none")
-                yield RadioButton("global (~/.config)", id="scope-global")
-                yield RadioButton("project (./siftmesh.toml)", id="scope-project")
-            yield Button("Next: evidence →", id="next", variant="primary")
-        yield Footer()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "next":
-            return
-        self.draft.case_name = self.query_one("#case", Input).value.strip()
-        self.draft.base_dir = self.query_one("#base", Input).value.strip() or "."
-        if not self.draft.case_name:
-            self.notify("a case name is required", severity="error")
-            return
-        idx = self.query_one("#scope", RadioSet).pressed_index
-        self.draft.save_scope = ("none", "global", "project")[idx if idx >= 0 else 0]
-        self.app.push_screen(Step2EvidenceScreen(settings=self.settings, draft=self.draft))
-
-
-# ── Step 2: evidence picker (DirectoryTree → add-to-list → curate) ───────────
-
-
-class Step2EvidenceScreen(Screen):
-    """Browse the filesystem; add files/folders to the selected list; curate on Next."""
-
-    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
-
-    def __init__(self, *, settings: SiftmeshSettings, draft: WizardDraft) -> None:
-        super().__init__()
-        self.settings = settings
-        self.draft = draft
         self._current: Path | None = None
+        self._hits: list[Path] = []
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("Step 2/6: Evidence — browse, Add files/folders, then Next", id="wizstep")
+        yield Static("New investigation — Setup (1/2): case · evidence · brief", id="wizstep")
+        with Horizontal(id="idrow"):
+            yield Input(
+                value=self.draft.case_name, placeholder="case name (e.g. case_rocba)", id="case"
+            )
+            yield Input(value=self.draft.base_dir, placeholder="runs base dir (.)", id="base")
+        with Horizontal(id="navrow"):
+            yield Input(value=str(Path.home()), placeholder="path to browse", id="evroot")
+            yield Button("Up", id="up")
+            yield Button("Home", id="home")
+            yield Button("/", id="root")
         with Horizontal(id="pickrow"):
-            yield DirectoryTree(str(Path(self.draft.base_dir).expanduser().resolve()), id="fstree")
+            with VerticalScroll(id="showcase"):
+                yield Static("select a file or folder to preview", id="showcaseview", markup=False)
+            yield DirectoryTree(str(Path.home()), id="fstree")
             with Vertical(id="pickedcol"):
                 yield Label("Selected evidence:")
                 yield ListView(id="picked")
                 with Horizontal(id="pickbtns"):
                     yield Button("Add", id="add", variant="success")
                     yield Button("Remove", id="remove")
-        yield Static(id="pickstatus")
-        yield Button("Next: brief →", id="next", variant="primary")
+        with Horizontal(id="searchrow"):
+            yield Input(
+                placeholder="#file <name>   or   #folder <name>   — Enter to search", id="evsearch"
+            )
+        yield OptionList(id="evhits")
+        yield Input(
+            value=self.draft.brief_path or "",
+            placeholder="brief file (.pptx/.pdf/.md) — optional",
+            id="brief",
+        )
+        yield Input(
+            value=self.draft.objective or "",
+            placeholder="…or inline objective text",
+            id="objective",
+        )
+        yield Static(id="pickstatus", markup=False)
+        yield Button("Next: options →", id="next", variant="primary")
         yield Footer()
 
     def on_mount(self) -> None:
         self._sync_picked()
 
+    # -- navigation / re-root --------------------------------------------------
+    def _reroot(self, path: Path) -> None:
+        tree = self.query_one("#fstree", DirectoryTree)
+        try:
+            resolved = path.expanduser().resolve()
+        except OSError:
+            self.notify("cannot resolve that path", severity="error")
+            return
+        if not resolved.is_dir():
+            self.notify("not a directory", severity="error")
+            return
+        tree.path = resolved  # path is a reactive in textual 8.2.7
+        tree.reload()
+        self.query_one("#evroot", Input).value = str(resolved)
+
+    def action_go_up(self) -> None:
+        cur = Path(self.query_one("#evroot", Input).value or str(Path.home()))
+        self._reroot(cur.parent)
+
+    def action_focus_search(self) -> None:
+        self.query_one("#evsearch", Input).focus()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id == "evroot":
+            self._reroot(Path(event.value))
+        elif event.input.id == "evsearch":
+            self._search(event.value)
+
+    # -- tree selection → showcase --------------------------------------------
     def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
-        self._current = Path(event.path)
+        self._set_current(Path(event.path))
 
     def on_directory_tree_directory_selected(self, event: DirectoryTree.DirectorySelected) -> None:
-        self._current = Path(event.path)
+        self._set_current(Path(event.path))
 
+    def _set_current(self, path: Path) -> None:
+        self._current = path
+        self.query_one("#showcaseview", Static).update(_render_showcase(path))
+
+    # -- fuzzy search ----------------------------------------------------------
+    def _search(self, raw: str) -> None:
+        text = raw.strip()
+        if not text:
+            return
+        mode = "both"
+        if text.startswith("#file"):
+            mode, query = "file", text[len("#file") :].strip()
+        elif text.startswith("#folder"):
+            mode, query = "folder", text[len("#folder") :].strip()
+        else:
+            query = text.lstrip("#").strip()
+        if not query:
+            self.notify("type a name after #file / #folder")
+            return
+        root = self.query_one("#evroot", Input).value or str(Path.home())
+        self.query_one("#pickstatus", Static).update(f"searching '{query}' under {root}…")
+        self._run_search(query, root, mode)
+
+    @work(thread=True, exclusive=True)
+    def _run_search(self, query: str, root: str, mode: str) -> None:
+        from siftmesh_core.tui.fs_search import fuzzy_find
+
+        hits = fuzzy_find(query, root=root, mode=mode)  # type: ignore[arg-type]
+        self.app.call_from_thread(self._show_hits, query, hits)
+
+    def _show_hits(self, query: str, hits: list[Path]) -> None:
+        from textual.fuzzy import Matcher
+
+        self._hits = hits
+        optlist = self.query_one("#evhits", OptionList)
+        optlist.clear_options()
+        matcher = Matcher(query)
+        for i, p in enumerate(hits):
+            optlist.add_option(Option(matcher.highlight(str(p)), id=str(i)))
+        self.query_one("#pickstatus", Static).update(
+            f"{len(hits)} match(es) for '{query}' — Enter on one to add"
+        )
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        self._add_hit(event.option_index)
+
+    def _add_hit(self, idx: int) -> None:
+        """Add the idx-th fuzzy hit to the picked list (Enter on a result)."""
+        if not (0 <= idx < len(self._hits)):
+            return
+        hit = self._hits[idx]
+        self._set_current(hit)
+        if self.draft.add_path(hit):
+            self._sync_picked()
+            self.notify(f"added {hit.name}")
+        else:
+            self.notify("already selected")
+
+    # -- picked list -----------------------------------------------------------
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "add":
+        bid = event.button.id
+        if bid == "up":
+            self.action_go_up()
+        elif bid == "home":
+            self._reroot(Path.home())
+        elif bid == "root":
+            self._reroot(Path("/"))
+        elif bid == "add":
             if self._current is None:
-                self.notify("select a file or folder in the tree first")
+                self.notify("select a file/folder in the tree, or search with #file / #folder")
                 return
             if self.draft.add_path(self._current):
                 self._sync_picked()
             else:
                 self.notify("already selected")
-        elif event.button.id == "remove":
+        elif bid == "remove":
             lv = self.query_one("#picked", ListView)
             i = lv.index
             if i is not None and 0 <= i < len(self.draft.selected_paths):
                 self.draft.remove_path(self.draft.selected_paths[i])
                 self._sync_picked()
-        elif event.button.id == "next":
-            self._curate_and_advance()
+        elif bid == "next":
+            self._next()
 
     def _sync_picked(self) -> None:
         lv = self.query_one("#picked", ListView)
@@ -227,10 +351,23 @@ class Step2EvidenceScreen(Screen):
             f"{len(self.draft.selected_paths)} item(s) selected"
         )
 
-    def _curate_and_advance(self) -> None:
+    # -- advance: validate + curate -------------------------------------------
+    def _next(self) -> None:
+        self.draft.case_name = self.query_one("#case", Input).value.strip()
+        self.draft.base_dir = self.query_one("#base", Input).value.strip() or "."
+        if not self.draft.case_name:
+            self.notify("a case name is required", severity="error")
+            return
         if not self.draft.selected_paths:
             self.notify("add at least one file or folder", severity="error")
             return
+        brief = self.query_one("#brief", Input).value.strip() or None
+        objective = self.query_one("#objective", Input).value.strip() or None
+        if brief and objective:
+            self.notify("give a brief OR an objective, not both", severity="error")
+            return
+        self.draft.brief_path = brief
+        self.draft.objective = objective
         self.query_one("#pickstatus", Static).update("curating evidence (hardlinks)…")
         self._curate()
 
@@ -246,60 +383,15 @@ class Step2EvidenceScreen(Screen):
             return
         self.draft.curated_root = str(root)
         self.app.call_from_thread(
-            self.app.push_screen, Step3BriefScreen(settings=self.settings, draft=self.draft)
+            self.app.push_screen, RunLaunchScreen(settings=self.settings, draft=self.draft)
         )
 
 
-# ── Step 3: brief / objective ───────────────────────────────────────────────
+# ── Screen 2: launch (verify + space + options) ──────────────────────────────
 
 
-class Step3BriefScreen(Screen):
-    """Incident brief file OR inline objective text (mutually exclusive)."""
-
-    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
-
-    def __init__(self, *, settings: SiftmeshSettings, draft: WizardDraft) -> None:
-        super().__init__()
-        self.settings = settings
-        self.draft = draft
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        with Vertical(id="newrun"):
-            yield Static(
-                "Step 3/6: Brief — a TRUSTED objective (file or inline text)", id="wizstep"
-            )
-            yield Label("Brief file (.pptx/.docx/.pdf/.txt/.md) — or leave blank")
-            yield Input(
-                value=self.draft.brief_path or "", placeholder="…/BACKGROUND.pptx", id="brief"
-            )
-            yield Label("…or inline objective text")
-            yield Input(
-                value=self.draft.objective or "",
-                placeholder="was host X compromised? find initial access",
-                id="objective",
-            )
-            yield Button("Next: verify + space →", id="next", variant="primary")
-        yield Footer()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "next":
-            return
-        brief = self.query_one("#brief", Input).value.strip() or None
-        objective = self.query_one("#objective", Input).value.strip() or None
-        if brief and objective:
-            self.notify("give a brief OR an objective, not both", severity="error")
-            return
-        self.draft.brief_path = brief
-        self.draft.objective = objective
-        self.app.push_screen(Step4VerifyScreen(settings=self.settings, draft=self.draft))
-
-
-# ── Step 4: verify + space synthesis ────────────────────────────────────────
-
-
-class Step4VerifyScreen(Screen):
-    """Host verification + disk-space estimate → recommendation + options."""
+class RunLaunchScreen(Screen):
+    """Host/space synthesis + run options + Launch (normal → cockpit; portions → orchestrated)."""
 
     BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
 
@@ -307,90 +399,7 @@ class Step4VerifyScreen(Screen):
         super().__init__()
         self.settings = settings
         self.draft = draft
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        yield Static("Step 4/6: Verify host + space", id="wizstep")
-        yield LoadingIndicator(id="vloading")
-        with VerticalScroll(id="vbody"):
-            yield Static(id="vreport")
-        with Horizontal(id="vbtns"):
-            yield Button("Full (parallel)", id="opt-full", variant="success")
-            yield Button("Single op + report", id="opt-single")
-            yield Button("Run in portions", id="opt-portions", variant="warning")
-        yield Footer()
-
-    def on_mount(self) -> None:
-        self._build()
-
-    @work(thread=True, exclusive=True)
-    def _build(self) -> None:
-        from siftmesh_core.tui.space_view import build_readiness
-
-        ev = self.draft.curated_root or self.draft.base_dir
-        report = build_readiness(ev, run_location=self.draft.case_dir, settings=self.settings)
-        self.app.call_from_thread(self._render_report, report)
-
-    def _render_report(self, report: object) -> None:
-        from siftmesh_core.tui.space_view import ReadinessReport
-
-        assert isinstance(report, ReadinessReport)
-        self._report = report
-        self.query_one("#vloading", LoadingIndicator).display = False
-        lines = [
-            f"checks: {report.checks_ok} ok · {report.checks_warn} warn · "
-            f"{report.checks_fail} fail",
-            f"agent default: {report.agents.chosen}"
-            + (
-                f" · live ready: {report.agents.live_candidate}"
-                if report.agents.live_candidate
-                else ""
-            ),
-            f"space: needs ~{report.needed_human} · free {report.free_human} · "
-            + ("FITS" if report.fits else "WON'T FIT"),
-            "",
-            f"recommendation: {report.recommendation.upper()}",
-        ]
-        if report.blocking:
-            lines.append("[$error]host has FAIL checks — fix before running (see doctor).[/]")
-        if not report.fits:
-            lines.append("")
-            lines.append(f"portions plan: {len(report.portions)} portion(s)")
-            for i, portion in enumerate(report.portions, 1):
-                names = ", ".join(Path(str(it.path)).name for it in portion)
-                lines.append(f"  portion {i}: {names}")
-        self.query_one("#vreport", Static).update("\n".join(lines))
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        report = getattr(self, "_report", None)
-        if report is None:
-            self.notify("still verifying…")
-            return
-        if event.button.id == "opt-full":
-            self.draft.run_style, self.draft.parallel = "full", True
-        elif event.button.id == "opt-single":
-            self.draft.run_style, self.draft.parallel = "single", False
-        elif event.button.id == "opt-portions":
-            self.draft.run_style = "portions"
-            self.draft.portion_plan = [list(p) for p in report.portions]
-            self.draft.force = True  # proceeding despite the shortfall (operator chose portions)
-        else:
-            return
-        self.app.push_screen(Step5OptionsScreen(settings=self.settings, draft=self.draft))
-
-
-# ── Step 5: toggles ─────────────────────────────────────────────────────────
-
-
-class Step5OptionsScreen(Screen):
-    """Final knobs — mode/agent/judge/caps/models + parallel/all-live."""
-
-    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
-
-    def __init__(self, *, settings: SiftmeshSettings, draft: WizardDraft) -> None:
-        super().__init__()
-        self.settings = settings
-        self.draft = draft
+        self._report: Any = None
 
     def compose(self) -> ComposeResult:
         agents = [p for p in self.settings.agent_preference if p != "deterministic_executor"]
@@ -398,8 +407,15 @@ class Step5OptionsScreen(Screen):
             (p.removesuffix("_headless"), p.removesuffix("_headless")) for p in agents
         ]
         yield Header()
+        yield Static("New investigation — Launch (2/2): verify · options", id="wizstep")
+        yield LoadingIndicator(id="vloading")
         with VerticalScroll(id="newrun"):
-            yield Static("Step 5/6: Options", id="wizstep")
+            yield Static(id="vreport")
+            yield Label("Run style")
+            with RadioSet(id="runstyle"):
+                yield RadioButton("Full (parallel)", value=True, id="rs-full")
+                yield RadioButton("Single op + report", id="rs-single")
+                yield RadioButton("Run in portions (low disk)", id="rs-portions")
             yield Label("Mode")
             yield Select(
                 [(m, m) for m in _MODES], value=self.draft.mode, id="mode", allow_blank=False
@@ -421,56 +437,63 @@ class Step5OptionsScreen(Screen):
             yield Checkbox(
                 "All-live (heavy tools on the agent)", value=self.draft.all_live, id="cb-alllive"
             )
-            yield Button("Next: launch →", id="next", variant="primary")
+            yield Label("Save agent config to:")
+            with RadioSet(id="scope"):
+                yield RadioButton("don't save", value=True, id="scope-none")
+                yield RadioButton("global (~/.config)", id="scope-global")
+                yield RadioButton("project (./siftmesh.toml)", id="scope-project")
+            yield Static(id="summary", markup=False)
+        yield Button("Launch", id="launch", variant="success")
         yield Footer()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "next":
-            return
-        self.draft.mode = str(self.query_one("#mode", Select).value)  # type: ignore[assignment]
-        self.draft.agent = str(self.query_one("#agent", Select).value)
-        self.draft.judge = str(self.query_one("#judge", Select).value)
-        self.draft.max_iterations = self.query_one("#max-iterations", Input).value.strip()
-        self.draft.max_agent_tasks = self.query_one("#max-agent-tasks", Input).value.strip()
-        self.draft.models = {
-            name: self.query_one(f"#model-{name}", Input).value.strip() for name in _MODEL_AGENTS
-        }
-        self.draft.parallel = self.query_one("#cb-parallel", Checkbox).value
-        self.draft.all_live = self.query_one("#cb-alllive", Checkbox).value
-        self.app.push_screen(Step6LaunchScreen(settings=self.settings, draft=self.draft))
+    def on_mount(self) -> None:
+        self._build()
 
+    @work(thread=True, exclusive=True)
+    def _build(self) -> None:
+        from siftmesh_core.tui.space_view import build_readiness
 
-# ── Step 6: launch ──────────────────────────────────────────────────────────
+        ev = self.draft.curated_root or self.draft.base_dir
+        report = build_readiness(ev, run_location=self.draft.case_dir, settings=self.settings)
+        self.app.call_from_thread(self._render_report, report)
 
-
-class Step6LaunchScreen(Screen):
-    """Summary + launch (normal → cockpit; portions → orchestrated run)."""
-
-    BINDINGS = [("escape", "app.pop_screen", "Back"), ("q", "quit", "Quit")]
-
-    def __init__(self, *, settings: SiftmeshSettings, draft: WizardDraft) -> None:
-        super().__init__()
-        self.settings = settings
-        self.draft = draft
-
-    def compose(self) -> ComposeResult:
-        d = self.draft
-        yield Header()
-        with Vertical(id="newrun"):
-            yield Static("Step 6/6: Launch", id="wizstep")
-            yield Static(
-                f"case: {d.case_dir}\nevidence: {d.curated_root}\n"
-                f"brief: {d.brief_path or d.objective or '(none)'}\n"
-                f"mode: {d.mode} · agent: {d.agent} · style: {d.run_style} · "
-                f"parallel: {d.parallel}",
-                id="summary",
-            )
-            yield Button("Launch", id="launch", variant="success")
-        yield Footer()
+    def _render_report(self, report: Any) -> None:
+        self._report = report
+        self.query_one("#vloading", LoadingIndicator).display = False
+        lines = [
+            f"checks: {report.checks_ok} ok · {report.checks_warn} warn · "
+            f"{report.checks_fail} fail",
+            f"agent default: {report.agents.chosen}"
+            + (
+                f" · live ready: {report.agents.live_candidate}"
+                if report.agents.live_candidate
+                else ""
+            ),
+            f"space: needs ~{report.needed_human} · free {report.free_human} · "
+            + ("FITS" if report.fits else "WON'T FIT"),
+            f"recommendation: {report.recommendation.upper()}",
+        ]
+        if report.blocking:
+            lines.append("host has FAIL checks — fix before running (see doctor).")
+        if not report.fits:
+            lines.append(f"portions plan: {len(report.portions)} portion(s)")
+            for i, portion in enumerate(report.portions, 1):
+                names = ", ".join(Path(str(it.path)).name for it in portion)
+                lines.append(f"  portion {i}: {names}")
+        self.query_one("#vreport", Static).update("\n".join(lines))
+        # pre-select the recommended run style (RadioSet enforces exclusivity when one is set True)
+        target = {"full": 0, "single": 1, "portions": 2}.get(report.recommendation, 0)
+        buttons = list(self.query_one("#runstyle", RadioSet).query(RadioButton))
+        if 0 <= target < len(buttons):
+            buttons[target].value = True
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id != "launch":
             return
+        if self._report is None:
+            self.notify("still verifying host + space…")
+            return
+        self._collect()
         if self.draft.save_scope in ("global", "project"):
             self._persist_scope()
         settings, max_iterations = self.draft.build_settings()
@@ -498,6 +521,28 @@ class Step6LaunchScreen(Screen):
         }
         self.app.switch_screen(CockpitScreen(None, settings=settings, launch_params=params))
 
+    def _collect(self) -> None:
+        d = self.draft
+        d.mode = str(self.query_one("#mode", Select).value)  # type: ignore[assignment]
+        d.agent = str(self.query_one("#agent", Select).value)
+        d.judge = str(self.query_one("#judge", Select).value)
+        d.max_iterations = self.query_one("#max-iterations", Input).value.strip()
+        d.max_agent_tasks = self.query_one("#max-agent-tasks", Input).value.strip()
+        d.models = {
+            name: self.query_one(f"#model-{name}", Input).value.strip() for name in _MODEL_AGENTS
+        }
+        d.parallel = self.query_one("#cb-parallel", Checkbox).value
+        d.all_live = self.query_one("#cb-alllive", Checkbox).value
+        scope_idx = self.query_one("#scope", RadioSet).pressed_index
+        d.save_scope = ("none", "global", "project")[scope_idx if scope_idx >= 0 else 0]
+        style_idx = self.query_one("#runstyle", RadioSet).pressed_index
+        d.run_style = ("full", "single", "portions")[style_idx if style_idx >= 0 else 0]
+        if d.run_style == "full":
+            d.parallel = True
+        if d.run_style == "portions" and self._report is not None and self._report.portions:
+            d.portion_plan = [list(p) for p in self._report.portions]
+            d.force = True
+
     def _persist_scope(self) -> None:
         from siftmesh_core.config import save_agent_selection
 
@@ -507,5 +552,9 @@ class Step6LaunchScreen(Screen):
                 self.settings.agent_preference,
                 scope=self.draft.save_scope,  # type: ignore[arg-type]
             )
-        except Exception as exc:
+        except Exception as exc:  # pragma: no cover - config IO is best-effort here
             self.notify(f"config save failed: {exc}", severity="warning")
+
+
+# Back-compat: HomeScreen "New run" entry point.
+Step1ProjectScreen = RunSetupScreen

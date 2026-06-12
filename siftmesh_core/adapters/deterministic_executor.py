@@ -24,6 +24,7 @@ from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, registe
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.ledgers.claim_ledger import append_claim
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
+from siftmesh_core.mcp_gateway.tools.browser_tools import parse_browser_history
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.image_tools import extract_artifacts_from_image
 from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
@@ -257,6 +258,46 @@ def _claims_usb(result: Any, task_id: str) -> list[Claim]:
     ]
 
 
+def _claims_browser(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim (enumeration -> one claim, full rows in the structured result). Downloads
+    # are the exfil-relevant signal (what left / where); visits are summarised by count. inferred —
+    # web activity is a lead, not proof of transfer.
+    rows = result.history
+    if not rows:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No browser history entries found in the database.",
+                evidence_type="browser_history",
+                confidence=0.5,
+            )
+        ]
+    targets = [
+        str(r.get("target_path") or "").replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+        for r in rows
+        if r.get("kind") == "download"
+    ]
+    shown, total = _dedupe(targets, 20)
+    text = f"Browser history: {result.visit_count} visit(s), {result.download_count} download(s)"
+    if total:
+        more = f" (+{total - len(shown)} more)" if total > len(shown) else ""
+        text += f"; downloaded file(s): {', '.join(shown)}{more}"
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=text + ".",
+            evidence_type="browser_history",
+            confidence=0.7,
+        )
+    ]
+
+
 def _claims_mft(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -414,6 +455,7 @@ _DISPATCH: dict[
     "parse_mft_filesystem": (parse_mft_filesystem, _single_source_kwargs, _claims_mft),
     "parse_recentdocs_mru": (parse_recentdocs_mru, _single_source_kwargs, _claims_recentdocs),
     "parse_usb_registry": (parse_usb_registry, _single_source_kwargs, _claims_usb),
+    "parse_browser_history": (parse_browser_history, _single_source_kwargs, _claims_browser),
 }
 
 
@@ -429,6 +471,7 @@ def _evidence_rows(result: ToolResult) -> list[dict[str, Any]]:
         "files",
         "mru_entries",
         "devices",
+        "history",
     ):
         rows = getattr(result, attr, None)
         if rows:
@@ -479,6 +522,7 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "parse_mft_filesystem",
         "parse_recentdocs_mru",
         "parse_usb_registry",
+        "parse_browser_history",
     }
 )
 

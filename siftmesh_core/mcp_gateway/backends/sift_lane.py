@@ -227,6 +227,12 @@ class SiftLaneBackend:
             "use backend_mode='real' (regipy). Fails closed."
         )
 
+    def parse_browser_history(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "browser-history parsing via sift_lane is not wired (no EZ browser tool); "
+            "use backend_mode='real' (stdlib sqlite3). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

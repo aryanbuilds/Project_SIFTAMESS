@@ -11,6 +11,9 @@ layer wraps them in ``ToolResult`` subclasses with provenance.
 from __future__ import annotations
 
 import json
+import shutil
+import sqlite3
+import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -37,6 +40,20 @@ def _filetime_iso(filetime: int | None) -> str | None:
         return None
     try:
         dt = datetime(1601, 1, 1, tzinfo=UTC) + timedelta(microseconds=int(filetime) // 10)
+    except (ValueError, OverflowError):
+        return None
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def _epoch_us_iso(value: int | None, epoch_year: int) -> str | None:
+    """Microseconds since (epoch_year-01-01 UTC) -> ISO-8601 UTC ``Z`` string, or None.
+
+    Covers Chromium's WebKit timestamp (µs since 1601) and Firefox PRTime (µs since 1970).
+    """
+    if not value:
+        return None
+    try:
+        dt = datetime(epoch_year, 1, 1, tzinfo=UTC) + timedelta(microseconds=int(value))
     except (ValueError, OverflowError):
         return None
     return dt.isoformat().replace("+00:00", "Z")
@@ -271,6 +288,118 @@ class RealBackend:
                             ),
                         }
                     )
+        return rows
+
+    def parse_browser_history(self, path: Path) -> list[dict[str, Any]]:
+        """Browser history (Chromium ``History`` / Firefox ``places.sqlite``) — stdlib sqlite3.
+
+        The DB is copied to a temp file and opened ``mode=ro&immutable=1`` so the original
+        evidence is never touched and a stale WAL lock cannot block the read (forensic-safe).
+        """
+        rows: list[dict[str, Any]] = []
+        with tempfile.TemporaryDirectory(prefix="siftmesh-browser-") as tmp:
+            copy = Path(tmp) / "history.db"
+            shutil.copyfile(path, copy)
+            conn = sqlite3.connect(f"file:{copy}?mode=ro&immutable=1", uri=True)
+            try:
+                conn.row_factory = sqlite3.Row
+                tables = {
+                    r[0]
+                    for r in conn.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                }
+                if "urls" in tables:  # Chromium (Chrome / Edge)
+                    rows.extend(self._chromium_history(conn, tables))
+                elif "moz_places" in tables:  # Firefox
+                    rows.extend(self._firefox_history(conn, tables))
+                else:
+                    raise ValueError("unrecognised browser history schema (no urls/moz_places)")
+            finally:
+                conn.close()
+        return rows
+
+    @staticmethod
+    def _chromium_history(conn: sqlite3.Connection, tables: set[str]) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for r in conn.execute(
+            "SELECT url, title, visit_count, last_visit_time FROM urls "
+            "ORDER BY last_visit_time DESC, url"
+        ):
+            rows.append(
+                {
+                    "kind": "visit",
+                    "url": r["url"],
+                    "title": r["title"],
+                    "visit_count": r["visit_count"],
+                    "last_visit_utc": _epoch_us_iso(r["last_visit_time"], 1601),
+                    "target_path": None,
+                    "source": "chromium",
+                }
+            )
+        if "downloads" in tables:
+            try:  # modern Chrome/Edge columns; older schemas simply skip downloads
+                cur = conn.execute(
+                    "SELECT tab_url, target_path, total_bytes, start_time FROM downloads "
+                    "ORDER BY target_path"
+                )
+                for r in cur:
+                    rows.append(
+                        {
+                            "kind": "download",
+                            "url": r["tab_url"],
+                            "title": None,
+                            "visit_count": None,
+                            "last_visit_utc": _epoch_us_iso(r["start_time"], 1601),
+                            "target_path": r["target_path"],
+                            "total_bytes": r["total_bytes"],
+                            "source": "chromium",
+                        }
+                    )
+            except sqlite3.OperationalError:
+                pass
+        return rows
+
+    @staticmethod
+    def _firefox_history(conn: sqlite3.Connection, tables: set[str]) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for r in conn.execute(
+            "SELECT url, title, visit_count, last_visit_date FROM moz_places "
+            "WHERE last_visit_date IS NOT NULL ORDER BY last_visit_date DESC, url"
+        ):
+            rows.append(
+                {
+                    "kind": "visit",
+                    "url": r["url"],
+                    "title": r["title"],
+                    "visit_count": r["visit_count"],
+                    "last_visit_utc": _epoch_us_iso(r["last_visit_date"], 1970),
+                    "target_path": None,
+                    "source": "firefox",
+                }
+            )
+        if {"moz_annos", "moz_anno_attributes"} <= tables:
+            try:  # modern Firefox stores downloads as place annotations
+                cur = conn.execute(
+                    "SELECT p.url AS url, a.content AS dest FROM moz_annos a "
+                    "JOIN moz_places p ON a.place_id = p.id "
+                    "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+                    "WHERE n.name = 'downloads/destinationFileURI' ORDER BY p.url"
+                )
+                for r in cur:
+                    rows.append(
+                        {
+                            "kind": "download",
+                            "url": r["url"],
+                            "title": None,
+                            "visit_count": None,
+                            "last_visit_utc": None,
+                            "target_path": r["dest"],
+                            "source": "firefox",
+                        }
+                    )
+            except sqlite3.OperationalError:
+                pass
         return rows
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:

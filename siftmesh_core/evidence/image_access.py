@@ -1,6 +1,6 @@
 """Sleuthkit-backed image access (SIFT-lane) — extract loose artifacts from a disk image.
 
-The eight typed parsers each consume a single loose Windows artifact; real evidence
+The typed parsers each consume a single loose Windows artifact; real evidence
 arrives as a disk image (``.E01``/raw). This module bridges the two by extracting the
 high-value artifacts out of the image with **The Sleuth Kit** (``mmls``/``ifind``/
 ``icat``/``fls``), which reads EWF/``.E01`` natively.
@@ -28,7 +28,8 @@ _DEFAULT_TIMEOUT = 1800  # seconds; large-volume MFT/dir walks over a 23GB image
 
 # Curated high-value Windows artifacts (NTFS paths inside the C: volume). Each entry is
 # (logical key, kind, ntfs_path_or_dir). "file" = single file; "glob" = every *.pf in a
-# dir; "userhive" = NTUSER.DAT under each profile; "mft" = the $MFT (metadata addr 0).
+# dir; "userhive" = NTUSER.DAT under each profile; "userfile" = a per-user file at a
+# profile-relative path (one optional ``*`` wildcard segment); "mft" = the $MFT (addr 0).
 ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("security_evtx", "file", "/Windows/System32/winevt/Logs/Security.evtx"),
     (
@@ -41,10 +42,15 @@ ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("system_hive", "file", "/Windows/System32/config/SYSTEM"),
     ("prefetch", "glob", "/Windows/Prefetch"),
     ("user_hives", "userhive", "/Users"),
+    ("chrome_history", "userfile", "AppData/Local/Google/Chrome/User Data/Default/History"),
+    ("edge_history", "userfile", "AppData/Local/Microsoft/Edge/User Data/Default/History"),
+    ("firefox_history", "userfile", "AppData/Roaming/Mozilla/Firefox/Profiles/*/places.sqlite"),
     ("mft", "mft", "0"),
 )
 
 _FS_TYPE = "ntfs"
+_USERS_DIR = "/Users"  # per-user artifacts ("userfile") resolve under each profile here
+_SKIP_PROFILES = (".", "..", "Public", "Default", "All Users", "Default User")
 
 
 @dataclass(frozen=True)
@@ -279,6 +285,58 @@ def _extract_user_hives(
     return ok, failed
 
 
+def _expand_user_relpaths(image: Path, offset: int, user_root: str, rel_path: str) -> list[str]:
+    """Resolve a profile-relative path that may contain ONE ``*`` directory wildcard.
+
+    No ``*`` -> the path unchanged. With ``*`` -> one expansion per subdirectory of the
+    wildcard's parent (e.g. each Firefox ``Profiles/<rnd>`` dir).
+    """
+    if "*" not in rel_path:
+        return [rel_path]
+    before, after = rel_path.split("*", 1)
+    before = before.rstrip("/")
+    after = after.lstrip("/")
+    parent_inode = find_inode(image, offset, f"{user_root}/{before}")
+    if parent_inode is None:
+        return []
+    out: list[str] = []
+    for kind, name, _inode in list_dir(image, offset, parent_inode):
+        if kind == "d" and name not in (".", ".."):
+            out.append(f"{before}/{name}/{after}")
+    return out
+
+
+def _extract_per_user(
+    image: Path, offset: int, key: str, users_dir: str, rel_path: str, dest_dir: Path
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
+    """Extract a per-user file at ``Users/<u>/<rel_path>`` (one optional ``*`` segment).
+
+    Extracted files KEEP their real basename (``History`` / ``places.sqlite`` / ``UsrClass.dat``)
+    and disambiguate by ``<key>/<user>/`` subdirs — the artifact router classifies on basename.
+    """
+    users_inode = find_inode(image, offset, users_dir)
+    if users_inode is None:
+        return [], []
+    ok: list[ExtractedFile] = []
+    failed: list[ExtractionFailure] = []
+    sub = dest_dir / key
+    for kind, user, _inode in list_dir(image, offset, users_inode):
+        if kind != "d" or user in _SKIP_PROFILES:
+            continue
+        for rel in _expand_user_relpaths(image, offset, f"{users_dir}/{user}", rel_path):
+            full = f"{users_dir}/{user}/{rel}"
+            inode = find_inode(image, offset, full)
+            if inode is None:
+                continue
+            dest = sub / _safe_name(user) / _safe_name(Path(rel).name)
+            one, fail = _extract_one(image, offset, key, full, inode, dest)
+            if one:
+                ok.append(one)
+            if fail:
+                failed.append(fail)
+    return ok, failed
+
+
 def extract_artifacts(
     image: Path,
     *,
@@ -308,6 +366,8 @@ def extract_artifacts(
             ok, fail = _extract_glob(image, off, key, path, dest_dir)
         elif kind == "userhive":
             ok, fail = _extract_user_hives(image, off, key, path, dest_dir)
+        elif kind == "userfile":
+            ok, fail = _extract_per_user(image, off, key, _USERS_DIR, path, dest_dir)
         elif kind == "mft":
             one, one_fail = _extract_one(image, off, key, "/$MFT", path, dest_dir / "MFT")
             ok = [one] if one else []

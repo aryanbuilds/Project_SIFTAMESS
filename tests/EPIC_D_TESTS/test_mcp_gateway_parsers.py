@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import lzma
 import shutil
+import sqlite3
 from pathlib import Path
 
 import pytest
 from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_backend
+from siftmesh_core.mcp_gateway.tools.browser_tools import parse_browser_history
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
@@ -145,6 +147,91 @@ def test_parse_usb_registry_real(case: tuple[RunPaths, Path]) -> None:
     # the fixture NTUSER hive has MountPoints2 subkeys → mounted-volume rows
     assert result.device_count >= 1 and result.device_count == len(result.devices)
     assert any(r.get("source_key") == "MountPoints2" for r in result.devices)
+
+
+def _make_chromium_history(path: Path) -> None:
+    """A real (deterministic) Chrome/Edge ``History`` sqlite with one visit + one download."""
+    conn = sqlite3.connect(path)
+    try:
+        conn.executescript(
+            "CREATE TABLE urls(id INTEGER PRIMARY KEY, url TEXT, title TEXT, "
+            "visit_count INTEGER, typed_count INTEGER, last_visit_time INTEGER, hidden INTEGER);"
+            "CREATE TABLE downloads(id INTEGER PRIMARY KEY, target_path TEXT, tab_url TEXT, "
+            "total_bytes INTEGER, start_time INTEGER);"
+        )
+        conn.execute(
+            "INSERT INTO urls(url,title,visit_count,typed_count,last_visit_time,hidden) "
+            "VALUES(?,?,?,?,?,0)",
+            ("https://drive.google.com/drive/my-drive", "My Drive", 7, 3, 13350000000000000),
+        )
+        conn.execute(
+            "INSERT INTO downloads(target_path,tab_url,total_bytes,start_time) VALUES(?,?,?,?)",
+            (
+                "C:\\Users\\fredr\\Downloads\\ProjectX.zip",
+                "https://drive.google.com/file/abc",
+                1048576,
+                13350000000000000,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _make_firefox_places(path: Path) -> None:
+    """A real (deterministic) Firefox ``places.sqlite`` with one visit + one download anno."""
+    conn = sqlite3.connect(path)
+    try:
+        conn.executescript(
+            "CREATE TABLE moz_places(id INTEGER PRIMARY KEY, url TEXT, title TEXT, "
+            "visit_count INTEGER, last_visit_date INTEGER);"
+            "CREATE TABLE moz_anno_attributes(id INTEGER PRIMARY KEY, name TEXT);"
+            "CREATE TABLE moz_annos(id INTEGER PRIMARY KEY, place_id INTEGER, "
+            "anno_attribute_id INTEGER, content TEXT);"
+        )
+        conn.execute(
+            "INSERT INTO moz_places(id,url,title,visit_count,last_visit_date) VALUES(1,?,?,?,?)",
+            ("https://mail.proton.me/inbox", "Proton Mail", 4, 1704164645000000),
+        )
+        conn.execute(
+            "INSERT INTO moz_anno_attributes(id,name) VALUES(1,'downloads/destinationFileURI')"
+        )
+        conn.execute(
+            "INSERT INTO moz_annos(id,place_id,anno_attribute_id,content) VALUES(1,1,1,?)",
+            ("file:///home/fredr/Downloads/leak.7z",),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_parse_browser_history_chromium_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    _make_chromium_history(evidence / "History")
+    result = parse_browser_history(run.root, source_artifact="History", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_browser_history"
+    assert result.visit_count == 1 and result.download_count == 1
+    assert result.entry_count == len(result.history) == 2
+    dl = next(r for r in result.history if r["kind"] == "download")
+    assert dl["target_path"].endswith("ProjectX.zip") and dl["source"] == "chromium"
+    assert dl["last_visit_utc"] and dl["last_visit_utc"].endswith("Z")
+    visit = next(r for r in result.history if r["kind"] == "visit")
+    assert visit["url"].startswith("https://drive.google.com")
+
+
+def test_parse_browser_history_firefox_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    _make_firefox_places(evidence / "places.sqlite")
+    result = parse_browser_history(
+        run.root, source_artifact="places.sqlite", evidence_root=evidence
+    )
+    assert result.status == "success"
+    assert result.visit_count == 1 and result.download_count == 1
+    visit = next(r for r in result.history if r["kind"] == "visit")
+    assert visit["source"] == "firefox" and visit["last_visit_utc"].endswith("Z")
+    dl = next(r for r in result.history if r["kind"] == "download")
+    assert dl["target_path"].endswith("leak.7z")
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

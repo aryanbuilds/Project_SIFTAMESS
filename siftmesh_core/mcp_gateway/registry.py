@@ -29,6 +29,7 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "parse_mft_filesystem",
         "parse_recentdocs_mru",
         "parse_usb_registry",
+        "parse_browser_history",
     }
 )
 

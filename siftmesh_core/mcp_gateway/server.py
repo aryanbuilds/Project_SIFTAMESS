@@ -16,6 +16,10 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, assert_tool_allowed
+from siftmesh_core.mcp_gateway.tools.browser_tools import (
+    BrowserHistoryResult,
+    parse_browser_history,
+)
 from siftmesh_core.mcp_gateway.tools.evidence_tools import (
     HashManifestResult,
     ReadonlyVaultResult,
@@ -152,6 +156,13 @@ def _parse_usb_registry(source_artifact: str) -> UsbRegistryResult:
     )
 
 
+def _parse_browser_history(source_artifact: str) -> BrowserHistoryResult:
+    run_root, evidence_root = _run_scope()
+    return parse_browser_history(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -168,6 +179,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_mft_filesystem": _parse_mft_filesystem,
         "parse_recentdocs_mru": _parse_recentdocs_mru,
         "parse_usb_registry": _parse_usb_registry,
+        "parse_browser_history": _parse_browser_history,
     }
 
 

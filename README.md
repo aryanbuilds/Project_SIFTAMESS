@@ -80,16 +80,30 @@ ledgers on a 1 s poll; launching a run uses the same governed engine). Four zone
 claims · verdict) beside claims/critic/agent/budget summaries, and a live **audit-log** ticker — plus
 a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui`, or `setup`).
 
-**Create a whole investigation from the TUI — "New run" launches a guided wizard:** name the case →
-**browse the filesystem and add evidence files/folders** (assembled into a hardlinked curated dir,
-originals untouched) → give the brief/objective → a **Verify + Space** step synthesizes host-backend
-readiness + estimated derived size vs free disk and recommends **Full (parallel)** / **Single op** /
-**Run in portions** (low-disk: it runs portions, prunes between, and merges into one report) → set the
-toggles → launch. The cockpit is a full operator console: drill into any task/claim (`Enter`), pick
-the audit ledger, filter tasks, **`P` pause** (cooperative — stops at the next safe checkpoint, fully
-resumable) / **`R` resume**, approve any gate (`g`), retry (`t`), replay (`p`), and `ctrl+p` for the
-command palette. The home screen badges each run (`terminal`/`blocked:<gate>`/`paused`/`running`) and
-a **Resume** button drives an interrupted run one-click from its persisted state.
+The **home** screen is deliberately minimal (opencode-inspired): a centered **New run** plus a left
+list of recent runs badged `terminal`/`blocked:<gate>`/`paused`/`running`, with the shortcuts always
+visible (`n` new · `Enter` attach · `r` resume · `o` agent setup · `ctrl+t` theme · `q` quit).
+
+**Create a whole investigation from the TUI — "New run" is a 2-screen flow.** Screen 1: name the case
+and **browse the WHOLE filesystem for evidence** — a re-rootable tree reachable *above* the project
+dir (type a path or use **Up / Home / `/`**), a left preview pane, and a **`#file` / `#folder` fuzzy
+search** box (`fd`/`find` if present, else a bounded walk; Enter on a hit adds it) — then the
+brief/objective. Picked files/folders are assembled into a hardlinked curated dir (originals
+untouched). Screen 2: a **Verify + Space** synthesis (host-backend readiness + estimated derived size
+vs free disk) recommends **Full (parallel)** / **Single op** / **Run in portions** (low-disk: runs
+portions, prunes between, merges into one report), then the run options + **Launch**.
+
+**Onboarding (`o` / "Agent setup")** has two tabs: **Agents** — a greyed-until-ready multiselect of
+claude/opencode/codex/gemini (a not-installed/not-authed agent is greyed with the exact fix; a
+**Launch auth** button runs the vendor login, and a background re-probe flips it selectable the moment
+auth lands) — and **Tier-2 judge** — pick a provider (claude/codex/opencode via their own login, or
+gemini/opencode-go-zen/custom via a LiteLLM API key saved to a 600-perm `~/.config/siftmesh/.env`,
+validated before persist; never in `siftmesh.toml`).
+
+The cockpit is a full operator console: drill into any task/claim (`Enter`), pick the audit ledger,
+filter tasks, **`P` pause** (cooperative — stops at the next safe checkpoint, fully resumable) /
+**`R` resume**, approve any gate (`g`), retry (`t`), replay (`p`), and `ctrl+p` for the command
+palette.
 
 ## Command reference
 

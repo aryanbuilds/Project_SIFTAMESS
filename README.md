@@ -41,7 +41,7 @@ lives in the code.**
 - Plan from the manifest, dispatch an agent toward your objective, and write an evidence-anchored
   report with a replayable audit trail.
 - Run fully on its own (`run --auto`) or step by step with human gates.
-- Stay **agent-neutral** — Claude, Codex, Gemini, OpenCode, or a no-keys deterministic floor.
+- Stay **agent-neutral** - Claude, Codex, Gemini, OpenCode, or a no-keys deterministic floor.
 - Self-correct when the critic rejects an unsupported claim.
 - Use **10 real typed forensic tools** (Sleuth Kit, Volatility 3, EZ Tools, evtx, regipy, prefetch,
   MFT). No mocks, no fake output.
@@ -103,14 +103,14 @@ uv run siftmesh status RUN     # where is it, what's blocked
 
 ## Features
 
-- **One-command auto run** — init → plan → dispatch → critique → decide → report.
-- **Agent-neutral safety tiers (T0–T3)** — `agents list` shows what is sandboxed and tool-reaching.
-- **Optional Tier-2 judge** — advisory only; it can lower confidence or annotate, but never promote.
-- **Evidence vault** — SHA-256 manifest, read-only posture, chain-of-custody log.
-- **Deterministic critic + self-correction** — unsupported claims are downgraded or dropped.
-- **Full traceability** — claim/contradiction ledgers, token/agent/tool audit, HTML replay.
-- **TUI cockpit** — live read-only run view plus guided new-run onboarding.
-- **Low-disk mode** — run in portions, prune between, then merge into one report.
+- **One-command auto run** - init → plan → dispatch → critique → decide → report.
+- **Agent-neutral safety tiers (T0–T3)** - `agents list` shows what is sandboxed and tool-reaching.
+- **Optional Tier-2 judge** - advisory only; it can lower confidence or annotate, but never promote.
+- **Evidence vault** - SHA-256 manifest, read-only posture, chain-of-custody log.
+- **Deterministic critic + self-correction** - unsupported claims are downgraded or dropped.
+- **Full traceability** - claim/contradiction ledgers, token/agent/tool audit, HTML replay.
+- **TUI cockpit** - live read-only run view plus guided new-run onboarding.
+- **Low-disk mode** - run in portions, prune between, then merge into one report.
 
 ---
 
@@ -124,12 +124,12 @@ SIFTMesh bridges manual DFIR and ungoverned AI agents:
 <td width="50%"><img src="assets/ai_agents_DFIR_drawbacks.png" alt="AI-agent DFIR drawbacks" width="100%"></td>
 </tr>
 <tr>
-<td align="center"><sub><b>Classic DFIR</b> — high time/resource cost, serial, human-bound.</sub></td>
-<td align="center"><sub><b>Ungoverned AI agents</b> — fast, parallel, but unverified.</sub></td>
+<td align="center"><sub><b>Classic DFIR</b> - high time/resource cost, serial, human-bound.</sub></td>
+<td align="center"><sub><b>Ungoverned AI agents</b> - fast, parallel, but unverified.</sub></td>
 </tr>
 </table>
 
-SIFTMesh keeps agent speed and forensic rigor — **autonomy in the agent, determinism in the code**:
+SIFTMesh keeps agent speed and forensic rigor - **autonomy in the agent, determinism in the code**:
 
 <p align="center">
   <img src="assets/simplified_SIFTMESH_architecture.png" alt="Simplified SIFTMesh architecture" width="100%">
@@ -138,7 +138,7 @@ SIFTMesh keeps agent speed and forensic rigor — **autonomy in the agent, deter
 
 <p align="center">
   <img src="assets/agent_execution_loop_runtime.png" alt="Agent execution loop at runtime" width="100%">
-  <br><sub><b>The agent execution loop at runtime</b> — plan → dispatch → critique → decide, with self-correction.</sub>
+  <br><sub><b>The agent execution loop at runtime</b> - plan → dispatch → critique → decide, with self-correction.</sub>
 </p>
 
 Under the hood, it is a deterministic state machine with a few clear roles. The agent is the only part
@@ -149,7 +149,7 @@ that "thinks"; everything else is plain code that can be audited and replayed.
 | **Planner** | `plan` | Reads the sealed manifest, routes each artifact to the right forensic family/tool, writes task contracts. No LLM, never reads evidence bytes. |
 | **Executor** | `dispatch` / `collect` | Either the deterministic real-tool floor **or** a live agent (claude/codex/gemini/opencode) investigating toward your objective. Both must emit evidence-anchored claims (a real `tool_call_id` + source hash). |
 | **Critic** | `critique` | The deterministic Tier-1 validator **and the only thing allowed to promote a finding.** A claim with no real tool call or source hash gets downgraded or marked unsupported. Catches contradictions and prompt-injection. |
-| **Ultraworker** | `decide` | The state machine. It folds the critic's verdicts and decides: done, retry, escalate, human-review, or follow-up — and enforces the caps + the self-correction loop. |
+| **Ultraworker** | `decide` | The state machine. It folds the critic's verdicts and decides: done, retry, escalate, human-review, or follow-up - and enforces the caps + the self-correction loop. |
 | **Tier-2 judge** | advisory | Optional second opinion. Lowers confidence or annotates only; never promotes; never blocks a run. |
 | **Reporter / replay** | `report` | Code-built, evidence-backed report + a replayable audit timeline. Unsupported claims only ever appear in an appendix. |
 
@@ -234,7 +234,7 @@ deterministic floor.
 ## Roadmap
 
 - A2A agent-to-agent interop (optional, governed).
-- ACP round-2 — typed-tool reach for Gemini/Codex (only Claude reaches the typed tools today).
+- ACP round-2 - typed-tool reach for Gemini/Codex (only Claude reaches the typed tools today).
 - Sigma / pySigma detection breadth.
 - More SIFT-lane tools, OS-level read-only mounts, and stream parsing for large archives.
 
@@ -242,7 +242,7 @@ deterministic floor.
 
 ## License & thanks
 
-Apache-2.0 — see [`LICENSE`](LICENSE).
+Apache-2.0 - see [`LICENSE`](LICENSE).
 
 Contributions, issues, and hard questions are welcome.
 

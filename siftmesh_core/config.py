@@ -80,6 +80,13 @@ class SiftmeshSettings(BaseSettings):
     # EZ Tools install dir for the SIFT-lane backend (D12); EvtxECmd/MFTECmd/RECmd .dlls
     # run via `dotnet <dll>`. Missing tool fails closed when sift_lane is actually used.
     ez_tools_dir: str = "/opt/zimmermantools"
+    # Plaso super-timeline (Epic C, build_super_timeline). OPT-IN + heavy (10-60 min, GBs RAM):
+    # the planner only emits a super-timeline task for a disk image when this flag is on, and it
+    # runs on the deterministic floor (subprocess: log2timeline.py -> psort.py). None => resolve
+    # the host binaries on PATH; a missing binary fails closed (never faked). Host-validated.
+    enable_super_timeline: bool = False
+    log2timeline_path: str | None = None
+    psort_path: str | None = None
 
     # Executor adapters (Epic F). The deterministic floor is the safe default so CI and
     # the no-keys demo never need an agent CLI/key. `executor_selection`: "deterministic"

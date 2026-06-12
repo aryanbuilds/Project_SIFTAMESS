@@ -73,7 +73,10 @@ SIFT_LANE_TOOLS: tuple[tuple[str, str], ...] = (
     ("fls", "Sleuthkit fls (dir walk)"),
     ("icat", "Sleuthkit icat (file extract)"),
     ("ifind", "Sleuthkit ifind (path→inode)"),
+    ("istat", "Sleuthkit istat ($UsnJrnl:$J attr id)"),
     ("7z", "7-Zip (memory decompress)"),
+    ("log2timeline.py", "Plaso log2timeline (super-timeline)"),
+    ("psort.py", "Plaso psort (super-timeline export)"),
 )
 
 
@@ -162,7 +165,7 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
 
-    allowlist_ok = len(ALLOWED_TOOLS) == 18 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
+    allowlist_ok = len(ALLOWED_TOOLS) == 19 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
     checks.append(
         Check(
             OK if allowlist_ok else FAIL,

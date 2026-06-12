@@ -46,6 +46,10 @@ from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analy
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import RecentDocsResult, parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.shellbag_tools import ShellbagResult, parse_shellbags
+from siftmesh_core.mcp_gateway.tools.super_timeline_tools import (
+    SuperTimelineResult,
+    build_super_timeline,
+)
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import UsbRegistryResult, parse_usb_registry
 from siftmesh_core.mcp_gateway.tools.usn_tools import UsnJournalResult, parse_usnjrnl
@@ -194,6 +198,13 @@ def _parse_usnjrnl(source_artifact: str) -> UsnJournalResult:
     return parse_usnjrnl(run_root, source_artifact=source_artifact, evidence_root=evidence_root)
 
 
+def _build_super_timeline(image_artifact: str) -> SuperTimelineResult:
+    run_root, evidence_root = _run_scope()
+    return build_super_timeline(
+        run_root, image_artifact=image_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -215,6 +226,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_shellbags": _parse_shellbags,
         "parse_amcache_shimcache": _parse_amcache_shimcache,
         "parse_usnjrnl": _parse_usnjrnl,
+        "build_super_timeline": _build_super_timeline,
     }
 
 

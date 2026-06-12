@@ -221,7 +221,10 @@ class _PlannedTask:
 
 
 def _build_contracts(
-    routed: list[RoutedArtifact], *, include_brief: bool = False
+    routed: list[RoutedArtifact],
+    *,
+    include_brief: bool = False,
+    enable_super_timeline: bool = False,
 ) -> list[_PlannedTask]:
     """Mint one task per actionable artifact FAMILY GROUP (+ a timeline task), in manifest order."""
     planned: list[_PlannedTask] = []
@@ -269,6 +272,32 @@ def _build_contracts(
                     tool=xtool,
                     input_paths=[a.path for a in chunk],
                     description=objective,
+                )
+            )
+
+    # Opt-in/gated Plaso super-timeline: an ADDITIONAL heavy task per disk image, never on the
+    # cheap auto path. Only the planner emits it (config flag) — everything else is zero-change.
+    if enable_super_timeline:
+        st_objective = "Build a Plaso super-timeline across the whole disk image."
+        for art in routed:
+            if art.family != "disk_image":
+                continue
+            n += 1
+            task_id = f"TASK-{n:03d}"
+            planned.append(
+                _PlannedTask(
+                    task_id=task_id,
+                    contract=executor_contract(
+                        task_id,
+                        [art],
+                        tool="build_super_timeline",
+                        objective=st_objective,
+                        include_brief=include_brief,
+                    ),
+                    kind="executor",
+                    tool="build_super_timeline",
+                    input_paths=[art.path],
+                    description=st_objective,
                 )
             )
 
@@ -513,7 +542,11 @@ def generate_plan(
 
     # E6/E7 task contracts. When the operator supplied an incident objective (--brief), each
     # contract references the TRUSTED brief in its context packet (the agent also gets it inlined).
-    planned = _build_contracts(routed, include_brief=manifest.incident_objective is not None)
+    planned = _build_contracts(
+        routed,
+        include_brief=manifest.incident_objective is not None,
+        enable_super_timeline=settings.enable_super_timeline,
+    )
     task_files: list[Path] = [
         _write(run, f"tasks/{task.task_id}.yaml", dump_yaml_model(task.contract))
         for task in planned

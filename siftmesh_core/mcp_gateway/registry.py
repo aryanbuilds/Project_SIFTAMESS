@@ -34,6 +34,7 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "parse_shellbags",
         "parse_amcache_shimcache",
         "parse_usnjrnl",
+        "build_super_timeline",
     }
 )
 

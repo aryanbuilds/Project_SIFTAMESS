@@ -133,3 +133,22 @@ def test_image_only_manifest_is_actionable(synthetic_run: SyntheticRun) -> None:
         tool for p in res.task_files for tool in read_yaml_model(TaskContract, p).allowed_tools
     }
     assert "extract_artifacts_from_image" in tools
+
+
+def test_super_timeline_is_opt_in(synthetic_run: SyntheticRun) -> None:
+    base = load_settings()
+    # Default (flag off): no super-timeline task is emitted (never on the cheap auto path).
+    off = generate_plan(synthetic_run(["rocba-cdrive.E01"]), settings=base)
+    off_tools = {t for p in off.task_files for t in read_yaml_model(TaskContract, p).allowed_tools}
+    assert "build_super_timeline" not in off_tools
+    # Opt-in (flag on): exactly one build_super_timeline task over the disk image.
+    on = generate_plan(
+        synthetic_run(["rocba-cdrive.E01"]),
+        settings=base.model_copy(update={"enable_super_timeline": True}),
+    )
+    st = [
+        c
+        for p in on.task_files
+        if (c := read_yaml_model(TaskContract, p)).allowed_tools == ["build_super_timeline"]
+    ]
+    assert len(st) == 1 and st[0].input_artifacts[0].path == "rocba-cdrive.E01"

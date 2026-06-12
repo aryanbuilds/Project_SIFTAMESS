@@ -6,6 +6,7 @@ suites (see tests/fixtures/forensic/README.md), never SANS evidence.
 
 from __future__ import annotations
 
+import json
 import lzma
 import shutil
 import sqlite3
@@ -381,6 +382,43 @@ def test_parse_usnjrnl_real(case: tuple[RunPaths, Path]) -> None:
     deleted = [r for r in result.entries if r["reason"] and "FILE_DELETE" in r["reason"]]
     assert deleted and deleted[0]["file_name"] == "secret.docx"  # captures the deleted file
     assert all(str(r["timestamp_utc"]).endswith("Z") for r in result.entries)
+
+
+def test_parse_psort_jsonl_real(tmp_path: Path) -> None:
+    # The full Plaso run is host-gated (not CI); here we test the real psort json_line parsing.
+    from siftmesh_core.evidence.super_timeline import parse_psort_jsonl
+
+    p = tmp_path / "timeline.jsonl"
+    lines = [
+        json.dumps(
+            {
+                "datetime": "2024-01-02T03:04:05+00:00",
+                "timestamp_desc": "Creation Time",
+                "message": "C:/Users/fredr/Downloads/ProjectX.zip",
+                "source_short": "FILE",
+                "parser": "filestat",
+                "data_type": "fs:stat",
+            }
+        ),
+        json.dumps(
+            {
+                "datetime": "2024-01-02T03:05:00+00:00",
+                "message": "Run key",
+                "source_short": "REG",
+                "parser": "winreg",
+                "data_type": "windows:registry:key_value",
+            }
+        ),
+        "",  # blank line skipped
+        "not-json",  # undecodable line skipped
+    ]
+    p.write_text("\n".join(lines), encoding="utf-8")
+    events, total = parse_psort_jsonl(p)
+    assert total == 2 and len(events) == 2
+    assert events[0]["timestamp_utc"] == "2024-01-02T03:04:05+00:00"
+    assert events[0]["parser"] == "filestat"
+    capped, total2 = parse_psort_jsonl(p, max_events=1)
+    assert total2 == 2 and len(capped) == 1  # total counted; stored list capped
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

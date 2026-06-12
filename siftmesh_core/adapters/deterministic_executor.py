@@ -35,6 +35,7 @@ from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.shellbag_tools import parse_shellbags
+from siftmesh_core.mcp_gateway.tools.super_timeline_tools import build_super_timeline
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
 from siftmesh_core.mcp_gateway.tools.usn_tools import parse_usnjrnl
@@ -486,6 +487,20 @@ def _claims_timeline(result: Any, task_id: str) -> list[Claim]:
     ]
 
 
+def _claims_super_timeline(result: Any, task_id: str) -> list[Claim]:
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=f"Plaso super-timeline built: {result.event_count} event(s) from the disk image.",
+            evidence_type="super_timeline",
+            confidence=0.7,
+        )
+    ]
+
+
 def _claims_image(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -569,6 +584,18 @@ def _memory_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
     }
 
 
+def _super_timeline_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
+    return {
+        "image_artifact": c.input_artifacts[0].path,
+        "evidence_root": _input_root(c, ctx),
+        "log2timeline_path": ctx.settings.log2timeline_path,
+        "psort_path": ctx.settings.psort_path,
+        # A full-image Plaso run legitimately takes many minutes; never the 300 s default.
+        "timeout": ctx.settings.heavy_tool_timeout_seconds,
+        "backend_mode": "sift_lane",
+    }
+
+
 def _timeline_kwargs(c: TaskContract, ctx: AdapterContext) -> dict[str, Any]:
     inputs = []
     for art in c.input_artifacts:
@@ -622,6 +649,7 @@ _DISPATCH: dict[
         _claims_amcache_shimcache,
     ),
     "parse_usnjrnl": (parse_usnjrnl, _single_source_kwargs, _claims_usnjrnl),
+    "build_super_timeline": (build_super_timeline, _super_timeline_kwargs, _claims_super_timeline),
 }
 
 

@@ -52,7 +52,8 @@ uv run siftmesh replay "$RUN"              # replay the audit timeline (add --ht
 What you just proved: evidence is SHA-256 sealed and never modified; the real `parse_evtx_security` +
 `build_timeline` backends ran; every promoted claim is anchored; the critic accepted both tasks; the
 whole run is replayable from JSONL. See `examples/demo_case/expected_findings.md` for the ground
-truth and `docs/execution_logs_sample.md` for an annotated ledger walkthrough.
+truth, and inspect `"$RUN/audit/*.jsonl"` (or `uv run siftmesh replay "$RUN"`) for the full
+timestamped, tool-traceable audit trail.
 
 ## 5. Go live (optional — tier T1/T2)
 

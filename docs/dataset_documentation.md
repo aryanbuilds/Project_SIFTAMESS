@@ -1,57 +1,56 @@
 # Dataset Documentation
 
-> **Provenance.** This is a committed copy of SIFTMesh's **deterministic, code-generated** dataset
-> documentation (no LLM at report time). It is produced by `siftmesh report` from the sealed evidence
-> manifest of a run; the copy below is the golden regression run (`tests/golden/recorded_run/RUN-GOLDEN`,
-> the §2B real-tool floor over committed public fixtures). Run any case to regenerate your own at
-> `case_runs/RUN-*/reports/dataset_documentation.md`. Every row is anchored to a SHA-256 computed at
-> ingest (chain of custody) — see `docs/evidence_integrity.md`.
+This documents the **dataset SIFTMesh investigates** and how to reproduce a run against it. The real
+findings, accuracy report, and audit trail are produced by running the pipeline against this data on
+the SANS SIFT workstation — they are **not** committed to the repo (CLAUDE.md §2B: SIFTMesh never
+self-tests against real forensic evidence, and real-evidence outputs stay on the box).
 
 ---
 
-# Dataset Documentation — RUN-GOLDEN
+## The case dataset (ROCBA)
 
-Provenance and integrity of every ingested artifact, generated from the sealed manifest.
+Provided evidence, held read-only on the workstation at `~/projects/data/`:
 
-## Case
+| Artifact | Size | Role |
+| --- | --- | --- |
+| `rocba-cdrive.e01` | ~23.7 GB | NTFS disk image (EnCase E01) — primary host evidence |
+| `Rocba-Memory.zip` | ~5.7 GB | memory capture (nested `…/Rocba-Memory.7z` → raw image) |
+| `ROCBA-BACKGROUND.pptx` | ~40 MB | incident background — the **TRUSTED objective** (passed via `--brief`, never treated as evidence) |
 
-- Case: golden-case
-- Run: RUN-20260610-071122
-- Sealed (UTC): 2026-06-10 07:11:22 UTC
-- Artifacts: 3
+## How SIFTMesh handles it (integrity)
 
-## Artifacts (integrity-verified)
+- **Hashed + sealed at ingest** — each file gets a SHA-256 into `evidence_manifest.json` +
+  `hashes.sha256` before any analysis; the chain of custody starts there (see
+  [`evidence_integrity.md`](evidence_integrity.md)).
+- **Read-only** — originals are opened read-only and never modified; derived artifacts (extracted
+  files, decompressed memory) are written only under the run dir.
+- **Real, fail-closed tools** — the `.E01` is carved with **Sleuth Kit** (`extract_artifacts_from_image`)
+  and the memory image triaged with **Volatility 3** (`analyze_memory`), both fixed-argv subprocess
+  backends with no evidence string interpolated into a command. A missing backend fails closed.
 
-| Path | sha256 | Size (bytes) | Type |
-| --- | --- | --- | --- |
-| CMD.EXE-89305D47.pf | 6127d820b031cac7…edcd0 | 6026 | prefetch |
-| NTUSER.DAT | 6a38fcea92411396…cd439 | 786432 | registry |
-| Security.evtx | 50c87926d2dfed97…13456 | 69632 | evtx |
+## Reproduce a run on this data
 
-These are public upstream test fixtures (omerbenamram/evtx, EricZimmerman/Prefetch,
-mkorman90/regipy) — real artifacts parsed by real backends, committed so the demo is reproducible
-with no keys and no licensed evidence. The `examples/demo_case` uses the same `Security.evtx`.
+On the SANS box (heavy: the disk image yields 200+ derived tasks and memory triage re-scans the image
+per plugin):
 
-## Derived artifacts (carved / parsed)
+```bash
+uv run siftmesh run ~/cases/rocba --evidence ~/projects/data \
+  --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
+  --agent claude --auto --max-agent-tasks 400 --max-iterations 5
+```
 
-Originals are never modified; each derived file chains back to its source + producer.
+The authoritative outputs land under the new run dir:
 
-| Derived path | Source artifact | source_sha256 | Produced by |
-| --- | --- | --- | --- |
-| results/TOOL-001.structured.json | CMD.EXE-89305D47.pf | 6127d820b031cac7… | TOOL-001 (analyze_prefetch) |
-| results/TOOL-002.structured.json | NTUSER.DAT | 6a38fcea92411396… | TOOL-002 (extract_registry_run_keys) |
-| results/TOOL-003.structured.json | Security.evtx | 50c87926d2dfed97… | TOOL-003 (parse_evtx_security) |
-| results/TOOL-004.structured.json | timeline | 4ad00a02214d95f6… | TOOL-004 (build_timeline) |
+- `reports/final_report.md` — evidence-anchored findings + MITRE ATT&CK + the chain of custody.
+- `reports/accuracy_report.md` — precision/recall vs `expected_findings.md` when ground truth is
+  supplied, else an honest self-assessment.
+- `claims/claim_ledger.jsonl` — the raw findings, each citing `tool_call_id` + `source_sha256`.
+- `audit/*.jsonl` + `uv run siftmesh replay RUN --html` — the full, timestamped, replayable trail.
 
-## Real-evidence datasets (maintainer-gated)
+## Note on the committed demo fixture
 
-The full hackathon datasets — the ROCBA disk image (`rocba-cdrive.e01`, 22.6 GB) and memory capture
-(`Rocba-Memory.zip`, 5.4 GB) — are processed on the SANS SIFT workstation by the maintainer (CLAUDE
-§2B: SIFTMesh never self-tests against real forensic evidence). Their handling is documented in
-`RUNBOOK.md`; the tools used (Sleuthkit, Volatility 3) are real subprocess backends, fail-closed.
-
-## License & provenance
-
-- Evidence provenance and licensing are the responsibility of the case submitter.
-- Integrity anchor: SHA-256 computed at ingest and on each tool access (chain of custody).
-- The committed fixtures are public test data from their upstream repositories.
+`examples/demo_case/` ships a tiny **public** `Security.evtx` (the `Security_short_selected.evtx`
+sample from [omerbenamram/evtx](https://github.com/omerbenamram/evtx), 7 records) purely as a
+**no-keys reproducibility harness** — it lets anyone exercise the real pipeline end to end without
+licensed evidence. It is **not** the case data, and its output is **not** a finding on the ROCBA
+dataset.

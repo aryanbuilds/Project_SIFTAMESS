@@ -62,3 +62,41 @@ def test_default_when_no_config(monkeypatch, tmp_path: Path) -> None:
     settings = load_settings()
     assert settings.executor_selection == "deterministic"  # model default
     assert settings.agent_preference[0] == "claude_headless"
+
+
+def test_agent_aliases_merge_and_load(monkeypatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    save_agent_selection(
+        "auto",
+        ["claude_headless", "deterministic_executor"],
+        scope="global",
+        agent_aliases={"claude_headless": "Ada"},
+    )
+    # a second save for a different alias must not clobber the first (merge)
+    save_agent_selection(
+        "auto",
+        ["claude_headless", "deterministic_executor"],
+        scope="global",
+        agent_aliases={"gemini_headless": "Gem"},
+    )
+    settings = load_settings()
+    assert settings.agent_aliases == {"claude_headless": "Ada", "gemini_headless": "Gem"}
+
+
+def test_judge_litellm_extras_persist(monkeypatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    save_agent_selection(
+        "deterministic",
+        ["deterministic_executor"],
+        scope="global",
+        judge="litellm:openai/glm-4.6",
+        judge_api_base="https://api.opencode.ai/zen/v1",
+        judge_drop_params=True,
+    )
+    settings = load_settings()
+    assert settings.judge == "litellm:openai/glm-4.6"
+    assert settings.judge_api_base == "https://api.opencode.ai/zen/v1"
+    assert settings.judge_drop_params is True
+    # defaults when never set
+    save_agent_selection("deterministic", ["deterministic_executor"], scope="project")
+    assert load_settings().judge_drop_params is True  # global still set; project didn't touch it

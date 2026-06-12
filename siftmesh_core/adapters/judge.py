@@ -155,13 +155,57 @@ def _litellm_text(model: str, prompt: str, *, settings: object, timeout: int | N
         import litellm
     except ImportError:
         return None
+    # Optional OpenAI-compatible-gateway extras (e.g. opencode-go / zen): api_base (must end /v1) +
+    # drop_params for open models that reject some OpenAI params. Omitted unless configured.
+    extra: dict[str, object] = {}
+    api_base = getattr(settings, "judge_api_base", None)
+    if api_base:
+        extra["api_base"] = api_base
+    if getattr(settings, "judge_drop_params", False):
+        extra["drop_params"] = True
     try:
         resp = litellm.completion(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             timeout=timeout or getattr(settings, "agent_timeout_seconds", 600),
+            **extra,
         )
         content = resp.choices[0].message.content
     except Exception:
         return None
     return content.strip() if isinstance(content, str) and content.strip() else None
+
+
+def judge_remediation(settings: object) -> list[str]:
+    """Honest next steps to make the configured Tier-2 judge ready (advisory; empty when ready).
+
+    Sibling to ``doctor.agent_remediation`` — surfaced by the judge tab so a not-ready advisory
+    judge is explained, never silently skipped. No subprocess / no LLM call.
+    """
+    backend, target = parse_judge(getattr(settings, "judge", None))
+    ready, _label = judge_ready(settings)
+    if ready:
+        return []
+    if backend == "litellm":
+        if importlib.util.find_spec("litellm") is None:
+            return ["install LiteLLM: `uv sync --extra llm`"]
+        # litellm present but a provider key is missing — name the likely env var from the prefix.
+        provider = target.split("/", 1)[0] if "/" in target else target
+        env = {
+            "gemini": "GEMINI_API_KEY (or GOOGLE_API_KEY)",
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "vertex_ai": "GOOGLE_APPLICATION_CREDENTIALS",
+        }.get(provider, "the provider's API key")
+        return [f"set {env} (saved to ~/.config/siftmesh/.env via the judge tab)"]
+    if backend == "cli":
+        if target == "claude":
+            return ["authenticate the claude CLI: `claude setup-token` or export ANTHROPIC_API_KEY"]
+        if target == "opencode":
+            return ["authenticate opencode: `opencode auth login`"]
+        if target == "codex":
+            return ["authenticate codex: `codex login` (or export CODEX_API_KEY)"]
+        if target == "gemini":
+            return ["install the gemini CLI, or use a `litellm:gemini/<model>` judge with a key"]
+        return [f"install/authenticate the `{target}` CLI"]
+    return [f"unknown judge backend '{backend}'"]

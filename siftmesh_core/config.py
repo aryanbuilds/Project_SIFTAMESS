@@ -135,6 +135,17 @@ class SiftmeshSettings(BaseSettings):
     # Keys: claude_headless / gemini_headless / codex_headless / opencode_headless. Empty = the
     # profile default (gemini auto-routes). Set via `--model gemini=…` / `setup` / onboarding TUI.
     agent_models: dict[str, str] = Field(default_factory=dict)
+    # Friendly display alias for an agent profile, shown in the TUI (e.g. claude_headless -> "Ada").
+    # Cosmetic only — never affects dispatch/resolve; the onboarding TUI lets the operator rename an
+    # agent. NO secret here (provider API keys live in ~/.config/siftmesh/.env, see secrets_env.py).
+    agent_aliases: dict[str, str] = Field(default_factory=dict)
+    # Optional LiteLLM extras for the Tier-2 judge (advisory). For an OpenAI-compatible gateway
+    # (e.g. opencode-go / zen) set judge_api_base to the endpoint (MUST end in /v1) and, for open
+    # models that reject some OpenAI params, judge_drop_params=True. Passed straight to
+    # litellm.completion in adapters/judge._litellm_text. The API KEY itself is NOT here — it is an
+    # env var (GEMINI_API_KEY/OPENAI_API_KEY/…) from ~/.config/siftmesh/.env (secrets_env.py).
+    judge_api_base: str | None = None
+    judge_drop_params: bool = False
 
     @classmethod
     def settings_customise_sources(
@@ -170,6 +181,9 @@ def save_agent_selection(
     judge: str | None = None,
     llm_critic_enabled: bool | None = None,
     agent_models: dict[str, str] | None = None,
+    agent_aliases: dict[str, str] | None = None,
+    judge_api_base: str | None = None,
+    judge_drop_params: bool | None = None,
 ) -> Path:
     """Persist the onboarding agent choice to a TOML file; return the path written.
 
@@ -200,5 +214,13 @@ def save_agent_selection(
         existing = dict(doc.get("agent_models", {}))
         existing.update(agent_models)
         doc["agent_models"] = existing
+    if agent_aliases is not None:
+        existing_aliases = dict(doc.get("agent_aliases", {}))
+        existing_aliases.update(agent_aliases)
+        doc["agent_aliases"] = existing_aliases
+    if judge_api_base is not None:
+        doc["judge_api_base"] = judge_api_base
+    if judge_drop_params is not None:
+        doc["judge_drop_params"] = judge_drop_params
     target.write_text(tomlkit.dumps(doc), encoding="utf-8")
     return target

@@ -33,6 +33,7 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "parse_lnk_jumplists",
         "parse_shellbags",
         "parse_amcache_shimcache",
+        "parse_usnjrnl",
     }
 )
 

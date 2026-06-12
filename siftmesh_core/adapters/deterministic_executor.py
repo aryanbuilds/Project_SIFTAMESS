@@ -37,6 +37,7 @@ from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_
 from siftmesh_core.mcp_gateway.tools.shellbag_tools import parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
+from siftmesh_core.mcp_gateway.tools.usn_tools import parse_usnjrnl
 from siftmesh_core.orchestrator.artifact_router import timeline_kind_for
 from siftmesh_core.schemas.claim import Claim
 from siftmesh_core.schemas.injection_alert import InjectionAlert
@@ -410,6 +411,51 @@ def _claims_amcache_shimcache(result: Any, task_id: str) -> list[Claim]:
     ]
 
 
+def _claims_usnjrnl(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim with create/delete/rename counts + the distinct deleted filenames (the
+    # cleanup/exfil signal; the USN journal captures files that no longer exist on disk). inferred.
+    rows = result.entries
+    if not rows:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No USN journal records parsed from the $J stream.",
+                evidence_type="usn_journal",
+                confidence=0.5,
+            )
+        ]
+
+    def _has(reason: Any, flag: str) -> bool:
+        return bool(reason) and flag in reason
+
+    created = sum(1 for r in rows if _has(r.get("reason"), "FILE_CREATE"))
+    deleted = sum(1 for r in rows if _has(r.get("reason"), "FILE_DELETE"))
+    renamed = sum(1 for r in rows if _has(r.get("reason"), "RENAME_NEW_NAME"))
+    del_names = [r.get("file_name", "") for r in rows if _has(r.get("reason"), "FILE_DELETE")]
+    shown, total_del = _dedupe(del_names, 20)
+    text = (
+        f"USN journal: {len(rows)} record(s) — "
+        f"{created} created, {deleted} deleted, {renamed} renamed."
+    )
+    if total_del:
+        more = f" (+{total_del - len(shown)} more)" if total_del > len(shown) else ""
+        text += f" Deleted file(s): {', '.join(shown)}{more}."
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=text,
+            evidence_type="usn_journal",
+            confidence=0.7,
+        )
+    ]
+
+
 def _claims_mft(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -575,6 +621,7 @@ _DISPATCH: dict[
         _single_source_kwargs,
         _claims_amcache_shimcache,
     ),
+    "parse_usnjrnl": (parse_usnjrnl, _single_source_kwargs, _claims_usnjrnl),
 }
 
 
@@ -646,6 +693,7 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "parse_lnk_jumplists",
         "parse_shellbags",
         "parse_amcache_shimcache",
+        "parse_usnjrnl",
     }
 )
 

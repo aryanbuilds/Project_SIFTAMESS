@@ -48,6 +48,7 @@ from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extrac
 from siftmesh_core.mcp_gateway.tools.shellbag_tools import ShellbagResult, parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import UsbRegistryResult, parse_usb_registry
+from siftmesh_core.mcp_gateway.tools.usn_tools import UsnJournalResult, parse_usnjrnl
 from siftmesh_core.mcp_gateway.tools.validation_tools import (
     ClaimValidationResult,
     validate_claim_evidence,
@@ -188,6 +189,11 @@ def _parse_amcache_shimcache(source_artifact: str) -> AmcacheShimcacheResult:
     )
 
 
+def _parse_usnjrnl(source_artifact: str) -> UsnJournalResult:
+    run_root, evidence_root = _run_scope()
+    return parse_usnjrnl(run_root, source_artifact=source_artifact, evidence_root=evidence_root)
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -208,6 +214,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_lnk_jumplists": _parse_lnk_jumplists,
         "parse_shellbags": _parse_shellbags,
         "parse_amcache_shimcache": _parse_amcache_shimcache,
+        "parse_usnjrnl": _parse_usnjrnl,
     }
 
 

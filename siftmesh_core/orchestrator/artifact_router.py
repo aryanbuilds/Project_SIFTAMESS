@@ -31,6 +31,7 @@ FineFamily = Literal[
     "lnk_jumplist",
     "shellbag_hive",
     "amcache_hive",
+    "usn_journal",
     "disk_image",
     "memory_image",
     "archive",
@@ -49,6 +50,7 @@ FAMILY_ORDER: tuple[FineFamily, ...] = (
     "lnk_jumplist",
     "shellbag_hive",
     "amcache_hive",
+    "usn_journal",
     "disk_image",
     "memory_image",
     "archive",
@@ -67,6 +69,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "lnk_jumplist": "parse_lnk_jumplists",
     "shellbag_hive": "parse_shellbags",
     "amcache_hive": "parse_amcache_shimcache",
+    "usn_journal": "parse_usnjrnl",
     "disk_image": "extract_artifacts_from_image",
     "memory_image": "analyze_memory",
     "archive": None,
@@ -118,6 +121,7 @@ FAMILY_LABEL: dict[FineFamily, str] = {
     "lnk_jumplist": "LNK shortcut / JumpList",
     "shellbag_hive": "Shellbags (UsrClass.dat BagMRU)",
     "amcache_hive": "Amcache (program execution / presence)",
+    "usn_journal": "USN change journal ($J)",
     "disk_image": "Disk image",
     "memory_image": "Memory image",
     "archive": "Archive",
@@ -146,6 +150,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "(including folders no longer on disk).",
     "amcache_hive": "Parse Amcache for program execution / presence "
     "(full path, SHA-1, first-run time).",
+    "usn_journal": "Parse the USN change journal for file create/delete/rename activity "
+    "(including deleted files), with timestamps.",
     "disk_image": "Recover loose triage artifacts (event logs, hives, prefetch, $MFT) "
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "
@@ -204,6 +210,9 @@ def _classify(name: str, suffix: str) -> FineFamily:
     # program-execution, so special-case it before the generic registry branch.
     if name == "amcache.hve":
         return "amcache_hive"
+    # USN change journal: the $J ADS, extracted as ``UsnJrnl.$J``.
+    if "usnjrnl" in name or suffix == ".$j":
+        return "usn_journal"
     if name in REGISTRY_HIVE_NAMES or suffix in (".dat", ".hve"):
         return "registry_hive"
     if suffix in _DISK_IMAGE_SUFFIXES:

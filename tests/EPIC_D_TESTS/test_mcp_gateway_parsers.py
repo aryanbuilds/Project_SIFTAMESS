@@ -25,6 +25,7 @@ from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_
 from siftmesh_core.mcp_gateway.tools.shellbag_tools import parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
+from siftmesh_core.mcp_gateway.tools.usn_tools import parse_usnjrnl
 from siftmesh_core.run_dir import RunPaths, new_run_dir
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "forensic"
@@ -331,6 +332,55 @@ def test_parse_shimcache_from_system_real(case: tuple[RunPaths, Path]) -> None:
     assert result.shimcache_count >= 1 and result.amcache_count == 0
     assert all(r["kind"] == "shimcache" for r in result.entries)
     assert any(r.get("path") for r in result.entries)  # real AppCompatCache paths
+
+
+def _usn_record(usn: int, file_ref: int, parent_ref: int, ts: int, reason: int, name: str) -> bytes:
+    """One real USN_RECORD_V2 (the documented on-disk layout)."""
+    name_b = name.encode("utf-16-le")
+    body = b"".join(
+        (
+            (2).to_bytes(2, "little"),  # MajorVersion
+            (0).to_bytes(2, "little"),  # MinorVersion
+            file_ref.to_bytes(8, "little"),
+            parent_ref.to_bytes(8, "little"),
+            usn.to_bytes(8, "little"),
+            ts.to_bytes(8, "little"),  # FILETIME
+            reason.to_bytes(4, "little"),
+            (0).to_bytes(4, "little"),  # SourceInfo
+            (0).to_bytes(4, "little"),  # SecurityId
+            (0x20).to_bytes(4, "little"),  # FileAttributes (ARCHIVE)
+            len(name_b).to_bytes(2, "little"),
+            (60).to_bytes(2, "little"),  # FileNameOffset
+            name_b,
+        )
+    )
+    rec = body + b"\x00" * ((-(len(body) + 4)) % 8)  # pad whole record to 8 bytes
+    return (len(rec) + 4).to_bytes(4, "little") + rec
+
+
+def _make_usn_journal(path: Path) -> None:
+    """A real $J: leading sparse zeros + create/delete/rename records (real USN_RECORD_V2)."""
+    ft = 131000000000000000  # a ~2016 FILETIME
+    data = b"\x00" * 4096  # leading sparse (deallocated) zeros, like a real $J
+    data += _usn_record(100, 0x1000, 0x5, ft, 0x100, "secret.docx")  # FILE_CREATE
+    data += _usn_record(200, 0x1000, 0x5, ft + 1, 0x80000200, "secret.docx")  # FILE_DELETE+CLOSE
+    data += _usn_record(300, 0x1001, 0x5, ft + 2, 0x1000, "old.txt")  # RENAME_OLD_NAME
+    data += _usn_record(400, 0x1001, 0x5, ft + 3, 0x2000, "new.txt")  # RENAME_NEW_NAME
+    path.write_bytes(data)
+
+
+def test_parse_usnjrnl_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    _make_usn_journal(evidence / "UsnJrnl.$J")
+    result = parse_usnjrnl(run.root, source_artifact="UsnJrnl.$J", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_usnjrnl"
+    assert result.entry_count == 4  # sparse zeros skipped, 4 real records parsed
+    names = {r["file_name"] for r in result.entries}
+    assert {"secret.docx", "old.txt", "new.txt"} <= names
+    deleted = [r for r in result.entries if r["reason"] and "FILE_DELETE" in r["reason"]]
+    assert deleted and deleted[0]["file_name"] == "secret.docx"  # captures the deleted file
+    assert all(str(r["timestamp_utc"]).endswith("Z") for r in result.entries)
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

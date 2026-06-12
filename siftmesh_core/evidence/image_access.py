@@ -49,6 +49,7 @@ ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("usrclass_hives", "userfile", "AppData/Local/Microsoft/Windows/UsrClass.dat"),
     ("recent_jumplists", "usertree", "AppData/Roaming/Microsoft/Windows/Recent"),
     ("amcache", "file", "/Windows/AppCompat/Programs/Amcache.hve"),
+    ("usn_journal", "ads", "/$Extend/$UsnJrnl"),
     ("mft", "mft", "0"),
 )
 
@@ -204,6 +205,19 @@ def extract_inode(
         dest.unlink(missing_ok=True)  # drop the partial/corrupt output — never keep garbage
         raise RuntimeError(f"icat failed for inode {inode}: {err or 'non-zero exit'}")
     return dest
+
+
+def istat(image: Path, offset: int, inode: str, *, timeout: int = _DEFAULT_TIMEOUT) -> str:
+    """Return ``istat`` metadata text for an inode (used to find a named ``$DATA`` attribute id)."""
+    exe = _require("istat")
+    proc = subprocess.run(  # fixed argv, shell=False
+        [exe, "-f", _FS_TYPE, "-o", str(offset), str(image), str(inode)],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    return proc.stdout
 
 
 # ── High-level extraction ───────────────────────────────────────────────────
@@ -399,6 +413,36 @@ def _extract_user_tree(
     return ok, failed
 
 
+def _extract_ads(
+    image: Path, offset: int, key: str, ntfs_path: str, attr_name: str, dest: Path
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
+    """Extract a named ``$DATA`` alternate data stream (e.g. ``$UsnJrnl:$J``) via TSK.
+
+    ``istat`` is parsed for the named ``$DATA`` attribute id, then ``icat inode-128-<id>`` streams
+    that attribute (TSK rebuilds the sparse $J as logical zeros). Best-effort + host-gated: a
+    missing path / attribute is recorded as a failure, never fatal.
+    """
+    base = find_inode(image, offset, ntfs_path)
+    if base is None:
+        return [], []
+    meta = base.split("-")[0]  # strip any type/id suffix -> bare meta address
+    text = istat(image, offset, meta)
+    # e.g. "Type: $DATA (128-5)   Name: $J   Non-Resident ..." -> capture the attribute id.
+    pattern = re.compile(r"\$DATA\s*\(128-(\d+)\)\s*Name:\s*" + re.escape(attr_name) + r"\b")
+    m = pattern.search(text)
+    if m is None:
+        return [], [
+            ExtractionFailure(
+                key=key,
+                ntfs_path=f"{ntfs_path}:{attr_name}",
+                error="named $DATA attribute not found",
+            )
+        ]
+    addr = f"{meta}-128-{m.group(1)}"
+    one, fail = _extract_one(image, offset, key, f"{ntfs_path}:{attr_name}", addr, dest)
+    return ([one] if one else []), ([fail] if fail else [])
+
+
 def extract_artifacts(
     image: Path,
     *,
@@ -432,6 +476,8 @@ def extract_artifacts(
             ok, fail = _extract_per_user(image, off, key, _USERS_DIR, path, dest_dir)
         elif kind == "usertree":
             ok, fail = _extract_user_tree(image, off, key, _USERS_DIR, path, dest_dir)
+        elif kind == "ads":
+            ok, fail = _extract_ads(image, off, key, path, "$J", dest_dir / "UsnJrnl.$J")
         elif kind == "mft":
             one, one_fail = _extract_one(image, off, key, "/$MFT", path, dest_dir / "MFT")
             ok = [one] if one else []

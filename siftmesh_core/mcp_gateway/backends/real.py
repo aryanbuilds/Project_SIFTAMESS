@@ -72,6 +72,33 @@ def _decode_utf16_name(blob: Any) -> str | None:
 # CustomDestinations-ms is a flat concatenation of LNK structures; we split on this signature.
 _LNK_HEADER = b"\x4c\x00\x00\x00" + bytes.fromhex("0114020000000000c000000000000046")
 
+# USN journal ($UsnJrnl:$J) change-reason bitmask -> name (Microsoft USN_REASON_* constants).
+_USN_REASONS: tuple[tuple[int, str], ...] = (
+    (0x00000001, "DATA_OVERWRITE"),
+    (0x00000002, "DATA_EXTEND"),
+    (0x00000004, "DATA_TRUNCATION"),
+    (0x00000100, "FILE_CREATE"),
+    (0x00000200, "FILE_DELETE"),
+    (0x00000400, "EA_CHANGE"),
+    (0x00000800, "SECURITY_CHANGE"),
+    (0x00001000, "RENAME_OLD_NAME"),
+    (0x00002000, "RENAME_NEW_NAME"),
+    (0x00004000, "INDEXABLE_CHANGE"),
+    (0x00008000, "BASIC_INFO_CHANGE"),
+    (0x00010000, "HARD_LINK_CHANGE"),
+    (0x00020000, "COMPRESSION_CHANGE"),
+    (0x00040000, "ENCRYPTION_CHANGE"),
+    (0x00080000, "OBJECT_ID_CHANGE"),
+    (0x00100000, "REPARSE_POINT_CHANGE"),
+    (0x00200000, "STREAM_CHANGE"),
+    (0x80000000, "CLOSE"),
+)
+
+
+def _decode_usn_reason(mask: int) -> list[str] | None:
+    """USN reason bitmask -> sorted list of flag names (None if no known bit set)."""
+    return [name for bit, name in _USN_REASONS if mask & bit] or None
+
 
 def _dt_iso(value: Any) -> str | None:
     """Normalize a datetime or ISO string to an ISO-8601 ``Z`` string; pass through None.
@@ -626,6 +653,68 @@ class RealBackend:
                     "modified_utc": _dt_iso(e.get("last_mod_date")),
                 }
             )
+        return rows
+
+    def parse_usnjrnl(self, path: Path, *, max_records: int = 500_000) -> list[dict[str, Any]]:
+        """USN change journal (``$Extend\\$UsnJrnl:$J``) — file create/delete/rename log.
+
+        A compact, real ``USN_RECORD_V2`` reader (the on-disk format is small + stable). The
+        ``$J`` stream is sparse (leading deallocated zeros); those are skipped fast (8-byte
+        aligned) and active records parsed sequentially. Pure stdlib — no subprocess, no dep.
+        """
+        rows: list[dict[str, Any]] = []
+        chunk_size = 1 << 20
+        buf = b""
+        eof = False
+        with path.open("rb") as fh:
+            while True:
+                if len(buf) < 65536 and not eof:
+                    more = fh.read(chunk_size)
+                    if more:
+                        buf += more
+                    else:
+                        eof = True
+                if len(buf) < 4:
+                    break
+                # Fast-skip sparse zero runs, keeping 8-byte record alignment.
+                zeros = len(buf) - len(buf.lstrip(b"\x00"))
+                if zeros >= 8:
+                    buf = buf[zeros - (zeros % 8) :]
+                    if len(buf) < 60 and eof:
+                        break
+                    continue
+                rec_len = int.from_bytes(buf[0:4], "little")
+                if rec_len == 0:
+                    buf = buf[8:]
+                    continue
+                if rec_len < 60 or rec_len > 0x10000:  # implausible -> resync on the 8-byte grid
+                    buf = buf[8:]
+                    continue
+                if len(buf) < rec_len:
+                    if eof:
+                        break
+                    continue  # refill on the next loop
+                rec, buf = buf[:rec_len], buf[rec_len:]
+                if int.from_bytes(rec[4:6], "little") != 2:  # only USN_RECORD_V2
+                    continue
+                name_len = int.from_bytes(rec[56:58], "little")
+                name_off = int.from_bytes(rec[58:60], "little")
+                name = ""
+                if name_len > 0 and name_off + name_len <= rec_len:
+                    name = rec[name_off : name_off + name_len].decode("utf-16-le", "ignore")
+                rows.append(
+                    {
+                        "usn": int.from_bytes(rec[24:32], "little"),
+                        "timestamp_utc": _filetime_iso(int.from_bytes(rec[32:40], "little")),
+                        "file_name": name,
+                        "reason": _decode_usn_reason(int.from_bytes(rec[40:44], "little")),
+                        "file_attributes": int.from_bytes(rec[52:56], "little"),
+                        "file_reference": int.from_bytes(rec[8:16], "little"),
+                        "parent_reference": int.from_bytes(rec[16:24], "little"),
+                    }
+                )
+                if len(rows) >= max_records:
+                    break
         return rows
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:

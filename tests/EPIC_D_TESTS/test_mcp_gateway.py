@@ -37,7 +37,7 @@ def _case(tmp_path: Path) -> tuple[RunPaths, Path]:
 
 def test_allowlist_is_exactly_the_ten_tools() -> None:
     # The original 8 (§7) plus governed expansions (image + memory + the P0 deep-evidence tools).
-    assert len(ALLOWED_TOOLS) == 17
+    assert len(ALLOWED_TOOLS) == 18
     assert "validate_claim_evidence" in ALLOWED_TOOLS
     assert {"extract_artifacts_from_image", "analyze_memory"} <= ALLOWED_TOOLS
     assert {
@@ -45,6 +45,7 @@ def test_allowlist_is_exactly_the_ten_tools() -> None:
         "parse_lnk_jumplists",
         "parse_shellbags",
         "parse_amcache_shimcache",
+        "parse_usnjrnl",
     } <= ALLOWED_TOOLS
 
 

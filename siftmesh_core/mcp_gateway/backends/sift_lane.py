@@ -251,6 +251,12 @@ class SiftLaneBackend:
             "use backend_mode='real' (regipy). Fails closed."
         )
 
+    def parse_usnjrnl(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "USN journal via sift_lane (MFTECmd) is not wired; "
+            "use backend_mode='real' (in-process USN_RECORD_V2 parser). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

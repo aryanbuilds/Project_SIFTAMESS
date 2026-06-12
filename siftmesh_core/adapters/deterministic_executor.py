@@ -494,7 +494,8 @@ def _claims_super_timeline(result: Any, task_id: str) -> list[Claim]:
             task_id,
             1,
             status="inferred",
-            text=f"Plaso super-timeline built: {result.event_count} event(s) from the disk image.",
+            text=f"Plaso super-timeline built: {result.event_count} event(s) "
+            f"(source: {result.timeline_source or 'disk image'}).",
             evidence_type="super_timeline",
             confidence=0.7,
         )

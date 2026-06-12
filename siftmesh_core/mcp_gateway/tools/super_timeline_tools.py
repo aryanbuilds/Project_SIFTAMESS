@@ -31,6 +31,9 @@ class SuperTimelineResult(ToolResult):
     event_count: int = 0
     events: list[dict[str, Any]] = Field(default_factory=list)
     timeline_path: str | None = None
+    # "disk_image" = full volume timeline; "extracted_artifacts" = robust fallback over the
+    # already-carved artifacts (used when the disk image's volume/VSS scan is unreadable).
+    timeline_source: str | None = None
 
 
 def build_super_timeline(
@@ -48,23 +51,47 @@ def build_super_timeline(
     image_path, image_sha = resolved_source(evidence_root, image_artifact, run_root=run_root)
 
     def produce() -> dict[str, Any]:
-        work_dir = Path(run_root) / "evidence" / "extracted" / "super_timeline"
-        try:
-            events, total, jsonl = build_plaso_timeline(
-                image_path,
+        # work_dir is OUTSIDE evidence/extracted so the directory fallback never re-ingests it.
+        work_dir = Path(run_root) / "super_timeline"
+        extracted = Path(run_root) / "evidence" / "extracted"
+
+        def _run(src: Path, *, is_dir: bool) -> tuple[list[dict[str, Any]], int, Any]:
+            return build_plaso_timeline(
+                src,
                 work_dir=work_dir,
+                is_directory=is_dir,
                 log2timeline_path=log2timeline_path,
                 psort_path=psort_path,
                 timeout=timeout,
                 max_events=max_events,
             )
+
+        try:
+            events, total, jsonl = _run(image_path, is_dir=False)
+            source = "disk_image"
         except BackendUnavailableError:
             raise
-        except Exception as exc:  # real Plaso failure -> recoverable (logged status=error)
-            raise RecoverableToolError(
-                f"super-timeline build failed: {exc}", code="plaso_error"
-            ) from exc
-        return {"event_count": total, "events": events, "timeline_path": str(jsonl)}
+        except Exception as exc_image:
+            # A partial/corrupt image can crash Plaso's volume/VSS scan. Fall back to the already
+            # -carved artifacts (real Plaso over real extracted evidence) when present.
+            if not (extracted.is_dir() and any(extracted.rglob("*"))):
+                raise RecoverableToolError(
+                    f"super-timeline build failed: {exc_image}", code="plaso_error"
+                ) from exc_image
+            try:
+                events, total, jsonl = _run(extracted, is_dir=True)
+                source = "extracted_artifacts"
+            except Exception as exc_dir:
+                raise RecoverableToolError(
+                    f"super-timeline build failed (image + extracted): {exc_dir}",
+                    code="plaso_error",
+                ) from exc_dir
+        return {
+            "event_count": total,
+            "events": events,
+            "timeline_path": str(jsonl),
+            "timeline_source": source,
+        }
 
     return run_tool(
         run_root,

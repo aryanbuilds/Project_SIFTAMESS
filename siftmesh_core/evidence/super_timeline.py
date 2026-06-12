@@ -68,36 +68,34 @@ def parse_psort_jsonl(
 
 
 def build_plaso_timeline(
-    image: Path,
+    source: Path,
     *,
     work_dir: Path,
+    is_directory: bool = False,
     log2timeline_path: str | None = None,
     psort_path: str | None = None,
     timeout: int = 3600,
     max_events: int | None = None,
 ) -> tuple[list[dict[str, object]], int, Path]:
-    """Run ``log2timeline.py`` then ``psort.py`` over ``image`` -> (events, total, jsonl_path)."""
+    """Run ``log2timeline.py`` then ``psort.py`` over ``source`` -> (events, total, jsonl_path).
+
+    ``source`` is a disk image (``is_directory=False``: volume scan, VSS disabled) or an
+    already-extracted artifacts directory (``is_directory=True``: no volume/VSS scan — robust on
+    partial/corrupt images where the disk-image VSS catalog is unreadable). ``work_dir`` MUST be
+    outside ``source`` so Plaso never re-ingests its own ``.plaso``/``.jsonl`` output.
+    """
     work_dir.mkdir(parents=True, exist_ok=True)
     storage = work_dir / "timeline.plaso"
     out = work_dir / "timeline.jsonl"
     l2t = _require(_LOG2TIMELINE, log2timeline_path)
     psort = _require(_PSORT, psort_path)
 
-    ingest = subprocess.run(  # fixed argv, shell=False, validated image path
-        [
-            l2t,
-            "--status_view",
-            "none",
-            "--partitions",
-            "all",
-            "--storage_file",
-            str(storage),
-            str(image),
-        ],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
+    argv = [l2t, "--status_view", "none", "--storage_file", str(storage)]
+    if not is_directory:  # disk image: process all partitions, skip the (often fragile) VSS scan
+        argv += ["--partitions", "all", "--vss_stores", "none"]
+    argv.append(str(source))
+    ingest = subprocess.run(  # fixed argv, shell=False, validated source path
+        argv, capture_output=True, text=True, timeout=timeout, check=False
     )
     if ingest.returncode != 0:
         raise RuntimeError(f"log2timeline failed: {ingest.stderr.strip()[:500] or 'non-zero exit'}")

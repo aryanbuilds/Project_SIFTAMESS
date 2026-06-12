@@ -8,6 +8,7 @@ the real parser analyses. No keys, no Volatility (the memory case is routing-onl
 from __future__ import annotations
 
 import json
+import lzma
 import shutil
 from collections.abc import Callable
 from pathlib import Path
@@ -89,6 +90,45 @@ def test_g9_flags_derived_gap_and_creates_followup(built_run: BuiltRun) -> None:
     critique_run(run, settings=load_settings(), evidence_root=evidence)
     fups = read_followups(run.root)
     assert any(f.reason == "derived_gap" and f.artifact == _DERIVED_EVTX for f in fups)
+
+
+def _add_derived_ntuser(run: RunPaths) -> str:
+    """Place a carved NTUSER.DAT under evidence/extracted/ + register it as a derived artifact."""
+    extracted = run.evidence / "extracted" / "user_hives"
+    extracted.mkdir(parents=True, exist_ok=True)
+    dest = extracted / "fredr_NTUSER.DAT"  # the disk-image extractor renames per-user hives
+    dest.write_bytes(lzma.decompress((_FIXTURES / "ntuser.dat.xz").read_bytes()))
+    rel = "evidence/extracted/user_hives/fredr_NTUSER.DAT"
+    append_derived(
+        run.root,
+        DerivedArtifact(
+            derived_path=rel,
+            source_artifact="disk.E01",
+            source_sha256="b" * 64,
+            tool_call_id="TOOL-001",
+            derived_sha256=sha256_file(dest),
+        ),
+    )
+    return rel
+
+
+def test_derived_ntuser_emits_extra_tool_followups(built_run: BuiltRun) -> None:
+    # A carved NTUSER must yield its multi-tool-per-hive EXTRAS, not just the primary run-keys —
+    # the gap that silently dropped recentdocs/usb/shellbags on the --auto disk path.
+    run, evidence = _prepared(built_run)
+    rel = _add_derived_ntuser(run)
+    created = ingest_derived(run, evidence_root=evidence)
+    tools = {read_yaml_model(TaskContract, p).allowed_tools[0] for p in created}
+    assert {
+        "extract_registry_run_keys",  # primary
+        "parse_recentdocs_mru",
+        "parse_usb_registry",
+        "parse_shellbags",
+    } <= tools
+    for p in created:  # every task binds to the derived hive, origin=derived
+        c = read_yaml_model(TaskContract, p)
+        assert c.input_artifacts[0].path == rel and c.input_artifacts[0].origin == "derived"
+    assert ingest_derived(run, evidence_root=evidence) == []  # idempotent (all tools covered)
 
 
 def test_ingest_derived_idempotent(built_run: BuiltRun) -> None:

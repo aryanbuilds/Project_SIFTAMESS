@@ -50,6 +50,7 @@ from siftmesh_core.ledgers.injection_alerts import (
 )
 from siftmesh_core.ledgers.retries import append_retry, next_retry_id
 from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
+from siftmesh_core.mcp_gateway.registry import assert_tool_allowed
 from siftmesh_core.mcp_gateway.tools.validation_tools import (
     _manifest_hashes,
     grade_claim_against_run,
@@ -57,10 +58,15 @@ from siftmesh_core.mcp_gateway.tools.validation_tools import (
 from siftmesh_core.orchestrator.artifact_router import (
     FineFamily,
     RoutedArtifact,
+    extra_tools_for,
     route_manifest,
     route_path,
 )
-from siftmesh_core.orchestrator.planner import executor_contract, group_actionable
+from siftmesh_core.orchestrator.planner import (
+    _EXTRA_TOOL_OBJECTIVE,
+    executor_contract,
+    group_actionable,
+)
 from siftmesh_core.run_dir import RunPaths
 from siftmesh_core.schemas.audit import CriticVerdict, CriticVerdictType
 from siftmesh_core.schemas.claim import Claim
@@ -406,6 +412,37 @@ def detect_derived_gaps(run: RunPaths) -> list[RoutedArtifact]:
     return gaps
 
 
+def _covered_tool_paths(run: RunPaths) -> set[tuple[str, str]]:
+    """Every (tool, input_path) pair already covered by a task contract (tool-scoped coverage)."""
+    covered: set[tuple[str, str]] = set()
+    for path in sorted(run.tasks.glob("TASK-*.yaml")):
+        contract = read_yaml_model(TaskContract, path)
+        tool = contract.allowed_tools[0] if contract.allowed_tools else ""
+        covered.update((tool, ia.path) for ia in contract.input_artifacts)
+    return covered
+
+
+def detect_derived_extra_tool_gaps(run: RunPaths) -> list[tuple[RoutedArtifact, str]]:
+    """Derived hives whose multi-tool-per-hive EXTRA tools haven't run yet (hth.2 + Phase A/B/C).
+
+    The planner applies ``extra_tools_for`` to MANIFEST hives, but the derived re-ingest path
+    only mints PRIMARY-family follow-ups — so a carved ``<user>_NTUSER.DAT`` would get run-keys
+    but not recentdocs/usb/shellbags, and a carved ``SYSTEM`` not usb/shimcache. This closes that
+    gap. Coverage is per ``(tool, path)`` so it is idempotent once each extra task exists.
+    """
+    covered = _covered_tool_paths(run)
+    gaps: list[tuple[RoutedArtifact, str]] = []
+    for rec in read_derived(run.root):
+        if rec.derived_sha256 is None:
+            continue
+        for xtool in extra_tools_for(rec.derived_path):
+            if (xtool, rec.derived_path) in covered:
+                continue
+            assert_tool_allowed(xtool)  # never mint a task for an off-allowlist tool
+            gaps.append((route_path(rec.derived_path, rec.derived_sha256), xtool))
+    return gaps
+
+
 def _write_followup_task(
     run: RunPaths,
     arts: RoutedArtifact | list[RoutedArtifact],
@@ -415,12 +452,17 @@ def _write_followup_task(
     reason: FollowupReason,
     evidence_root: Path | str | None,
     audit: FilteringBoundLogger,
+    tool: str | None = None,
+    objective: str | None = None,
 ) -> Path:
-    """Mint TASK-{n:03d} for a gap artifact GROUP: write its contract + FollowupRecord, then log."""
+    """Mint TASK-{n:03d} for a gap artifact GROUP: write its contract + FollowupRecord, then log.
+
+    ``tool``/``objective`` override the artifact's primary tool for multi-tool-per-hive extras.
+    """
     group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
     rep = group[0]
     task_id = f"TASK-{n:03d}"
-    contract = executor_contract(task_id, group, origin=origin)
+    contract = executor_contract(task_id, group, origin=origin, tool=tool, objective=objective)
     target = safe_write_path(run.root, f"tasks/{task_id}.yaml", evidence_root=evidence_root)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dump_yaml_model(contract), encoding="utf-8")
@@ -432,7 +474,7 @@ def _write_followup_task(
             reason=reason,
             artifact=rep.path,
             family=rep.family,
-            tool=rep.tool,
+            tool=tool or rep.tool,
             created_utc=_now(),
         ),
         evidence_root=evidence_root,
@@ -483,6 +525,23 @@ def generate_followup_tasks(
                 audit=audit,
             )
         )
+    # Multi-tool-per-hive EXTRA tools over derived hives (the planner only does this for manifest
+    # hives): e.g. a carved NTUSER -> recentdocs/usb/shellbags, a carved SYSTEM -> usb/shimcache.
+    for art, xtool in detect_derived_extra_tool_gaps(run):
+        n += 1
+        written.append(
+            _write_followup_task(
+                run,
+                art,
+                n=n,
+                origin="derived",
+                reason="derived_gap",
+                evidence_root=evidence_root,
+                audit=audit,
+                tool=xtool,
+                objective=_EXTRA_TOOL_OBJECTIVE.get(xtool),
+            )
+        )
     return written
 
 
@@ -511,6 +570,22 @@ def ingest_derived(
                 reason="derived_gap",
                 evidence_root=evidence_root,
                 audit=log,
+            )
+        )
+    # Multi-tool-per-hive extras over derived hives (NTUSER -> recentdocs/usb/shellbags, etc.).
+    for art, xtool in detect_derived_extra_tool_gaps(run):
+        n += 1
+        written.append(
+            _write_followup_task(
+                run,
+                art,
+                n=n,
+                origin="derived",
+                reason="derived_gap",
+                evidence_root=evidence_root,
+                audit=log,
+                tool=xtool,
+                objective=_EXTRA_TOOL_OBJECTIVE.get(xtool),
             )
         )
     _ensure_dispatchable_plan(run, created=len(written))

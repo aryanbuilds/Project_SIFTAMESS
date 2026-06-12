@@ -111,6 +111,48 @@ Screen.-narrow #navcol {
 #intro, #hometitle {
     padding: 1 1;
 }
+/* Minimal home: left recent-runs sidebar + centered hero. */
+#homesplit {
+    height: 1fr;
+}
+#homeside {
+    width: 40%;
+    min-width: 28;
+    padding: 1 1;
+}
+#homeside #runs {
+    height: 1fr;
+    border: round $primary;
+}
+#rundetail, #firstrun {
+    height: auto;
+    color: $text-muted;
+}
+#hero {
+    width: 1fr;
+    align: center middle;
+    content-align: center middle;
+}
+#herotitle {
+    text-style: bold;
+    text-align: center;
+    padding: 1 0;
+}
+#hero Button {
+    width: 24;
+    margin: 1 0;
+}
+#herohint {
+    color: $text-muted;
+    text-align: center;
+    padding: 1 0;
+}
+Screen.-narrow #homesplit {
+    layout: vertical;
+}
+Screen.-narrow #homeside, Screen.-narrow #hero {
+    width: 1fr;
+}
 #setupbtns, #homebtns, #scoperow, #judgerow, #agentbtns {
     height: auto;
     padding: 1 0;

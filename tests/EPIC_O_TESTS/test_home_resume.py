@@ -63,10 +63,14 @@ def test_home_screen_has_resume_button_and_badge(tmp_path: Path, monkeypatch) ->
     async def run() -> None:
         async with app.run_test() as pilot:
             await pilot.pause()
-            from textual.widgets import Button, ListView
+            from textual.widgets import ListView
 
             assert isinstance(app.screen, HomeScreen)
-            assert app.screen.query_one("#resume", Button) is not None
+            # resume is now the `r` key action (no dedicated button) + a centered "New run" hero
+            assert hasattr(app.screen, "action_resume")
+            from textual.widgets import Button
+
+            assert app.screen.query_one("#new", Button) is not None
             lv = app.screen.query_one("#runs", ListView)
             assert lv.children  # the golden run listed (with a badge appended to its label)
 

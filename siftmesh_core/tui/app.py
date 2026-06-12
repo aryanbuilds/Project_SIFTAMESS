@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, ListItem, ListView, Static
 
@@ -14,9 +15,16 @@ from siftmesh_core.run_dir import DEFAULT_BASE
 
 
 class HomeScreen(Screen):
-    """Run picker + entry points: new run, onboard agents, attach to an existing run."""
+    """Minimal home (opencode-style): centered New run + a left recent-runs list + visible keys."""
 
-    BINDINGS = [("q", "quit", "Quit")]
+    BINDINGS = [
+        Binding("n", "new_run", "New run"),
+        Binding("enter", "attach", "Attach"),
+        Binding("r", "resume", "Resume"),
+        Binding("o", "agent_setup", "Agents"),
+        Binding("ctrl+t", "app.toggle_theme", "Theme"),
+        Binding("q", "quit", "Quit"),
+    ]
 
     def __init__(self, *, settings: SiftmeshSettings) -> None:
         super().__init__()
@@ -24,15 +32,17 @@ class HomeScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("SIFTMesh cockpit — pick a run to attach, or start one.", id="hometitle")
-        yield Static(id="firstrun")  # first-run guidance banner (populated on mount)
-        yield ListView(id="runs")
-        with Horizontal(id="homebtns"):
-            yield Button("New run", id="new", variant="success")
-            yield Button("Attach", id="attach", variant="primary")
-            yield Button("Resume", id="resume", variant="warning")
-            yield Button("Onboard agents", id="onboard")
-            yield Button("Quit", id="quit")
+        with Horizontal(id="homesplit"):
+            with Vertical(id="homeside"):
+                yield Label("Recent runs")
+                yield ListView(id="runs")
+                yield Static(id="rundetail", markup=False)
+                yield Static(id="firstrun")
+            with Vertical(id="hero"):
+                yield Static("SIFTMesh", id="herotitle")
+                yield Button("New run", id="new", variant="success")
+                yield Button("Agent setup", id="setup")
+                yield Static("n new · ↵ attach · r resume · o agents · q quit", id="herohint")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -41,8 +51,7 @@ class HomeScreen(Screen):
         base = Path(DEFAULT_BASE)
         runs = sorted(base.glob("RUN-*"), reverse=True) if base.is_dir() else []
         if not runs:
-            empty = "No runs yet — click 'New run' to start, or 'Onboard agents' first."
-            lv.append(ListItem(Label(empty)))
+            lv.append(ListItem(Label("No runs yet — press n to start one.")))
             return
         from siftmesh_core.run_dir import RunPaths
         from siftmesh_core.tui.snapshot import run_badge
@@ -57,7 +66,7 @@ class HomeScreen(Screen):
             lv.append(item)
 
     def _render_firstrun(self) -> None:
-        """Show a one-time onboarding hint when no live agent is ready (never blocks the floor)."""
+        """A muted one-liner when no live agent is ready (never blocks the floor)."""
         banner = self.query_one("#firstrun", Static)
         try:
             from siftmesh_core.doctor import probe_agents
@@ -69,31 +78,47 @@ class HomeScreen(Screen):
         if cap.live_candidate:
             banner.display = False
             return
-        banner.update(
-            "First run? No live agent is ready — runs will use the deterministic floor (tier T0, "
-            "no keys needed). Click 'Onboard agents' to enable a live T1/T2 agent."
-        )
+        banner.update("[dim]No live agent ready — runs use the floor (T0). Press o to onboard.[/]")
+
+    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        if getattr(event.item, "run_path", None) is not None:
+            self.action_attach()  # Enter / click on a run = attach (opencode-style)
+
+    def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
+        path = getattr(event.item, "run_path", None)
+        detail = self.query_one("#rundetail", Static)
+        if path is None:
+            detail.update("")
+            return
+        from siftmesh_core.run_dir import RunPaths
+        from siftmesh_core.tui.snapshot import run_badge
+
+        try:
+            detail.update(f"{path.name} — {run_badge(RunPaths(root=path))}")
+        except Exception:
+            detail.update(str(path.name))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "new":
-            from siftmesh_core.tui.wizard import RunSetupScreen
+            self.action_new_run()
+        elif event.button.id == "setup":
+            self.action_agent_setup()
 
-            self.app.push_screen(RunSetupScreen(settings=self.settings))
-        elif event.button.id == "onboard":
-            from siftmesh_core.tui.setup_screen import OnboardingScreen
+    def action_new_run(self) -> None:
+        from siftmesh_core.tui.wizard import RunSetupScreen
 
-            self.app.push_screen(OnboardingScreen(settings=self.settings))
-        elif event.button.id == "attach":
-            self._attach_selected()
-        elif event.button.id == "resume":
-            self._resume_selected()
-        elif event.button.id == "quit":
-            self.app.exit()
+        self.app.push_screen(RunSetupScreen(settings=self.settings))
 
-    def _attach_selected(self) -> None:
-        lv = self.query_one("#runs", ListView)
-        item = lv.highlighted_child
-        path = getattr(item, "run_path", None)
+    def action_agent_setup(self) -> None:
+        from siftmesh_core.tui.setup_screen import OnboardingScreen
+
+        self.app.push_screen(OnboardingScreen(settings=self.settings))
+
+    def _selected_run(self) -> Path | None:
+        return getattr(self.query_one("#runs", ListView).highlighted_child, "run_path", None)
+
+    def action_attach(self) -> None:
+        path = self._selected_run()
         if path is None:
             self.notify("select a run to attach")
             return
@@ -101,9 +126,8 @@ class HomeScreen(Screen):
 
         self.app.push_screen(CockpitScreen(path, settings=self.settings))
 
-    def _resume_selected(self) -> None:
-        lv = self.query_one("#runs", ListView)
-        path = getattr(lv.highlighted_child, "run_path", None)
+    def action_resume(self) -> None:
+        path = self._selected_run()
         if path is None:
             self.notify("select a run to resume")
             return
@@ -112,7 +136,7 @@ class HomeScreen(Screen):
         from siftmesh_core.tui.snapshot import resumable
 
         if not resumable(RunPaths(root=path)):
-            self.notify("that run is terminal / has no state — use Attach")
+            self.notify("that run is terminal / has no state — press Enter to attach")
             return
         self.app.push_screen(CockpitScreen(path, settings=self.settings, auto_resume=True))
 
@@ -157,6 +181,12 @@ class SiftmeshTUI(App):
         from siftmesh_core.tui.cockpit import CockpitScreen
 
         yield from super().get_system_commands(screen)
+        if isinstance(screen, HomeScreen):
+            yield SystemCommand("New run", "Start a new investigation", screen.action_new_run)
+            yield SystemCommand(
+                "Agent setup", "Onboard agents + Tier-2 judge", screen.action_agent_setup
+            )
+            yield SystemCommand("Toggle theme", "Switch light/dark", self.action_toggle_theme)
         if isinstance(screen, CockpitScreen):
             yield SystemCommand(
                 "Resolve a gate", "Approve/reject any gate", screen.action_gate_selector

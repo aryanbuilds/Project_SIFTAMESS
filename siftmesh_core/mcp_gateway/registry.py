@@ -1,17 +1,19 @@
 """Forensic-tool allowlist + registration guard (D1).
 
-The gateway exposes EXACTLY the ten typed forensic tools (CLAUDE.md §7) and
+The gateway exposes EXACTLY the allowlisted typed forensic tools (CLAUDE.md §7) and
 nothing else. A forbidden name (CLAUDE.md §6 — raw shell / destructive) can never
 register, and any name outside the allowlist is rejected at registration time
 (criterion 4: a constrained tool surface). This module is ``mcp``-free so the
-allowlist is testable without building a server.
+allowlist is testable without building a server. Adding a tool is a GOVERNED change:
+this set + the ``doctor`` count self-check + the per-tool tests move in lockstep.
 """
 
 from __future__ import annotations
 
-# The complete, fixed set of tools the gateway may expose (CLAUDE.md §7). The last
-# two were added by a governed expansion (Epic D deepening) for real disk-image
-# evidence access and memory triage — both real-tool backed, audited, fail-closed.
+# The complete, fixed set of tools the gateway may expose (CLAUDE.md §7). Disk-image
+# extraction + memory triage were a governed Epic-D expansion; parse_mft_filesystem (+
+# the P0 deep-evidence tools) a later governed expansion — all real-tool backed,
+# audited, fail-closed.
 ALLOWED_TOOLS: frozenset[str] = frozenset(
     {
         "compute_hash_manifest",
@@ -24,6 +26,7 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "validate_claim_evidence",
         "extract_artifacts_from_image",
         "analyze_memory",
+        "parse_mft_filesystem",
     }
 )
 

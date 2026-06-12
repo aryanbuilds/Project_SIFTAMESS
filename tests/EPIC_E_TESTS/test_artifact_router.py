@@ -35,13 +35,14 @@ def test_powershell_evtx_routes_before_generic_evtx() -> None:
     assert r.tool == "parse_evtx_powershell"
 
 
-def test_other_evtx_and_mft_are_context_only() -> None:
+def test_other_evtx_context_only_and_mft_actionable() -> None:
     sysr = route_artifact(_ef("System.evtx"))
     assert sysr.family == "evtx_other"
     assert sysr.tool is None and sysr.actionable is False
     assert sysr.timeline_kind == "evtx"  # still feeds the timeline
     mft = route_artifact(_ef("$MFT"))
-    assert mft.family == "mft" and mft.tool is None and mft.actionable is False
+    # $MFT is now actionable (parse_mft_filesystem) AND still feeds the unified timeline.
+    assert mft.family == "mft" and mft.tool == "parse_mft_filesystem" and mft.actionable is True
     assert mft.timeline_kind == "mft"
 
 

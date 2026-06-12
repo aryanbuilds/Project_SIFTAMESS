@@ -32,6 +32,7 @@ from siftmesh_core.mcp_gateway.tools.image_tools import (
     extract_artifacts_from_image,
 )
 from siftmesh_core.mcp_gateway.tools.memory_tools import MemoryAnalysisResult, analyze_memory
+from siftmesh_core.mcp_gateway.tools.mft_tools import MftFilesystemResult, parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
@@ -128,6 +129,13 @@ def _analyze_memory(memory_artifact: str, plugins: list[str] | None = None) -> M
     )
 
 
+def _parse_mft_filesystem(source_artifact: str) -> MftFilesystemResult:
+    run_root, evidence_root = _run_scope()
+    return parse_mft_filesystem(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -141,6 +149,7 @@ def tool_adapters() -> dict[str, Any]:
         "validate_claim_evidence": _validate_claim_evidence,
         "extract_artifacts_from_image": _extract_artifacts_from_image,
         "analyze_memory": _analyze_memory,
+        "parse_mft_filesystem": _parse_mft_filesystem,
     }
 
 

@@ -809,7 +809,7 @@ def status(run_dir: str) -> None:
 
 @app.command("mcp-serve")
 def mcp_serve() -> None:
-    """Launch the typed forensic MCP gateway over stdio (the 10 allowlisted tools)."""
+    """Launch the typed forensic MCP gateway over stdio (the allowlisted forensic tools)."""
     from siftmesh_core.mcp_gateway.server import run_server
 
     run_server()

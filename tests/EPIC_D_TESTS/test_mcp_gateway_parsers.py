@@ -14,6 +14,7 @@ import pytest
 from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_backend
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
+from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
@@ -108,6 +109,20 @@ def test_analyze_prefetch_real(case: tuple[RunPaths, Path]) -> None:
     assert result.executable_filename == "CMD.EXE"
     assert result.run_count == 3
     assert result.last_run_times  # at least one real run timestamp
+
+
+def test_parse_mft_filesystem_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    result = parse_mft_filesystem(run.root, source_artifact="$MFT", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_mft_filesystem"
+    assert result.entry_count == len(result.files) and result.entry_count >= 1
+    assert result.file_count + result.directory_count == result.entry_count
+    # each row carries the real metadata fields (names/sizes/SI timestamps)
+    assert all("record_number" in r for r in result.files)
+    # provenance line written
+    ledger = read_tool_results(run.root)
+    assert any(t.tool_name == "parse_mft_filesystem" for t in ledger)
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

@@ -33,9 +33,9 @@ def test_plan_cli_exits_zero_and_writes_artifacts(
     ):
         assert path.is_file(), f"missing {path}"
     # Per-family aggregation (bd 1xy6): security, powershell, prefetch, ONE registry task over
-    # both NTUSER.DAT hives, (+timeline) = 5 tasks (was 6 one-per-file).
+    # both NTUSER.DAT hives, parse_mft_filesystem ($MFT now actionable), (+timeline) = 6 tasks.
     task_files = sorted(run.tasks.glob("TASK-*.yaml"))
-    assert len(task_files) == 5
+    assert len(task_files) == 6
     registry = [
         c
         for c in (read_yaml_model(TaskContract, p) for p in task_files)
@@ -97,14 +97,18 @@ def test_empty_manifest_degrades_gracefully(synthetic_run: SyntheticRun) -> None
 
 
 def test_timeline_only_manifest_builds_timeline_task(synthetic_run: SyntheticRun) -> None:
-    # System.evtx (evtx_other) + $MFT are timeline-capable but NOT actionable on their own.
+    # System.evtx (evtx_other) is context-only; $MFT is now actionable (parse_mft_filesystem) AND
+    # timeline-capable → a parse_mft task + one timeline task (both artifacts feed the timeline).
     run = synthetic_run(["System.evtx", "$MFT"])
     res = generate_plan(run, settings=load_settings())
     contracts = [read_yaml_model(TaskContract, p) for p in res.task_files]
-    assert len(contracts) == 1
-    assert contracts[0].role == "timeline_executor"
-    assert contracts[0].allowed_tools == ["build_timeline"]
-    assert len(contracts[0].input_artifacts) == 2  # both feed the timeline
+    roles = sorted(c.role for c in contracts)
+    assert roles == ["mft_executor", "timeline_executor"]
+    timeline = next(c for c in contracts if c.role == "timeline_executor")
+    assert timeline.allowed_tools == ["build_timeline"]
+    assert len(timeline.input_artifacts) == 2  # System.evtx + $MFT both feed the timeline
+    mft = next(c for c in contracts if c.role == "mft_executor")
+    assert mft.allowed_tools == ["parse_mft_filesystem"]
 
 
 def test_image_only_manifest_is_actionable(synthetic_run: SyntheticRun) -> None:

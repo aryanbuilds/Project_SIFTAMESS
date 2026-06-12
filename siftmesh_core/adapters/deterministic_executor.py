@@ -27,6 +27,7 @@ from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.image_tools import extract_artifacts_from_image
 from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
+from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
@@ -178,6 +179,21 @@ def _claims_registry(result: Any, task_id: str) -> list[Claim]:
     return claims
 
 
+def _claims_mft(result: Any, task_id: str) -> list[Claim]:
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="confirmed",
+            text=f"$MFT parsed: {result.entry_count} filesystem entries "
+            f"({result.file_count} files, {result.directory_count} directories).",
+            evidence_type="filesystem_mft",
+            confidence=0.9,
+        )
+    ]
+
+
 def _claims_timeline(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -317,12 +333,13 @@ _DISPATCH: dict[
     "build_timeline": (build_timeline, _timeline_kwargs, _claims_timeline),
     "extract_artifacts_from_image": (extract_artifacts_from_image, _image_kwargs, _claims_image),
     "analyze_memory": (analyze_memory, _memory_kwargs, _claims_memory),
+    "parse_mft_filesystem": (parse_mft_filesystem, _single_source_kwargs, _claims_mft),
 }
 
 
 def _evidence_rows(result: ToolResult) -> list[dict[str, Any]]:
     """Pull the untrusted row list off whichever result subclass attr carries it."""
-    for attr in ("events", "run_keys", "processes", "cmdlines", "suspicious", "extracted"):
+    for attr in ("events", "run_keys", "processes", "cmdlines", "suspicious", "extracted", "files"):
         rows = getattr(result, attr, None)
         if rows:
             return list(rows)
@@ -369,6 +386,7 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "parse_evtx_powershell",
         "analyze_prefetch",
         "extract_registry_run_keys",
+        "parse_mft_filesystem",
     }
 )
 

@@ -54,7 +54,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "evtx_other": None,
     "prefetch": "analyze_prefetch",
     "registry_hive": "extract_registry_run_keys",
-    "mft": None,
+    "mft": "parse_mft_filesystem",
     "disk_image": "extract_artifacts_from_image",
     "memory_image": "analyze_memory",
     "archive": None,
@@ -96,7 +96,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "prefetch": "Analyse the prefetch artifact for program-execution evidence "
     "(run count, last-run times).",
     "registry_hive": "Extract autostart Run/RunOnce keys from the registry hive.",
-    "mft": "$MFT filesystem metadata — feeds the unified timeline (kind=mft); no standalone tool.",
+    "mft": "Parse the $MFT for a filesystem inventory (filenames, sizes, timestamps); "
+    "also feeds the unified timeline (kind=mft).",
     "disk_image": "Recover loose triage artifacts (event logs, hives, prefetch, $MFT) "
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "

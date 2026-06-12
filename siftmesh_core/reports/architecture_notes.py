@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS
 from siftmesh_core.reports.loader import ReportView, load_report_view
 from siftmesh_core.reports.render import MarkdownBuilder, compose_report, write_report
 from siftmesh_core.run_dir import RunPaths
@@ -39,7 +40,10 @@ def generate_architecture_notes(
     consequences = sum(1 for e in v.events if e.event == "injection_consequence_applied")
     fell_back = sum(1 for a in v.agent_calls if a.status == "fell_back")
     md.bullet("Path policy: all writes confined to the run directory (originals never modified).")
-    md.bullet("Typed-tool allowlist: only the 10 audited tools; no raw shell / destructive tools.")
+    md.bullet(
+        f"Typed-tool allowlist: only the {len(ALLOWED_TOOLS)} audited tools; "
+        "no raw shell / destructive tools."
+    )
     md.bullet("Evidence read-only: hashed at ingest; re-hashed on each tool access (custody).")
     md.bullet(f"Spotlighting: {inj} injection alert(s); {consequences} consequence(s) applied.")
     md.bullet(f"Adapter fall-back to deterministic floor: {fell_back} time(s).")

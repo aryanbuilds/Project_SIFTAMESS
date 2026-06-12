@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b> Orchestration of chaos to Find evil, not more agent noise with pro/max...</b><br>
+  <b>CLI-first DFIR orchestration with governed agents.</b><br>
   The LLM proposes; the code decides. Every finding is anchored to a real tool call, and every run is replayable.
 </p>
 
@@ -11,7 +11,7 @@
 
 ## Tech stack
 
-`uv`-managed (please don't use pip/venv). Everything is pinned in `pyproject.toml`.
+Use `uv`; avoid pip/venv. Everything is pinned in `pyproject.toml`.
 
 | Area | Pins |
 |---|---|
@@ -24,35 +24,32 @@
 | `a2a` extra | a2a-sdk 1.1 (optional agent-to-agent interop) |
 | Dev | ruff · mypy · pytest · hypothesis |
 
-External tools it drives (on a SANS SIFT host): Sleuth Kit, Volatility 3, EZ Tools, 7-Zip.
+External tools it drives on a SANS SIFT host: Sleuth Kit, Volatility 3, EZ Tools, 7-Zip.
 
 ---
 
 ## About the project
 
-SIFTMesh is a CLI-first controller that runs a real DFIR investigation for you and keeps it honest.
-You point it at evidence and an objective; it hashes and seals the evidence read-only, plans the work,
-sends a real agent in to investigate, then a **deterministic critic** checks every claim against the
-actual tool output before anything is allowed into the report. The agent is free to reason and make
-mistakes — the governance code is what decides truth. That split is the whole point: **autonomy lives
-in the agent, determinism lives in the code.**
+SIFTMesh is a CLI-first controller for DFIR investigations. It hashes and seals evidence read-only,
+plans the work, sends an agent to investigate, and uses a **deterministic critic** to check each claim
+against actual tool output before it reaches the report. **Autonomy lives in the agent; determinism
+lives in the code.**
 
 **What it can do**
 
 - Hash + seal evidence into a read-only vault with a SHA-256 manifest and a chain-of-custody log.
-- Plan from the manifest, dispatch an agent to investigate **toward your objective**, and write an
-  evidence-anchored report with a full, replayable audit trail.
-- Run completely on its own (`run --auto`) or step-by-step with human gates.
+- Plan from the manifest, dispatch an agent toward your objective, and write an evidence-anchored
+  report with a replayable audit trail.
+- Run fully on its own (`run --auto`) or step by step with human gates.
 - Stay **agent-neutral** — Claude, Codex, Gemini, OpenCode, or a no-keys deterministic floor.
-- Self-correct: when the critic rejects an unsupported claim, the agent gets the feedback and tries
-  again — emergently, not scripted.
+- Self-correct when the critic rejects an unsupported claim.
 - Use **10 real typed forensic tools** (Sleuth Kit, Volatility 3, EZ Tools, evtx, regipy, prefetch,
   MFT). No mocks, no fake output.
 
 **What it's NOT**
 
 - Not a generic multi-agent chatbot, a SOC platform, or a web dashboard.
-- Not "let the LLM decide forensic truth" — the LLM never has the final say.
+- Not "let the LLM decide forensic truth"; the LLM never has the final say.
 - Not a replacement for court-vetted tools. It **orchestrates** them; the tools are the source of truth.
 - Never runs raw shell, destructive ops, or writes to your evidence. It fails closed, not open.
 
@@ -65,9 +62,8 @@ the sealed hashes + how to reproduce.
 
 ## Pre-setup (recommended)
 
-A live agent is **optional** — the deterministic floor runs the whole pipeline with no API keys. But
-if you want a live agent to investigate, install its CLI **before** you run `setup` so onboarding can
-detect it:
+A live agent is **optional**. The deterministic floor runs the whole pipeline with no API keys. If you
+want a live agent, install its CLI **before** `setup` so onboarding can detect it:
 
 ```bash
 # uv (required)            -> https://docs.astral.sh/uv/
@@ -79,9 +75,9 @@ npm i -g @google/gemini-cli              # then: export GEMINI_API_KEY=...
 curl -fsSL https://opencode.ai/install | bash   # then: opencode auth login
 ```
 
-On a SANS SIFT workstation the forensic CLIs (sleuthkit, volatility3, 7z, EZ tools) are already there.
-You can also onboard agents later from inside the TUI (`o` → Agent setup) — it greys out anything not
-ready and tells you the exact fix.
+On a SANS SIFT workstation, the forensic CLIs (sleuthkit, volatility3, 7z, EZ tools) are already
+there. You can also onboard agents later from the TUI (`o` → Agent setup); it greys out anything not
+ready and shows the fix.
 
 ---
 
@@ -107,25 +103,20 @@ uv run siftmesh status RUN     # where is it, what's blocked
 
 ## Features
 
-- **One-command auto run** — init → plan → dispatch → critique → decide → report, end to end.
-- **Agent-neutral + honest safety tiers (T0–T3)** — `agents list` shows what's actually sandboxed and
-  tool-reaching; the label can never disagree with what dispatch does.
-- **Optional Tier-2 judge** — an advisory second opinion (any provider via LiteLLM). It can only lower
-  confidence or annotate; it never promotes. Fails soft.
-- **Evidence vault** — SHA-256 manifest, read-only posture, chain-of-custody log; originals are never
-  touched.
-- **Deterministic critic + self-correction** — unsupported claims get downgraded or dropped and never
-  reach the report; the agent re-tries on the feedback.
-- **Full traceability** — claim + contradiction ledgers, a token/agent/tool audit, and an HTML replay.
-- **TUI cockpit** — a live, read-only view over the run, plus a guided new-run wizard with a
-  filesystem-wide evidence picker and a 2-tab onboarding (Agents + Tier-2 judge).
-- **Low-disk mode** — run in portions → prune between → merge into one report. Plus pause/resume.
+- **One-command auto run** — init → plan → dispatch → critique → decide → report.
+- **Agent-neutral safety tiers (T0–T3)** — `agents list` shows what is sandboxed and tool-reaching.
+- **Optional Tier-2 judge** — advisory only; it can lower confidence or annotate, but never promote.
+- **Evidence vault** — SHA-256 manifest, read-only posture, chain-of-custody log.
+- **Deterministic critic + self-correction** — unsupported claims are downgraded or dropped.
+- **Full traceability** — claim/contradiction ledgers, token/agent/tool audit, HTML replay.
+- **TUI cockpit** — live read-only run view plus guided new-run onboarding.
+- **Low-disk mode** — run in portions, prune between, then merge into one report.
 
 ---
 
 ## Architecture
 
-The two worlds SIFTMesh bridges — classic manual DFIR and ungoverned AI agents — each have real drawbacks:
+SIFTMesh bridges manual DFIR and ungoverned AI agents:
 
 <table>
 <tr>
@@ -138,7 +129,7 @@ The two worlds SIFTMesh bridges — classic manual DFIR and ungoverned AI agents
 </tr>
 </table>
 
-SIFTMesh keeps the speed of agents and the rigor of forensics — **autonomy in the agent, determinism in the code**:
+SIFTMesh keeps agent speed and forensic rigor — **autonomy in the agent, determinism in the code**:
 
 <p align="center">
   <img src="assets/simplified_SIFTMESH_architecture.png" alt="Simplified SIFTMesh architecture" width="100%">
@@ -150,8 +141,8 @@ SIFTMesh keeps the speed of agents and the rigor of forensics — **autonomy in 
   <br><sub><b>The agent execution loop at runtime</b> — plan → dispatch → critique → decide, with self-correction.</sub>
 </p>
 
-Under the hood it's a deterministic state machine with a few clear roles. The agent is the only part
-that "thinks"; everything around it is plain code that can be audited and replayed.
+Under the hood, it is a deterministic state machine with a few clear roles. The agent is the only part
+that "thinks"; everything else is plain code that can be audited and replayed.
 
 | Role | Stage | What it does |
 |---|---|---|
@@ -245,7 +236,7 @@ deterministic floor.
 - A2A agent-to-agent interop (optional, governed).
 - ACP round-2 — typed-tool reach for Gemini/Codex (only Claude reaches the typed tools today).
 - Sigma / pySigma detection breadth.
-- More SIFT-lane tools, OS-level read-only mounts, and stream-parsing for huge archives.
+- More SIFT-lane tools, OS-level read-only mounts, and stream parsing for large archives.
 
 ---
 
@@ -253,6 +244,6 @@ deterministic floor.
 
 Apache-2.0 — see [`LICENSE`](LICENSE).
 
-Thanks for taking a look. Contributions, issues, and hard questions are all welcome.
+Contributions, issues, and hard questions are welcome.
 
 > *securing digital world one byte at a time*

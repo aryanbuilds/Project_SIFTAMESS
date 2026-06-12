@@ -27,6 +27,8 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "extract_artifacts_from_image",
         "analyze_memory",
         "parse_mft_filesystem",
+        "parse_recentdocs_mru",
+        "parse_usb_registry",
     }
 )
 

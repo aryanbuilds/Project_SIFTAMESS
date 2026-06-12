@@ -32,10 +32,11 @@ def test_plan_cli_exits_zero_and_writes_artifacts(
         run.investigation_plan,
     ):
         assert path.is_file(), f"missing {path}"
-    # Per-family aggregation (bd 1xy6): security, powershell, prefetch, ONE registry task over
-    # both NTUSER.DAT hives, parse_mft_filesystem ($MFT now actionable), (+timeline) = 6 tasks.
+    # Per-family aggregation (bd 1xy6) + multi-tool-per-hive: security, powershell, prefetch, ONE
+    # registry run-keys task (both NTUSER hives), parse_mft_filesystem, + recentdocs + usb over the
+    # NTUSER hives, (+timeline) = 8 tasks.
     task_files = sorted(run.tasks.glob("TASK-*.yaml"))
-    assert len(task_files) == 6
+    assert len(task_files) == 8
     registry = [
         c
         for c in (read_yaml_model(TaskContract, p) for p in task_files)
@@ -109,6 +110,15 @@ def test_timeline_only_manifest_builds_timeline_task(synthetic_run: SyntheticRun
     assert len(timeline.input_artifacts) == 2  # System.evtx + $MFT both feed the timeline
     mft = next(c for c in contracts if c.role == "mft_executor")
     assert mft.allowed_tools == ["parse_mft_filesystem"]
+
+
+def test_ntuser_hive_emits_extra_tool_tasks(synthetic_run: SyntheticRun) -> None:
+    # Multi-tool-per-hive: an NTUSER.DAT feeds run-keys (primary) + recentdocs + usb (extra tools).
+    run = synthetic_run(["Users/alice/NTUSER.DAT"])
+    res = generate_plan(run, settings=load_settings())
+    contracts = [read_yaml_model(TaskContract, p) for p in res.task_files]
+    tools = sorted(c.allowed_tools[0] for c in contracts)
+    assert tools == ["extract_registry_run_keys", "parse_recentdocs_mru", "parse_usb_registry"]
 
 
 def test_image_only_manifest_is_actionable(synthetic_run: SyntheticRun) -> None:

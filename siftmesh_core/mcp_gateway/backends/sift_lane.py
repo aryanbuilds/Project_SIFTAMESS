@@ -215,6 +215,18 @@ class SiftLaneBackend:
                 )
             return rows
 
+    def extract_recentdocs(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "RecentDocs via sift_lane is not wired (no RECmd batch shipped); "
+            "use backend_mode='real' (regipy). Fails closed."
+        )
+
+    def extract_usb_devices(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "USB registry parsing via sift_lane is not wired (no RECmd batch shipped); "
+            "use backend_mode='real' (regipy). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

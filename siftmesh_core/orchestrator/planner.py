@@ -24,6 +24,7 @@ from siftmesh_core.orchestrator.artifact_router import (
     FAMILY_ORDER,
     FAMILY_TOOL_MAP,
     RoutedArtifact,
+    extra_tools_for,
     route_manifest,
 )
 from siftmesh_core.orchestrator.deep_context import (
@@ -101,6 +102,12 @@ def _context_packet(*, include_brief: bool) -> list[str]:
 # (200+ prefetch .pf → a few tasks, not one-per-file). Keeps a single task's runtime bounded.
 MAX_ARTIFACTS_PER_TASK = 64
 
+# Objective text for the multi-tool-per-hive extra tools (a hive feeds these beyond its main tool).
+_EXTRA_TOOL_OBJECTIVE: dict[str, str] = {
+    "parse_recentdocs_mru": "Extract RecentDocs MRU (recently-opened files) from the NTUSER hive.",
+    "parse_usb_registry": "Extract USBSTOR + MountPoints2 removable-media evidence from the hive.",
+}
+
 
 def group_actionable(
     routed: list[RoutedArtifact], *, max_per_task: int = MAX_ARTIFACTS_PER_TASK
@@ -135,6 +142,8 @@ def executor_contract(
     *,
     origin: ArtifactOrigin = "evidence",
     include_brief: bool = False,
+    tool: str | None = None,
+    objective: str | None = None,
 ) -> TaskContract:
     """One TaskContract for one or more same-family actionable artifacts (E6/E7) — exactly one tool.
 
@@ -142,27 +151,32 @@ def executor_contract(
     contract shape. ``arts`` may be a single artifact or a same-(family, tool) group (per-family
     aggregation, bd 1xy6) — all share the one tool; the executor runs it over each input artifact.
     ``origin="derived"`` marks carved/decompressed inputs (they resolve under the run dir, not the
-    evidence root). ``include_brief`` adds the TRUSTED brief to the context packet.
+    evidence root). ``include_brief`` adds the TRUSTED brief to the packet. ``tool`` overrides
+    the artifact's primary tool (multi-tool-per-hive: e.g. parse_recentdocs_mru on an NTUSER hive),
+    with ``objective`` the matching task objective; the role then keys off the tool, not the family.
     """
     group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
     rep = group[0]
-    assert rep.tool is not None  # actionable => tool set (route_artifact guarantee)
-    objective = (
-        rep.objective if len(group) == 1 else f"{rep.objective} (across {len(group)} artifacts)"
+    effective_tool = tool or rep.tool
+    assert effective_tool is not None  # actionable => tool set (route_artifact guarantee)
+    role = f"{tool}_executor" if tool else f"{rep.family}_executor"
+    base_objective = objective or rep.objective
+    objective_text = (
+        base_objective if len(group) == 1 else f"{base_objective} (across {len(group)} artifacts)"
     )
     return TaskContract(
         task_id=task_id,
-        role=f"{rep.family}_executor",
-        objective=objective,
+        role=role,
+        objective=objective_text,
         assigned_agent_profile=DEFAULT_AGENT_PROFILE,
-        allowed_tools=[rep.tool],
+        allowed_tools=[effective_tool],
         input_artifacts=[InputArtifact(path=a.path, sha256=a.sha256, origin=origin) for a in group],
         context_packet=_context_packet(include_brief=include_brief),
         output_required=[f"results/{task_id}.result.json"],
         success_criteria=[
             "Every claim MUST carry a tool_call_id and source_sha256 binding it to evidence.",
             "No claim may be broader than the tool output rows support.",
-            f"Use only the allowed tool: {rep.tool}.",
+            f"Use only the allowed tool: {effective_tool}.",
         ],
         retry_policy=_retry(),
         safety_policy=_safety(),
@@ -224,6 +238,37 @@ def _build_contracts(
                 description=rep.objective,
             )
         )
+    # Multi-tool-per-hive: a registry hive feeds extra typed tools beyond its primary run-keys tool
+    # (NTUSER -> recentdocs + usb; SYSTEM -> usb). Mint one task per extra tool over its matching
+    # hives, grouped + manifest-ordered (deterministic), after the primary tasks, before timeline.
+    extra_groups: dict[str, list[RoutedArtifact]] = {}
+    extra_order: list[str] = []
+    for art in routed:
+        for xtool in extra_tools_for(art.path):
+            if xtool not in extra_groups:
+                extra_groups[xtool] = []
+                extra_order.append(xtool)
+            extra_groups[xtool].append(art)
+    for xtool in extra_order:
+        arts = extra_groups[xtool]
+        for i in range(0, len(arts), MAX_ARTIFACTS_PER_TASK):
+            chunk = arts[i : i + MAX_ARTIFACTS_PER_TASK]
+            n += 1
+            task_id = f"TASK-{n:03d}"
+            objective = _EXTRA_TOOL_OBJECTIVE.get(xtool, f"Run {xtool} over the registry hive.")
+            planned.append(
+                _PlannedTask(
+                    task_id=task_id,
+                    contract=executor_contract(
+                        task_id, chunk, tool=xtool, objective=objective, include_brief=include_brief
+                    ),
+                    kind="executor",
+                    tool=xtool,
+                    input_paths=[a.path for a in chunk],
+                    description=objective,
+                )
+            )
+
     timeline_arts = [a for a in routed if a.timeline_kind]
     if timeline_arts:
         n += 1

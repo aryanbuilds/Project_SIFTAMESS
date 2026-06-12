@@ -50,15 +50,23 @@ def test_input_artifact_comes_from_manifest(synthetic_run: SyntheticRun) -> None
 def test_fixed_mapping_windows_initial_triage(synthetic_run: SyntheticRun) -> None:
     run = synthetic_run()
     generate_plan(run, settings=load_settings())
-    tool_for = {
-        c.input_artifacts[0].path: c.allowed_tools[0]
-        for c in _contracts(run)
-        if c.role != "timeline_executor"
+    # An artifact may now feed MULTIPLE tools (multi-tool-per-hive), so map path -> set of tools.
+    tools_for: dict[str, set[str]] = {}
+    for c in _contracts(run):
+        if c.role == "timeline_executor":
+            continue
+        for ia in c.input_artifacts:
+            tools_for.setdefault(ia.path, set()).add(c.allowed_tools[0])
+    assert tools_for["Security.evtx"] == {"parse_evtx_security"}
+    assert tools_for["Microsoft-Windows-PowerShell%4Operational.evtx"] == {"parse_evtx_powershell"}
+    assert tools_for["CMD.EXE-12345678.pf"] == {"analyze_prefetch"}
+    assert tools_for["$MFT"] == {"parse_mft_filesystem"}
+    # NTUSER.DAT feeds its primary run-keys tool + the extra recentdocs + usb tools.
+    assert tools_for["Users/alice/NTUSER.DAT"] == {
+        "extract_registry_run_keys",
+        "parse_recentdocs_mru",
+        "parse_usb_registry",
     }
-    assert tool_for["Security.evtx"] == "parse_evtx_security"
-    assert tool_for["Microsoft-Windows-PowerShell%4Operational.evtx"] == "parse_evtx_powershell"
-    assert tool_for["CMD.EXE-12345678.pf"] == "analyze_prefetch"
-    assert tool_for["Users/alice/NTUSER.DAT"] == "extract_registry_run_keys"
 
 
 def test_duplicate_basenames_preserved_as_distinct_inputs(synthetic_run: SyntheticRun) -> None:

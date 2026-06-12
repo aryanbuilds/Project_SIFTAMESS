@@ -11,6 +11,7 @@ layer wraps them in ``ToolResult`` subclasses with provenance.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,31 @@ _RUN_KEY_PATHS: tuple[str, ...] = (
     r"\Software\Microsoft\Windows\CurrentVersion\Run",
     r"\Software\Microsoft\Windows\CurrentVersion\RunOnce",
 )
+
+# HKCU RecentDocs (per-extension subkeys hold the same value shape).
+_RECENTDOCS_PATH = r"\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs"
+# Removable-media evidence: NTUSER MountPoints2 + SYSTEM USBSTOR/MountedDevices.
+_MOUNTPOINTS2_PATH = r"\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
+
+
+def _filetime_iso(filetime: int | None) -> str | None:
+    """Windows FILETIME (100 ns ticks since 1601) -> ISO-8601 UTC ``Z`` string, or None."""
+    if not filetime:
+        return None
+    try:
+        dt = datetime(1601, 1, 1, tzinfo=UTC) + timedelta(microseconds=int(filetime) // 10)
+    except (ValueError, OverflowError):
+        return None
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def _decode_utf16_name(blob: Any) -> str | None:
+    """Decode the leading UTF-16LE (null-terminated) filename from a RecentDocs binary value."""
+    if not isinstance(blob, (bytes, bytearray)):
+        return None
+    name = bytes(blob).split(b"\x00\x00", 1)[0].decode("utf-16-le", errors="ignore")
+    name = name.rstrip("\x00").strip()
+    return name or None
 
 
 def _system_field(data: dict[str, Any], key: str) -> Any:
@@ -150,6 +176,102 @@ class RealBackend:
             "volumes": volumes,
             "filenames": list(scca.filenames),
         }
+
+    def extract_recentdocs(self, path: Path) -> list[dict[str, Any]]:
+        """RecentDocs MRU (NTUSER.DAT) — files the user recently opened (real, regipy)."""
+        try:
+            from regipy.exceptions import RegistryKeyNotFoundException
+            from regipy.registry import RegistryHive
+        except ImportError as exc:  # pragma: no cover
+            raise BackendUnavailableError("regipy backend missing") from exc
+
+        hive = RegistryHive(str(path))
+        try:
+            root = hive.get_key(_RECENTDOCS_PATH)
+        except RegistryKeyNotFoundException:
+            return []
+        keys = [("RecentDocs", root)]
+        keys.extend((sub.name, sub) for sub in root.iter_subkeys())
+        rows: list[dict[str, Any]] = []
+        for key_name, key in keys:
+            last_write = _filetime_iso(getattr(getattr(key, "header", None), "last_modified", None))
+            for value in key.get_values():
+                if getattr(value, "name", None) == "MRUListEx":
+                    continue  # ordering blob, not a filename
+                name = _decode_utf16_name(getattr(value, "value", None))
+                if name:
+                    rows.append(
+                        {
+                            "source_key": key_name,
+                            "value_name": getattr(value, "name", None),
+                            "name": name,
+                            "last_write_utc": last_write,
+                        }
+                    )
+        return rows
+
+    def extract_usb_devices(self, path: Path) -> list[dict[str, Any]]:
+        """Removable-media evidence: USBSTOR (SYSTEM) + MountPoints2 (NTUSER) (real, regipy)."""
+        try:
+            from regipy.exceptions import RegistryKeyNotFoundException
+            from regipy.registry import RegistryHive
+        except ImportError as exc:  # pragma: no cover
+            raise BackendUnavailableError("regipy backend missing") from exc
+
+        hive = RegistryHive(str(path))
+        rows: list[dict[str, Any]] = []
+
+        # NTUSER: mounted volumes / UNC shares the user accessed.
+        try:
+            mp = hive.get_key(_MOUNTPOINTS2_PATH)
+        except RegistryKeyNotFoundException:
+            mp = None
+        if mp is not None:
+            for sub in mp.iter_subkeys():
+                rows.append(
+                    {
+                        "source_key": "MountPoints2",
+                        "device": sub.name,
+                        "last_write_utc": _filetime_iso(
+                            getattr(getattr(sub, "header", None), "last_modified", None)
+                        ),
+                    }
+                )
+
+        # SYSTEM: USBSTOR device enumeration under the ACTIVE control set.
+        control_set = "ControlSet001"
+        try:
+            select = hive.get_key(r"\Select")
+            current = next(
+                (v.value for v in select.get_values() if getattr(v, "name", None) == "Current"),
+                None,
+            )
+            if current is not None:
+                control_set = f"ControlSet{int(current):03d}"
+        except RegistryKeyNotFoundException:
+            pass
+        try:
+            usbstor = hive.get_key(rf"\{control_set}\Enum\USBSTOR")
+        except RegistryKeyNotFoundException:
+            usbstor = None
+        if usbstor is not None:
+            for device_class in usbstor.iter_subkeys():
+                for instance in device_class.iter_subkeys():
+                    values = {
+                        getattr(v, "name", None): getattr(v, "value", None)
+                        for v in instance.get_values()
+                    }
+                    rows.append(
+                        {
+                            "source_key": f"USBSTOR\\{device_class.name}",
+                            "device": instance.name,
+                            "friendly_name": values.get("FriendlyName"),
+                            "last_write_utc": _filetime_iso(
+                                getattr(getattr(instance, "header", None), "last_modified", None)
+                            ),
+                        }
+                    )
+        return rows
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         try:

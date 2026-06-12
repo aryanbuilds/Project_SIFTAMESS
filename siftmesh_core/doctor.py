@@ -158,7 +158,7 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
 
-    allowlist_ok = len(ALLOWED_TOOLS) == 11 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
+    allowlist_ok = len(ALLOWED_TOOLS) == 13 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
     checks.append(
         Check(
             OK if allowlist_ok else FAIL,

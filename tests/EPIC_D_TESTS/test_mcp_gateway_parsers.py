@@ -16,8 +16,10 @@ from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_back
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
+from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
+from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
 from siftmesh_core.run_dir import RunPaths, new_run_dir
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "forensic"
@@ -123,6 +125,26 @@ def test_parse_mft_filesystem_real(case: tuple[RunPaths, Path]) -> None:
     # provenance line written
     ledger = read_tool_results(run.root)
     assert any(t.tool_name == "parse_mft_filesystem" for t in ledger)
+
+
+def test_parse_recentdocs_mru_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    result = parse_recentdocs_mru(run.root, source_artifact="NTUSER.DAT", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_recentdocs_mru"
+    # the regipy fixture hive has a populated RecentDocs MRU → real decoded filenames
+    assert result.entry_count >= 1 and result.entry_count == len(result.mru_entries)
+    assert all(r.get("name") for r in result.mru_entries)  # decoded names, never empty
+
+
+def test_parse_usb_registry_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    result = parse_usb_registry(run.root, source_artifact="NTUSER.DAT", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_usb_registry"
+    # the fixture NTUSER hive has MountPoints2 subkeys → mounted-volume rows
+    assert result.device_count >= 1 and result.device_count == len(result.devices)
+    assert any(r.get("source_key") == "MountPoints2" for r in result.devices)
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

@@ -31,9 +31,13 @@ def _registry_task(run: RunPaths) -> Path:
 
 def test_followup_task_created_for_coverage_gap(dispatched_case: DispatchedCase) -> None:
     run, _ = dispatched_case()
-    task = _registry_task(run)
-    gap_artifact = read_yaml_model(TaskContract, task).input_artifacts[0].path
-    task.unlink()  # remove the task → its artifact is now unexamined
+    gap_artifact = read_yaml_model(TaskContract, _registry_task(run)).input_artifacts[0].path
+    # A hive now feeds MULTIPLE tools (run-keys + recentdocs + usb), so remove EVERY task covering
+    # this artifact for it to be genuinely unexamined.
+    for p in sorted(run.tasks.glob("TASK-*.yaml")):
+        c = read_yaml_model(TaskContract, p)
+        if any(ia.path == gap_artifact for ia in c.input_artifacts):
+            p.unlink()
 
     assert gap_artifact in {a.path for a in detect_coverage_gaps(run)}
     critique_run(run, settings=load_settings())

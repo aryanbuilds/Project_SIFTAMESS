@@ -37,7 +37,7 @@ def _case(tmp_path: Path) -> tuple[RunPaths, Path]:
 
 def test_allowlist_is_exactly_the_ten_tools() -> None:
     # The original 8 (§7) plus the governed Epic-D-deepening expansion (image + memory).
-    assert len(ALLOWED_TOOLS) == 11
+    assert len(ALLOWED_TOOLS) == 13
     assert "validate_claim_evidence" in ALLOWED_TOOLS
     assert {"extract_artifacts_from_image", "analyze_memory"} <= ALLOWED_TOOLS
 

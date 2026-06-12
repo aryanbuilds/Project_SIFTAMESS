@@ -29,8 +29,10 @@ from siftmesh_core.mcp_gateway.tools.image_tools import extract_artifacts_from_i
 from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
 from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
+from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
+from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
 from siftmesh_core.orchestrator.artifact_router import timeline_kind_for
 from siftmesh_core.schemas.claim import Claim
 from siftmesh_core.schemas.injection_alert import InjectionAlert
@@ -177,6 +179,82 @@ def _claims_registry(result: Any, task_id: str) -> list[Claim]:
             )
         )
     return claims
+
+
+def _dedupe(items: list[str], limit: int) -> tuple[list[str], int]:
+    """Order-preserving de-dup; return (first ``limit`` distinct items, total distinct count)."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for it in items:
+        if it and it not in seen:
+            seen.add(it)
+            out.append(it)
+    return out[:limit], len(out)
+
+
+def _claims_recentdocs(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim listing the distinct filenames (an enumeration, not per-file claims: the
+    # critic's digit-mask contradiction heuristic would treat siblings like report-1/report-2 as a
+    # value mismatch). The full entry set stays in the structured result.
+    names = [r.get("name", "") for r in result.mru_entries]
+    shown, total = _dedupe(names, 30)
+    if total == 0:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No RecentDocs MRU entries found in the hive.",
+                evidence_type="recent_files",
+                confidence=0.5,
+            )
+        ]
+    more = f" (+{total - len(shown)} more)" if total > len(shown) else ""
+    text = f"RecentDocs: {total} distinct recently-opened file(s): {', '.join(shown)}{more}."
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="confirmed",
+            text=text,
+            evidence_type="recent_files",
+            confidence=0.85,
+        )
+    ]
+
+
+def _claims_usb(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim listing the distinct device/mount names (enumeration; same reason as
+    # recentdocs); inferred — a mount/attachment is a lead, not proof of transfer. Full set in res.
+    devices = [r.get("friendly_name") or r.get("device", "") for r in result.devices]
+    shown, total = _dedupe(devices, 20)
+    if total == 0:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No USB/mounted-volume registry entries found.",
+                evidence_type="removable_media",
+                confidence=0.5,
+            )
+        ]
+    more = f" (+{total - len(shown)} more)" if total > len(shown) else ""
+    text = f"Removable-media registry: {total} device/mount entry(ies): {', '.join(shown)}{more}."
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=text,
+            evidence_type="removable_media",
+            confidence=0.7,
+        )
+    ]
 
 
 def _claims_mft(result: Any, task_id: str) -> list[Claim]:
@@ -334,12 +412,24 @@ _DISPATCH: dict[
     "extract_artifacts_from_image": (extract_artifacts_from_image, _image_kwargs, _claims_image),
     "analyze_memory": (analyze_memory, _memory_kwargs, _claims_memory),
     "parse_mft_filesystem": (parse_mft_filesystem, _single_source_kwargs, _claims_mft),
+    "parse_recentdocs_mru": (parse_recentdocs_mru, _single_source_kwargs, _claims_recentdocs),
+    "parse_usb_registry": (parse_usb_registry, _single_source_kwargs, _claims_usb),
 }
 
 
 def _evidence_rows(result: ToolResult) -> list[dict[str, Any]]:
     """Pull the untrusted row list off whichever result subclass attr carries it."""
-    for attr in ("events", "run_keys", "processes", "cmdlines", "suspicious", "extracted", "files"):
+    for attr in (
+        "events",
+        "run_keys",
+        "processes",
+        "cmdlines",
+        "suspicious",
+        "extracted",
+        "files",
+        "mru_entries",
+        "devices",
+    ):
         rows = getattr(result, attr, None)
         if rows:
             return list(rows)
@@ -387,6 +477,8 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "analyze_prefetch",
         "extract_registry_run_keys",
         "parse_mft_filesystem",
+        "parse_recentdocs_mru",
+        "parse_usb_registry",
     }
 )
 

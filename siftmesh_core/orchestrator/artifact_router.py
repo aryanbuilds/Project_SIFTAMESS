@@ -61,6 +61,21 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "other": None,
 }
 
+# Extra typed tools a specific registry hive feeds BEYOND its primary FAMILY_TOOL_MAP tool
+# (multi-tool-per-hive): NTUSER.DAT also yields RecentDocs + MountPoints2; SYSTEM also has USBSTOR.
+# Keyed by lowercased hive basename. The planner mints one extra task per (extra tool) over the
+# matching hives; the router family stays single-tool (one source of truth per family).
+_EXTRA_HIVE_TOOLS: dict[str, tuple[str, ...]] = {
+    "ntuser.dat": ("parse_recentdocs_mru", "parse_usb_registry"),
+    "system": ("parse_usb_registry",),
+}
+
+
+def extra_tools_for(path: str) -> tuple[str, ...]:
+    """Extra typed tools this hive feeds beyond its primary tool (by hive basename), or ()."""
+    return _EXTRA_HIVE_TOOLS.get(Path(path).name.lower(), ())
+
+
 # build_timeline kind for families it can ingest (None = not timeline-capable).
 _FAMILY_TIMELINE_KIND: dict[FineFamily, str | None] = {
     "evtx_security": "evtx",
@@ -198,6 +213,9 @@ def _guard_family_tools() -> None:
     """Fail import if any mapped tool is forbidden/unknown (E5 can't drift)."""
     for tool in FAMILY_TOOL_MAP.values():
         if tool is not None:
+            assert_tool_allowed(tool)
+    for extra in _EXTRA_HIVE_TOOLS.values():
+        for tool in extra:
             assert_tool_allowed(tool)
 
 

@@ -1,6 +1,6 @@
 """FastMCP server (D1) — the thin agent-facing adapter over the typed tools.
 
-Registers EXACTLY the ten allowlisted forensic tools (CLAUDE.md §7) on a FastMCP
+Registers EXACTLY the allowlisted forensic tools (CLAUDE.md §7) on a FastMCP
 stdio server, each guarded by :func:`assert_tool_allowed` at registration so a
 forbidden / off-allowlist name can never be exposed (criterion 4). The adapters are
 thin: they take primitive args an agent can supply and delegate to the same service
@@ -34,8 +34,10 @@ from siftmesh_core.mcp_gateway.tools.image_tools import (
 from siftmesh_core.mcp_gateway.tools.memory_tools import MemoryAnalysisResult, analyze_memory
 from siftmesh_core.mcp_gateway.tools.mft_tools import MftFilesystemResult, parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analyze_prefetch
+from siftmesh_core.mcp_gateway.tools.recentdocs_tools import RecentDocsResult, parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extract_registry_run_keys
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
+from siftmesh_core.mcp_gateway.tools.usb_tools import UsbRegistryResult, parse_usb_registry
 from siftmesh_core.mcp_gateway.tools.validation_tools import (
     ClaimValidationResult,
     validate_claim_evidence,
@@ -136,6 +138,20 @@ def _parse_mft_filesystem(source_artifact: str) -> MftFilesystemResult:
     )
 
 
+def _parse_recentdocs_mru(source_artifact: str) -> RecentDocsResult:
+    run_root, evidence_root = _run_scope()
+    return parse_recentdocs_mru(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
+def _parse_usb_registry(source_artifact: str) -> UsbRegistryResult:
+    run_root, evidence_root = _run_scope()
+    return parse_usb_registry(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -150,6 +166,8 @@ def tool_adapters() -> dict[str, Any]:
         "extract_artifacts_from_image": _extract_artifacts_from_image,
         "analyze_memory": _analyze_memory,
         "parse_mft_filesystem": _parse_mft_filesystem,
+        "parse_recentdocs_mru": _parse_recentdocs_mru,
+        "parse_usb_registry": _parse_usb_registry,
     }
 
 

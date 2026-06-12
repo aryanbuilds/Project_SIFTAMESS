@@ -26,8 +26,31 @@ Layer 0  SANS SIFT / Protocol SIFT host    real DFIR tooling (TSK, Volatility, e
 ```
 
 The CLI calls the typed tool **service** directly (CLI-first); a live agent reaches the
-same functions over MCP. The TUI (optional, last) would be a read-only cockpit over the
-same run-dir files — never a second copy of the logic.
+same functions over MCP. The TUI (optional `tui` extra) is a **read-only cockpit** over the
+same run-dir files plus a thin launcher — never a second copy of the logic (see §2b).
+
+### 2b. The Textual cockpit (read-only over the run dir)
+
+The cockpit renders `run_state.json` + the JSONL ledgers on a poll; launching a run goes through the
+**same** governed engine, so the UI never decides anything. Three surfaces:
+
+- **Home** — minimal: a centered *New run*, a left list of recent runs badged
+  `terminal`/`blocked:<gate>`/`paused`/`running`, and visible key hints (`n` new · `Enter` attach ·
+  `r` resume · `o` agents · `ctrl+t` theme · `q` quit).
+- **New-run wizard** (2 screens, Textual-free `WizardDraft` core) — Screen 1: case name + a
+  **filesystem-wide evidence picker** (a re-rootable `DirectoryTree` reachable *above* the project dir
+  via Up/Home/`/` + a breadcrumb, a `#file` / `#folder` fuzzy search box backed by
+  `tui/fs_search.py`, and a left preview that never reads a huge/binary file into memory) + the
+  brief/objective. Picks are hardlinked into a curated dir (`evidence/curate.py`, originals untouched).
+  Screen 2: the Verify + Space readiness synthesis (host checks + derived-size vs free disk →
+  full / single / portions) + the run options + Launch.
+- **Onboarding** (`o` / Agent setup) — a `TabbedContent` with **Agents** (a greyed-until-ready
+  multiselect; not-installed/not-authed agents are disabled with the exact fix from
+  `doctor.agent_remediation`; a *Launch auth* button runs the vendor login via `App.suspend()`; a 2 s
+  background re-probe flips an agent selectable the moment auth lands) and **Tier-2 judge** (a provider
+  radio: claude/codex/opencode via their own login, or gemini/opencode-go-zen/custom via a LiteLLM API
+  key). Provider keys are validated then saved to a 600-perm `~/.config/siftmesh/.env`
+  (`secrets_env.py` + `tui/auth_actions.py`) — **never** to `siftmesh.toml`.
 
 ### 2a. Agent safety tiers (honest labels, never a gate)
 
@@ -125,12 +148,15 @@ to CAO and Valhuntir — is in [`threat_model.md`](threat_model.md) §6.
 ```
 siftmesh_core/
   cli.py                 # Typer CLI — the source of truth
+  config.py              # SiftmeshSettings (+ agent_aliases · judge_api_base · judge_drop_params) · save_agent_selection
+  secrets_env.py         # provider API keys → 600-perm ~/.config/siftmesh/.env (never in siftmesh.toml)
   orchestrator/          # state_machine · workflow_runner · planner · critic · ultraworker · budget_router
   schemas/               # Pydantic StrictModels (run · task · claim · audit · tool_result · …)
-  evidence/              # vault · manifest · readonly · hash_utils · path_policy
+  evidence/              # vault · manifest · readonly · hash_utils · path_policy · curate
   mcp_gateway/           # registry (allowlist) · server (thin MCP adapter) · tools/*
   ledgers/               # claim · contradiction · injection_alerts · audit (JSONL)
-  adapters/              # claude · opencode · generic_shell · deterministic floor · spotlight · prompt_builder
+  adapters/              # claude · opencode · headless · generic_shell · deterministic floor · spotlight · judge
   reports/               # loader → render → final/accuracy/dataset/architecture + replay (Epic J)
+  tui/                   # cockpit · wizard · setup_screen · fs_search · auth_actions · space_view · snapshot (Textual)
 docs/                    # architecture · threat_model · evidence_integrity · diagrams/
 ```

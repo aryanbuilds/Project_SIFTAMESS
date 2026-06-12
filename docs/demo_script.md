@@ -61,8 +61,10 @@ uv run siftmesh replay "$RUN"                  # the whole run reconstructed fro
 > "Every action is a timestamped JSONL record. The entire investigation replays — that's criterion 5,
 > audit-trail quality."
 
-(Optional B-roll: `uv run siftmesh tui "$RUN"` — the live cockpit: vitals, pipeline ribbon, task
-table, claims/agents/budget, audit ticker.)
+(Optional B-roll: `uv run siftmesh tui` — the minimal home (recent runs + a centered *New run*), the
+new-run wizard browsing the filesystem for evidence with `#file`/`#folder` fuzzy search, then
+`uv run siftmesh tui "$RUN"` — the live cockpit: vitals, pipeline ribbon, task table,
+claims/agents/budget, audit ticker.)
 
 ## 3:15 — Act B: live self-correction hero (75s)
 

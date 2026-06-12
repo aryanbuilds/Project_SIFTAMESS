@@ -1,167 +1,236 @@
-# SIFTMesh
+<p align="center">
+  <img src="assets/github_banner_siftmesh.png" alt="SIFTMesh" width="100%">
+</p>
 
-CLI-first, evidence-safe, agent-agnostic orchestration layer for autonomous DFIR on SANS SIFT and
-Protocol SIFT. **The LLM proposes; deterministic code decides** — every finding is an evidence-anchored
-claim, every claim is critiqued by deterministic code, and every run is a replayable, audited chain of
-custody. (`uv`-managed; do not use pip/venv.)
+<p align="center">
+  <b>Autonomous, evidence-safe DFIR orchestration for SANS SIFT.</b><br>
+  The LLM proposes, the code decides — every finding is anchored to a real tool call, and every run is replayable.
+</p>
 
-## Setup + onboarding (one command)
+---
 
-```bash
-uv sync                  # base deps + dev tools (ruff/mypy/pytest)
-uv run siftmesh setup    # installs ALL backends + the Volatility symbol cache, probes the coding
-                         # agents, lets you pick which to use, and remembers the choice.
-```
+## Tech stack
 
-`siftmesh setup` is the single onboarding entry: it installs everything (`uv sync --all-extras`),
-probes which agents are installed + authenticated + sandboxed, opens a TUI to pick a **multi-agent**
-set (or `setup --no-tui`/`--yes` for a headless auto-pick of the ready agents), and persists it to
-`~/.config/siftmesh/siftmesh.toml` (a project `./siftmesh.toml` overrides it). `doctor [--setup]`
-remains for a pure host/backend health check. (Plain `uv sync --extra X` is *declarative* — it
-removes extras you don't name; `setup`/`doctor --setup` run `uv sync --all-extras`.)
+`uv`-managed (please don't use pip/venv). Everything is pinned in `pyproject.toml`.
 
-## Run an investigation — automated (the headline)
-
-Put the evidence in one dir, point `--brief` at the incident document (the TRUSTED objective), and
-run one command:
-
-```bash
-uv run siftmesh run ./case_rocba --evidence ~/projects/ev_all \
-  --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
-  --agent claude --auto --max-agent-tasks 400 --max-iterations 5
-```
-
-It reads the brief → hashes evidence → auto-decompresses archives → plans (one task per artifact
-**family**, not per file) → the live agent investigates **toward the objective**, self-correcting
-under the deterministic critic → quarantines any single flagged task (the run still completes) →
-writes a report whose "Answer to the incident objective" section is anchored to real tool calls.
-
-- **No briefing file?** Use `--objective "was host X compromised? find initial access"`.
-- **Agent-neutral.** `--agent claude|gemini|codex|opencode` (or `deterministic`). SIFTMesh is
-  not Claude-only: any agent is a swap-in connector under the same deterministic governance. Run
-  `siftmesh doctor --agents` (or `siftmesh agents list`) to onboard — it shows which agents are
-  installed + authenticated + sandboxed and picks the best default. (Only Claude reaches the typed
-  tools today; others run sandboxed but their tool wiring is `verify-live` — see `PLAN/13`. A live
-  agent is opt-in: a plain `run` uses the deterministic floor unless you pass `--agent`.)
-- **Honest agent safety tiers.** SIFTMesh does not pretend every agent is equally safe — it measures
-  capability and **labels risk** (`siftmesh agents list` shows a `tier` column + legend). The tier is
-  derived purely from the probed facts, so the label can never disagree with what dispatch does:
-
-  | Tier | What it is | Examples |
-  |---|---|---|
-  | **T0** `deterministic_floor` | real tools, no LLM execution — the safe default | the deterministic executor |
-  | **T1** `constrained_live` | sandboxed **and** typed tools via the strict-MCP boundary | `claude` (`--strict-mcp-config`) |
-  | **T2** `unconstrained_live` | capable but unsandboxed or tool-reach unproven/native — **explicit `--agent` opt-in**, never described as sandboxed | `opencode`, `gemini`, `codex` |
-  | **T3** `advisory_llm` | tool-less Tier-2 judge — never promotes, may only lower confidence / annotate | `--judge …`, `litellm:<model>` |
-
-  Tiers are **labels only** — they never gate dispatch. `--agent opencode` works exactly as before;
-  you just always see that it is T2.
-- **Pick a model per provider.** `--model gemini=gemini-3-pro --model codex=gpt-5.5` (repeatable)
-  overrides the model for that run; persist it via `siftmesh setup` (CLI flag or the onboarding TUI's
-  per-provider fields). `siftmesh agents inspect gemini` shows the effective model.
-- **Tier-2 judge (advisory).** `--judge gemini|codex|opencode|claude|litellm:<model>|off` enables an
-  advisory second-opinion judge for the run (fails soft; the deterministic critic stays sole promoter).
-- **Free, no keys?** Omit `--agent …` — the deterministic real-tool floor runs the whole pipeline.
-- **Heavy tasks (disk-image extract, memory triage)** always run on the floor (the tool does the work);
-  `--all-live` overrides. A pre-flight check estimates derived-data size vs free disk and, if it won't
-  fit, prints a partition plan (run portions → `prune` → `merge`); `--force` skips it.
-
-## Watch it live — the cockpit (TUI)
-
-```bash
-uv run siftmesh tui                 # home: pick a run to attach, start a new one, or onboard agents
-uv run siftmesh tui case_runs/RUN-… # attach the live cockpit to a run
-```
-
-The Textual cockpit is a **read-only** view over the run dir (it renders `run_state.json` + the
-ledgers on a 1 s poll; launching a run uses the same governed engine). Four zones: a **vitals** bar
-(mode · stage · gate · agent · tasks done/total · total & current-stage timers), a **pipeline ribbon**
-(the FSM path, done/current/pending), a **task table** (per-task status · attempt · family · agent ·
-claims · verdict) beside claims/critic/agent/budget summaries, and a live **audit-log** ticker — plus
-a **navigation tree** to open any run file. Optional extra (`uv sync --extra tui`, or `setup`).
-
-The **home** screen is deliberately minimal (opencode-inspired): a centered **New run** plus a left
-list of recent runs badged `terminal`/`blocked:<gate>`/`paused`/`running`, with the shortcuts always
-visible (`n` new · `Enter` attach · `r` resume · `o` agent setup · `ctrl+t` theme · `q` quit).
-
-**Create a whole investigation from the TUI — "New run" is a 2-screen flow.** Screen 1: name the case
-and **browse the WHOLE filesystem for evidence** — a re-rootable tree reachable *above* the project
-dir (type a path or use **Up / Home / `/`**), a left preview pane, and a **`#file` / `#folder` fuzzy
-search** box (`fd`/`find` if present, else a bounded walk; Enter on a hit adds it) — then the
-brief/objective. Picked files/folders are assembled into a hardlinked curated dir (originals
-untouched). Screen 2: a **Verify + Space** synthesis (host-backend readiness + estimated derived size
-vs free disk) recommends **Full (parallel)** / **Single op** / **Run in portions** (low-disk: runs
-portions, prunes between, merges into one report), then the run options + **Launch**.
-
-**Onboarding (`o` / "Agent setup")** has two tabs: **Agents** — a greyed-until-ready multiselect of
-claude/opencode/codex/gemini (a not-installed/not-authed agent is greyed with the exact fix; a
-**Launch auth** button runs the vendor login, and a background re-probe flips it selectable the moment
-auth lands) — and **Tier-2 judge** — pick a provider (claude/codex/opencode via their own login, or
-gemini/opencode-go-zen/custom via a LiteLLM API key saved to a 600-perm `~/.config/siftmesh/.env`,
-validated before persist; never in `siftmesh.toml`).
-
-The cockpit is a full operator console: drill into any task/claim (`Enter`), pick the audit ledger,
-filter tasks, **`P` pause** (cooperative — stops at the next safe checkpoint, fully resumable) /
-**`R` resume**, approve any gate (`g`), retry (`t`), replay (`p`), and `ctrl+p` for the command
-palette.
-
-## Command reference
-
-**Automated (one deterministic engine; modes are config):**
-
-| Command | What it does |
+| Area | Pins |
 |---|---|
-| `run CASE --evidence DIR [--brief/--objective] [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent claude\|gemini\|codex\|opencode] [--judge …]` | Init → plan → dispatch → collect → critique → decide → report, end to end. `--agent` picks the executor; `--judge claude\|gemini\|codex\|opencode\|litellm:<model>` picks the advisory Tier-2 judge (fail-soft, off by default). |
-| `resume RUN` | Continue an interrupted run from its persisted state (skips hashing + decompress). |
-| `status RUN` | Show state, mode, iteration, gates, per-task attempts, quarantined tasks. |
-| `approve RUN --gate G` / `reject RUN --gate G` | Resolve a gate (plan\|dispatch\|retry\|report) in guided mode. |
-| `merge CASE --run RUN_A --run RUN_B … [--agent claude]` | Combine ≥2 completed runs into one provenance-tracked report (opt-in advisory synthesis). |
-| `setup [--no-tui] [--scope global\|project] [--yes]` | One-command onboarding: install backends + probe agents + pick a multi-agent set + persist it. |
-| `tui [RUN]` | Live Textual cockpit: attach to a run, or the home/run-picker (start a run, onboard agents). |
-| `doctor [--setup] [--protocol-sift] [--agents]` | Verify the host/backends (fail-closed); `--setup` installs + configures them; `--agents` onboards the coding agents. |
+| Runtime | Python ≥ 3.11 (CI: 3.11 + 3.12), Linux-first (SANS SIFT / Ubuntu) |
+| Core | Typer 0.26 · Pydantic 2.13 + pydantic-settings 2.14 · structlog 25 · PyYAML 6 · Jinja2 3.1 · **MCP SDK 1.27** · regipy 6.2.1 · tomlkit 0.13 |
+| `sift` extra | evtx 0.11.1 · libscca (prefetch) · mft 0.7 |
+| `brief` extra | python-pptx · python-docx · pypdf (read the incident brief) |
+| `tui` extra | Textual 8 (the cockpit) |
+| `llm` extra | LiteLLM 1.7 (the optional Tier-2 judge only) |
+| `a2a` extra | a2a-sdk 1.1 (optional agent-to-agent interop) |
+| Dev | ruff · mypy · pytest · hypothesis |
 
-**Manual / deterministic (staged — full control; `run --auto` does all of this for you):**
+External tools it drives (on a SANS SIFT host): Sleuth Kit, Volatility 3, EZ Tools, 7-Zip.
 
-| Command | What it does |
+---
+
+## About the project
+
+SIFTMesh is a CLI-first controller that runs a real DFIR investigation for you and keeps it honest.
+You point it at evidence and an objective; it hashes and seals the evidence read-only, plans the work,
+sends a real agent in to investigate, then a **deterministic critic** checks every claim against the
+actual tool output before anything is allowed into the report. The agent is free to reason and make
+mistakes — the governance code is what decides truth. That split is the whole point: **autonomy lives
+in the agent, determinism lives in the code.**
+
+**What it can do**
+
+- Hash + seal evidence into a read-only vault with a SHA-256 manifest and a chain-of-custody log.
+- Plan from the manifest, dispatch an agent to investigate **toward your objective**, and write an
+  evidence-anchored report with a full, replayable audit trail.
+- Run completely on its own (`run --auto`) or step-by-step with human gates.
+- Stay **agent-neutral** — Claude, Codex, Gemini, OpenCode, or a no-keys deterministic floor.
+- Self-correct: when the critic rejects an unsupported claim, the agent gets the feedback and tries
+  again — emergently, not scripted.
+- Use **10 real typed forensic tools** (Sleuth Kit, Volatility 3, EZ Tools, evtx, regipy, prefetch,
+  MFT). No mocks, no fake output.
+
+**What it's NOT**
+
+- Not a generic multi-agent chatbot, a SOC platform, or a web dashboard.
+- Not "let the LLM decide forensic truth" — the LLM never has the final say.
+- Not a replacement for court-vetted tools. It **orchestrates** them; the tools are the source of truth.
+- Never runs raw shell, destructive ops, or writes to your evidence. It fails closed, not open.
+
+---
+
+## Pre-setup (recommended)
+
+A live agent is **optional** — the deterministic floor runs the whole pipeline with no API keys. But
+if you want a live agent to investigate, install its CLI **before** you run `setup` so onboarding can
+detect it:
+
+```bash
+# uv (required)            -> https://docs.astral.sh/uv/
+# claude code (best tool reach today)
+npm i -g @anthropic-ai/claude-code      # then: claude setup-token
+# any of these also work as the executor or the Tier-2 judge:
+npm i -g @openai/codex                   # then: codex login
+npm i -g @google/gemini-cli              # then: export GEMINI_API_KEY=...
+curl -fsSL https://opencode.ai/install | bash   # then: opencode auth login
+```
+
+On a SANS SIFT workstation the forensic CLIs (sleuthkit, volatility3, 7z, EZ tools) are already there.
+You can also onboard agents later from inside the TUI (`o` → Agent setup) — it greys out anything not
+ready and tells you the exact fix.
+
+---
+
+## Setup & install
+
+```bash
+uv sync                  # base deps + dev tools
+uv run siftmesh setup    # installs all backends, probes your agents, lets you pick a set + judge,
+                         # and remembers the choice (~/.config/siftmesh/siftmesh.toml)
+uv run siftmesh doctor   # fail-closed health check (host + every tool backend)
+```
+
+The commands you'll actually use day to day:
+
+```bash
+uv run siftmesh run ./case --evidence ~/data --objective "was this host compromised?" --auto
+uv run siftmesh tui            # the live cockpit (or start a new run from it)
+uv run siftmesh resume RUN     # continue an interrupted run
+uv run siftmesh status RUN     # where is it, what's blocked
+```
+
+---
+
+## Features
+
+- **One-command auto run** — init → plan → dispatch → critique → decide → report, end to end.
+- **Agent-neutral + honest safety tiers (T0–T3)** — `agents list` shows what's actually sandboxed and
+  tool-reaching; the label can never disagree with what dispatch does.
+- **Optional Tier-2 judge** — an advisory second opinion (any provider via LiteLLM). It can only lower
+  confidence or annotate; it never promotes. Fails soft.
+- **Evidence vault** — SHA-256 manifest, read-only posture, chain-of-custody log; originals are never
+  touched.
+- **Deterministic critic + self-correction** — unsupported claims get downgraded or dropped and never
+  reach the report; the agent re-tries on the feedback.
+- **Full traceability** — claim + contradiction ledgers, a token/agent/tool audit, and an HTML replay.
+- **TUI cockpit** — a live, read-only view over the run, plus a guided new-run wizard with a
+  filesystem-wide evidence picker and a 2-tab onboarding (Agents + Tier-2 judge).
+- **Low-disk mode** — run in portions → prune between → merge into one report. Plus pause/resume.
+
+---
+
+## Architecture
+
+<!-- Hand-drawn architecture diagrams are coming to assets/. -->
+<!-- <p align="center"><img src="assets/architecture.png" alt="SIFTMesh architecture" width="100%"></p> -->
+
+> Diagram coming soon (hand-drawn, will live in `assets/`).
+
+Under the hood it's a deterministic state machine with a few clear roles. The agent is the only part
+that "thinks"; everything around it is plain code that can be audited and replayed.
+
+| Role | Stage | What it does |
+|---|---|---|
+| **Planner** | `plan` | Reads the sealed manifest, routes each artifact to the right forensic family/tool, writes task contracts. No LLM, never reads evidence bytes. |
+| **Executor** | `dispatch` / `collect` | Either the deterministic real-tool floor **or** a live agent (claude/codex/gemini/opencode) investigating toward your objective. Both must emit evidence-anchored claims (a real `tool_call_id` + source hash). |
+| **Critic** | `critique` | The deterministic Tier-1 validator **and the only thing allowed to promote a finding.** A claim with no real tool call or source hash gets downgraded or marked unsupported. Catches contradictions and prompt-injection. |
+| **Ultraworker** | `decide` | The state machine. It folds the critic's verdicts and decides: done, retry, escalate, human-review, or follow-up — and enforces the caps + the self-correction loop. |
+| **Tier-2 judge** | advisory | Optional second opinion. Lowers confidence or annotates only; never promotes; never blocks a run. |
+| **Reporter / replay** | `report` | Code-built, evidence-backed report + a replayable audit timeline. Unsupported claims only ever appear in an appendix. |
+
+**Run it step-by-step (manual / full control):**
+
+```bash
+siftmesh init-case ./case --evidence ~/data --objective "..."
+siftmesh plan      ./case/case_runs/RUN-*
+siftmesh dispatch  ./case/case_runs/RUN-*
+siftmesh collect   ./case/case_runs/RUN-*
+siftmesh critique  ./case/case_runs/RUN-*
+siftmesh report    ./case/case_runs/RUN-*
+siftmesh replay    ./case/case_runs/RUN-* --html
+```
+
+**Or let one engine do all of it (auto):**
+
+```bash
+siftmesh run ./case --evidence ~/data --objective "..." --auto \
+  --agent claude --max-agent-tasks 400 --max-iterations 5
+```
+
+Modes: `--auto` (run to the end), `--auto-human-loop` (stop at meaningful gates), `--review-only`
+(plan and stop), or `--mode manual` (one step at a time). Drop `--agent` to run free on the
+deterministic floor.
+
+---
+
+## What makes it different
+
+| | Generic AI tools | Plain forensic tools | **SIFTMesh** |
+|---|---|---|---|
+| Who decides truth | the LLM (can hallucinate) | the analyst (manual) | **code decides; LLM only proposes** |
+| Provenance | usually none | per-tool | **every claim → tool call + source hash** |
+| Chain of custody | no | partial | **sealed manifest + custody log + replay** |
+| Autonomy | yes, ungoverned | none | **yes, under deterministic governance** |
+| Evidence safety | varies | read-only | **read-only, fails closed** |
+| Agent lock-in | usually | n/a | **agent-neutral (swap-in connectors)** |
+
+---
+
+## All commands
+
+**Automated (one engine, modes are config):**
+
+| Command | Does |
 |---|---|
-| `init-case CASE --evidence DIR [--brief/--objective]` | Hash + seal evidence into a new run dir (manifest, custody, policy). |
-| `plan RUN [--review-only]` | Deterministic investigation plan + task contracts (one per artifact family). |
-| `dispatch RUN` / `collect RUN` / `critique RUN` | Execute task contracts → gather results → validate claims, emit verdicts. |
-| `report RUN` / `replay RUN [--html]` | Render the deterministic evidence-backed reports / replay the audit timeline. |
-| `evidence extract RUN --image … --keys …` | Recover Windows artifacts from a disk image (Sleuthkit; audited). |
-| `evidence memory RUN --memory …` | Triage a memory image with Volatility 3 (subprocess; audited). |
-| `evidence decompress RUN --archive …` / `evidence ingest RUN` | Expand an archive → make derived artifacts plannable. |
-| `prune RUN [--force]` | Reclaim a completed run's bulky `evidence/extracted/` derived data; keep all ledgers. |
-| `retry RUN TASK` | Re-critique one task; tighten + re-dispatch if DECIDE says so. |
+| `run CASE --evidence DIR [--auto\|--auto-human-loop\|--review-only\|--mode manual] [--agent …] [--judge …]` | The whole pipeline, end to end. |
+| `resume RUN` · `status RUN` | Continue an interrupted run · show state/gates/attempts. |
+| `approve RUN --gate G` / `reject RUN --gate G` | Resolve a gate (plan\|dispatch\|retry\|report). |
+| `merge CASE --run A --run B …` | Combine ≥2 completed runs into one report. |
+| `setup` · `doctor [--setup\|--agents\|--protocol-sift]` | Onboard + persist · health check (fail-closed). |
+| `tui [RUN]` | The live cockpit / new-run wizard / onboarding. |
+
+**Staged (full manual control):**
+
+| Command | Does |
+|---|---|
+| `init-case CASE --evidence DIR [--brief/--objective]` | Hash + seal evidence into a new run. |
+| `plan RUN [--review-only]` | Deterministic plan + task contracts. |
+| `dispatch RUN` / `collect RUN` / `critique RUN` | Execute → gather → validate claims. |
+| `report RUN` / `replay RUN [--html]` | Render reports / replay the audit timeline. |
+| `retry RUN TASK` · `prune RUN` | Re-critique one task · reclaim bulky derived data (keep ledgers). |
+
+**Evidence access (audited):**
+
+| Command | Does |
+|---|---|
+| `evidence extract RUN --image … --keys …` | Recover Windows artifacts from a disk image (Sleuth Kit). |
+| `evidence memory RUN --memory …` | Triage a memory image (Volatility 3). |
+| `evidence decompress RUN --archive …` / `evidence ingest RUN` | Expand an archive → make it plannable. |
 
 **Inspection (read-only):**
 
-| Command | What it does |
+| Command | Does |
 |---|---|
-| `tasks list\|show RUN [TASK]` · `claims list\|show RUN [CLAIM]` · `audit tail RUN [--ledger …]` | Inspect contracts, claims, and audit ledgers. |
-| `agents list` · `agents inspect <id>` | Onboard/inspect the coding-agent connectors (installed? authed? tool-reachable? default?). |
-| `protocol-sift inspect` · `protocol-sift skills list` | Inspect/govern the `~/.claude` Protocol SIFT layer. |
+| `tasks list\|show` · `claims list\|show` · `audit tail` | Inspect contracts, claims, ledgers. |
+| `agents list\|inspect` · `protocol-sift inspect\|skills list` | Onboard agents · inspect the `~/.claude` layer. |
 
-## Try it / docs
+---
 
-- **Zero-keys demo:** `bash examples/demo_case/run_demo.sh` (full pipeline on the deterministic floor,
-  no API keys) — see [`examples/demo_case/README.md`](examples/demo_case/README.md).
-- **[`docs/try_it_out.md`](docs/try_it_out.md)** — local deploy in 3 minutes.
-- **[`docs/judge_runbook.md`](docs/judge_runbook.md)** — evaluator quick-start, mapped to the judging criteria.
-- **[`docs/demo_script.md`](docs/demo_script.md)** — ≤5-min video shot list + narration.
-- **[`docs/execution_logs_sample.md`](docs/execution_logs_sample.md)** — annotated JSONL audit-trail walkthrough.
-- **[`docs/architecture.md`](docs/architecture.md)** (incl. agent safety tiers) · **[`docs/threat_model.md`](docs/threat_model.md)** · **[`docs/evidence_integrity.md`](docs/evidence_integrity.md)** · **[`docs/dataset_documentation.md`](docs/dataset_documentation.md)** · **[`docs/accuracy_report.md`](docs/accuracy_report.md)**.
+## Roadmap
 
-## Develop
+- Hand-drawn architecture diagrams (into `assets/`).
+- A2A agent-to-agent interop (optional, governed).
+- ACP round-2 — typed-tool reach for Gemini/Codex (only Claude reaches the typed tools today).
+- Sigma / pySigma detection breadth.
+- More SIFT-lane tools, OS-level read-only mounts, and stream-parsing for huge archives.
 
-```bash
-uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest
-```
+---
 
-Architecture decisions live in `PLAN/` — notably `PLAN/01_ARCHITECTURE.md`,
-`PLAN/12_ADR_orchestration_engine.md` (keep the native deterministic FSM; no LangGraph/CAO),
-`PLAN/13` (agent-neutral connectors), and `PLAN/14` (Textual cockpit + `setup`, Textual over Ratatui).
-`PLAN/00_INDEX_AND_ROADMAP.md` is the roadmap. Real end-to-end runs against forensic evidence are
-maintainer-gated (CLAUDE.md §2B).
+## License & thanks
 
-License: **Apache-2.0**.
+Apache-2.0 — see [`LICENSE`](LICENSE).
+
+Thanks for taking a look. SIFTMesh exists because autonomous tooling and forensic rigor shouldn't be a
+trade-off — you can have an agent do the legwork and still trust every line of the report. If it saves
+you an hour on a case, it did its job. Contributions, issues, and hard questions are all welcome.
+
+> *securing digital world one byte at a time*

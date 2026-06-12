@@ -42,6 +42,11 @@ uv run siftmesh replay "$RUN" --html        # self-contained HTML replay of the 
 uv run siftmesh tui "$RUN"                   # live cockpit (optional `tui` extra)
 ```
 
+`siftmesh tui` (no arg) opens the minimal home (recent runs + a centered *New run*). Press **`o`** for
+onboarding: an **Agents** tab (which agents are ready, with one-click *Launch auth*) and a **Tier-2
+judge** tab (pick a provider, log in or paste an API key — LiteLLM keys are validated and saved to a
+600-perm `~/.config/siftmesh/.env`, never to the committed config).
+
 ## 4. See the live self-correction hero (optional)
 
 Claude is the constrained (tier T1) executor. Add auth, then one flag:

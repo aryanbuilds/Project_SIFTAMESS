@@ -67,9 +67,18 @@ bash examples/demo_case/run_demo.sh --agent claude   # live, self-correcting inv
 ## 6. Watch it in the cockpit (optional)
 
 ```bash
-uv run siftmesh tui            # home: pick/onboard/start a run
+uv run siftmesh tui            # home: recent runs + a centered "New run" + onboarding
 uv run siftmesh tui "$RUN"     # attach the live cockpit to a run
 ```
+
+The home screen is minimal — a left list of recent runs (badged `terminal`/`blocked`/`paused`/
+`running`) and a centered **New run**, with the shortcuts always visible (`n` new · `Enter` attach ·
+`r` resume · `o` agents · `q` quit). **New run** is a 2-screen wizard: pick evidence by browsing the
+whole filesystem (the tree is reachable *above* the project dir; type `#file <name>` or
+`#folder <name>` to fuzzy-search anywhere) + give the objective, then review the host/space readiness
+and launch. Press **`o`** for onboarding — an **Agents** tab (greys out anything not installed/authed
+and offers a one-click *Launch auth*) and a **Tier-2 judge** tab (pick a provider, log in or paste an
+API key; LiteLLM keys are validated and saved to a 600-perm `~/.config/siftmesh/.env`).
 
 ## 7. Real evidence
 

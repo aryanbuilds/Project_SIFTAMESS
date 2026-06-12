@@ -1,7 +1,7 @@
 """L5b — bypass test: typed-tool (MCP) boundary (SIFTMesh threat T2/T5 · OWASP LLM06/LLM03 · ASI02).
 
 Asserts the EFFECT of the forbidden-tool registry: the 7 destructive names (and any off-allowlist
-name) can NEVER register, and the REAL FastMCP server exposes EXACTLY the 16-tool allowlist and zero
+name) can NEVER register, and the REAL FastMCP server exposes EXACTLY the 17-tool allowlist and zero
 forbidden names. Stronger than a deny-list (Velociraptor lockdown / GRR restricted-flows): the
 destructive surface is ABSENT, not grantable. Satisfies CLAUDE §14 test_forbidden_tool_not_exposed.
 """
@@ -21,7 +21,7 @@ from siftmesh_core.mcp_gateway.server import build_server, registered_tool_names
 
 
 def test_allowlist_is_exactly_ten() -> None:
-    assert len(ALLOWED_TOOLS) == 16
+    assert len(ALLOWED_TOOLS) == 17
     assert len(FORBIDDEN_TOOLS) == 7
 
 
@@ -45,7 +45,7 @@ def test_real_server_surface_equals_allowlist() -> None:
     mcp = build_server()
     surface = registered_tool_names(mcp)
     assert surface == set(ALLOWED_TOOLS)
-    assert len(surface) == 16
+    assert len(surface) == 17
     assert FORBIDDEN_TOOLS.isdisjoint(surface)
 
 

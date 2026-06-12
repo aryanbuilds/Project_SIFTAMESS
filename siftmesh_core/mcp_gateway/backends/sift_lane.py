@@ -245,6 +245,12 @@ class SiftLaneBackend:
             "use backend_mode='real' (regipy + libfwsi/libfwps). Fails closed."
         )
 
+    def extract_amcache_shimcache(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "amcache/shimcache via sift_lane (AppCompatCacheParser/AmcacheParser) is not wired; "
+            "use backend_mode='real' (regipy). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

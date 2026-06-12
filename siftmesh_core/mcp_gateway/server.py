@@ -16,6 +16,10 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, assert_tool_allowed
+from siftmesh_core.mcp_gateway.tools.amcache_tools import (
+    AmcacheShimcacheResult,
+    parse_amcache_shimcache,
+)
 from siftmesh_core.mcp_gateway.tools.browser_tools import (
     BrowserHistoryResult,
     parse_browser_history,
@@ -177,6 +181,13 @@ def _parse_shellbags(source_artifact: str) -> ShellbagResult:
     return parse_shellbags(run_root, source_artifact=source_artifact, evidence_root=evidence_root)
 
 
+def _parse_amcache_shimcache(source_artifact: str) -> AmcacheShimcacheResult:
+    run_root, evidence_root = _run_scope()
+    return parse_amcache_shimcache(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -196,6 +207,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_browser_history": _parse_browser_history,
         "parse_lnk_jumplists": _parse_lnk_jumplists,
         "parse_shellbags": _parse_shellbags,
+        "parse_amcache_shimcache": _parse_amcache_shimcache,
     }
 
 

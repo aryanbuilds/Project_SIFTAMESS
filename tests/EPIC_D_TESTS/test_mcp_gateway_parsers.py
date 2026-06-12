@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_backend
+from siftmesh_core.mcp_gateway.tools.amcache_tools import parse_amcache_shimcache
 from siftmesh_core.mcp_gateway.tools.browser_tools import parse_browser_history
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.lnk_tools import parse_lnk_jumplists
@@ -304,6 +305,32 @@ def test_parse_shellbags_ntuser_real(case: tuple[RunPaths, Path]) -> None:
     assert all(r["source_hive"] == "ntuser" for r in result.entries)
     folders = " ".join(str(r.get("folder_path") or "") for r in result.entries)
     assert "wsl$" in folders  # a real decoded BagMRU folder path from the fixture
+
+
+def test_parse_amcache_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    (evidence / "Amcache.hve").write_bytes(
+        lzma.decompress((FIXTURES / "amcache.hve.xz").read_bytes())
+    )
+    result = parse_amcache_shimcache(
+        run.root, source_artifact="Amcache.hve", evidence_root=evidence
+    )
+    assert result.status == "success"
+    assert result.tool_name == "parse_amcache_shimcache"
+    assert result.amcache_count >= 1 and result.shimcache_count == 0
+    assert result.entry_count == len(result.entries)
+    row = next(r for r in result.entries if r["kind"] == "amcache")
+    assert row["path"] and row["sha1"]  # real decoded program path + SHA-1
+
+
+def test_parse_shimcache_from_system_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    (evidence / "SYSTEM").write_bytes(lzma.decompress((FIXTURES / "system.xz").read_bytes()))
+    result = parse_amcache_shimcache(run.root, source_artifact="SYSTEM", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.shimcache_count >= 1 and result.amcache_count == 0
+    assert all(r["kind"] == "shimcache" for r in result.entries)
+    assert any(r.get("path") for r in result.entries)  # real AppCompatCache paths
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

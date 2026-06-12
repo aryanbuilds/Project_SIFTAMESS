@@ -32,6 +32,7 @@ ALLOWED_TOOLS: frozenset[str] = frozenset(
         "parse_browser_history",
         "parse_lnk_jumplists",
         "parse_shellbags",
+        "parse_amcache_shimcache",
     }
 )
 

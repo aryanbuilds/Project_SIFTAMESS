@@ -107,6 +107,8 @@ _EXTRA_TOOL_OBJECTIVE: dict[str, str] = {
     "parse_recentdocs_mru": "Extract RecentDocs MRU (recently-opened files) from the NTUSER hive.",
     "parse_usb_registry": "Extract USBSTOR + MountPoints2 removable-media evidence from the hive.",
     "parse_shellbags": "Extract shellbags (BagMRU) browsed-folder history from the NTUSER hive.",
+    "parse_amcache_shimcache": "Extract ShimCache (AppCompatCache) program-execution evidence "
+    "from the SYSTEM hive.",
 }
 
 

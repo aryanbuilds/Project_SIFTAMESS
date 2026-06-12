@@ -18,6 +18,8 @@ maintainer command on the SIFT workstation — see CLAUDE.md §2B).
 | `lnk_sample.lnk` | derived from `jumplist_auto` above | OLE stream `1` extracted (a real LNK from that public jumplist) | B2 LNK/jumplists (single `.lnk`) |
 | `usrclass.dat.xz` | mkorman90/regipy (MIT) | `regipy_tests/data/UsrClass.dat.xz` | B3 shellbags (UsrClass BagMRU; decompressed at test time) |
 | `ntuser_bagmru.dat.xz` | mkorman90/regipy (MIT) | `regipy_tests/data/NTUSER_BAGMRU.DAT.xz` | B3 shellbags (NTUSER BagMRU; decompressed at test time) |
+| `amcache.hve.xz` | mkorman90/regipy (MIT) | `regipy_tests/data/amcache.hve.xz` | C1 amcache/shimcache (Amcache.hve; decompressed at test time) |
+| `system.xz` | mkorman90/regipy (MIT) | `regipy_tests/data/SYSTEM.xz` | C1 amcache/shimcache (SYSTEM ShimCache; decompressed at test time) |
 
 Note: no PowerShell-Operational sample exists in any upstream parser test suite, so
 `parse_evtx_powershell`'s 4103/4104 filter is validated by (a) the generic

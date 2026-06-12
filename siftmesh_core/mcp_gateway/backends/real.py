@@ -74,12 +74,16 @@ _LNK_HEADER = b"\x4c\x00\x00\x00" + bytes.fromhex("0114020000000000c000000000000
 
 
 def _dt_iso(value: Any) -> str | None:
-    """LnkParse3 returns tz-aware datetimes -> ISO-8601 ``Z`` string; pass through None/other."""
+    """Normalize a datetime or ISO string to an ISO-8601 ``Z`` string; pass through None.
+
+    LnkParse3 returns tz-aware datetimes; regipy plugins return ISO strings with ``+00:00`` —
+    both end as a trailing ``Z`` for consistency with the other tools' timestamps.
+    """
     if value is None:
         return None
     if hasattr(value, "isoformat"):
         return str(value.isoformat()).replace("+00:00", "Z")
-    return str(value)
+    return str(value).replace("+00:00", "Z")
 
 
 def _lnk_row(blob: bytes, *, kind: str, source: str) -> dict[str, Any]:
@@ -149,6 +153,25 @@ def _custom_dest_rows(path: Path) -> list[dict[str, Any]]:
         except Exception:  # skip a malformed embedded LNK, keep the rest
             continue
     return rows
+
+
+def _run_regipy_plugin(plugin: Any, fail_msg: str) -> list[dict[str, Any]]:
+    """Run a regipy plugin gated by its ``can_run``; a missing decoder lib fails closed.
+
+    Returns [] if this plugin does not apply to the hive (``can_run`` False / raises). A
+    ``ModuleNotFoundError`` inside ``run`` means a regipy[full] decoder (libfwsi/libfwps) is
+    absent -> :class:`BackendUnavailableError` (never a fake result).
+    """
+    try:
+        if not plugin.can_run():
+            return []
+    except Exception:
+        return []
+    try:
+        out = plugin.run()
+    except ModuleNotFoundError as exc:  # pragma: no cover - exercised via fail-closed test
+        raise BackendUnavailableError(fail_msg) from exc
+    return (out if out is not None else getattr(plugin, "entries", [])) or []
 
 
 def _shellbag_row(entry: dict[str, Any], source_hive: str) -> dict[str, Any]:
@@ -560,6 +583,49 @@ class RealBackend:
                 ) from exc
             entries = out if out is not None else getattr(plug, "entries", [])
             rows.extend(_shellbag_row(e, label) for e in (entries or []))
+        return rows
+
+    def extract_amcache_shimcache(self, path: Path) -> list[dict[str, Any]]:
+        """Amcache.hve + SYSTEM ShimCache — program execution / presence, real, in-process.
+
+        One tool, two sources: regipy ``AmCachePlugin`` (Amcache.hve: installed/run programs with
+        SHA-1) and ``ShimCachePlugin`` (SYSTEM AppCompatCache: executables the shim engine saw).
+        Each plugin's ``can_run`` gates the hive type, so only the matching one yields rows.
+        """
+        try:
+            from regipy.plugins.amcache.amcache import AmCachePlugin
+            from regipy.plugins.system.shimcache import ShimCachePlugin
+            from regipy.registry import RegistryHive
+        except ImportError as exc:  # pragma: no cover
+            raise BackendUnavailableError("regipy backend missing") from exc
+
+        hive = RegistryHive(str(path))
+        fail = "amcache/shimcache decode needs regipy[full] (libfwsi+libfwps); uv sync --all-extras"
+        rows: list[dict[str, Any]] = []
+        for e in _run_regipy_plugin(AmCachePlugin(hive, as_json=True), fail):
+            rows.append(
+                {
+                    "kind": "amcache",
+                    "path": e.get("full_path"),
+                    "sha1": e.get("sha1"),
+                    "program_id": e.get("program_id"),
+                    "exec_flag": None,
+                    "first_run_utc": _dt_iso(e.get("timestamp")),
+                    "modified_utc": _dt_iso(e.get("last_modified_timestamp_2")),
+                }
+            )
+        for e in _run_regipy_plugin(ShimCachePlugin(hive, as_json=True), fail):
+            rows.append(
+                {
+                    "kind": "shimcache",
+                    "path": e.get("path"),
+                    "sha1": None,
+                    "program_id": None,
+                    "exec_flag": e.get("exec_flag"),
+                    "first_run_utc": None,
+                    "modified_utc": _dt_iso(e.get("last_mod_date")),
+                }
+            )
         return rows
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:

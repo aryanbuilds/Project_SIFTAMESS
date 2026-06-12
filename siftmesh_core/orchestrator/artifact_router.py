@@ -30,6 +30,7 @@ FineFamily = Literal[
     "browser_history",
     "lnk_jumplist",
     "shellbag_hive",
+    "amcache_hive",
     "disk_image",
     "memory_image",
     "archive",
@@ -47,6 +48,7 @@ FAMILY_ORDER: tuple[FineFamily, ...] = (
     "browser_history",
     "lnk_jumplist",
     "shellbag_hive",
+    "amcache_hive",
     "disk_image",
     "memory_image",
     "archive",
@@ -64,6 +66,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "browser_history": "parse_browser_history",
     "lnk_jumplist": "parse_lnk_jumplists",
     "shellbag_hive": "parse_shellbags",
+    "amcache_hive": "parse_amcache_shimcache",
     "disk_image": "extract_artifacts_from_image",
     "memory_image": "analyze_memory",
     "archive": None,
@@ -76,7 +79,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
 # matching hives; the router family stays single-tool (one source of truth per family).
 _EXTRA_HIVE_TOOLS: dict[str, tuple[str, ...]] = {
     "ntuser.dat": ("parse_recentdocs_mru", "parse_usb_registry", "parse_shellbags"),
-    "system": ("parse_usb_registry",),
+    "system": ("parse_usb_registry", "parse_amcache_shimcache"),
 }
 
 
@@ -114,6 +117,7 @@ FAMILY_LABEL: dict[FineFamily, str] = {
     "browser_history": "Browser history database",
     "lnk_jumplist": "LNK shortcut / JumpList",
     "shellbag_hive": "Shellbags (UsrClass.dat BagMRU)",
+    "amcache_hive": "Amcache (program execution / presence)",
     "disk_image": "Disk image",
     "memory_image": "Memory image",
     "archive": "Archive",
@@ -140,6 +144,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "(what the user accessed and where it lived).",
     "shellbag_hive": "Parse shellbags (BagMRU) for browsed-folder history "
     "(including folders no longer on disk).",
+    "amcache_hive": "Parse Amcache for program execution / presence "
+    "(full path, SHA-1, first-run time).",
     "disk_image": "Recover loose triage artifacts (event logs, hives, prefetch, $MFT) "
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "
@@ -194,6 +200,10 @@ def _classify(name: str, suffix: str) -> FineFamily:
     # its forensic value is shellbags, so special-case it before the generic registry branch.
     if name == "usrclass.dat":
         return "shellbag_hive"
+    # Amcache.hve would otherwise hit the ``.hve`` branch -> run-keys (it has none); its value is
+    # program-execution, so special-case it before the generic registry branch.
+    if name == "amcache.hve":
+        return "amcache_hive"
     if name in REGISTRY_HIVE_NAMES or suffix in (".dat", ".hve"):
         return "registry_hive"
     if suffix in _DISK_IMAGE_SUFFIXES:

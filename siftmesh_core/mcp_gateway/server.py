@@ -41,6 +41,7 @@ from siftmesh_core.mcp_gateway.tools.mft_tools import MftFilesystemResult, parse
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import RecentDocsResult, parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import RunKeysResult, extract_registry_run_keys
+from siftmesh_core.mcp_gateway.tools.shellbag_tools import ShellbagResult, parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import TimelineResult, build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import UsbRegistryResult, parse_usb_registry
 from siftmesh_core.mcp_gateway.tools.validation_tools import (
@@ -171,6 +172,11 @@ def _parse_lnk_jumplists(source_artifact: str) -> LnkJumplistResult:
     )
 
 
+def _parse_shellbags(source_artifact: str) -> ShellbagResult:
+    run_root, evidence_root = _run_scope()
+    return parse_shellbags(run_root, source_artifact=source_artifact, evidence_root=evidence_root)
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -189,6 +195,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_usb_registry": _parse_usb_registry,
         "parse_browser_history": _parse_browser_history,
         "parse_lnk_jumplists": _parse_lnk_jumplists,
+        "parse_shellbags": _parse_shellbags,
     }
 
 

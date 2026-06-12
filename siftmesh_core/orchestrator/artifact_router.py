@@ -29,6 +29,7 @@ FineFamily = Literal[
     "mft",
     "browser_history",
     "lnk_jumplist",
+    "shellbag_hive",
     "disk_image",
     "memory_image",
     "archive",
@@ -45,6 +46,7 @@ FAMILY_ORDER: tuple[FineFamily, ...] = (
     "mft",
     "browser_history",
     "lnk_jumplist",
+    "shellbag_hive",
     "disk_image",
     "memory_image",
     "archive",
@@ -61,6 +63,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "mft": "parse_mft_filesystem",
     "browser_history": "parse_browser_history",
     "lnk_jumplist": "parse_lnk_jumplists",
+    "shellbag_hive": "parse_shellbags",
     "disk_image": "extract_artifacts_from_image",
     "memory_image": "analyze_memory",
     "archive": None,
@@ -72,14 +75,23 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
 # Keyed by lowercased hive basename. The planner mints one extra task per (extra tool) over the
 # matching hives; the router family stays single-tool (one source of truth per family).
 _EXTRA_HIVE_TOOLS: dict[str, tuple[str, ...]] = {
-    "ntuser.dat": ("parse_recentdocs_mru", "parse_usb_registry"),
+    "ntuser.dat": ("parse_recentdocs_mru", "parse_usb_registry", "parse_shellbags"),
     "system": ("parse_usb_registry",),
 }
 
 
 def extra_tools_for(path: str) -> tuple[str, ...]:
-    """Extra typed tools this hive feeds beyond its primary tool (by hive basename), or ()."""
-    return _EXTRA_HIVE_TOOLS.get(Path(path).name.lower(), ())
+    """Extra typed tools this hive feeds beyond its primary tool, or ().
+
+    Matches the hive basename exactly OR with a ``<profile>_`` prefix, so per-user hives
+    extracted from a disk image (e.g. ``Alice_NTUSER.DAT``) get the same extra tools as a
+    loose ``NTUSER.DAT`` in the manifest.
+    """
+    name = Path(path).name.lower()
+    for hive, tools in _EXTRA_HIVE_TOOLS.items():
+        if name == hive or name.endswith(f"_{hive}"):
+            return tools
+    return ()
 
 
 # build_timeline kind for families it can ingest (None = not timeline-capable).
@@ -101,6 +113,7 @@ FAMILY_LABEL: dict[FineFamily, str] = {
     "mft": "$MFT filesystem metadata",
     "browser_history": "Browser history database",
     "lnk_jumplist": "LNK shortcut / JumpList",
+    "shellbag_hive": "Shellbags (UsrClass.dat BagMRU)",
     "disk_image": "Disk image",
     "memory_image": "Memory image",
     "archive": "Archive",
@@ -125,6 +138,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "(cloud-storage / webmail destinations).",
     "lnk_jumplist": "Parse the LNK shortcut / JumpList for opened-file target paths "
     "(what the user accessed and where it lived).",
+    "shellbag_hive": "Parse shellbags (BagMRU) for browsed-folder history "
+    "(including folders no longer on disk).",
     "disk_image": "Recover loose triage artifacts (event logs, hives, prefetch, $MFT) "
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "
@@ -175,6 +190,10 @@ def _classify(name: str, suffix: str) -> FineFamily:
         return "browser_history"
     if suffix in (".lnk", ".automaticdestinations-ms", ".customdestinations-ms"):
         return "lnk_jumplist"
+    # UsrClass.dat is in REGISTRY_HIVE_NAMES (would misroute to run-keys, which it has none of);
+    # its forensic value is shellbags, so special-case it before the generic registry branch.
+    if name == "usrclass.dat":
+        return "shellbag_hive"
     if name in REGISTRY_HIVE_NAMES or suffix in (".dat", ".hve"):
         return "registry_hive"
     if suffix in _DISK_IMAGE_SUFFIXES:

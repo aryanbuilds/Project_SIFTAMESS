@@ -21,6 +21,7 @@ from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
+from siftmesh_core.mcp_gateway.tools.shellbag_tools import parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
 from siftmesh_core.run_dir import RunPaths, new_run_dir
@@ -276,6 +277,33 @@ def test_parse_lnk_custom_destinations_real(case: tuple[RunPaths, Path]) -> None
     assert result.jumplist_count >= 1
     paths = " ".join(str(r.get("target_path") or "") for r in result.entries)
     assert "GettingStarted.exe" in paths  # real embedded LNK target
+
+
+def test_parse_shellbags_usrclass_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    (evidence / "UsrClass.dat").write_bytes(
+        lzma.decompress((FIXTURES / "usrclass.dat.xz").read_bytes())
+    )
+    result = parse_shellbags(run.root, source_artifact="UsrClass.dat", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_shellbags"
+    assert result.entry_count >= 1 and result.entry_count == len(result.entries)
+    assert all(r["source_hive"] == "usrclass" for r in result.entries)
+    # real PIDL decode (libfwsi/libfwps) -> reconstructed folder paths, never fabricated
+    assert any(r.get("folder_path") for r in result.entries)
+
+
+def test_parse_shellbags_ntuser_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    (evidence / "NTUSER_BAGMRU.DAT").write_bytes(
+        lzma.decompress((FIXTURES / "ntuser_bagmru.dat.xz").read_bytes())
+    )
+    result = parse_shellbags(run.root, source_artifact="NTUSER_BAGMRU.DAT", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.entry_count >= 1
+    assert all(r["source_hive"] == "ntuser" for r in result.entries)
+    folders = " ".join(str(r.get("folder_path") or "") for r in result.entries)
+    assert "wsl$" in folders  # a real decoded BagMRU folder path from the fixture
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

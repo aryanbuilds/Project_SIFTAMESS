@@ -106,6 +106,7 @@ MAX_ARTIFACTS_PER_TASK = 64
 _EXTRA_TOOL_OBJECTIVE: dict[str, str] = {
     "parse_recentdocs_mru": "Extract RecentDocs MRU (recently-opened files) from the NTUSER hive.",
     "parse_usb_registry": "Extract USBSTOR + MountPoints2 removable-media evidence from the hive.",
+    "parse_shellbags": "Extract shellbags (BagMRU) browsed-folder history from the NTUSER hive.",
 }
 
 

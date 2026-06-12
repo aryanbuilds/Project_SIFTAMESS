@@ -61,11 +61,12 @@ def test_fixed_mapping_windows_initial_triage(synthetic_run: SyntheticRun) -> No
     assert tools_for["Microsoft-Windows-PowerShell%4Operational.evtx"] == {"parse_evtx_powershell"}
     assert tools_for["CMD.EXE-12345678.pf"] == {"analyze_prefetch"}
     assert tools_for["$MFT"] == {"parse_mft_filesystem"}
-    # NTUSER.DAT feeds its primary run-keys tool + the extra recentdocs + usb tools.
+    # NTUSER.DAT feeds its primary run-keys tool + the extra recentdocs + usb + shellbags tools.
     assert tools_for["Users/alice/NTUSER.DAT"] == {
         "extract_registry_run_keys",
         "parse_recentdocs_mru",
         "parse_usb_registry",
+        "parse_shellbags",
     }
 
 

@@ -239,6 +239,12 @@ class SiftLaneBackend:
             "use backend_mode='real' (LnkParse3 + olefile). Fails closed."
         )
 
+    def extract_shellbags(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "shellbag parsing via sift_lane (SBECmd) is not wired; "
+            "use backend_mode='real' (regipy + libfwsi/libfwps). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

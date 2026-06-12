@@ -151,6 +151,23 @@ def _custom_dest_rows(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _shellbag_row(entry: dict[str, Any], source_hive: str) -> dict[str, Any]:
+    """Normalize one regipy shellbag plugin entry to a stable row."""
+    return {
+        "source_hive": source_hive,
+        "bag_path": entry.get("reg_path"),
+        "value_name": entry.get("value_name"),
+        "shell_type": entry.get("shell_type"),
+        "folder_path": entry.get("path") or entry.get("value"),
+        "value": entry.get("value"),
+        "last_write_utc": _dt_iso(entry.get("last_write")),
+        "created_utc": _dt_iso(entry.get("creation_time")),
+        "modified_utc": _dt_iso(entry.get("modification_time")),
+        "accessed_utc": _dt_iso(entry.get("access_time")),
+        "mru_order": entry.get("mru_order"),
+    }
+
+
 def _system_field(data: dict[str, Any], key: str) -> Any:
     """Pull a field from Event.System, unwrapping ``#text`` attribute objects."""
     value = data.get("Event", {}).get("System", {}).get(key)
@@ -506,6 +523,44 @@ class RealBackend:
             return _custom_dest_rows(path)
         # .lnk (or any other suffix routed here) -> a single shell-link
         return [_lnk_row(path.read_bytes(), kind="lnk", source=path.name)]
+
+    def extract_shellbags(self, path: Path) -> list[dict[str, Any]]:
+        """Shellbags / BagMRU — folder-access history (UsrClass.dat + NTUSER), real, in-process.
+
+        Uses regipy's shellbag plugins, which decode the shell-item PIDLs via libfwsi + libfwps.
+        A missing decoder lib fails closed (:class:`BackendUnavailableError`) — never fabricated
+        folder names. The plugin's ``can_run`` gates each hive type, so only the matching one runs.
+        """
+        try:
+            from regipy.plugins.ntuser.shellbags_ntuser import ShellBagNtuserPlugin
+            from regipy.plugins.usrclass.shellbags_usrclass import ShellBagUsrclassPlugin
+            from regipy.registry import RegistryHive
+        except ImportError as exc:  # pragma: no cover
+            raise BackendUnavailableError("regipy backend missing") from exc
+
+        hive = RegistryHive(str(path))
+        rows: list[dict[str, Any]] = []
+        for plugin_cls, label in (
+            (ShellBagUsrclassPlugin, "usrclass"),
+            (ShellBagNtuserPlugin, "ntuser"),
+        ):
+            plug = plugin_cls(hive, as_json=True)
+            try:
+                runnable = plug.can_run()
+            except Exception:  # a hive missing this BagMRU path simply isn't this kind
+                continue
+            if not runnable:
+                continue
+            try:
+                out = plug.run()
+            except ModuleNotFoundError as exc:  # libfwsi / libfwps absent -> fail closed
+                raise BackendUnavailableError(
+                    "shellbag PIDL decode needs libfwsi-python + libfwps-python "
+                    "(regipy[full]); uv sync --all-extras"
+                ) from exc
+            entries = out if out is not None else getattr(plug, "entries", [])
+            rows.extend(_shellbag_row(e, label) for e in (entries or []))
+        return rows
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         try:

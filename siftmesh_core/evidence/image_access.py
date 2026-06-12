@@ -46,6 +46,7 @@ ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("chrome_history", "userfile", "AppData/Local/Google/Chrome/User Data/Default/History"),
     ("edge_history", "userfile", "AppData/Local/Microsoft/Edge/User Data/Default/History"),
     ("firefox_history", "userfile", "AppData/Roaming/Mozilla/Firefox/Profiles/*/places.sqlite"),
+    ("usrclass_hives", "userfile", "AppData/Local/Microsoft/Windows/UsrClass.dat"),
     ("recent_jumplists", "usertree", "AppData/Roaming/Microsoft/Windows/Recent"),
     ("mft", "mft", "0"),
 )

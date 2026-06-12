@@ -40,6 +40,11 @@ dependencies = [
 # A missing backend fails closed in `siftmesh doctor`, never a fake fallback.
 sift = [
     "evtx==0.11.1",
+    # Shell-item / property-store decoders for regipy's in-process shellbag plugins
+    # (regipy[full] backends). cp312 manylinux wheels present; capped to avoid an
+    # untested future sdist-only release (cf. the libscca note below).
+    "libfwps-python>=20240310,<20270101",
+    "libfwsi-python>=20240315,<20270101",
     # Cap below 20260527: that release is sdist-only (no wheels) and breaks a
     # plain install; 20250915 ships wheels. See PLAN/08 §3 + bd memory.
     "libscca-python>=20250915,<20260527",

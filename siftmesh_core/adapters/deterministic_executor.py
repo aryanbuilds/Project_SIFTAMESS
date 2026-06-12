@@ -33,6 +33,7 @@ from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
 from siftmesh_core.mcp_gateway.tools.registry_tools import extract_registry_run_keys
+from siftmesh_core.mcp_gateway.tools.shellbag_tools import parse_shellbags
 from siftmesh_core.mcp_gateway.tools.timeline_tools import build_timeline
 from siftmesh_core.mcp_gateway.tools.usb_tools import parse_usb_registry
 from siftmesh_core.orchestrator.artifact_router import timeline_kind_for
@@ -335,6 +336,39 @@ def _claims_lnk(result: Any, task_id: str) -> list[Claim]:
     ]
 
 
+def _claims_shellbags(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim listing distinct browsed-folder paths (enumeration -> one claim, full rows
+    # in the structured result). inferred — a shellbag proves a folder was browsed in Explorer (a
+    # strong where/what lead, incl. folders no longer on disk), not proof of exfil.
+    folders = [str(r.get("folder_path") or "") for r in result.entries]
+    shown, total = _dedupe(folders, 30)
+    if total == 0:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No shellbag (BagMRU) folder entries found in the hive.",
+                evidence_type="shell_folder_access",
+                confidence=0.5,
+            )
+        ]
+    more = f" (+{total - len(shown)} more)" if total > len(shown) else ""
+    text = f"Shellbags: {total} distinct browsed folder(s): {', '.join(shown)}{more}."
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=text,
+            evidence_type="shell_folder_access",
+            confidence=0.7,
+        )
+    ]
+
+
 def _claims_mft(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -494,6 +528,7 @@ _DISPATCH: dict[
     "parse_usb_registry": (parse_usb_registry, _single_source_kwargs, _claims_usb),
     "parse_browser_history": (parse_browser_history, _single_source_kwargs, _claims_browser),
     "parse_lnk_jumplists": (parse_lnk_jumplists, _single_source_kwargs, _claims_lnk),
+    "parse_shellbags": (parse_shellbags, _single_source_kwargs, _claims_shellbags),
 }
 
 
@@ -563,6 +598,7 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "parse_usb_registry",
         "parse_browser_history",
         "parse_lnk_jumplists",
+        "parse_shellbags",
     }
 )
 

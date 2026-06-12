@@ -54,6 +54,8 @@ FORENSIC_DEPS: tuple[tuple[str, str], ...] = (
     ("mft", "MFT (pymft-rs)"),
     ("LnkParse3", "LNK/JumpList (LnkParse3)"),
     ("olefile", "JumpList OLE (olefile)"),
+    ("pyfwsi", "Shellbag shell-items (libfwsi)"),
+    ("pyfwps", "Shellbag property-store (libfwps)"),
 )
 
 # Optional incident-brief readers (`brief` extra). Missing => WARN; only fails closed when a
@@ -160,7 +162,7 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
 
-    allowlist_ok = len(ALLOWED_TOOLS) == 15 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
+    allowlist_ok = len(ALLOWED_TOOLS) == 16 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
     checks.append(
         Check(
             OK if allowlist_ok else FAIL,

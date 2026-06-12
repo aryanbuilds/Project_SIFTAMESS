@@ -82,6 +82,12 @@ def main(
     ] = None,
 ) -> None:
     """App-level options. `siftmesh --version` works with no subcommand."""
+    # Load provider credentials (LiteLLM judge keys) from ~/.config/siftmesh/.env into the
+    # environment before any command runs. A real shell export wins (override=False). Provider
+    # creds only — never SIFTMESH_* settings (those stay in TOML/env per config.py precedence).
+    from siftmesh_core.secrets_env import load_secrets_into_env
+
+    load_secrets_into_env()
 
 
 @app.command("init-case")

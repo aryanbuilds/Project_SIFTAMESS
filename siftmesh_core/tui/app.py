@@ -171,8 +171,13 @@ class SiftmeshTUI(App):
             yield SystemCommand("Switch run", "Pick another run", screen.action_switch_run)
 
     def on_mount(self) -> None:
+        from siftmesh_core.secrets_env import load_secrets_into_env
         from siftmesh_core.tui.cockpit import CockpitScreen
         from siftmesh_core.tui.theme import DEFAULT_THEME, SIFTMESH_THEMES
+
+        # Provider credentials (LiteLLM judge keys) from the 600-perm env file → os.environ, so the
+        # in-process judge + child agents see them. A real shell export still wins (override=False).
+        load_secrets_into_env()
 
         for theme in SIFTMESH_THEMES:
             self.register_theme(theme)

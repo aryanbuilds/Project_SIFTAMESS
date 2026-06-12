@@ -24,7 +24,10 @@ custody). This is an **automated triage to guide an analyst — not a court-read
   GUID-named key `C18E42C7363A0E298C5594A2ABE53A0760B71220._service_run` — worth manual review.
 - **Execution history (`analyze_prefetch`, 211 prefetch files):** AcroRd32 (9 runs), AdobeARM (12),
   Slack (3), SmartScreen (55), MicrosoftEdgeUpdate (42), etc. — each with run count + source `.pf`.
-- **PowerShell (`parse_evtx_powershell`):** 2× EventID **4104** (script-block logging) recorded.
+- **PowerShell (`parse_evtx_powershell`, host `SRL-FORGE`):** 2× EventID **4104** (script-block
+  logging) at 2020-11-02 13:08 UTC — the script-block is a **benign Microsoft troubleshooting-pack
+  script** (CL_LocalizationData / WER cleanup), **not** attacker activity. Latest prefetch execution
+  is 2020-11-16 02:50 UTC (≈ 21:50 EST, 11-15); memory captured ~2020-11-16.
 - **Honest gap:** `Security.evtx` failed extraction — a genuine TSK LZNT1 decompression error on this
   image (recorded in `failed[]`, **not** fabricated). 67 evidence strings that looked like
   instructions were flagged as prompt-injection and logged, never executed.
@@ -51,6 +54,14 @@ that an analyst would examine first for the alleged IP theft / "pictures synced 
 alongside autostart persistence (including one unusual GUID service key) and an execution timeline.
 No single artifact *proves* exfiltration; these are the evidence-anchored leads SIFTMesh produced
 autonomously for a human examiner to confirm. **This is investigative triage, not a legal conclusion.**
+
+### Coverage of the brief's 5 questions (honest)
+
+The current 10-tool MVP gives real leads for **Where / How / When** (cloud-sync egress + the execution
+window) but **cannot** answer **what key projects Fred had access to** or **what was stolen** — those
+need artifacts/tools outside the allowlist (browser history, LNK/JumpLists, `$MFT` filename timeline,
+ShellBags, Outlook/email, OneDrive/SharePoint logs). The full question-by-question mapping + the
+command log is in [`complete_operation.md`](complete_operation.md).
 
 ## Provenance & integrity
 

@@ -125,10 +125,30 @@ uv run siftmesh status RUN     # where is it, what's blocked
 
 ## Architecture
 
-<!-- Hand-drawn architecture diagrams are coming to assets/. -->
-<!-- <p align="center"><img src="assets/architecture.png" alt="SIFTMesh architecture" width="100%"></p> -->
+The two worlds SIFTMesh bridges — classic manual DFIR and ungoverned AI agents — each have real drawbacks:
 
-> Diagram coming soon (hand-drawn, will live in `assets/`).
+<table>
+<tr>
+<td width="50%"><img src="assets/classic_DFIR_drawbacks.png" alt="Classic DFIR drawbacks" width="100%"></td>
+<td width="50%"><img src="assets/ai_agents_DFIR_drawbacks.png" alt="AI-agent DFIR drawbacks" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><sub><b>Classic DFIR</b> — high time/resource cost, serial, human-bound.</sub></td>
+<td align="center"><sub><b>Ungoverned AI agents</b> — fast, parallel, but unverified.</sub></td>
+</tr>
+</table>
+
+SIFTMesh keeps the speed of agents and the rigor of forensics — **autonomy in the agent, determinism in the code**:
+
+<p align="center">
+  <img src="assets/simplified_SIFTMESH_architecture.png" alt="Simplified SIFTMesh architecture" width="100%">
+  <br><sub><b>Simplified SIFTMesh architecture</b></sub>
+</p>
+
+<p align="center">
+  <img src="assets/agent_execution_loop_runtime.png" alt="Agent execution loop at runtime" width="100%">
+  <br><sub><b>The agent execution loop at runtime</b> — plan → dispatch → critique → decide, with self-correction.</sub>
+</p>
 
 Under the hood it's a deterministic state machine with a few clear roles. The agent is the only part
 that "thinks"; everything around it is plain code that can be audited and replayed.
@@ -222,7 +242,6 @@ deterministic floor.
 
 ## Roadmap
 
-- Hand-drawn architecture diagrams (into `assets/`).
 - A2A agent-to-agent interop (optional, governed).
 - ACP round-2 — typed-tool reach for Gemini/Codex (only Claude reaches the typed tools today).
 - Sigma / pySigma detection breadth.

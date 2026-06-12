@@ -1,20 +1,3 @@
-"""Deterministic Layer-1 Critic + self-correction governance (Epic G, G1/G2/G3/G6/G8).
-
-``critique_run`` validates the Claims Epic F's executor produced (per-task
-``results/TASK-*.result.json`` envelopes), emits one :class:`CriticVerdict` per task,
-detects contradictions, downgrades over-broad claims, applies the injection
-consequence, and persists verdicts/contradictions/confidence-changes — all
-deterministically, no LLM. ``decide()`` (``orchestrator/decide.py``) consumes the
-verdict. The optional Layer-2 LLM adversarial pass (G8) is a no-op seam here.
-
-Write policy (the key correctness rule): Epic F's deterministic floor ALREADY
-appended its claims to the claim ledger, so the critic VALIDATES those (never
-re-appends — a structural no-dup guard by claim_id). Live-agent results carry
-claims not yet in the ledger, so for those the critic IS the promoter. The genuine
-live self-correction HERO is human-gated (Epic F8); here the governance is exercised
-deterministically.
-"""
-
 from __future__ import annotations
 
 import json
@@ -85,7 +68,6 @@ from siftmesh_core.schemas.task_result import TaskResult
 from siftmesh_core.schemas.tool_result import ToolResult
 from siftmesh_core.schemas.yaml_io import dump_yaml_model, read_yaml_model
 
-# Per-claim outcomes (the verdict is derived from these + cross-cutting flags).
 _ACCEPT, _DOWNGRADE, _UNSUPPORTED, _REJECT, _HUMAN = (
     "accept",
     "downgrade",
@@ -94,7 +76,6 @@ _ACCEPT, _DOWNGRADE, _UNSUPPORTED, _REJECT, _HUMAN = (
     "human_review",
 )
 
-# Over-broad / severity-overreach tokens (CLAUDE §10 "claim broader than evidence").
 _QUANTIFIERS = re.compile(r"\b(all|every|always|none|never)\b", re.IGNORECASE)
 _SEVERITY = re.compile(
     r"\b(critical|high severity|confirmed compromise|malicious|definitely)\b", re.IGNORECASE
@@ -107,14 +88,12 @@ def _now() -> datetime:
 
 
 def _is_broader_than_evidence(claim: Claim) -> bool:
-    """Structural over-breadth: an unconfirmed claim asserting a quantifier or final severity."""
     if claim.status == "confirmed":
         return False
     return bool(_QUANTIFIERS.search(claim.claim) or _SEVERITY.search(claim.claim))
 
 
 def _injection_affected(claim: Claim, alerts: list[InjectionAlert]) -> bool:
-    """Artifact-scoped: an alert on THIS claim's task+artifact, or injection text in the claim."""
     for alert in alerts:
         if alert.task_id == claim.task_id and alert.source_artifact == claim.source_artifact:
             return True
@@ -123,20 +102,10 @@ def _injection_affected(claim: Claim, alerts: list[InjectionAlert]) -> bool:
 
 
 def detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord]:
-    """Public wrapper over the deterministic contradiction detector (reused by cross-run merge)."""
     return _detect_contradictions(claims)
 
 
 def _detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord]:
-    """Deterministic, low-false-positive contradiction detection (no LLM).
-
-    Rule 1 (same_artifact_field_value_mismatch): two claims with the same
-    ``source_artifact`` + ``evidence_type`` whose texts share a digit-masked template
-    but carry different numbers (e.g. "executed 3 time(s)" vs "executed 5 time(s)").
-    Rule 2 (same_subject_opposite_assertion): a ``confirmed`` and a ``contradicted``
-    claim on the same (source_artifact, evidence_type). Semantic contradiction is
-    out of scope (G8/Layer-2).
-    """
     anchored = [c for c in claims if c.status in ("confirmed", "inferred", "contradicted")]
     by_artifact: dict[tuple[str, str], list[Claim]] = {}
     for c in anchored:
@@ -174,8 +143,6 @@ def _detect_contradictions(claims: list[Claim]) -> dict[str, ContradictionRecord
 def _contradiction_rule(a: Claim, b: Claim) -> str | None:
     if {a.status, b.status} == {"confirmed", "contradicted"}:
         return "same_subject_opposite_assertion"
-    # Enumeration indices ("event #1" vs "event #2") mark DISTINCT items, not conflicting values —
-    # strip them so per-item sibling claims on one artifact aren't mistaken for a value mismatch.
     enum = re.compile(r"#\s*\d+")
     a_text, b_text = enum.sub("#", a.claim), enum.sub("#", b.claim)
     mask = re.compile(r"\d+")
@@ -215,7 +182,6 @@ def _classify_claim(
 def _task_verdict(
     outcomes: list[str], *, has_contradiction: bool
 ) -> tuple[CriticVerdictType, list[str]]:
-    """Map per-claim outcomes (+ contradiction) to one task verdict (precedence-ordered)."""
     if _HUMAN in outcomes:
         return "human_review_required", ["injection-affected claim requires human review"]
     if has_contradiction:
@@ -234,11 +200,9 @@ def critique_run(
     evidence_root: Path | str | None = None,
     generate_followups: bool = True,
 ) -> list[CriticVerdict]:
-    """Critique every collected task result; persist verdicts + records; return verdicts."""
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
     result_paths = sorted(run.results.glob("TASK-*.result.json"))
 
-    # Pass 1: gather anchored claims across all success results → contradiction map.
     results: list[tuple[Path, TaskResult | None]] = []
     all_claims: list[Claim] = []
     for path in result_paths:
@@ -252,17 +216,12 @@ def critique_run(
             all_claims.extend(tr.claims)
     contradictions = _detect_contradictions(all_claims)
     alerts = read_injection_alerts(run.root)
-    # Grading context built ONCE for the whole pass (B1): grade_claim_against_run would otherwise
-    # re-read the manifest + tool_calls.jsonl per claim. Pre-loading is byte-identical to inline.
     grade_hashes = _manifest_hashes(run.root)
     grade_results = {r.tool_call_id: r for r in read_tool_results(run.root)}
     already = [*read_claims(run.root), *read_unsupported_claims(run.root)]
     persisted_ids = {c.claim_id for c in already}
-    # Content keys defeat the dual id scheme (floor TASK-CLAIM-NNN vs live TASK-A{n}-CLAIM-NNN):
-    # the SAME finding from the SAME evidence must not be promoted twice across re-critique passes.
     persisted_keys = {_claim_key(c) for c in already}
 
-    # Pass 2: per-task verdict.
     verdicts: list[CriticVerdict] = []
     for path, tr_opt in results:
         if tr_opt is None:
@@ -345,7 +304,6 @@ def critique_run(
             )
         )
 
-    # G9 — coverage/corroboration gaps ("recognize gaps and adjust").
     _record_corroboration_gaps(run, all_claims, evidence_root=evidence_root, audit=audit)
     if generate_followups:
         generate_followup_tasks(run, evidence_root=evidence_root, audit=audit)
@@ -356,11 +314,7 @@ def critique_run(
     return verdicts
 
 
-# G9 — gap detection + follow-up generation ----------------------------------------
-
-
 def _covered_artifact_paths(run: RunPaths) -> set[str]:
-    """Every evidence path already covered by a task contract's input_artifacts."""
     covered: set[str] = set()
     for path in sorted(run.tasks.glob("TASK-*.yaml")):
         contract = read_yaml_model(TaskContract, path)
@@ -369,7 +323,6 @@ def _covered_artifact_paths(run: RunPaths) -> set[str]:
 
 
 def _max_task_number(run: RunPaths) -> int:
-    """Highest TASK-NNN number under tasks/ (0 if none)."""
     numbers = []
     for path in run.tasks.glob("TASK-*.yaml"):
         stem = path.stem  # "TASK-001"
@@ -381,7 +334,6 @@ def _max_task_number(run: RunPaths) -> int:
 
 
 def detect_coverage_gaps(run: RunPaths) -> list[RoutedArtifact]:
-    """Actionable manifest artifacts not covered by any task (a coverage gap, G9)."""
     if not run.evidence_manifest.is_file():
         return []
     manifest = EvidenceManifest.model_validate_json(
@@ -392,12 +344,6 @@ def detect_coverage_gaps(run: RunPaths) -> list[RoutedArtifact]:
 
 
 def detect_derived_gaps(run: RunPaths) -> list[RoutedArtifact]:
-    """Actionable DERIVED (carved/decompressed) artifacts not covered by any task (hth.2).
-
-    Reads ``evidence/derived_artifacts.json`` and routes each derived file by its basename — but a
-    ``decompress``-produced image (``DECOMP-`` id) is forced to ``memory_image`` because a ``.raw``
-    suffix would otherwise route to ``disk_image``. The intake manifest is never consulted/mutated.
-    """
     covered = _covered_artifact_paths(run)
     gaps: list[RoutedArtifact] = []
     for rec in read_derived(run.root):
@@ -413,7 +359,6 @@ def detect_derived_gaps(run: RunPaths) -> list[RoutedArtifact]:
 
 
 def _covered_tool_paths(run: RunPaths) -> set[tuple[str, str]]:
-    """Every (tool, input_path) pair already covered by a task contract (tool-scoped coverage)."""
     covered: set[tuple[str, str]] = set()
     for path in sorted(run.tasks.glob("TASK-*.yaml")):
         contract = read_yaml_model(TaskContract, path)
@@ -423,13 +368,6 @@ def _covered_tool_paths(run: RunPaths) -> set[tuple[str, str]]:
 
 
 def detect_derived_extra_tool_gaps(run: RunPaths) -> list[tuple[RoutedArtifact, str]]:
-    """Derived hives whose multi-tool-per-hive EXTRA tools haven't run yet (hth.2 + Phase A/B/C).
-
-    The planner applies ``extra_tools_for`` to MANIFEST hives, but the derived re-ingest path
-    only mints PRIMARY-family follow-ups — so a carved ``<user>_NTUSER.DAT`` would get run-keys
-    but not recentdocs/usb/shellbags, and a carved ``SYSTEM`` not usb/shimcache. This closes that
-    gap. Coverage is per ``(tool, path)`` so it is idempotent once each extra task exists.
-    """
     covered = _covered_tool_paths(run)
     gaps: list[tuple[RoutedArtifact, str]] = []
     for rec in read_derived(run.root):
@@ -438,7 +376,7 @@ def detect_derived_extra_tool_gaps(run: RunPaths) -> list[tuple[RoutedArtifact, 
         for xtool in extra_tools_for(rec.derived_path):
             if (xtool, rec.derived_path) in covered:
                 continue
-            assert_tool_allowed(xtool)  # never mint a task for an off-allowlist tool
+            assert_tool_allowed(xtool)
             gaps.append((route_path(rec.derived_path, rec.derived_sha256), xtool))
     return gaps
 
@@ -455,10 +393,6 @@ def _write_followup_task(
     tool: str | None = None,
     objective: str | None = None,
 ) -> Path:
-    """Mint TASK-{n:03d} for a gap artifact GROUP: write its contract + FollowupRecord, then log.
-
-    ``tool``/``objective`` override the artifact's primary tool for multi-tool-per-hive extras.
-    """
     group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
     rep = group[0]
     task_id = f"TASK-{n:03d}"
@@ -493,10 +427,6 @@ def _write_followup_task(
 def generate_followup_tasks(
     run: RunPaths, *, evidence_root: Path | str | None, audit: FilteringBoundLogger
 ) -> list[Path]:
-    """Create one follow-up task per coverage gap (manifest) AND per derived gap (hth.2).
-
-    Idempotent — each new task's input path covers its gap, so a second pass finds none.
-    """
     written: list[Path] = []
     n = _max_task_number(run)
     for group in group_actionable(detect_coverage_gaps(run)):
@@ -525,8 +455,6 @@ def generate_followup_tasks(
                 audit=audit,
             )
         )
-    # Multi-tool-per-hive EXTRA tools over derived hives (the planner only does this for manifest
-    # hives): e.g. a carved NTUSER -> recentdocs/usb/shellbags, a carved SYSTEM -> usb/shimcache.
     for art, xtool in detect_derived_extra_tool_gaps(run):
         n += 1
         written.append(
@@ -551,11 +479,6 @@ def ingest_derived(
     evidence_root: Path | str | None = None,
     audit: FilteringBoundLogger | None = None,
 ) -> list[Path]:
-    """Explicit hth.2 primitive — create a derived task per uncovered actionable derived artifact.
-
-    Same effect as the G9 derived-gap path, runnable on demand (the ``ingest-derived`` CLI) before
-    the first critique. Idempotent; never touches ``evidence_manifest.json``.
-    """
     log = audit or open_orchestration_log(run.orchestration_events, run.run_id)
     written: list[Path] = []
     n = _max_task_number(run)
@@ -572,7 +495,6 @@ def ingest_derived(
                 audit=log,
             )
         )
-    # Multi-tool-per-hive extras over derived hives (NTUSER -> recentdocs/usb/shellbags, etc.).
     for art, xtool in detect_derived_extra_tool_gaps(run):
         n += 1
         written.append(
@@ -593,14 +515,6 @@ def ingest_derived(
 
 
 def _ensure_dispatchable_plan(run: RunPaths, *, created: int) -> None:
-    """Write a minimal InvestigationPlan if none exists, so the derived tasks are dispatchable.
-
-    The staged manual flow (``extract-artifacts`` → ``ingest-derived`` → ``dispatch``) never runs
-    ``plan``, so ``context/investigation_plan.yaml`` is absent and ``dispatch_run`` — which reads it
-    only to check ``review_only`` — fails closed. The derived tasks already live in ``tasks/``; this
-    records a non-review-only plan (empty step graph) so they can be dispatched. The ``plan`` /
-    high-level engine paths are unaffected (the file already exists there, so this is a no-op).
-    """
     if run.investigation_plan.exists():
         return
     manifest = EvidenceManifest.model_validate_json(
@@ -626,7 +540,6 @@ def _record_corroboration_gaps(
     evidence_root: Path | str | None,
     audit: FilteringBoundLogger,
 ) -> None:
-    """Label high-risk single-source claims as needing corroboration (G9; never dropped)."""
     for claim in claims:
         high_risk = bool(_SEVERITY.search(claim.claim))
         if claim.status == "confirmed" and high_risk and len(claim.supporting_evidence_refs) <= 1:
@@ -723,11 +636,6 @@ def _write_injection_consequence(
 
 
 def _claim_key(claim: Claim) -> tuple[str, str, str, str]:
-    """Content identity of a claim (independent of the id scheme): task + source + normalized text.
-
-    Defeats the dual id scheme — a floor ``TASK-002-CLAIM-001`` and a live
-    ``TASK-002-A1-CLAIM-001`` for the same finding over the same evidence collapse to one key.
-    """
     text = " ".join((claim.claim or "").split()).strip().lower()
     return (claim.task_id, claim.source_sha256 or "", claim.tool_call_id or "", text)
 
@@ -741,18 +649,15 @@ def _maybe_promote(
     persisted_keys: set[tuple[str, str, str, str]],
     evidence_root: Path | str | None,
 ) -> None:
-    """Promote a LIVE-agent claim; floor claims are already persisted (no re-append)."""
     if outcome in (_REJECT, _HUMAN):
-        return  # rejected / human-review claims are not promoted
+        return
     key = _claim_key(claim)
     if claim.claim_id in persisted_ids or key in persisted_keys:
-        return  # already promoted (by id OR by content) — validate-only, never duplicate
+        return
     append_claim(run.root, claim, evidence_root=evidence_root)
     persisted_ids.add(claim.claim_id)
     persisted_keys.add(key)
 
-
-# G5 — retry task generation -------------------------------------------------------
 
 _TIGHTENED_CRITERIA = (
     "Every claim MUST include a tool_call_id and source_sha256 bound to a real tool call.",
@@ -762,7 +667,6 @@ _TIGHTENED_CRITERIA = (
 
 
 def generate_retry_contract(contract: TaskContract) -> TaskContract:
-    """Return a deep copy with tightened success_criteria (idempotent). Pure (G5)."""
     tightened = list(contract.success_criteria)
     for line in _TIGHTENED_CRITERIA:
         if line not in tightened:
@@ -778,7 +682,6 @@ def write_retry(
     cause: str,
     evidence_root: Path | str | None = None,
 ) -> RetryRecord:
-    """Overwrite the contract with the tightened version + record the retry (G5)."""
     tightened = generate_retry_contract(contract)
     target = safe_write_path(
         run.root, f"tasks/{contract.task_id}.yaml", evidence_root=evidence_root
@@ -801,16 +704,9 @@ def write_retry(
 def llm_adversarial_review(
     verdicts: list[CriticVerdict], *, settings: SiftmeshSettings
 ) -> list[CriticVerdict]:
-    """Layer-2 seam (G8): the Tier-1 verdicts are AUTHORITATIVE and returned unchanged.
-
-    The advisory Tier-2 work (which may lower confidence / suggest corroboration / annotate, but
-    NEVER promote) is done by :func:`run_tier2_judge` as logged side effects — it does not alter
-    the deterministic verdicts.
-    """
     return verdicts
 
 
-# Closed verdict vocabulary the Tier-2 judge may return (advisory only — never promotes).
 _TIER2_VERDICTS = frozenset({"ok", "overbroad", "low_confidence", "needs_corroboration"})
 
 
@@ -849,13 +745,6 @@ def run_tier2_judge(
     evidence_root: Path | str | None,
     audit: FilteringBoundLogger,
 ) -> int:
-    """Advisory Tier-2 LLM judge over the PROMOTED claims (G8). Returns judgements acted on.
-
-    STRICTLY advisory: it may lower a claim's confidence (a logged ``confidence_change``), raise a
-    corroboration follow-up, or annotate uncertainty (``tier2_judgements.jsonl``) — it NEVER
-    promotes, adds, removes, or up-weights a claim (Tier-1 is the sole promoter). Fails soft: a
-    missing agent / unparseable output / fabricated claim-ref produces no change.
-    """
     promoted = [c for c in read_claims(run.root) if c.status in ("confirmed", "inferred")]
     if not promoted:
         return 0
@@ -865,15 +754,10 @@ def run_tier2_judge(
         else None
     )
     objective = manifest.incident_objective if manifest else None
-    # Advisory + OPTIONAL: a missing judge backend/key/CLI → skip + log, never fail the run (Tier-1
-    # remains the sole promoter and is untouched). invoke_judge_text returns None on any failure.
     text = invoke_judge_text(_tier2_prompt(promoted, objective), settings)
     if not text:
         log_event(audit, "tier2_judge_skipped", reason="backend_unavailable_or_no_output")
         return 0
-    # Judges routinely wrap JSON in ```json fences or prose — reuse the agent-result extractor so a
-    # well-formed opinion isn't silently dropped over a code fence. Log (don't swallow) a true parse
-    # failure so an unusable judge response is visible in the audit, not invisible.
     parsed = _extract_json(text)
     if parsed is None:
         log_event(audit, "tier2_judge_unparsable", reason="no_json_object_in_response")
@@ -889,7 +773,7 @@ def run_tier2_judge(
         verdict = j.get("verdict")
         if not isinstance(cid, str) or verdict not in _TIER2_VERDICTS:
             continue
-        claim = by_id.get(cid)  # ignore fabricated / unknown ids (never act on them)
+        claim = by_id.get(cid)
         if claim is None:
             continue
         sugg = j.get("suggested_confidence")
@@ -906,7 +790,7 @@ def run_tier2_judge(
         if (
             verdict in ("overbroad", "low_confidence")
             and isinstance(sugg, int | float)
-            and 0.0 <= float(sugg) < claim.confidence  # may ONLY lower, never raise
+            and 0.0 <= float(sugg) < claim.confidence
         ):
             append_confidence_change(
                 run.root,

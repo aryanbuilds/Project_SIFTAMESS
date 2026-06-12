@@ -1,15 +1,4 @@
-"""Deterministic Planner (E1, E3-E7) — manifest -> context packets + task contracts.
-
-``generate_plan`` is the body of ``siftmesh plan``. It reads the evidence manifest
-(metadata only), routes each artifact to a family + tool, and writes — all under the
-run directory, all via the path policy — the five ``context/`` files, one
-``tasks/TASK-*.yaml`` per actionable artifact (plus a timeline task), and
-``context/investigation_plan.yaml``. No LLM, no tool execution, no evidence reads.
-
-Output is byte-stable per manifest: nothing written here contains a wall-clock, a
-random id, an unordered-set iteration, or a host-absolute path. The only run-varying
-artifact is ``audit/orchestration_events.jsonl`` (structlog timestamps).
-"""
+"""Deterministic planner for manifest-backed task contracts."""
 
 from __future__ import annotations
 
@@ -45,13 +34,10 @@ from siftmesh_core.schemas.task import (
 from siftmesh_core.schemas.yaml_io import dump_yaml_model
 
 TEMPLATE = "windows_initial_triage"
-# Placeholder profile id; the agent-profile registry (Epic I) rebinds executors.
 DEFAULT_AGENT_PROFILE = "deterministic_executor"
-# Cross-cutting tools every triage plan references (both in the gateway allowlist).
 TIMELINE_TOOL = "build_timeline"
 VALIDATION_TOOL = "validate_claim_evidence"
 
-# What an executor may write — confined to the run dir (CLAUDE.md §6).
 _WRITE_SCOPE = ["results/", "claims/"]
 _CONTEXT_PACKET = [
     "context/case_brief.md",
@@ -63,8 +49,6 @@ _CONTEXT_PACKET = [
 
 @dataclass(frozen=True)
 class PlanResult:
-    """Outcome of a planning run (paths written + the typed plan)."""
-
     run: RunPaths
     context_files: list[Path]
     task_files: list[Path]
@@ -73,7 +57,6 @@ class PlanResult:
 
 
 def _write(run: RunPaths, rel: str, text: str) -> Path:
-    """Write *text* to a run-relative path through the path policy."""
     target = safe_write_path(run.root, rel)
     target.parent.mkdir(parents=True, exist_ok=True)
     if not text.endswith("\n"):
@@ -91,18 +74,14 @@ def _retry() -> RetryPolicy:
 
 
 def _context_packet(*, include_brief: bool) -> list[str]:
-    """The base context packet, plus the TRUSTED incident brief when one was supplied."""
     packet = list(_CONTEXT_PACKET)
     if include_brief:
         packet.append("context/incident_brief.md")
     return packet
 
 
-# Per-family aggregation cap: one executor task parses up to this many same-family artifacts
-# (200+ prefetch .pf → a few tasks, not one-per-file). Keeps a single task's runtime bounded.
 MAX_ARTIFACTS_PER_TASK = 64
 
-# Objective text for the multi-tool-per-hive extra tools (a hive feeds these beyond its main tool).
 _EXTRA_TOOL_OBJECTIVE: dict[str, str] = {
     "parse_recentdocs_mru": "Extract RecentDocs MRU (recently-opened files) from the NTUSER hive.",
     "parse_usb_registry": "Extract USBSTOR + MountPoints2 removable-media evidence from the hive.",
@@ -115,12 +94,6 @@ _EXTRA_TOOL_OBJECTIVE: dict[str, str] = {
 def group_actionable(
     routed: list[RoutedArtifact], *, max_per_task: int = MAX_ARTIFACTS_PER_TASK
 ) -> list[list[RoutedArtifact]]:
-    """Group actionable artifacts by (family, tool), chunked to ``max_per_task``, in manifest order.
-
-    The single biggest scale lever (bd 1xy6): collapses one-task-per-file into one task per family
-    group, so a real disk image yields a handful of executor tasks instead of 200+. Deterministic
-    (stable first-seen key order + manifest order within a group).
-    """
     by_key: dict[tuple[str, str], list[RoutedArtifact]] = {}
     order: list[tuple[str, str]] = []
     for art in routed:
@@ -148,20 +121,10 @@ def executor_contract(
     tool: str | None = None,
     objective: str | None = None,
 ) -> TaskContract:
-    """One TaskContract for one or more same-family actionable artifacts (E6/E7) — exactly one tool.
-
-    Public so the critic's G9 follow-up generator + the hth.2 derived-ingest reuse the exact
-    contract shape. ``arts`` may be a single artifact or a same-(family, tool) group (per-family
-    aggregation, bd 1xy6) — all share the one tool; the executor runs it over each input artifact.
-    ``origin="derived"`` marks carved/decompressed inputs (they resolve under the run dir, not the
-    evidence root). ``include_brief`` adds the TRUSTED brief to the packet. ``tool`` overrides
-    the artifact's primary tool (multi-tool-per-hive: e.g. parse_recentdocs_mru on an NTUSER hive),
-    with ``objective`` the matching task objective; the role then keys off the tool, not the family.
-    """
     group = [arts] if isinstance(arts, RoutedArtifact) else list(arts)
     rep = group[0]
     effective_tool = tool or rep.tool
-    assert effective_tool is not None  # actionable => tool set (route_artifact guarantee)
+    assert effective_tool is not None
     role = f"{tool}_executor" if tool else f"{rep.family}_executor"
     base_objective = objective or rep.objective
     objective_text = (
@@ -189,7 +152,6 @@ def executor_contract(
 def _timeline_contract(
     task_id: str, timeline_arts: list[RoutedArtifact], *, include_brief: bool = False
 ) -> TaskContract:
-    """A single build_timeline task over every timeline-capable artifact."""
     return TaskContract(
         task_id=task_id,
         role="timeline_executor",
@@ -210,11 +172,9 @@ def _timeline_contract(
 
 @dataclass(frozen=True)
 class _PlannedTask:
-    """A minted task contract + everything the plan step needs (no later re-derivation)."""
-
     task_id: str
     contract: TaskContract
-    kind: PlanStepKind  # "executor" | "timeline"
+    kind: PlanStepKind
     tool: str
     input_paths: list[str]
     description: str
@@ -226,12 +186,11 @@ def _build_contracts(
     include_brief: bool = False,
     enable_super_timeline: bool = False,
 ) -> list[_PlannedTask]:
-    """Mint one task per actionable artifact FAMILY GROUP (+ a timeline task), in manifest order."""
     planned: list[_PlannedTask] = []
     n = 0
     for group in group_actionable(routed):
         rep = group[0]
-        assert rep.tool is not None  # actionable => tool set (route_artifact guarantee)
+        assert rep.tool is not None
         n += 1
         task_id = f"TASK-{n:03d}"
         planned.append(
@@ -244,9 +203,6 @@ def _build_contracts(
                 description=rep.objective,
             )
         )
-    # Multi-tool-per-hive: a registry hive feeds extra typed tools beyond its primary run-keys tool
-    # (NTUSER -> recentdocs + usb; SYSTEM -> usb). Mint one task per extra tool over its matching
-    # hives, grouped + manifest-ordered (deterministic), after the primary tasks, before timeline.
     extra_groups: dict[str, list[RoutedArtifact]] = {}
     extra_order: list[str] = []
     for art in routed:
@@ -275,8 +231,6 @@ def _build_contracts(
                 )
             )
 
-    # Opt-in/gated Plaso super-timeline: an ADDITIONAL heavy task per disk image, never on the
-    # cheap auto path. Only the planner emits it (config flag) — everything else is zero-change.
     if enable_super_timeline:
         st_objective = "Build a Plaso super-timeline across the whole disk image."
         for art in routed:
@@ -324,7 +278,6 @@ def _build_plan(
     *,
     review_only: bool,
 ) -> InvestigationPlan:
-    """Assemble the ordered step graph (E4) directly from the minted tasks."""
     steps: list[PlanStep] = []
     sid = 0
 
@@ -389,8 +342,6 @@ def _build_case_brief(
     present = [f for f in FAMILY_ORDER if any(a.family == f for a in routed)]
     family_line = ", ".join(FAMILY_LABEL[f] for f in present) or "none recognised"
     mode = "review-only (recommendations only, no dispatch)" if review_only else "standard"
-    # The operator's TRUSTED incident objective (from --brief), if supplied, drives the
-    # investigation. It is plain trusted text (NOT datamarked like the hostile case_id).
     if manifest.incident_objective:
         objective_lines = [
             "Operator incident objective (investigate TOWARD this; full brief in "
@@ -451,9 +402,6 @@ def _build_assumptions(routed: list[RoutedArtifact]) -> str:
         "manifest metadata, never raw evidence bytes.",
         "",
     ]
-    # Surface every manifest entry that gets no directly-dispatchable task, so a full-auto
-    # run never *silently* drops evidence (e.g. a compressed memory capture). Archives need
-    # an explicit decompress + re-ingest; a disk image's contents appear after extraction.
     non_actionable = [a for a in routed if not a.actionable]
     if non_actionable:
         lines += [
@@ -509,7 +457,6 @@ def _build_tool_map(routed: list[RoutedArtifact]) -> str:
 def generate_plan(
     run: RunPaths, *, settings: SiftmeshSettings, review_only: bool = False
 ) -> PlanResult:
-    """Generate the deterministic investigation plan + task contracts for a run."""
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
     log_event(audit, "plan_started", template=TEMPLATE, review_only=review_only)
 
@@ -528,7 +475,6 @@ def generate_plan(
             note="archives need decompress + ingest-derived; see context/assumptions.md",
         )
 
-    # E2 context pack (deterministic; LLM seam is identity in Epic E).
     context_pack_md = enrich_context_pack(
         build_context_pack(manifest, routed), manifest=manifest, settings=settings
     )
@@ -540,8 +486,6 @@ def generate_plan(
         _write(run, "context/tool_map.md", _build_tool_map(routed)),
     ]
 
-    # E6/E7 task contracts. When the operator supplied an incident objective (--brief), each
-    # contract references the TRUSTED brief in its context packet (the agent also gets it inlined).
     planned = _build_contracts(
         routed,
         include_brief=manifest.incident_objective is not None,
@@ -552,7 +496,6 @@ def generate_plan(
         for task in planned
     ]
 
-    # E4 investigation plan (written last so context_files count is the 5 above + this).
     plan = _build_plan(manifest, planned, review_only=review_only)
     context_files.append(_write(run, "context/investigation_plan.yaml", dump_yaml_model(plan)))
 

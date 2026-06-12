@@ -1,18 +1,17 @@
 # ROCBA — Complete Operation Log
 
-A faithful, end-to-end record of the **real** SIFTMesh investigation against the ROCBA dataset on the
-SANS SIFT workstation — every command, its real result, the findings, and an **honest** mapping to the
-five questions the incident brief asks. Nothing here is fabricated; where the data does not answer a
-question, this document says so.
+A record of the SIFTMesh investigation against the ROCBA dataset on the SANS SIFT workstation — every
+command, its result, the findings, and the mapping to the five questions the incident brief asks.
+Nothing here is fabricated; where the data does not answer a question, this document says so.
 
 > **Scope.** This run used SIFTMesh's **19-tool** governed allowlist — the original 10 (hash · vault ·
 > EVTX-security · EVTX-PowerShell · prefetch · registry-Run-keys · timeline · claim-validation ·
 > disk-image extraction · memory triage) **plus the 9 deep-evidence tools** added in Phases A–C:
 > `parse_mft_filesystem`, `parse_recentdocs_mru`, `parse_usb_registry`, `parse_browser_history`,
 > `parse_lnk_jumplists`, `parse_shellbags`, `parse_amcache_shimcache`, `parse_usnjrnl`, and
-> `build_super_timeline` (Plaso). With these, the run materially answers **all five** brief questions
-> with evidence-anchored leads — see "Objective coverage" below. Remaining honest gaps (SRUM, Outlook
-> email, server-side SharePoint logs) are documented in §5.
+> `build_super_timeline` (Plaso). With these, the run answers **all five** brief questions — see
+> "Objective coverage" below. Remaining gaps (SRUM, Outlook email, server-side SharePoint logs) are
+> documented in §5.
 
 ---
 
@@ -60,13 +59,13 @@ Real results:
   (recorded in `failed[]`). Prompt-injection: evidence strings that looked like instructions were
   flagged + logged, never executed.
 
-> **Two real issues this run surfaced (both fixed, commit `9c24e23`):** (1) Plaso's full-disk scan
-> crashes on this image's **unreadable VSS backup header** (a partial-acquisition trait) → added
-> `--vss_stores none` + a fallback to the extracted-artifacts dir (real Plaso over real carved
-> evidence; the 5,727,623-event timeline was built that way). (2) The `--auto` derived re-ingest only
-> minted **primary**-family tasks, so the multi-tool-per-hive extras (`recentdocs`/`usb`/`shellbags` on
-> NTUSER, `shimcache` on SYSTEM) didn't auto-fire → fixed `generate_followup_tasks` / `ingest_derived`
-> to apply `extra_tools_for` to carved hives. Those tasks were then dispatched into this run (`TASK-018…025`).
+> **Two issues this run surfaced (both fixed, commit `9c24e23`):** (1) Plaso's full-disk scan crashes
+> on this image's **unreadable VSS backup header** (a partial-acquisition trait) → added `--vss_stores
+> none` + a fallback to the extracted-artifacts dir (the 5,727,623-event timeline was built that way).
+> (2) The `--auto` derived re-ingest only minted **primary**-family tasks, so the
+> `recentdocs`/`usb`/`shellbags` extras on NTUSER and `shimcache` on SYSTEM didn't auto-fire → fixed
+> `generate_followup_tasks` / `ingest_derived` to apply `extra_tools_for` to carved hives. Those tasks
+> were then dispatched into this run (`TASK-018…025`).
 
 ### 2.3 Memory — seal, decompress, triage (Volatility 3), reclaim space
 ```bash
@@ -92,8 +91,7 @@ Plaso super-timeline. Memory shows live OneDrive/iCloud/Teams cloud egress.
 
 ## 4. Objective coverage — does this run answer the brief's 5 questions?
 
-**Verdict: yes, materially — real evidence-anchored leads for all five** (analyst-grade, not a legal
-conclusion).
+**Verdict: yes — leads for all five** (analyst-grade, not a legal conclusion).
 
 | Brief question | Status | What the run shows (tool) |
 |---|---|---|

@@ -1,11 +1,4 @@
-"""``siftmesh doctor`` (A8).
-
-Verify the host + each backend and **fail closed** on a missing *required*
-dependency — never a fake fallback (*missing = OK; fake = not OK*). Optional
-forensic backends (the ``sift`` extra) are **reported, not required**: a missing
-one is fine here; it only fails closed when the corresponding tool is actually
-*used* (Epic D). Env-only — needs no forensic evidence.
-"""
+"""Health checks for `siftmesh doctor`."""
 
 from __future__ import annotations
 
@@ -35,7 +28,6 @@ FAIL = "fail"
 WARN = "warn"
 _MARK = {OK: "[ ok ]", FAIL: "[FAIL]", WARN: "[warn]"}
 
-# Required runtime deps (the chassis). Missing one => fail closed.
 CORE_DEPS: tuple[tuple[str, str], ...] = (
     ("typer", "Typer CLI"),
     ("pydantic", "Pydantic"),
@@ -47,7 +39,6 @@ CORE_DEPS: tuple[tuple[str, str], ...] = (
     ("regipy", "regipy (registry)"),
 )
 
-# Optional forensic backends (`sift` extra). Missing => reported, not a failure.
 FORENSIC_DEPS: tuple[tuple[str, str], ...] = (
     ("evtx", "EVTX (pyevtx-rs)"),
     ("pyscca", "Prefetch (libscca)"),
@@ -58,16 +49,12 @@ FORENSIC_DEPS: tuple[tuple[str, str], ...] = (
     ("pyfwps", "Shellbag property-store (libfwps)"),
 )
 
-# Optional incident-brief readers (`brief` extra). Missing => WARN; only fails closed when a
-# brief of that format is actually passed via --brief (.txt/.md need nothing).
 BRIEF_DEPS: tuple[tuple[str, str], ...] = (
     ("pptx", "Incident brief .pptx (python-pptx)"),
     ("docx", "Incident brief .docx (python-docx)"),
     ("pypdf", "Incident brief .pdf (pypdf)"),
 )
 
-# Optional SIFT-lane host CLIs (Epic D deepening: disk-image extraction + memory
-# triage). Missing => WARN, not a failure; the tool that needs one fails closed.
 SIFT_LANE_TOOLS: tuple[tuple[str, str], ...] = (
     ("mmls", "Sleuthkit mmls (partitions)"),
     ("fls", "Sleuthkit fls (dir walk)"),
@@ -95,7 +82,6 @@ def _module_available(name: str) -> bool:
 
 
 def _cwd_writable() -> bool:
-    """True if a directory can be created in the CWD (no artifacts left behind)."""
     try:
         with tempfile.TemporaryDirectory(dir=Path.cwd()):
             return True
@@ -104,7 +90,6 @@ def _cwd_writable() -> bool:
 
 
 def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
-    """Run every host/dependency/safety check and return the results."""
     settings = settings or load_settings()
     checks: list[Check] = [
         Check(
@@ -112,8 +97,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             "python >= 3.11",
             platform.python_version(),
         ),
-        # Linux-first: a non-Linux host is a warning (the chassis is portable),
-        # not a failure. Real forensic execution targets Linux/SANS SIFT.
         Check(
             OK if platform.system() == "Linux" else WARN,
             "linux target",
@@ -123,8 +106,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
     for mod, human in CORE_DEPS:
         ok = _module_available(mod)
         checks.append(Check(OK if ok else FAIL, f"dep: {human}", mod if ok else f"MISSING ({mod})"))
-    # NOTE: `uv sync --extra X` is declarative — it makes the env exactly base+X and REMOVES
-    # other extras. Recommend --all-extras so installing one suite never uninstalls another.
     for mod, human in FORENSIC_DEPS:
         ok = _module_available(mod)
         checks.append(
@@ -162,7 +143,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
         )
     )
     checks.append(Check(OK if _cwd_writable() else FAIL, "run-dir writable", "case_runs/ (cwd)"))
-    # Gateway tool surface (criterion 4): exactly the 8 §7 tools, none forbidden.
     from siftmesh_core.mcp_gateway.registry import ALLOWED_TOOLS, FORBIDDEN_TOOLS
 
     allowlist_ok = len(ALLOWED_TOOLS) == 19 and ALLOWED_TOOLS.isdisjoint(FORBIDDEN_TOOLS)
@@ -173,8 +153,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             f"{len(ALLOWED_TOOLS)} tools, no forbidden",
         )
     )
-    # SIFT-lane host CLIs (WARN-only): present on a SANS SIFT host, absent on a clean
-    # dev/CI box. The image/memory tools fail closed if one is actually missing.
     for binary, human in SIFT_LANE_TOOLS:
         present = shutil.which(binary) is not None
         checks.append(
@@ -188,8 +166,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             settings.vol_path if vol_present else "absent (subprocess-only, never imported)",
         )
     )
-    # Live agent (loud opt-in): report whether the Claude headless agent could run here. Absent =>
-    # WARN; runs fall to the deterministic floor unless `--agent claude` is used with CLI + auth.
     try:
         from siftmesh_core.adapters.claude_adapter import ClaudeHeadlessAdapter
 
@@ -205,7 +181,6 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             else "absent (CLI/auth) — runs use the deterministic floor",
         )
     )
-    # Safety posture (CLAUDE.md §11) read from config.
     checks.append(
         Check(
             OK if settings.raw_shell is False else FAIL,
@@ -248,10 +223,6 @@ def _format_protocol_sift(status: ProtocolSiftStatus) -> list[str]:
 
 
 def run_setup(settings: SiftmeshSettings) -> int:
-    """One-command install/configure: `uv sync --all-extras` + create the vol symbol cache.
-
-    Fails closed if `uv` is absent (never a pip fallback). Returns 0 on success, 1 on failure.
-    """
     import importlib
     import subprocess
 
@@ -262,11 +233,11 @@ def run_setup(settings: SiftmeshSettings) -> int:
         )
         return 1
     print("setup: uv sync --all-extras (installs forensic + brief + a2a backends)…")
-    proc = subprocess.run([uv, "sync", "--all-extras"], check=False)  # fixed argv, shell=False
+    proc = subprocess.run([uv, "sync", "--all-extras"], check=False)
     if proc.returncode != 0:
         print(f"{_MARK[FAIL]} setup: `uv sync --all-extras` failed (exit {proc.returncode})")
         return 1
-    importlib.invalidate_caches()  # so the dependency checks below see freshly installed packages
+    importlib.invalidate_caches()
     cache = Path(settings.vol_symbol_dirs)
     try:
         cache.mkdir(parents=True, exist_ok=True)
@@ -277,12 +248,7 @@ def run_setup(settings: SiftmeshSettings) -> int:
     return 0
 
 
-# ---- Agent onboarding (Epic Q) -------------------------------------------------------------------
-# The connector kinds we onboard (a coding agent the operator could dispatch to). ``generic_shell``
-# is operator-defined fixed-argv (not an onboarding target); ``deterministic`` is the always-present
-# real-tool floor.
 _LIVE_KINDS = ("claude", "opencode", "headless")
-# Default pick order when no settings.agent_preference is configured (best first).
 _DEFAULT_AGENT_ORDER = (
     "claude_headless",
     "opencode_headless",
@@ -292,7 +258,6 @@ _DEFAULT_AGENT_ORDER = (
 
 
 def _profile_cli(prof: AgentProfile, settings: SiftmeshSettings) -> str | None:
-    """The launch binary for a dispatchable profile (None for the deterministic floor)."""
     if prof.kind == "claude":
         return settings.claude_cli_path
     if prof.kind == "opencode":
@@ -303,7 +268,6 @@ def _profile_cli(prof: AgentProfile, settings: SiftmeshSettings) -> str | None:
 
 
 def _agent_version(cli: str) -> str:
-    """Best-effort ``<cli> --version`` first line (fast, fixed-argv, abs-path, never raises)."""
     resolved = shutil.which(cli)
     if resolved is None:
         return "absent"
@@ -323,7 +287,6 @@ def _agent_version(cli: str) -> str:
 
 
 def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
-    """Whether the agent is authenticated (env var / cached credentials, or none required)."""
     if prof.kind == "claude":
         try:
             from siftmesh_core.adapters.claude_adapter import claude_available
@@ -331,9 +294,7 @@ def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
             return bool(claude_available(settings))
         except Exception:
             return False
-    if (
-        prof.kind == "opencode"
-    ):  # OpenCode uses its own login (auth.json); presence is treated usable
+    if prof.kind == "opencode":
         return shutil.which(settings.opencode_cli_path) is not None
     if prof.kind == "headless":
         from siftmesh_core.adapters.headless import profile_authed
@@ -343,11 +304,10 @@ def _agent_auth_ok(prof: AgentProfile, settings: SiftmeshSettings) -> bool:
 
 
 def _agent_sandboxed(prof: AgentProfile) -> bool:
-    """Whether the agent's native tools are denied (claude yes; opencode no; headless: recipe)."""
     if prof.kind in ("deterministic", "claude"):
         return True
     if prof.kind == "opencode":
-        return False  # secondary path; no native-tool deny wired (its adapter notes this)
+        return False
     if prof.kind == "headless":
         from siftmesh_core.adapters.headless import is_sandboxed
 
@@ -356,22 +316,16 @@ def _agent_sandboxed(prof: AgentProfile) -> bool:
 
 
 def _agent_tool_reach(prof: AgentProfile) -> str:
-    """Can this agent reach the typed forensic tools? (honest; only Claude is verified today)."""
     if prof.kind in ("deterministic", "claude"):
         return "yes"
     if prof.kind == "opencode":
-        return "no"  # OpenCode MCP wiring not done yet (round-2)
+        return "no"
     if prof.kind == "headless":
         return "yes" if prof.mcp_strategy == "claude_flag" else "verify-live"
     return "verify-live"
 
 
 def _agent_safety_tier(kind: str, sandboxed: bool, tool_reachable: str) -> str:
-    """Honest containment label derived from the capability facts (labels only — never gates).
-
-    T0 = the deterministic floor; T1 = sandboxed AND typed tools via strict-MCP (claude today);
-    T2 = any other live agent (unsandboxed, or tool-reach unproven/native — explicit opt-in).
-    """
     if kind == "deterministic":
         return "T0"
     if sandboxed and tool_reachable == "yes":
@@ -380,11 +334,6 @@ def _agent_safety_tier(kind: str, sandboxed: bool, tool_reachable: str) -> str:
 
 
 def profile_safety_tiers() -> dict[str, str]:
-    """``{profile_id: tier}`` from the profiles alone — pure, NO ``--version`` subprocess.
-
-    Cheap enough for the cockpit to call once per mount (the full ``probe_agents`` shells each
-    present CLI; this only needs the static profile recipe to classify containment).
-    """
     out: dict[str, str] = {}
     for pid, prof in load_profiles().items():
         out[pid] = _agent_safety_tier(prof.kind, _agent_sandboxed(prof), _agent_tool_reach(prof))
@@ -392,35 +341,22 @@ def profile_safety_tiers() -> dict[str, str]:
 
 
 def _is_ready(c: AgentCapability) -> bool:
-    """A live agent that can do forensic work: present + authed + sandboxed + tool-reaching."""
     return c.present and c.auth_ok and c.sandboxed and c.tool_reachable == "yes"
 
 
 def _live_candidate(caps: list[AgentCapability], settings: SiftmeshSettings) -> str | None:
-    """Best ready LIVE agent to opt into via ``--agent`` (ignores executor_selection; not floor)."""
     ready = {c.profile_id for c in caps if _is_ready(c) and c.kind != "deterministic"}
     order = settings.agent_preference or list(_DEFAULT_AGENT_ORDER)
     return next((pid for pid in order if pid in ready), None)
 
 
 def _choose_default(caps: list[AgentCapability], settings: SiftmeshSettings) -> str:
-    """What a plain ``siftmesh run`` dispatches IN THIS CONFIG — mirrors ``resolve_profile``.
-
-    When ``executor_selection == "deterministic"`` (the shipped default) that is the floor, even if
-    a live agent is installed — so the map never claims a live agent will run when it won't. The
-    ready live agent is surfaced separately as ``live_candidate`` (the ``--agent`` opt-in).
-    """
     if settings.executor_selection == "deterministic":
         return "deterministic_executor"
     return _live_candidate(caps, settings) or "deterministic_executor"
 
 
 def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap:
-    """Env-only onboarding probe: which agent CLIs are installed/authed/sandboxed + the default.
-
-    Pure function of the host + the profile registry (no agent is launched beyond ``--version``),
-    so the map is fully snapshot-stable. Fails closed via ``StrictModel`` validation.
-    """
     settings = settings or load_settings()
     caps: list[AgentCapability] = []
     for pid, prof in load_profiles().items():
@@ -440,7 +376,7 @@ def probe_agents(settings: SiftmeshSettings | None = None) -> AgentCapabilityMap
             )
             continue
         if prof.kind not in _LIVE_KINDS:
-            continue  # generic_shell / future kinds are not onboarding targets
+            continue
         cli = _profile_cli(prof, settings)
         present = bool(cli and shutil.which(cli))
         sandboxed = _agent_sandboxed(prof)
@@ -472,7 +408,6 @@ def write_agent_capability_map(
     settings: SiftmeshSettings | None = None,
     evidence_root: Path | str | None = None,
 ) -> Path:
-    """Write the onboarding map to ``context/agent_capabilities.json`` (path-policed)."""
     cap = probe_agents(settings)
     target = safe_write_path(
         run_root, Path("context") / "agent_capabilities.json", evidence_root=evidence_root
@@ -495,7 +430,6 @@ def _format_agents(cap: AgentCapabilityMap) -> list[str]:
             f"  {_MARK[mark]} {c.profile_id:<22} [{c.safety_tier}] {present:<22} "
             f"{auth:<8} {box:<11} tools:{c.tool_reachable}{sel}"
         )
-        # Guided remediation: for a not-ready agent, the exact fix (data-driven from its profile).
         if not _is_ready(c) and c.kind != "deterministic":
             for hint in agent_remediation(c, profiles.get(c.profile_id)):
                 lines.append(f"      → {hint}")
@@ -515,13 +449,11 @@ def _format_agents(cap: AgentCapabilityMap) -> list[str]:
 
 
 def _safety_tier_legend() -> list[str]:
-    """The shared T0-T3 legend (CLI / doctor / TUI render the same honest definitions)."""
     return ["  safety tiers:", *[f"    {safety_tier_label(t)}" for t in SAFETY_TIER_DESC]]
 
 
 def _auth_hint(c: AgentCapability, prof: AgentProfile | None) -> str:
-    """The exact authentication step for a present-but-unauthed agent (kind-aware, honest)."""
-    if c.kind == "claude":  # subscription OR API; auth_env is empty (handled by claude_available)
+    if c.kind == "claude":
         return "authenticate: `claude setup-token` (subscription) or export ANTHROPIC_API_KEY=…"
     if c.kind == "opencode":
         return "authenticate: `opencode auth login` (its own auth.json)"
@@ -531,11 +463,10 @@ def _auth_hint(c: AgentCapability, prof: AgentProfile | None) -> str:
 
 
 def agent_remediation(c: AgentCapability, prof: AgentProfile | None) -> list[str]:
-    """Honest, data-driven next steps for a not-ready agent (no interactive auth driven by us)."""
     hints: list[str] = []
     if not c.present:
         hints.append(f"install the `{c.profile_id.split('_')[0]}` CLI, then re-probe")
-        return hints  # nothing else is actionable until the CLI exists
+        return hints
     if not c.auth_ok:
         hints.append(_auth_hint(c, prof))
     if not c.sandboxed:
@@ -558,12 +489,6 @@ def run_doctor(
     setup: bool = False,
     settings: SiftmeshSettings | None = None,
 ) -> int:
-    """Run all checks, print a report, return an exit code (0 = ok, 1 = fail-closed).
-
-    With ``setup=True``, first install all extras + create the symbol cache (one-command setup),
-    then run the checks (so the report proves the setup worked). With ``agents=True``, also print
-    the coding-agent onboarding map (absent agents are informational, never a fail-closed failure).
-    """
     settings = settings or load_settings()
     if setup and run_setup(settings) != 0:
         return 1

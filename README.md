@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>Autonomous, evidence-safe DFIR orchestration for SANS SIFT.</b><br>
-  The LLM proposes, the code decides — every finding is anchored to a real tool call, and every run is replayable.
+  The LLM proposes; the code decides. Every finding is anchored to a real tool call, and every run is replayable.
 </p>
 
 ---
@@ -71,7 +71,7 @@ detect it:
 
 ```bash
 # uv (required)            -> https://docs.astral.sh/uv/
-# claude code (best tool reach today)
+# claude code
 npm i -g @anthropic-ai/claude-code      # then: claude setup-token
 # any of these also work as the executor or the Tier-2 judge:
 npm i -g @openai/codex                   # then: codex login
@@ -94,7 +94,7 @@ uv run siftmesh setup    # installs all backends, probes your agents, lets you p
 uv run siftmesh doctor   # fail-closed health check (host + every tool backend)
 ```
 
-The commands you'll actually use day to day:
+Common commands:
 
 ```bash
 uv run siftmesh run ./case --evidence ~/data --objective "was this host compromised?" --auto
@@ -253,8 +253,6 @@ deterministic floor.
 
 Apache-2.0 — see [`LICENSE`](LICENSE).
 
-Thanks for taking a look. SIFTMesh exists because autonomous tooling and forensic rigor shouldn't be a
-trade-off — you can have an agent do the legwork and still trust every line of the report. If it saves
-you an hour on a case, it did its job. Contributions, issues, and hard questions are all welcome.
+Thanks for taking a look. Contributions, issues, and hard questions are all welcome.
 
 > *securing digital world one byte at a time*

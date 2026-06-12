@@ -1,13 +1,3 @@
-"""Real in-process forensic backend (D3).
-
-100% in-process Python library calls — zero subprocess, zero shell (criterion 4):
-EVTX via ``evtx`` (pyevtx-rs), registry via ``regipy``, prefetch via ``pyscca``
-(libscca), MFT via ``mft`` (pymft-rs). Each parser lazy-imports its library and
-raises :class:`BackendUnavailableError` if absent (fail closed; ``uv sync --extra
-sift``) — never a fake fallback. Output is normalized dict rows; the typed tool
-layer wraps them in ``ToolResult`` subclasses with provenance.
-"""
-
 from __future__ import annotations
 
 import json
@@ -20,7 +10,6 @@ from typing import Any
 
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 
-# Windows registry autostart locations (HKLM SOFTWARE hive + HKCU NTUSER.DAT hive).
 _RUN_KEY_PATHS: tuple[str, ...] = (
     r"\Microsoft\Windows\CurrentVersion\Run",
     r"\Microsoft\Windows\CurrentVersion\RunOnce",
@@ -28,14 +17,11 @@ _RUN_KEY_PATHS: tuple[str, ...] = (
     r"\Software\Microsoft\Windows\CurrentVersion\RunOnce",
 )
 
-# HKCU RecentDocs (per-extension subkeys hold the same value shape).
 _RECENTDOCS_PATH = r"\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs"
-# Removable-media evidence: NTUSER MountPoints2 + SYSTEM USBSTOR/MountedDevices.
 _MOUNTPOINTS2_PATH = r"\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
 
 
 def _filetime_iso(filetime: int | None) -> str | None:
-    """Windows FILETIME (100 ns ticks since 1601) -> ISO-8601 UTC ``Z`` string, or None."""
     if not filetime:
         return None
     try:
@@ -46,10 +32,6 @@ def _filetime_iso(filetime: int | None) -> str | None:
 
 
 def _epoch_us_iso(value: int | None, epoch_year: int) -> str | None:
-    """Microseconds since (epoch_year-01-01 UTC) -> ISO-8601 UTC ``Z`` string, or None.
-
-    Covers Chromium's WebKit timestamp (µs since 1601) and Firefox PRTime (µs since 1970).
-    """
     if not value:
         return None
     try:
@@ -60,19 +42,15 @@ def _epoch_us_iso(value: int | None, epoch_year: int) -> str | None:
 
 
 def _decode_utf16_name(blob: Any) -> str | None:
-    """Decode the leading UTF-16LE (null-terminated) filename from a RecentDocs binary value."""
-    if not isinstance(blob, (bytes, bytearray)):
+    if not isinstance(blob, bytes | bytearray):
         return None
     name = bytes(blob).split(b"\x00\x00", 1)[0].decode("utf-16-le", errors="ignore")
     name = name.rstrip("\x00").strip()
     return name or None
 
 
-# A shell-link (.lnk) starts with header size 0x4C + CLSID {00021401-0000-0000-C000-000000000046}.
-# CustomDestinations-ms is a flat concatenation of LNK structures; we split on this signature.
 _LNK_HEADER = b"\x4c\x00\x00\x00" + bytes.fromhex("0114020000000000c000000000000046")
 
-# USN journal ($UsnJrnl:$J) change-reason bitmask -> name (Microsoft USN_REASON_* constants).
 _USN_REASONS: tuple[tuple[int, str], ...] = (
     (0x00000001, "DATA_OVERWRITE"),
     (0x00000002, "DATA_EXTEND"),
@@ -96,16 +74,10 @@ _USN_REASONS: tuple[tuple[int, str], ...] = (
 
 
 def _decode_usn_reason(mask: int) -> list[str] | None:
-    """USN reason bitmask -> sorted list of flag names (None if no known bit set)."""
     return [name for bit, name in _USN_REASONS if mask & bit] or None
 
 
 def _dt_iso(value: Any) -> str | None:
-    """Normalize a datetime or ISO string to an ISO-8601 ``Z`` string; pass through None.
-
-    LnkParse3 returns tz-aware datetimes; regipy plugins return ISO strings with ``+00:00`` —
-    both end as a trailing ``Z`` for consistency with the other tools' timestamps.
-    """
     if value is None:
         return None
     if hasattr(value, "isoformat"):
@@ -114,7 +86,6 @@ def _dt_iso(value: Any) -> str | None:
 
 
 def _lnk_row(blob: bytes, *, kind: str, source: str) -> dict[str, Any]:
-    """Parse one LNK byte blob (LnkParse3) into a normalized row."""
     import LnkParse3
 
     j = LnkParse3.lnk_file(indata=blob).get_json()
@@ -138,7 +109,6 @@ def _lnk_row(blob: bytes, *, kind: str, source: str) -> dict[str, Any]:
 
 
 def _auto_dest_rows(path: Path) -> list[dict[str, Any]]:
-    """AutomaticDestinations-ms = OLE compound; each numeric stream is a LNK (DestList skipped)."""
     try:
         import olefile
     except ImportError as exc:  # pragma: no cover
@@ -152,12 +122,12 @@ def _auto_dest_rows(path: Path) -> list[dict[str, Any]]:
         for entry in ole.listdir():
             leaf = entry[-1]
             if not (isinstance(leaf, str) and leaf.isdigit()):
-                continue  # DestList / non-LNK stream
+                continue
             try:
                 rows.append(
                     _lnk_row(ole.openstream(entry).read(), kind="jumplist", source="/".join(entry))
                 )
-            except Exception:  # one corrupt stream never aborts the whole jumplist
+            except Exception:
                 continue
     finally:
         ole.close()
@@ -165,7 +135,6 @@ def _auto_dest_rows(path: Path) -> list[dict[str, Any]]:
 
 
 def _custom_dest_rows(path: Path) -> list[dict[str, Any]]:
-    """CustomDestinations-ms = flat binary; split on the LNK header signature, parse each."""
     blob = path.read_bytes()
     offsets: list[int] = []
     i = blob.find(_LNK_HEADER)
@@ -177,18 +146,12 @@ def _custom_dest_rows(path: Path) -> list[dict[str, Any]]:
         end = offsets[k + 1] if k + 1 < len(offsets) else len(blob)
         try:
             rows.append(_lnk_row(blob[start:end], kind="jumplist", source=f"entry-{k}"))
-        except Exception:  # skip a malformed embedded LNK, keep the rest
+        except Exception:
             continue
     return rows
 
 
 def _run_regipy_plugin(plugin: Any, fail_msg: str) -> list[dict[str, Any]]:
-    """Run a regipy plugin gated by its ``can_run``; a missing decoder lib fails closed.
-
-    Returns [] if this plugin does not apply to the hive (``can_run`` False / raises). A
-    ``ModuleNotFoundError`` inside ``run`` means a regipy[full] decoder (libfwsi/libfwps) is
-    absent -> :class:`BackendUnavailableError` (never a fake result).
-    """
     try:
         if not plugin.can_run():
             return []
@@ -202,7 +165,6 @@ def _run_regipy_plugin(plugin: Any, fail_msg: str) -> list[dict[str, Any]]:
 
 
 def _shellbag_row(entry: dict[str, Any], source_hive: str) -> dict[str, Any]:
-    """Normalize one regipy shellbag plugin entry to a stable row."""
     return {
         "source_hive": source_hive,
         "bag_path": entry.get("reg_path"),
@@ -219,7 +181,6 @@ def _shellbag_row(entry: dict[str, Any], source_hive: str) -> dict[str, Any]:
 
 
 def _system_field(data: dict[str, Any], key: str) -> Any:
-    """Pull a field from Event.System, unwrapping ``#text`` attribute objects."""
     value = data.get("Event", {}).get("System", {}).get(key)
     if isinstance(value, dict):
         return value.get("#text", value.get("#attributes"))
@@ -227,8 +188,6 @@ def _system_field(data: dict[str, Any], key: str) -> Any:
 
 
 class RealBackend:
-    """In-process real forensic backend (default; the demo path)."""
-
     name = "real"
 
     def parse_evtx(
@@ -297,7 +256,6 @@ class RealBackend:
             except RegistryKeyNotFoundException:
                 continue
             for value in key.get_values():
-                # regipy Value records expose name/value/value_type.
                 rows.append(
                     {
                         "key_path": key_path,
@@ -318,7 +276,7 @@ class RealBackend:
 
         scca = pyscca.open(str(path))
         last_run_times: list[str] = []
-        for index in range(8):  # Win8+ stores up to 8; older formats fewer.
+        for index in range(8):
             try:
                 value = scca.get_last_run_time(index)
             except (OSError, ValueError, RuntimeError):
@@ -345,7 +303,6 @@ class RealBackend:
         }
 
     def extract_recentdocs(self, path: Path) -> list[dict[str, Any]]:
-        """RecentDocs MRU (NTUSER.DAT) — files the user recently opened (real, regipy)."""
         try:
             from regipy.exceptions import RegistryKeyNotFoundException
             from regipy.registry import RegistryHive
@@ -364,7 +321,7 @@ class RealBackend:
             last_write = _filetime_iso(getattr(getattr(key, "header", None), "last_modified", None))
             for value in key.get_values():
                 if getattr(value, "name", None) == "MRUListEx":
-                    continue  # ordering blob, not a filename
+                    continue
                 name = _decode_utf16_name(getattr(value, "value", None))
                 if name:
                     rows.append(
@@ -378,7 +335,6 @@ class RealBackend:
         return rows
 
     def extract_usb_devices(self, path: Path) -> list[dict[str, Any]]:
-        """Removable-media evidence: USBSTOR (SYSTEM) + MountPoints2 (NTUSER) (real, regipy)."""
         try:
             from regipy.exceptions import RegistryKeyNotFoundException
             from regipy.registry import RegistryHive
@@ -388,7 +344,6 @@ class RealBackend:
         hive = RegistryHive(str(path))
         rows: list[dict[str, Any]] = []
 
-        # NTUSER: mounted volumes / UNC shares the user accessed.
         try:
             mp = hive.get_key(_MOUNTPOINTS2_PATH)
         except RegistryKeyNotFoundException:
@@ -405,7 +360,6 @@ class RealBackend:
                     }
                 )
 
-        # SYSTEM: USBSTOR device enumeration under the ACTIVE control set.
         control_set = "ControlSet001"
         try:
             select = hive.get_key(r"\Select")
@@ -441,11 +395,6 @@ class RealBackend:
         return rows
 
     def parse_browser_history(self, path: Path) -> list[dict[str, Any]]:
-        """Browser history (Chromium ``History`` / Firefox ``places.sqlite``) — stdlib sqlite3.
-
-        The DB is copied to a temp file and opened ``mode=ro&immutable=1`` so the original
-        evidence is never touched and a stale WAL lock cannot block the read (forensic-safe).
-        """
         rows: list[dict[str, Any]] = []
         with tempfile.TemporaryDirectory(prefix="siftmesh-browser-") as tmp:
             copy = Path(tmp) / "history.db"
@@ -459,9 +408,9 @@ class RealBackend:
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     ).fetchall()
                 }
-                if "urls" in tables:  # Chromium (Chrome / Edge)
+                if "urls" in tables:
                     rows.extend(self._chromium_history(conn, tables))
-                elif "moz_places" in tables:  # Firefox
+                elif "moz_places" in tables:
                     rows.extend(self._firefox_history(conn, tables))
                 else:
                     raise ValueError("unrecognised browser history schema (no urls/moz_places)")
@@ -488,7 +437,7 @@ class RealBackend:
                 }
             )
         if "downloads" in tables:
-            try:  # modern Chrome/Edge columns; older schemas simply skip downloads
+            try:
                 cur = conn.execute(
                     "SELECT tab_url, target_path, total_bytes, start_time FROM downloads "
                     "ORDER BY target_path"
@@ -529,7 +478,7 @@ class RealBackend:
                 }
             )
         if {"moz_annos", "moz_anno_attributes"} <= tables:
-            try:  # modern Firefox stores downloads as place annotations
+            try:
                 cur = conn.execute(
                     "SELECT p.url AS url, a.content AS dest FROM moz_annos a "
                     "JOIN moz_places p ON a.place_id = p.id "
@@ -553,14 +502,8 @@ class RealBackend:
         return rows
 
     def parse_lnk_jumplists(self, path: Path) -> list[dict[str, Any]]:
-        """LNK shortcuts + JumpLists — real, in-process (LnkParse3 + olefile).
-
-        Dispatches by suffix: ``.lnk`` -> one row; ``.automaticDestinations-ms`` -> one row per
-        OLE LNK stream; ``.customDestinations-ms`` -> one row per embedded LNK. Each row is tagged
-        ``kind=lnk|jumplist`` with the resolved target path/size/timestamps.
-        """
         try:
-            import LnkParse3  # noqa: F401  (fail closed if the LNK lib is absent)
+            import LnkParse3  # noqa: F401
         except ImportError as exc:  # pragma: no cover
             raise BackendUnavailableError(
                 "LNK backend missing (LnkParse3); uv sync --all-extras"
@@ -571,16 +514,9 @@ class RealBackend:
             return _auto_dest_rows(path)
         if suffix == ".customdestinations-ms":
             return _custom_dest_rows(path)
-        # .lnk (or any other suffix routed here) -> a single shell-link
         return [_lnk_row(path.read_bytes(), kind="lnk", source=path.name)]
 
     def extract_shellbags(self, path: Path) -> list[dict[str, Any]]:
-        """Shellbags / BagMRU — folder-access history (UsrClass.dat + NTUSER), real, in-process.
-
-        Uses regipy's shellbag plugins, which decode the shell-item PIDLs via libfwsi + libfwps.
-        A missing decoder lib fails closed (:class:`BackendUnavailableError`) — never fabricated
-        folder names. The plugin's ``can_run`` gates each hive type, so only the matching one runs.
-        """
         try:
             from regipy.plugins.ntuser.shellbags_ntuser import ShellBagNtuserPlugin
             from regipy.plugins.usrclass.shellbags_usrclass import ShellBagUsrclassPlugin
@@ -597,13 +533,13 @@ class RealBackend:
             plug = plugin_cls(hive, as_json=True)
             try:
                 runnable = plug.can_run()
-            except Exception:  # a hive missing this BagMRU path simply isn't this kind
+            except Exception:
                 continue
             if not runnable:
                 continue
             try:
                 out = plug.run()
-            except ModuleNotFoundError as exc:  # libfwsi / libfwps absent -> fail closed
+            except ModuleNotFoundError as exc:
                 raise BackendUnavailableError(
                     "shellbag PIDL decode needs libfwsi-python + libfwps-python "
                     "(regipy[full]); uv sync --all-extras"
@@ -613,12 +549,6 @@ class RealBackend:
         return rows
 
     def extract_amcache_shimcache(self, path: Path) -> list[dict[str, Any]]:
-        """Amcache.hve + SYSTEM ShimCache — program execution / presence, real, in-process.
-
-        One tool, two sources: regipy ``AmCachePlugin`` (Amcache.hve: installed/run programs with
-        SHA-1) and ``ShimCachePlugin`` (SYSTEM AppCompatCache: executables the shim engine saw).
-        Each plugin's ``can_run`` gates the hive type, so only the matching one yields rows.
-        """
         try:
             from regipy.plugins.amcache.amcache import AmCachePlugin
             from regipy.plugins.system.shimcache import ShimCachePlugin
@@ -656,12 +586,6 @@ class RealBackend:
         return rows
 
     def parse_usnjrnl(self, path: Path, *, max_records: int = 500_000) -> list[dict[str, Any]]:
-        """USN change journal (``$Extend\\$UsnJrnl:$J``) — file create/delete/rename log.
-
-        A compact, real ``USN_RECORD_V2`` reader (the on-disk format is small + stable). The
-        ``$J`` stream is sparse (leading deallocated zeros); those are skipped fast (8-byte
-        aligned) and active records parsed sequentially. Pure stdlib — no subprocess, no dep.
-        """
         rows: list[dict[str, Any]] = []
         chunk_size = 1 << 20
         buf = b""
@@ -676,7 +600,6 @@ class RealBackend:
                         eof = True
                 if len(buf) < 4:
                     break
-                # Fast-skip sparse zero runs, keeping 8-byte record alignment.
                 zeros = len(buf) - len(buf.lstrip(b"\x00"))
                 if zeros >= 8:
                     buf = buf[zeros - (zeros % 8) :]
@@ -687,15 +610,15 @@ class RealBackend:
                 if rec_len == 0:
                     buf = buf[8:]
                     continue
-                if rec_len < 60 or rec_len > 0x10000:  # implausible -> resync on the 8-byte grid
+                if rec_len < 60 or rec_len > 0x10000:
                     buf = buf[8:]
                     continue
                 if len(buf) < rec_len:
                     if eof:
                         break
-                    continue  # refill on the next loop
+                    continue
                 rec, buf = buf[:rec_len], buf[rec_len:]
-                if int.from_bytes(rec[4:6], "little") != 2:  # only USN_RECORD_V2
+                if int.from_bytes(rec[4:6], "little") != 2:
                     continue
                 name_len = int.from_bytes(rec[56:58], "little")
                 name_off = int.from_bytes(rec[58:60], "little")
@@ -728,8 +651,6 @@ class RealBackend:
         rows: list[dict[str, Any]] = []
         parser = PyMftParser(str(path))
         for entry in parser.entries_json():
-            # entries_json() yields JSON strings, or inline RuntimeError on a bad
-            # entry (pymft-rs caveat): type-check and skip, never raise.
             if isinstance(entry, RuntimeError):
                 continue
             record = json.loads(entry)
@@ -743,7 +664,6 @@ class RealBackend:
                     continue
                 if type_code == "StandardInformation" and not std_info:
                     std_info = data
-                # Prefer the longer (Win32) FileName over the 8.3 short name.
                 elif type_code == "FileName" and len(str(data.get("name", ""))) > len(
                     str(file_name.get("name", ""))
                 ):

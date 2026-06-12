@@ -1,18 +1,3 @@
-"""SIFT-lane backend (D12) — drive Protocol SIFT's real EZ Tools behind the typed interface.
-
-Mirrors :class:`RealBackend` so SIFT-host execution is a **config flip** (``backend_mode``),
-not a fork. Each method shells out to an Eric-Zimmerman tool via **fixed-argv**
-``subprocess.run(shell=False)`` — ``dotnet <Tool>.dll`` (EZ Tools are .NET) — parses the tool's
-JSON output, and normalizes to the **exact same row dicts** :class:`RealBackend` returns, so the
-typed tools and their results are unchanged.
-
-REAL-ONLY / fail-closed (CLAUDE.md §2B/§6): a missing ``dotnet`` or tool DLL raises
-:class:`BackendUnavailableError` (never a fake result); a non-zero tool exit raises (the tool layer
-records ``status=error``). Only the validated evidence path + a scratch temp dir are passed as argv
-elements — no evidence string is ever interpolated into a shell. ``analyze_prefetch`` fails closed:
-PECmd is not part of the EZ Tools install on the SANS SIFT host.
-"""
-
 from __future__ import annotations
 
 import json
@@ -29,15 +14,12 @@ _EVTX_TIMEOUT = 600
 _MFT_TIMEOUT = 1800  # a full $MFT can be hundreds of MB
 _RECMD_TIMEOUT = 600
 
-# EZ tool DLL location relative to the EZ Tools install dir.
 _DLL_PARTS: dict[str, tuple[str, ...]] = {
     "evtx": ("EvtxeCmd", "EvtxECmd.dll"),
     "mft": ("MFTECmd.dll",),
     "recmd": ("RECmd", "RECmd.dll"),
 }
 
-# RECmd batch (.reb) targeting autostart Run/RunOnce across HKLM SOFTWARE + HKCU NTUSER,
-# mirroring RealBackend._RUN_KEY_PATHS. RECmd applies entries whose HiveType matches the hive.
 _RUNKEYS_BATCH = """Description: SIFTMesh autostart Run/RunOnce keys
 Author: SIFTMesh
 Version: 1.0
@@ -75,7 +57,6 @@ Keys:
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    """Read an EZ tool JSONL output file (utf-8-sig strips the BOM EvtxECmd writes)."""
     if not path.is_file():
         return []
     rows: list[dict[str, Any]] = []
@@ -88,14 +69,11 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 class SiftLaneBackend:
-    """SIFT-host backend driving EZ Tools via fixed-argv ``dotnet`` subprocess (D12)."""
-
     name = "sift_lane"
 
     def __init__(self, ez_tools_dir: str | Path | None = None) -> None:
         self.ez_tools_dir = Path(ez_tools_dir or load_settings().ez_tools_dir)
 
-    # ── tool resolution (fail closed) ──────────────────────────────────────
     def _dotnet(self) -> str:
         found = shutil.which("dotnet")
         if found is None:
@@ -113,15 +91,12 @@ class SiftLaneBackend:
         return dll
 
     def _run(self, argv: list[str], *, timeout: int) -> None:
-        proc = subprocess.run(  # fixed argv, shell=False, validated evidence path
-            argv, capture_output=True, text=True, timeout=timeout, check=False
-        )
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
         if proc.returncode != 0:
             raise RuntimeError(
                 f"{Path(argv[1]).name} failed: {proc.stderr.strip() or 'non-zero exit'}"
             )
 
-    # ── typed primitives (normalized to RealBackend row shapes) ─────────────
     def parse_evtx(
         self,
         path: Path,

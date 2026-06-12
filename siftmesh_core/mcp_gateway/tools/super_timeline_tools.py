@@ -1,11 +1,4 @@
-"""Super-timeline tool (Epic C) — a whole-image Plaso chronology (subprocess-only, gated).
-
-``build_super_timeline`` runs Plaso (``log2timeline.py`` + ``psort.py``) over a disk image and
-returns a normalised, capped event list (the full ``.plaso`` + ``json_line`` output stay on disk
-under the run dir). It consolidates every parser Plaso supports into one timeline (Q5). Heavy +
-opt-in: only the ``enable_super_timeline`` planner path emits it, and it runs on the deterministic
-floor. A missing Plaso binary fails closed. Logs provenance to ``audit/tool_calls.jsonl``.
-"""
+"""Super-timeline tool for building a Plaso chronology."""
 
 from __future__ import annotations
 
@@ -21,18 +14,15 @@ from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 from siftmesh_core.mcp_gateway.tools._common import resolved_source
 from siftmesh_core.schemas.tool_result import ToolResult
 
-# Cap the events embedded in the structured result; the full timeline stays on disk under the run.
 _MAX_EVENTS = 200_000
 
 
 class SuperTimelineResult(ToolResult):
-    """A Plaso super-timeline over one disk image (capped events; full output on disk)."""
+    """Plaso super-timeline result."""
 
     event_count: int = 0
     events: list[dict[str, Any]] = Field(default_factory=list)
     timeline_path: str | None = None
-    # "disk_image" = full volume timeline; "extracted_artifacts" = robust fallback over the
-    # already-carved artifacts (used when the disk image's volume/VSS scan is unreadable).
     timeline_source: str | None = None
 
 
@@ -47,11 +37,9 @@ def build_super_timeline(
     max_events: int = _MAX_EVENTS,
     backend_mode: str = "sift_lane",
 ) -> SuperTimelineResult:
-    """Build a Plaso super-timeline across a disk image (opt-in/gated; host-validated)."""
     image_path, image_sha = resolved_source(evidence_root, image_artifact, run_root=run_root)
 
     def produce() -> dict[str, Any]:
-        # work_dir is OUTSIDE evidence/extracted so the directory fallback never re-ingests it.
         work_dir = Path(run_root) / "super_timeline"
         extracted = Path(run_root) / "evidence" / "extracted"
 
@@ -72,8 +60,6 @@ def build_super_timeline(
         except BackendUnavailableError:
             raise
         except Exception as exc_image:
-            # A partial/corrupt image can crash Plaso's volume/VSS scan. Fall back to the already
-            # -carved artifacts (real Plaso over real extracted evidence) when present.
             if not (extracted.is_dir() and any(extracted.rglob("*"))):
                 raise RecoverableToolError(
                     f"super-timeline build failed: {exc_image}", code="plaso_error"

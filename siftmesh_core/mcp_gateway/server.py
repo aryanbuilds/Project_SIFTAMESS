@@ -1,13 +1,3 @@
-"""FastMCP server (D1) — the thin agent-facing adapter over the typed tools.
-
-Registers EXACTLY the allowlisted forensic tools (CLAUDE.md §7) on a FastMCP
-stdio server, each guarded by :func:`assert_tool_allowed` at registration so a
-forbidden / off-allowlist name can never be exposed (criterion 4). The adapters are
-thin: they take primitive args an agent can supply and delegate to the same service
-functions the CLI calls directly (CLI-first). Returns are ``ToolResult`` subclasses
-(structured MCP output).
-"""
-
 from __future__ import annotations
 
 import os
@@ -58,19 +48,11 @@ from siftmesh_core.mcp_gateway.tools.validation_tools import (
     validate_claim_evidence,
 )
 
-# ── Run scoping (K3) ────────────────────────────────────────────────────────
-# The agent NEVER chooses the run/evidence roots — the dispatching adapter scopes the server to the
-# active run via SIFTMESH_RUN_ROOT / SIFTMESH_EVIDENCE_ROOT (set by claude_adapter's mcp_config).
-# The agent-facing tools below therefore take only artifact-specific args, removing the confused-
-# deputy surface (a hostile prompt can't redirect a tool at another run/evidence tree). Missing env
-# => fail closed: refuse to run an unscoped forensic tool rather than guess a root.
-
 _RUN_ROOT_ENV = "SIFTMESH_RUN_ROOT"
 _EVIDENCE_ROOT_ENV = "SIFTMESH_EVIDENCE_ROOT"
 
 
 def _run_scope() -> tuple[str, str]:
-    """The (run_root, evidence_root) the adapter scoped this server to; fail closed if unset."""
     run_root = os.environ.get(_RUN_ROOT_ENV)
     evidence_root = os.environ.get(_EVIDENCE_ROOT_ENV)
     if not run_root or not evidence_root:
@@ -79,9 +61,6 @@ def _run_scope() -> tuple[str, str]:
             "refusing to run an unscoped forensic tool."
         )
     return run_root, evidence_root
-
-
-# ── Thin MCP adapters (artifact-specific args -> service functions; roots from env) ──
 
 
 def _compute_hash_manifest() -> HashManifestResult:
@@ -206,7 +185,6 @@ def _build_super_timeline(image_artifact: str) -> SuperTimelineResult:
 
 
 def tool_adapters() -> dict[str, Any]:
-    """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
         "compute_hash_manifest": _compute_hash_manifest,
         "create_readonly_evidence_vault": _create_readonly_evidence_vault,
@@ -231,15 +209,13 @@ def tool_adapters() -> dict[str, Any]:
 
 
 def registered_tool_names(mcp: FastMCP) -> set[str]:
-    """The set of tool names currently registered on a FastMCP server (sync)."""
     return {tool.name for tool in mcp._tool_manager.list_tools()}
 
 
 def build_server() -> FastMCP:
-    """Build the FastMCP server with exactly the allowlisted tools (guarded)."""
     mcp = FastMCP("siftmesh")
     for name, adapter in tool_adapters().items():
-        assert_tool_allowed(name)  # forbidden / off-allowlist can never register
+        assert_tool_allowed(name)
         mcp.add_tool(adapter, name=name)
     registered = registered_tool_names(mcp)
     if registered != set(ALLOWED_TOOLS):
@@ -248,5 +224,4 @@ def build_server() -> FastMCP:
 
 
 def run_server() -> None:
-    """Launch the gateway over stdio (``siftmesh mcp-serve``)."""
     build_server().run(transport="stdio")

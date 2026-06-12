@@ -1,15 +1,7 @@
-"""Deterministic real-tool executor (Epic F, F2) — the floor.
+"""Deterministic real-tool executor.
 
-Runs the contract's single allowlisted Epic-D tool over the real evidence and
-derives **deterministic, evidence-anchored** Claims from the genuine tool output.
-This is NOT a mock and NOT a ledger-replay (CLAUDE §2B): it executes the real tool
-every time (over committed public fixtures in CI, over real evidence on a SIFT
-host). It is the regression/replay floor and the no-keys demo path; the genuine
-self-correction hero is the live agent (Epic G).
-
-Tool calls are already audited by ``mcp_gateway.audit_exec.run_tool`` (it mints
-``TOOL-NNN`` and writes ``tool_calls.jsonl``/custody/derived) — this module only
-calls the tool fn, reads back the typed result, and turns its rows into Claims.
+Runs the allowlisted tool over real evidence and turns the typed result into
+deterministic, evidence-anchored claims.
 """
 
 from __future__ import annotations
@@ -69,7 +61,6 @@ def _claim(
     confidence: float,
     requires_human_review: bool = False,
 ) -> Claim:
-    """Build one evidence-anchored Claim from a tool result (fixed, deterministic)."""
     return Claim(
         claim_id=f"{task_id}-CLAIM-{n:03d}",
         task_id=task_id,
@@ -188,7 +179,6 @@ def _claims_registry(result: Any, task_id: str) -> list[Claim]:
 
 
 def _dedupe(items: list[str], limit: int) -> tuple[list[str], int]:
-    """Order-preserving de-dup; return (first ``limit`` distinct items, total distinct count)."""
     seen: set[str] = set()
     out: list[str] = []
     for it in items:
@@ -199,9 +189,6 @@ def _dedupe(items: list[str], limit: int) -> tuple[list[str], int]:
 
 
 def _claims_recentdocs(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim listing the distinct filenames (an enumeration, not per-file claims: the
-    # critic's digit-mask contradiction heuristic would treat siblings like report-1/report-2 as a
-    # value mismatch). The full entry set stays in the structured result.
     names = [r.get("name", "") for r in result.mru_entries]
     shown, total = _dedupe(names, 30)
     if total == 0:
@@ -232,8 +219,6 @@ def _claims_recentdocs(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_usb(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim listing the distinct device/mount names (enumeration; same reason as
-    # recentdocs); inferred — a mount/attachment is a lead, not proof of transfer. Full set in res.
     devices = [r.get("friendly_name") or r.get("device", "") for r in result.devices]
     shown, total = _dedupe(devices, 20)
     if total == 0:
@@ -264,9 +249,6 @@ def _claims_usb(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_browser(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim (enumeration -> one claim, full rows in the structured result). Downloads
-    # are the exfil-relevant signal (what left / where); visits are summarised by count. inferred —
-    # web activity is a lead, not proof of transfer.
     rows = result.history
     if not rows:
         return [
@@ -304,9 +286,6 @@ def _claims_browser(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_lnk(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim listing distinct opened-file target basenames (enumeration -> one claim,
-    # full rows in the structured result). inferred — a shortcut/jumplist proves the file was
-    # referenced/opened, a lead toward what was taken (Q1/Q2), not proof of exfil.
     targets = [
         str(r.get("target_path") or "").replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
         for r in result.entries
@@ -340,9 +319,6 @@ def _claims_lnk(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_shellbags(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim listing distinct browsed-folder paths (enumeration -> one claim, full rows
-    # in the structured result). inferred — a shellbag proves a folder was browsed in Explorer (a
-    # strong where/what lead, incl. folders no longer on disk), not proof of exfil.
     folders = [str(r.get("folder_path") or "") for r in result.entries]
     shown, total = _dedupe(folders, 30)
     if total == 0:
@@ -373,9 +349,6 @@ def _claims_shellbags(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_amcache_shimcache(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim listing distinct program paths (enumeration -> one claim, full rows in the
-    # structured result). inferred — Amcache=presence/install, ShimCache=the shim engine saw the
-    # binary; both are strong execution LEADS, not by themselves proof a process actually ran.
     progs = [
         str(r.get("path") or "").replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
         for r in result.entries
@@ -413,8 +386,6 @@ def _claims_amcache_shimcache(result: Any, task_id: str) -> list[Claim]:
 
 
 def _claims_usnjrnl(result: Any, task_id: str) -> list[Claim]:
-    # ONE summary claim with create/delete/rename counts + the distinct deleted filenames (the
-    # cleanup/exfil signal; the USN journal captures files that no longer exist on disk). inferred.
     rows = result.entries
     if not rows:
         return [
@@ -548,8 +519,6 @@ def _claims_memory(result: Any, task_id: str) -> list[Claim]:
 
 
 def _input_root(c: TaskContract, ctx: AdapterContext) -> Path | str:
-    """Root the first input resolves against: the run dir for a derived (carved/decompressed)
-    artifact (hth.2), else the original evidence root."""
     if c.input_artifacts and c.input_artifacts[0].origin == "derived":
         return ctx.run.root
     return ctx.evidence_root
@@ -655,7 +624,6 @@ _DISPATCH: dict[
 
 
 def _evidence_rows(result: ToolResult) -> list[dict[str, Any]]:
-    """Pull the untrusted row list off whichever result subclass attr carries it."""
     for attr in (
         "events",
         "run_keys",
@@ -682,11 +650,6 @@ def scan_and_log_rows(
     source_artifact: str,
     rows: list[dict[str, Any]],
 ) -> int:
-    """Scan evidence rows for injection signatures; log alerts. Returns alert count.
-
-    Logged only — never changes the executor's output (criterion 4: injection
-    changes nothing here; the consequence is Epic G).
-    """
     text = json.dumps(rows, default=str)
     matches = scan_injection(text)
     for m in matches:
@@ -706,9 +669,6 @@ def scan_and_log_rows(
     return len(matches)
 
 
-# Single-source parse tools the floor runs once PER input artifact (per-family aggregation, bd
-# 1xy6): one aggregated task → one audited tool call per .pf/hive/evtx, claims merged + renumbered.
-# build_timeline (aggregates inputs itself) and image/memory (inherently single-source) stay 1-call.
 _PER_ARTIFACT_TOOLS = frozenset(
     {
         "parse_evtx_security",
@@ -729,8 +689,6 @@ _PER_ARTIFACT_TOOLS = frozenset(
 
 @register
 class DeterministicExecutor(ExecutorAdapter):
-    """The real-tool floor: real Epic-D tools over real evidence → deterministic claims."""
-
     profile_id = "deterministic_executor"
     backend_label = "real"
 
@@ -808,12 +766,6 @@ class DeterministicExecutor(ExecutorAdapter):
         derive_claims: Callable[[Any, str], list[Claim]],
         started: datetime,
     ) -> TaskResult:
-        """Run a single-source tool over EVERY input artifact; merge + renumber claims (bd 1xy6).
-
-        One audited ``run_tool`` call per artifact (per-artifact provenance preserved in
-        tool_calls.jsonl). Partial failures are recorded but never fatal; the task succeeds if any
-        artifact parsed, else retry_required.
-        """
         all_claims: list[Claim] = []
         tool_call_ids: list[str] = []
         errors: list[str] = []

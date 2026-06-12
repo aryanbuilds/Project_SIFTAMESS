@@ -1,13 +1,4 @@
-"""Plaso super-timeline (host tool, subprocess-only) — ``log2timeline.py`` + ``psort.py``.
-
-Builds a whole-image super-timeline by running Plaso as an **external fixed-argv subprocess**
-(``shell=False``): ``log2timeline.py`` ingests the disk image into a run-scoped ``.plaso`` store,
-then ``psort.py -o json_line`` exports newline-delimited JSON events, which are normalised into
-typed rows. Plaso is Apache-2.0 but is invoked as a subprocess (never imported), consistent with
-the Volatility lane. A missing binary **fails closed** (:class:`BackendUnavailableError`); a
-non-zero exit raises (the tool layer records ``status=error``). Heavy (10-60 min, GBs RAM) and
-host-gated — only the opt-in ``enable_super_timeline`` planner path emits it.
-"""
+"""Plaso super-timeline built from ``log2timeline.py`` and ``psort.py`` subprocesses."""
 
 from __future__ import annotations
 
@@ -23,7 +14,6 @@ _PSORT = "psort.py"
 
 
 def _require(tool: str, override: str | None = None) -> str:
-    """Resolve a Plaso binary (explicit override path, else PATH) or fail closed."""
     if override and Path(override).exists():
         return override
     found = shutil.which(override or tool)
@@ -33,7 +23,6 @@ def _require(tool: str, override: str | None = None) -> str:
 
 
 def _norm_event(ev: dict[str, object]) -> dict[str, object]:
-    """Normalise one psort ``json_line`` event to a stable row (graceful on key drift)."""
     return {
         "timestamp_utc": ev.get("datetime") or ev.get("timestamp"),
         "timestamp_desc": ev.get("timestamp_desc"),
@@ -49,7 +38,6 @@ def _norm_event(ev: dict[str, object]) -> dict[str, object]:
 def parse_psort_jsonl(
     path: Path, *, max_events: int | None = None
 ) -> tuple[list[dict[str, object]], int]:
-    """Parse a psort ``json_line`` file -> (first ``max_events`` rows, total event count)."""
     events: list[dict[str, object]] = []
     total = 0
     with path.open("r", encoding="utf-8", errors="replace") as handle:
@@ -77,13 +65,6 @@ def build_plaso_timeline(
     timeout: int = 3600,
     max_events: int | None = None,
 ) -> tuple[list[dict[str, object]], int, Path]:
-    """Run ``log2timeline.py`` then ``psort.py`` over ``source`` -> (events, total, jsonl_path).
-
-    ``source`` is a disk image (``is_directory=False``: volume scan, VSS disabled) or an
-    already-extracted artifacts directory (``is_directory=True``: no volume/VSS scan — robust on
-    partial/corrupt images where the disk-image VSS catalog is unreadable). ``work_dir`` MUST be
-    outside ``source`` so Plaso never re-ingests its own ``.plaso``/``.jsonl`` output.
-    """
     work_dir.mkdir(parents=True, exist_ok=True)
     storage = work_dir / "timeline.plaso"
     out = work_dir / "timeline.jsonl"
@@ -91,16 +72,14 @@ def build_plaso_timeline(
     psort = _require(_PSORT, psort_path)
 
     argv = [l2t, "--status_view", "none", "--storage_file", str(storage)]
-    if not is_directory:  # disk image: process all partitions, skip the (often fragile) VSS scan
+    if not is_directory:
         argv += ["--partitions", "all", "--vss_stores", "none"]
     argv.append(str(source))
-    ingest = subprocess.run(  # fixed argv, shell=False, validated source path
-        argv, capture_output=True, text=True, timeout=timeout, check=False
-    )
+    ingest = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
     if ingest.returncode != 0:
         raise RuntimeError(f"log2timeline failed: {ingest.stderr.strip()[:500] or 'non-zero exit'}")
 
-    export = subprocess.run(  # fixed argv, shell=False
+    export = subprocess.run(
         [psort, "-o", "json_line", "-w", str(out), str(storage)],
         capture_output=True,
         text=True,

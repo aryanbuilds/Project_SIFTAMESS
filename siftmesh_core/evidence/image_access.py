@@ -1,18 +1,3 @@
-"""Sleuthkit-backed image access (SIFT-lane) — extract loose artifacts from a disk image.
-
-The typed parsers each consume a single loose Windows artifact; real evidence
-arrives as a disk image (``.E01``/raw). This module bridges the two by extracting the
-high-value artifacts out of the image with **The Sleuth Kit** (``mmls``/``ifind``/
-``icat``/``fls``), which reads EWF/``.E01`` natively.
-
-Safety (CLAUDE.md §6, criterion 4): every call is a **fixed-argv** ``subprocess`` with
-``shell=False``. The only variable argv elements are the validated image path, a numeric
-partition offset, and a TSK metadata address — never an attacker-controlled string spliced
-into a shell. A missing TSK binary **fails closed** (:class:`BackendUnavailableError`),
-never a fake result. Originals are opened read-only by TSK; output is written by the
-caller through ``safe_write_path``.
-"""
-
 from __future__ import annotations
 
 import re
@@ -24,13 +9,8 @@ from pathlib import Path
 from siftmesh_core.evidence.hash_utils import sha256_file
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError
 
-_DEFAULT_TIMEOUT = 1800  # seconds; large-volume MFT/dir walks over a 23GB image are slow
+_DEFAULT_TIMEOUT = 1800
 
-# Curated high-value Windows artifacts (NTFS paths inside the C: volume). Each entry is
-# (logical key, kind, ntfs_path_or_dir). "file" = single file; "glob" = every *.pf in a
-# dir; "userhive" = NTUSER.DAT under each profile; "userfile" = a per-user file at a
-# profile-relative path (one optional ``*`` wildcard segment); "usertree" = every file under a
-# per-user directory tree (recursive); "mft" = the $MFT (addr 0).
 ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("security_evtx", "file", "/Windows/System32/winevt/Logs/Security.evtx"),
     (
@@ -54,14 +34,12 @@ ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
 )
 
 _FS_TYPE = "ntfs"
-_USERS_DIR = "/Users"  # per-user artifacts ("userfile") resolve under each profile here
+_USERS_DIR = "/Users"
 _SKIP_PROFILES = (".", "..", "Public", "Default", "All Users", "Default User")
 
 
 @dataclass(frozen=True)
 class Partition:
-    """One row of the image's partition table (sectors)."""
-
     addr: int
     start_sector: int
     length_sectors: int
@@ -70,27 +48,22 @@ class Partition:
 
 @dataclass(frozen=True)
 class ExtractedFile:
-    """One artifact extracted out of the image into the run dir."""
-
     key: str
     ntfs_path: str
     inode: str
-    dest: Path  # absolute path written under the run dir
+    dest: Path
     sha256: str
     size_bytes: int
 
 
 @dataclass(frozen=True)
 class ExtractionFailure:
-    """One artifact that could not be extracted (e.g. corrupt NTFS compression in image)."""
-
     key: str
     ntfs_path: str
     error: str
 
 
 def _require(tool: str) -> str:
-    """Resolve a TSK binary on PATH or fail closed."""
     found = shutil.which(tool)
     if found is None:
         raise BackendUnavailableError(
@@ -100,27 +73,20 @@ def _require(tool: str) -> str:
 
 
 def _safe_name(name: str) -> str:
-    """Reduce an NTFS filename to a safe flat basename (case data is hostile, §6)."""
     base = Path(name.replace("\\", "/")).name
     cleaned = re.sub(r"[^A-Za-z0-9._%+-]", "_", base).strip("._")
     return cleaned or "artifact"
 
 
-# ── TSK primitives (fixed-argv, shell=False) ────────────────────────────────
-
-
 def list_partitions(image: Path, *, timeout: int = 120) -> list[Partition]:
-    """Return NTFS partitions from ``mmls``; empty if the image has no partition table."""
     exe = _require("mmls")
-    proc = subprocess.run(  # fixed argv, shell=False, validated path
+    proc = subprocess.run(
         [exe, "-M", str(image)],
         capture_output=True,
         text=True,
         timeout=timeout,
         check=False,
     )
-    # mmls exits non-zero / prints nothing for a single-volume image (no table) —
-    # that is expected, not an error; callers then use offset 0.
     parts: list[Partition] = []
     row = re.compile(r"^\s*(\d+):\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+?)\s*$")
     for line in proc.stdout.splitlines():
@@ -138,7 +104,6 @@ def list_partitions(image: Path, *, timeout: int = 120) -> list[Partition]:
 
 
 def resolve_offset(image: Path) -> int:
-    """Pick the NTFS partition start sector, or 0 for a single-volume image."""
     parts = list_partitions(image)
     return parts[0].start_sector if parts else 0
 
@@ -146,9 +111,8 @@ def resolve_offset(image: Path) -> int:
 def find_inode(
     image: Path, offset: int, ntfs_path: str, *, timeout: int = _DEFAULT_TIMEOUT
 ) -> str | None:
-    """Resolve an NTFS path to its TSK metadata address via ``ifind -n``; None if absent."""
     exe = _require("ifind")
-    proc = subprocess.run(  # fixed argv, shell=False
+    proc = subprocess.run(
         [exe, "-f", _FS_TYPE, "-o", str(offset), "-n", ntfs_path, str(image)],
         capture_output=True,
         text=True,
@@ -159,16 +123,14 @@ def find_inode(
     if proc.returncode != 0 or not out or "not found" in out.lower():
         return None
     token = out.split()[0]
-    # A valid address is a number, optionally with TSK type/id suffix (e.g. 65-128-1).
     return token if re.fullmatch(r"\d+(?:-\d+)*", token) else None
 
 
 def list_dir(
     image: Path, offset: int, inode: str, *, timeout: int = _DEFAULT_TIMEOUT
 ) -> list[tuple[str, str, str]]:
-    """List a directory's entries via ``fls`` → ``[(type, name, inode), ...]``."""
     exe = _require("fls")
-    proc = subprocess.run(  # fixed argv, shell=False
+    proc = subprocess.run(
         [exe, "-f", _FS_TYPE, "-o", str(offset), str(image), str(inode)],
         capture_output=True,
         text=True,
@@ -189,11 +151,10 @@ def list_dir(
 def extract_inode(
     image: Path, offset: int, inode: str, dest: Path, *, timeout: int = _DEFAULT_TIMEOUT
 ) -> Path:
-    """Stream a file's bytes out of the image via ``icat`` into ``dest`` (no buffering)."""
     exe = _require("icat")
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("wb") as handle:
-        proc = subprocess.run(  # fixed argv, shell=False
+        proc = subprocess.run(
             [exe, "-f", _FS_TYPE, "-o", str(offset), str(image), str(inode)],
             stdout=handle,
             stderr=subprocess.PIPE,
@@ -202,15 +163,14 @@ def extract_inode(
         )
     if proc.returncode != 0:
         err = proc.stderr.decode("utf-8", "replace").strip()
-        dest.unlink(missing_ok=True)  # drop the partial/corrupt output — never keep garbage
+        dest.unlink(missing_ok=True)
         raise RuntimeError(f"icat failed for inode {inode}: {err or 'non-zero exit'}")
     return dest
 
 
 def istat(image: Path, offset: int, inode: str, *, timeout: int = _DEFAULT_TIMEOUT) -> str:
-    """Return ``istat`` metadata text for an inode (used to find a named ``$DATA`` attribute id)."""
     exe = _require("istat")
-    proc = subprocess.run(  # fixed argv, shell=False
+    proc = subprocess.run(
         [exe, "-f", _FS_TYPE, "-o", str(offset), str(image), str(inode)],
         capture_output=True,
         text=True,
@@ -218,9 +178,6 @@ def istat(image: Path, offset: int, inode: str, *, timeout: int = _DEFAULT_TIMEO
         check=False,
     )
     return proc.stdout
-
-
-# ── High-level extraction ───────────────────────────────────────────────────
 
 
 def _record(key: str, ntfs_path: str, inode: str, dest: Path) -> ExtractedFile:
@@ -237,7 +194,6 @@ def _record(key: str, ntfs_path: str, inode: str, dest: Path) -> ExtractedFile:
 def _extract_one(
     image: Path, offset: int, key: str, ntfs_path: str, inode: str, dest: Path
 ) -> tuple[ExtractedFile | None, ExtractionFailure | None]:
-    """Extract one known-inode file. A corrupt file is recorded as a failure, never fatal."""
     try:
         extract_inode(image, offset, inode, dest)
     except RuntimeError as exc:
@@ -304,11 +260,6 @@ def _extract_user_hives(
 
 
 def _expand_user_relpaths(image: Path, offset: int, user_root: str, rel_path: str) -> list[str]:
-    """Resolve a profile-relative path that may contain ONE ``*`` directory wildcard.
-
-    No ``*`` -> the path unchanged. With ``*`` -> one expansion per subdirectory of the
-    wildcard's parent (e.g. each Firefox ``Profiles/<rnd>`` dir).
-    """
     if "*" not in rel_path:
         return [rel_path]
     before, after = rel_path.split("*", 1)
@@ -327,11 +278,6 @@ def _expand_user_relpaths(image: Path, offset: int, user_root: str, rel_path: st
 def _extract_per_user(
     image: Path, offset: int, key: str, users_dir: str, rel_path: str, dest_dir: Path
 ) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
-    """Extract a per-user file at ``Users/<u>/<rel_path>`` (one optional ``*`` segment).
-
-    Extracted files KEEP their real basename (``History`` / ``places.sqlite`` / ``UsrClass.dat``)
-    and disambiguate by ``<key>/<user>/`` subdirs — the artifact router classifies on basename.
-    """
     users_inode = find_inode(image, offset, users_dir)
     if users_inode is None:
         return [], []
@@ -358,7 +304,6 @@ def _extract_per_user(
 def _walk_tree(
     image: Path, offset: int, key: str, ntfs_dir: str, inode: str, dest_dir: Path, depth: int
 ) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
-    """Recursively extract every regular file under ``ntfs_dir`` (bounded depth)."""
     if depth <= 0:
         return [], []
     ok: list[ExtractedFile] = []
@@ -387,11 +332,6 @@ def _walk_tree(
 def _extract_user_tree(
     image: Path, offset: int, key: str, users_dir: str, rel_dir: str, dest_dir: Path
 ) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
-    """Extract every file under ``Users/<u>/<rel_dir>`` (e.g. the Recent / JumpList tree).
-
-    Files keep their real basename (``*.lnk`` / ``*.automaticDestinations-ms``) and disambiguate
-    by ``<key>/<user>/...`` subdirs so the artifact router classifies them on basename/suffix.
-    """
     users_inode = find_inode(image, offset, users_dir)
     if users_inode is None:
         return [], []
@@ -416,18 +356,11 @@ def _extract_user_tree(
 def _extract_ads(
     image: Path, offset: int, key: str, ntfs_path: str, attr_name: str, dest: Path
 ) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
-    """Extract a named ``$DATA`` alternate data stream (e.g. ``$UsnJrnl:$J``) via TSK.
-
-    ``istat`` is parsed for the named ``$DATA`` attribute id, then ``icat inode-128-<id>`` streams
-    that attribute (TSK rebuilds the sparse $J as logical zeros). Best-effort + host-gated: a
-    missing path / attribute is recorded as a failure, never fatal.
-    """
     base = find_inode(image, offset, ntfs_path)
     if base is None:
         return [], []
-    meta = base.split("-")[0]  # strip any type/id suffix -> bare meta address
+    meta = base.split("-")[0]
     text = istat(image, offset, meta)
-    # e.g. "Type: $DATA (128-5)   Name: $J   Non-Resident ..." -> capture the attribute id.
     pattern = re.compile(r"\$DATA\s*\(128-(\d+)\)\s*Name:\s*" + re.escape(attr_name) + r"\b")
     m = pattern.search(text)
     if m is None:
@@ -450,14 +383,6 @@ def extract_artifacts(
     offset: int | None = None,
     keys: frozenset[str] | None = None,
 ) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
-    """Extract the curated artifacts (or a subset) from ``image`` into ``dest_dir``.
-
-    Returns ``(extracted, failed)``. A single unreadable artifact — e.g. an NTFS-compressed
-    file that is corrupt in the image (LZNT1 decompression fails identically across TSK,
-    ntfs-3g, and libfsntfs) — is recorded in ``failed`` and never aborts the whole run.
-    Missing artifacts are skipped; a missing TSK binary fails closed via the primitives.
-    ``dest_dir`` must already be a path the caller validated with ``safe_write_path``.
-    """
     image = Path(image)
     dest_dir.mkdir(parents=True, exist_ok=True)
     off = offset if offset is not None else resolve_offset(image)

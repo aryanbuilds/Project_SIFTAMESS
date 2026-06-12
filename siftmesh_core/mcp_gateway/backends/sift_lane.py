@@ -233,6 +233,12 @@ class SiftLaneBackend:
             "use backend_mode='real' (stdlib sqlite3). Fails closed."
         )
 
+    def parse_lnk_jumplists(self, path: Path) -> list[dict[str, Any]]:
+        raise BackendUnavailableError(
+            "LNK/JumpList parsing via sift_lane (JLECmd/LECmd) is not wired; "
+            "use backend_mode='real' (LnkParse3 + olefile). Fails closed."
+        )
+
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         dll = self._dll("mft")
         with tempfile.TemporaryDirectory(prefix="siftmesh-mft-") as tmp:

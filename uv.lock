@@ -1287,6 +1287,18 @@ wheels = [
 ]
 
 [[package]]
+name = "lnkparse3"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/47/08/0ab4666bcc6ce5aa43642cc6c75e1718417911952c0667d6c19eec0fbcd5/lnkparse3-1.6.0.tar.gz", hash = "sha256:519e6af6193b3d1802e1ec118a531ee3ca5a39d31137b507c0f19a0d437bd8ba", size = 35605, upload-time = "2026-02-27T09:54:17.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/7f/3998a1902e88b556679118cdc052fd87ee180b8782c925585e77a176371a/lnkparse3-1.6.0-py3-none-any.whl", hash = "sha256:7b3b1289e99992a4d3901d80ac9ab87fa8de854b2bffe5c4011453b093038b50", size = 52640, upload-time = "2026-02-27T09:54:15.81Z" },
+]
+
+[[package]]
 name = "lxml"
 version = "6.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1712,6 +1724,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8dac321cda606860fa4548858c0cc45d9d1d4ca2628b/mypy_extensions-1.1.0.tar.gz", hash = "sha256:52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558", size = 6343, upload-time = "2025-04-22T14:54:24.164Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl", hash = "sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505", size = 4963, upload-time = "2025-04-22T14:54:22.983Z" },
+]
+
+[[package]]
+name = "olefile"
+version = "0.47"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/1b/077b508e3e500e1629d366249c3ccb32f95e50258b231705c09e3c7a4366/olefile-0.47.zip", hash = "sha256:599383381a0bf3dfbd932ca0ca6515acd174ed48870cbf7fee123d698c192c1c", size = 112240, upload-time = "2023-12-01T16:22:53.025Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/d3/b64c356a907242d719fc668b71befd73324e47ab46c8ebbbede252c154b2/olefile-0.47-py2.py3-none-any.whl", hash = "sha256:543c7da2a7adadf21214938bb79c83ea12b473a4b6ee4ad4bf854e7715e13d1f", size = 114565, upload-time = "2023-12-01T16:22:51.518Z" },
 ]
 
 [[package]]
@@ -2711,7 +2732,9 @@ llm = [
 sift = [
     { name = "evtx" },
     { name = "libscca-python" },
+    { name = "lnkparse3" },
     { name = "mft" },
+    { name = "olefile" },
 ]
 tui = [
     { name = "textual" },
@@ -2734,8 +2757,10 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1,<4" },
     { name = "libscca-python", marker = "extra == 'sift'", specifier = ">=20250915,<20260527" },
     { name = "litellm", marker = "extra == 'llm'", specifier = ">=1.7,<2" },
+    { name = "lnkparse3", marker = "extra == 'sift'", specifier = ">=1.6,<2" },
     { name = "mcp", specifier = ">=1.27,<2" },
     { name = "mft", marker = "extra == 'sift'", specifier = "==0.7.0" },
+    { name = "olefile", marker = "extra == 'sift'", specifier = ">=0.46,<1" },
     { name = "pydantic", specifier = ">=2.13,<3" },
     { name = "pydantic-settings", specifier = ">=2.14,<3" },
     { name = "pypdf", marker = "extra == 'brief'", specifier = ">=5.1,<6" },

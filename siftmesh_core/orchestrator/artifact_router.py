@@ -28,6 +28,7 @@ FineFamily = Literal[
     "registry_hive",
     "mft",
     "browser_history",
+    "lnk_jumplist",
     "disk_image",
     "memory_image",
     "archive",
@@ -43,6 +44,7 @@ FAMILY_ORDER: tuple[FineFamily, ...] = (
     "registry_hive",
     "mft",
     "browser_history",
+    "lnk_jumplist",
     "disk_image",
     "memory_image",
     "archive",
@@ -58,6 +60,7 @@ FAMILY_TOOL_MAP: dict[FineFamily, str | None] = {
     "registry_hive": "extract_registry_run_keys",
     "mft": "parse_mft_filesystem",
     "browser_history": "parse_browser_history",
+    "lnk_jumplist": "parse_lnk_jumplists",
     "disk_image": "extract_artifacts_from_image",
     "memory_image": "analyze_memory",
     "archive": None,
@@ -97,6 +100,7 @@ FAMILY_LABEL: dict[FineFamily, str] = {
     "registry_hive": "Windows registry hive",
     "mft": "$MFT filesystem metadata",
     "browser_history": "Browser history database",
+    "lnk_jumplist": "LNK shortcut / JumpList",
     "disk_image": "Disk image",
     "memory_image": "Memory image",
     "archive": "Archive",
@@ -119,6 +123,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "also feeds the unified timeline (kind=mft).",
     "browser_history": "Parse the browser history database for visited URLs and downloads "
     "(cloud-storage / webmail destinations).",
+    "lnk_jumplist": "Parse the LNK shortcut / JumpList for opened-file target paths "
+    "(what the user accessed and where it lived).",
     "disk_image": "Recover loose triage artifacts (event logs, hives, prefetch, $MFT) "
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "
@@ -167,6 +173,8 @@ def _classify(name: str, suffix: str) -> FineFamily:
     # branch so a bare name can never be mistaken for a hive.
     if name in ("history", "places.sqlite"):
         return "browser_history"
+    if suffix in (".lnk", ".automaticdestinations-ms", ".customdestinations-ms"):
+        return "lnk_jumplist"
     if name in REGISTRY_HIVE_NAMES or suffix in (".dat", ".hve"):
         return "registry_hive"
     if suffix in _DISK_IMAGE_SUFFIXES:

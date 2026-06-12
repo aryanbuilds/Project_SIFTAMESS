@@ -43,7 +43,9 @@ sift = [
     # Cap below 20260527: that release is sdist-only (no wheels) and breaks a
     # plain install; 20250915 ships wheels. See PLAN/08 §3 + bd memory.
     "libscca-python>=20250915,<20260527",
+    "lnkparse3>=1.6,<2",
     "mft==0.7.0",
+    "olefile>=0.46,<1",
 ]
 # Optional agent-to-agent interop (A2A). Opt-in only.
 a2a = [
@@ -127,7 +129,18 @@ no_implicit_optional = true
 
 [[tool.mypy.overrides]]
 # Forensic/optional backends without stubs; do not block on missing types.
-module = ["regipy.*", "evtx.*", "pyscca.*", "mft.*", "a2a.*", "pptx.*", "docx.*", "pypdf.*"]
+module = [
+    "regipy.*",
+    "evtx.*",
+    "pyscca.*",
+    "mft.*",
+    "a2a.*",
+    "pptx.*",
+    "docx.*",
+    "pypdf.*",
+    "LnkParse3.*",
+    "olefile.*",
+]
 ignore_missing_imports = true
 
 # ── pytest ────────────────────────────────────────────────────────────────

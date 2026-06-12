@@ -13,6 +13,9 @@ maintainer command on the SIFT workstation — see CLAUDE.md §2B).
 | `prefetch_win2012_cmd.pf` | EricZimmerman/Prefetch (MIT) | `Prefetch.Test/TestFiles/Win2012/CMD.EXE-4A81B364.pf` | D6 prefetch |
 | `mft_entry_single` | omerbenamram/mft (Apache-2.0) | `samples/entry_single_file` | D8 timeline ($MFT) |
 | `ntuser.dat.xz` | mkorman90/regipy (MIT) | `regipy_tests/data/NTUSER.DAT.xz` | D7 registry (kept xz; decompressed at test time) |
+| `jumplist_auto.automaticDestinations-ms` | EricZimmerman/JumpList (MIT) | `JumpList.Test/TestFiles/Win7/1b4dd67f29cb1962.automaticDestinations-ms` | B2 LNK/jumplists (OLE auto-dest) |
+| `jumplist_custom.customDestinations-ms` | Matmaus/LnkParse3 (MIT) | `tests/raw/5afe4de1b92fc382.customDestinations-ms` (base64 in repo; **decoded to raw on-disk binary** here) | B2 LNK/jumplists (custom-dest) |
+| `lnk_sample.lnk` | derived from `jumplist_auto` above | OLE stream `1` extracted (a real LNK from that public jumplist) | B2 LNK/jumplists (single `.lnk`) |
 
 Note: no PowerShell-Operational sample exists in any upstream parser test suite, so
 `parse_evtx_powershell`'s 4103/4104 filter is validated by (a) the generic

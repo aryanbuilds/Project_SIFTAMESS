@@ -27,6 +27,7 @@ from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_
 from siftmesh_core.mcp_gateway.tools.browser_tools import parse_browser_history
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
 from siftmesh_core.mcp_gateway.tools.image_tools import extract_artifacts_from_image
+from siftmesh_core.mcp_gateway.tools.lnk_tools import parse_lnk_jumplists
 from siftmesh_core.mcp_gateway.tools.memory_tools import analyze_memory
 from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
@@ -298,6 +299,42 @@ def _claims_browser(result: Any, task_id: str) -> list[Claim]:
     ]
 
 
+def _claims_lnk(result: Any, task_id: str) -> list[Claim]:
+    # ONE summary claim listing distinct opened-file target basenames (enumeration -> one claim,
+    # full rows in the structured result). inferred — a shortcut/jumplist proves the file was
+    # referenced/opened, a lead toward what was taken (Q1/Q2), not proof of exfil.
+    targets = [
+        str(r.get("target_path") or "").replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+        for r in result.entries
+    ]
+    shown, total = _dedupe(targets, 30)
+    if total == 0:
+        return [
+            _claim(
+                result,
+                task_id,
+                1,
+                status="inferred",
+                text="No LNK/JumpList target paths recovered.",
+                evidence_type="lnk_target",
+                confidence=0.5,
+            )
+        ]
+    more = f" (+{total - len(shown)} more)" if total > len(shown) else ""
+    text = f"LNK/JumpList: {total} distinct opened-file target(s): {', '.join(shown)}{more}."
+    return [
+        _claim(
+            result,
+            task_id,
+            1,
+            status="inferred",
+            text=text,
+            evidence_type="lnk_target",
+            confidence=0.7,
+        )
+    ]
+
+
 def _claims_mft(result: Any, task_id: str) -> list[Claim]:
     return [
         _claim(
@@ -456,6 +493,7 @@ _DISPATCH: dict[
     "parse_recentdocs_mru": (parse_recentdocs_mru, _single_source_kwargs, _claims_recentdocs),
     "parse_usb_registry": (parse_usb_registry, _single_source_kwargs, _claims_usb),
     "parse_browser_history": (parse_browser_history, _single_source_kwargs, _claims_browser),
+    "parse_lnk_jumplists": (parse_lnk_jumplists, _single_source_kwargs, _claims_lnk),
 }
 
 
@@ -472,6 +510,7 @@ def _evidence_rows(result: ToolResult) -> list[dict[str, Any]]:
         "mru_entries",
         "devices",
         "history",
+        "entries",
     ):
         rows = getattr(result, attr, None)
         if rows:
@@ -523,6 +562,7 @@ _PER_ARTIFACT_TOOLS = frozenset(
         "parse_recentdocs_mru",
         "parse_usb_registry",
         "parse_browser_history",
+        "parse_lnk_jumplists",
     }
 )
 

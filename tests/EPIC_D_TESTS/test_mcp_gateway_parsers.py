@@ -16,6 +16,7 @@ from siftmesh_core.ledgers.tool_call_ledger import read_tool_results
 from siftmesh_core.mcp_gateway.backends import BackendUnavailableError, get_backend
 from siftmesh_core.mcp_gateway.tools.browser_tools import parse_browser_history
 from siftmesh_core.mcp_gateway.tools.evtx_tools import parse_evtx_powershell, parse_evtx_security
+from siftmesh_core.mcp_gateway.tools.lnk_tools import parse_lnk_jumplists
 from siftmesh_core.mcp_gateway.tools.mft_tools import parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import analyze_prefetch
 from siftmesh_core.mcp_gateway.tools.recentdocs_tools import parse_recentdocs_mru
@@ -232,6 +233,49 @@ def test_parse_browser_history_firefox_real(case: tuple[RunPaths, Path]) -> None
     assert visit["source"] == "firefox" and visit["last_visit_utc"].endswith("Z")
     dl = next(r for r in result.history if r["kind"] == "download")
     assert dl["target_path"].endswith("leak.7z")
+
+
+def test_parse_lnk_single_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    shutil.copy(FIXTURES / "lnk_sample.lnk", evidence / "Recent.lnk")
+    result = parse_lnk_jumplists(run.root, source_artifact="Recent.lnk", evidence_root=evidence)
+    assert result.status == "success"
+    assert result.tool_name == "parse_lnk_jumplists"
+    assert result.lnk_count == 1 and result.entry_count == 1
+    row = result.entries[0]
+    assert row["kind"] == "lnk"
+    assert str(row["target_path"]).endswith("Documents.library-ms")
+
+
+def test_parse_lnk_automatic_destinations_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    shutil.copy(
+        FIXTURES / "jumplist_auto.automaticDestinations-ms",
+        evidence / "auto.automaticDestinations-ms",
+    )
+    result = parse_lnk_jumplists(
+        run.root, source_artifact="auto.automaticDestinations-ms", evidence_root=evidence
+    )
+    assert result.status == "success"
+    # OLE compound -> one row per numeric LNK stream (DestList skipped), all tagged jumplist
+    assert result.jumplist_count >= 1 and result.entry_count == result.jumplist_count
+    assert all(r["kind"] == "jumplist" for r in result.entries)
+    assert any(r["target_path"] for r in result.entries)  # at least one resolved target
+
+
+def test_parse_lnk_custom_destinations_real(case: tuple[RunPaths, Path]) -> None:
+    run, evidence = case
+    shutil.copy(
+        FIXTURES / "jumplist_custom.customDestinations-ms",
+        evidence / "custom.customDestinations-ms",
+    )
+    result = parse_lnk_jumplists(
+        run.root, source_artifact="custom.customDestinations-ms", evidence_root=evidence
+    )
+    assert result.status == "success"
+    assert result.jumplist_count >= 1
+    paths = " ".join(str(r.get("target_path") or "") for r in result.entries)
+    assert "GettingStarted.exe" in paths  # real embedded LNK target
 
 
 def test_extract_registry_run_keys_real(case: tuple[RunPaths, Path]) -> None:

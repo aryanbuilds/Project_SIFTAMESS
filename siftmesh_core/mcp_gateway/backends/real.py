@@ -68,6 +68,89 @@ def _decode_utf16_name(blob: Any) -> str | None:
     return name or None
 
 
+# A shell-link (.lnk) starts with header size 0x4C + CLSID {00021401-0000-0000-C000-000000000046}.
+# CustomDestinations-ms is a flat concatenation of LNK structures; we split on this signature.
+_LNK_HEADER = b"\x4c\x00\x00\x00" + bytes.fromhex("0114020000000000c000000000000046")
+
+
+def _dt_iso(value: Any) -> str | None:
+    """LnkParse3 returns tz-aware datetimes -> ISO-8601 ``Z`` string; pass through None/other."""
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return str(value.isoformat()).replace("+00:00", "Z")
+    return str(value)
+
+
+def _lnk_row(blob: bytes, *, kind: str, source: str) -> dict[str, Any]:
+    """Parse one LNK byte blob (LnkParse3) into a normalized row."""
+    import LnkParse3
+
+    j = LnkParse3.lnk_file(indata=blob).get_json()
+    header = j.get("header", {}) or {}
+    info = j.get("link_info", {}) or {}
+    data = j.get("data", {}) or {}
+    lbp = info.get("local_base_path")
+    target = (str(lbp) + str(info.get("common_path_suffix") or "")) if lbp else None
+    return {
+        "kind": kind,
+        "source": source,
+        "target_path": target,
+        "target_size": header.get("file_size"),
+        "working_dir": data.get("working_directory"),
+        "relative_path": data.get("relative_path"),
+        "arguments": data.get("command_line_arguments"),
+        "created_utc": _dt_iso(header.get("creation_time")),
+        "accessed_utc": _dt_iso(header.get("accessed_time")),
+        "modified_utc": _dt_iso(header.get("modified_time")),
+    }
+
+
+def _auto_dest_rows(path: Path) -> list[dict[str, Any]]:
+    """AutomaticDestinations-ms = OLE compound; each numeric stream is a LNK (DestList skipped)."""
+    try:
+        import olefile
+    except ImportError as exc:  # pragma: no cover
+        raise BackendUnavailableError(
+            "JumpList OLE backend missing (olefile); uv sync --all-extras"
+        ) from exc
+
+    rows: list[dict[str, Any]] = []
+    ole = olefile.OleFileIO(str(path))
+    try:
+        for entry in ole.listdir():
+            leaf = entry[-1]
+            if not (isinstance(leaf, str) and leaf.isdigit()):
+                continue  # DestList / non-LNK stream
+            try:
+                rows.append(
+                    _lnk_row(ole.openstream(entry).read(), kind="jumplist", source="/".join(entry))
+                )
+            except Exception:  # one corrupt stream never aborts the whole jumplist
+                continue
+    finally:
+        ole.close()
+    return rows
+
+
+def _custom_dest_rows(path: Path) -> list[dict[str, Any]]:
+    """CustomDestinations-ms = flat binary; split on the LNK header signature, parse each."""
+    blob = path.read_bytes()
+    offsets: list[int] = []
+    i = blob.find(_LNK_HEADER)
+    while i != -1:
+        offsets.append(i)
+        i = blob.find(_LNK_HEADER, i + 20)
+    rows: list[dict[str, Any]] = []
+    for k, start in enumerate(offsets):
+        end = offsets[k + 1] if k + 1 < len(offsets) else len(blob)
+        try:
+            rows.append(_lnk_row(blob[start:end], kind="jumplist", source=f"entry-{k}"))
+        except Exception:  # skip a malformed embedded LNK, keep the rest
+            continue
+    return rows
+
+
 def _system_field(data: dict[str, Any], key: str) -> Any:
     """Pull a field from Event.System, unwrapping ``#text`` attribute objects."""
     value = data.get("Event", {}).get("System", {}).get(key)
@@ -401,6 +484,28 @@ class RealBackend:
             except sqlite3.OperationalError:
                 pass
         return rows
+
+    def parse_lnk_jumplists(self, path: Path) -> list[dict[str, Any]]:
+        """LNK shortcuts + JumpLists — real, in-process (LnkParse3 + olefile).
+
+        Dispatches by suffix: ``.lnk`` -> one row; ``.automaticDestinations-ms`` -> one row per
+        OLE LNK stream; ``.customDestinations-ms`` -> one row per embedded LNK. Each row is tagged
+        ``kind=lnk|jumplist`` with the resolved target path/size/timestamps.
+        """
+        try:
+            import LnkParse3  # noqa: F401  (fail closed if the LNK lib is absent)
+        except ImportError as exc:  # pragma: no cover
+            raise BackendUnavailableError(
+                "LNK backend missing (LnkParse3); uv sync --all-extras"
+            ) from exc
+
+        suffix = path.suffix.lower()
+        if suffix == ".automaticdestinations-ms":
+            return _auto_dest_rows(path)
+        if suffix == ".customdestinations-ms":
+            return _custom_dest_rows(path)
+        # .lnk (or any other suffix routed here) -> a single shell-link
+        return [_lnk_row(path.read_bytes(), kind="lnk", source=path.name)]
 
     def parse_mft(self, path: Path) -> list[dict[str, Any]]:
         try:

@@ -29,7 +29,8 @@ _DEFAULT_TIMEOUT = 1800  # seconds; large-volume MFT/dir walks over a 23GB image
 # Curated high-value Windows artifacts (NTFS paths inside the C: volume). Each entry is
 # (logical key, kind, ntfs_path_or_dir). "file" = single file; "glob" = every *.pf in a
 # dir; "userhive" = NTUSER.DAT under each profile; "userfile" = a per-user file at a
-# profile-relative path (one optional ``*`` wildcard segment); "mft" = the $MFT (addr 0).
+# profile-relative path (one optional ``*`` wildcard segment); "usertree" = every file under a
+# per-user directory tree (recursive); "mft" = the $MFT (addr 0).
 ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("security_evtx", "file", "/Windows/System32/winevt/Logs/Security.evtx"),
     (
@@ -45,6 +46,7 @@ ARTIFACT_MAP: tuple[tuple[str, str, str], ...] = (
     ("chrome_history", "userfile", "AppData/Local/Google/Chrome/User Data/Default/History"),
     ("edge_history", "userfile", "AppData/Local/Microsoft/Edge/User Data/Default/History"),
     ("firefox_history", "userfile", "AppData/Roaming/Mozilla/Firefox/Profiles/*/places.sqlite"),
+    ("recent_jumplists", "usertree", "AppData/Roaming/Microsoft/Windows/Recent"),
     ("mft", "mft", "0"),
 )
 
@@ -337,6 +339,64 @@ def _extract_per_user(
     return ok, failed
 
 
+def _walk_tree(
+    image: Path, offset: int, key: str, ntfs_dir: str, inode: str, dest_dir: Path, depth: int
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
+    """Recursively extract every regular file under ``ntfs_dir`` (bounded depth)."""
+    if depth <= 0:
+        return [], []
+    ok: list[ExtractedFile] = []
+    failed: list[ExtractionFailure] = []
+    for kind, name, child in list_dir(image, offset, inode):
+        if name in (".", ".."):
+            continue
+        child_path = f"{ntfs_dir}/{name}"
+        if kind == "d":
+            sub_ok, sub_fail = _walk_tree(
+                image, offset, key, child_path, child, dest_dir / _safe_name(name), depth - 1
+            )
+            ok.extend(sub_ok)
+            failed.extend(sub_fail)
+        elif kind == "r":
+            one, fail = _extract_one(
+                image, offset, key, child_path, child, dest_dir / _safe_name(name)
+            )
+            if one:
+                ok.append(one)
+            if fail:
+                failed.append(fail)
+    return ok, failed
+
+
+def _extract_user_tree(
+    image: Path, offset: int, key: str, users_dir: str, rel_dir: str, dest_dir: Path
+) -> tuple[list[ExtractedFile], list[ExtractionFailure]]:
+    """Extract every file under ``Users/<u>/<rel_dir>`` (e.g. the Recent / JumpList tree).
+
+    Files keep their real basename (``*.lnk`` / ``*.automaticDestinations-ms``) and disambiguate
+    by ``<key>/<user>/...`` subdirs so the artifact router classifies them on basename/suffix.
+    """
+    users_inode = find_inode(image, offset, users_dir)
+    if users_inode is None:
+        return [], []
+    ok: list[ExtractedFile] = []
+    failed: list[ExtractionFailure] = []
+    root_sub = dest_dir / key
+    for kind, user, _inode in list_dir(image, offset, users_inode):
+        if kind != "d" or user in _SKIP_PROFILES:
+            continue
+        base = f"{users_dir}/{user}/{rel_dir}"
+        base_inode = find_inode(image, offset, base)
+        if base_inode is None:
+            continue
+        sub_ok, sub_fail = _walk_tree(
+            image, offset, key, base, base_inode, root_sub / _safe_name(user), depth=4
+        )
+        ok.extend(sub_ok)
+        failed.extend(sub_fail)
+    return ok, failed
+
+
 def extract_artifacts(
     image: Path,
     *,
@@ -368,6 +428,8 @@ def extract_artifacts(
             ok, fail = _extract_user_hives(image, off, key, path, dest_dir)
         elif kind == "userfile":
             ok, fail = _extract_per_user(image, off, key, _USERS_DIR, path, dest_dir)
+        elif kind == "usertree":
+            ok, fail = _extract_user_tree(image, off, key, _USERS_DIR, path, dest_dir)
         elif kind == "mft":
             one, one_fail = _extract_one(image, off, key, "/$MFT", path, dest_dir / "MFT")
             ok = [one] if one else []

@@ -35,6 +35,7 @@ from siftmesh_core.mcp_gateway.tools.image_tools import (
     ImageExtractionResult,
     extract_artifacts_from_image,
 )
+from siftmesh_core.mcp_gateway.tools.lnk_tools import LnkJumplistResult, parse_lnk_jumplists
 from siftmesh_core.mcp_gateway.tools.memory_tools import MemoryAnalysisResult, analyze_memory
 from siftmesh_core.mcp_gateway.tools.mft_tools import MftFilesystemResult, parse_mft_filesystem
 from siftmesh_core.mcp_gateway.tools.prefetch_tools import PrefetchResult, analyze_prefetch
@@ -163,6 +164,13 @@ def _parse_browser_history(source_artifact: str) -> BrowserHistoryResult:
     )
 
 
+def _parse_lnk_jumplists(source_artifact: str) -> LnkJumplistResult:
+    run_root, evidence_root = _run_scope()
+    return parse_lnk_jumplists(
+        run_root, source_artifact=source_artifact, evidence_root=evidence_root
+    )
+
+
 def tool_adapters() -> dict[str, Any]:
     """The allowlisted tool name -> MCP adapter mapping (the complete tool surface)."""
     return {
@@ -180,6 +188,7 @@ def tool_adapters() -> dict[str, Any]:
         "parse_recentdocs_mru": _parse_recentdocs_mru,
         "parse_usb_registry": _parse_usb_registry,
         "parse_browser_history": _parse_browser_history,
+        "parse_lnk_jumplists": _parse_lnk_jumplists,
     }
 
 

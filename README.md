@@ -56,6 +56,11 @@ in the agent, determinism lives in the code.**
 - Not a replacement for court-vetted tools. It **orchestrates** them; the tools are the source of truth.
 - Never runs raw shell, destructive ops, or writes to your evidence. It fails closed, not open.
 
+**Real results (ROCBA dataset):** [`docs/findings_rocba.md`](docs/findings_rocba.md) +
+[`docs/accuracy_report.md`](docs/accuracy_report.md) are produced by a real run against the provided
+evidence (disk image + memory); [`docs/dataset_documentation.md`](docs/dataset_documentation.md) has
+the sealed hashes + how to reproduce.
+
 ---
 
 ## Pre-setup (recommended)

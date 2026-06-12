@@ -9,13 +9,16 @@ self-tests against real forensic evidence, and real-evidence outputs stay on the
 
 ## The case dataset (ROCBA)
 
-Provided evidence, held read-only on the workstation at `~/projects/data/`:
+Provided evidence, held read-only on the workstation at `~/projects/data/`. The SHA-256 values below
+are the **real sealed manifest** from the runs (`RUN-20260612-082004` disk, `RUN-20260612-082630`
+memory) — the chain-of-custody anchor computed at ingest:
 
-| Artifact | Size | Role |
-| --- | --- | --- |
-| `rocba-cdrive.e01` | ~23.7 GB | NTFS disk image (EnCase E01) — primary host evidence |
-| `Rocba-Memory.zip` | ~5.7 GB | memory capture (nested `…/Rocba-Memory.7z` → raw image) |
-| `ROCBA-BACKGROUND.pptx` | ~40 MB | incident background — the **TRUSTED objective** (passed via `--brief`, never treated as evidence) |
+| Artifact | Size (bytes) | SHA-256 | Role |
+| --- | --- | --- | --- |
+| `rocba-cdrive.e01` | 23,678,691,658 | `f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67` | NTFS disk image (EnCase E01) — primary host evidence |
+| `Rocba-Memory.zip` | 5,682,814,481 | `32cec94018051f6ce20ec75f1b7b53ad2f6eb5e8bbaec7b402e30409af552b09` | memory capture (nested `…/Rocba-Memory.7z` → raw image) |
+| `Rocba-Memory.raw` (derived) | 19,050,528,768 | `eb33bdf63730858a805463d171245b233335dd6d89ed458bc681f7d282e10563` | decompressed raw memory image (Volatility 3 input) |
+| `ROCBA-BACKGROUND.pptx` | 40,148,560 | — (objective, not evidence) | incident background — the **TRUSTED objective** (`--brief`, never fed to a tool) |
 
 ## How SIFTMesh handles it (integrity)
 

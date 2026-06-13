@@ -71,6 +71,7 @@ def _version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     version: Annotated[
         bool | None,
         typer.Option(
@@ -80,6 +81,17 @@ def main(
             help="Show version and exit.",
         ),
     ] = None,
+    stream: Annotated[
+        bool | None,
+        typer.Option(
+            "--stream/--no-stream",
+            help="Real-time tagged log stream to stderr (default: on when attached to a terminal).",
+        ),
+    ] = None,
+    quiet: Annotated[
+        bool,
+        typer.Option("--quiet", "-q", help="Suppress the real-time log stream (= --no-stream)."),
+    ] = False,
 ) -> None:
     """App-level options. `siftmesh --version` works with no subcommand."""
     # Load provider credentials (LiteLLM judge keys) from ~/.config/siftmesh/.env into the
@@ -88,6 +100,13 @@ def main(
     from siftmesh_core.secrets_env import load_secrets_into_env
 
     load_secrets_into_env()
+
+    # Real-time log stream: register a stderr streamer for long-running commands so any run
+    # shows tagged, per-task, %-complete logs by default. TTY-gated, so CliRunner/pipes (and
+    # the golden recorder) get nothing; the TUI/mcp-serve are excluded (they own their I/O).
+    from siftmesh_core.observability import install_stream_if_enabled
+
+    install_stream_if_enabled(ctx.invoked_subcommand, stream=stream, quiet=quiet)
 
 
 @app.command("init-case")

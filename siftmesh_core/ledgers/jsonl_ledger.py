@@ -37,6 +37,11 @@ def append_record(
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("a", encoding="utf-8", newline="\n") as out:
         out.write(record.model_dump_json() + "\n")
+    # Real-time stream (near-noop when no sink registered); after the durable write so the
+    # golden bytes are unaffected and a sink can never change the ledger.
+    from siftmesh_core.observability import sinks
+
+    sinks.emit_record(run_root, rel, record)
     return target
 
 

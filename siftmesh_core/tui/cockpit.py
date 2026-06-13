@@ -97,10 +97,6 @@ class CockpitScreen(Screen):
                     yield Static(id="claims")
                 with TabPane("Claim list", id="tab-claimlist"):
                     yield DataTable(id="claimlist", zebra_stripes=True, cursor_type="row")
-                with TabPane("Agents", id="tab-agents"):
-                    yield Static(id="agents")
-                with TabPane("Budget", id="tab-budget"):
-                    yield Static(id="budget")
                 with TabPane("Console", id="tab-console"):
                     yield RichLog(id="console", max_lines=2000, markup=False, highlight=False)
             with Vertical(id="navcol"):
@@ -123,13 +119,6 @@ class CockpitScreen(Screen):
         self.query_one("#ledgersel", Select).tooltip = "which audit ledger the ticker shows"
         self.query_one("#nav", Tree).tooltip = "Select a run file to view (markdown/JSON rendered)"
         self.query_one("#taskbar", ProgressBar).tooltip = "Tasks completed / total"
-        # Cache the honest agent safety tiers once (pure profile classification — no subprocess).
-        try:
-            from siftmesh_core.doctor import profile_safety_tiers
-
-            self._tiers = profile_safety_tiers()
-        except Exception:
-            self._tiers = {}
         self._build_nav()
         if self.launch_params is not None:
             self._launch_run()
@@ -339,10 +328,6 @@ class CockpitScreen(Screen):
         bar.update(total=max(snap.tasks_total, 1), progress=snap.tasks_done)
         self.query_one("#ribbon", Static).update(widgets.ribbon_text(snap))
         self.query_one("#claims", Static).update(widgets.claims_text(snap))
-        self.query_one("#agents", Static).update(
-            widgets.agents_text(snap, getattr(self, "_tiers", {}))
-        )
-        self.query_one("#budget", Static).update(widgets.budget_text(snap))
         self._sync_tasks(snap)
         self._sync_claimlist(snap)
         self._sync_ticker(snap)

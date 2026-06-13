@@ -174,7 +174,7 @@ Screen.-narrow #homeside, Screen.-narrow #hero {
     padding: 1 2;
 }
 
-/* Evidence picker (RunSetupScreen): breadcrumb + 3-pane (showcase | tree | picked) + search. */
+/* Evidence picker (RunSetupScreen): breadcrumb + 2-pane (tree | picked) + search. */
 #idrow, #navrow, #searchrow {
     height: auto;
     padding: 0 1;
@@ -188,10 +188,6 @@ Screen.-narrow #homeside, Screen.-narrow #hero {
 #pickrow {
     height: 1fr;
     min-height: 12;
-}
-#showcase {
-    width: 1fr;
-    border: round $accent;
 }
 #pickrow #fstree {
     width: 1fr;
@@ -220,7 +216,6 @@ Screen.-narrow #homeside, Screen.-narrow #hero {
 Screen.-narrow #pickrow {
     layout: vertical;
 }
-Screen.-narrow #showcase,
 Screen.-narrow #pickrow #fstree,
 Screen.-narrow #pickedcol {
     width: 1fr;

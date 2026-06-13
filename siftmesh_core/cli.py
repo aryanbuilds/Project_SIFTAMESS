@@ -683,13 +683,15 @@ def run(
         ),
     ] = False,
     parallel: Annotated[
-        bool,
+        bool | None,
         typer.Option(
-            "--parallel",
+            "--parallel/--no-parallel",
             help="Dispatch tasks concurrently (up to caps.max_parallel_tasks) — deterministic "
-            "(byte-identical to sequential). The real win is the live-agent path. Default: off.",
+            "(byte-identical to sequential). Default: AUTO — ON when a live --agent executor is "
+            "used (slow live agents shouldn't run serially), OFF for the deterministic floor. "
+            "--no-parallel forces sequential.",
         ),
-    ] = False,
+    ] = None,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -720,8 +722,18 @@ def run(
         )
     if all_live:
         settings = settings.model_copy(update={"live_extraction": True})
-    if parallel:
+    # Parallel dispatch is AUTO: default ON for a live AI executor (sequential live agents are slow
+    # and brittle over many tasks), OFF for the deterministic floor (keeps the byte-stable default).
+    # Explicit --parallel / --no-parallel win; the floor otherwise keeps its config default.
+    live_executor = agent is not None and agent != "deterministic"
+    if parallel is not None:
+        settings = settings.model_copy(update={"parallel_dispatch": parallel})
+    elif live_executor:
         settings = settings.model_copy(update={"parallel_dispatch": True})
+        typer.echo(
+            "note: live agent — parallel dispatch is ON (use --no-parallel for sequential)",
+            err=True,
+        )
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     if not force and not _space_preflight_ok(case_dir, evidence):

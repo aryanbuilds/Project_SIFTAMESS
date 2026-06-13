@@ -184,7 +184,37 @@ siftmesh run ./case --evidence ~/data --objective "..." --auto \
 
 Modes: `--auto` (run to the end), `--auto-human-loop` (stop at meaningful gates), `--review-only`
 (plan and stop), or `--mode manual` (one step at a time). Drop `--agent` to run free on the
-deterministic floor.
+deterministic floor. When you pick a live `--agent`, **parallel dispatch turns on automatically**
+(bounded + deterministic) so a slow agent isn't run serially — pass `--no-parallel` to opt out.
+
+---
+
+## FAQ — how the "agents" actually work
+
+**Q1 · Are the planner, executor, critic and ultraworker all AI agents?**
+No. They are stages of a **deterministic state machine**, not LLMs. Only the **executor** can be an AI
+agent — and only if you opt in with `--agent`. With no `--agent`, the whole pipeline runs as plain code
+over the real forensic tools (the "deterministic floor") with **no AI at all**. The **planner**,
+**critic** and **ultraworker** are *always* deterministic code; the optional Tier-2 judge is advisory
+and can never promote a finding. (Your committed ROCBA results were produced this way — real tools, no
+AI executor.)
+
+**Q2 · Does the ultraworker dispatch every executor in parallel?**
+No — and the ultraworker doesn't dispatch at all. It is the `decide` stage that folds the critic's
+verdicts. The **scheduler** does the dispatching in the `dispatch` stage. By **default tasks run one at
+a time** (up to `--max-agent-tasks`). Parallel dispatch is **bounded** (`caps.max_parallel_tasks`,
+default 3): each task runs isolated in its own staging dir, and results are **committed in order so the
+output is byte-identical to a sequential run**. Tasks whose input is a *derived* (carved-from-image)
+artifact always run sequentially by design.
+
+**Q3 · Do live AI agents support parallel, and what runs if I don't pass `--agent`?**
+Live agents *do* support parallel — each task gets its own sandboxed agent process and isolated run
+dir — and **SIFTMesh now enables it automatically whenever you select a live `--agent`** (sequential
+live agents are slow and brittle across many tasks; use `--no-parallel` to force serial). If you **omit
+`--agent`**, the deterministic floor runs everything (no AI) — independent of `--auto` /
+`--auto-human-loop`, which only decide *how far* the engine runs and *where it pauses*, not *who* fills
+the executor seat. If you name a live agent that isn't installed/authenticated, it **falls back to the
+deterministic floor** (never silently to a different live agent).
 
 ---
 

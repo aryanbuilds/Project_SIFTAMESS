@@ -109,6 +109,8 @@ uv run siftmesh status RUN     # where is it, what's blocked
 - **Optional Tier-2 judge** - advisory only; it can lower confidence or annotate, but never promote.
 - **Evidence vault** - SHA-256 manifest, read-only posture, chain-of-custody log.
 - **Deterministic critic + self-correction** - unsupported claims are downgraded or dropped.
+- **Real-time logs** - every command streams a tagged, per-task, %-complete log to your terminal
+  by default (`[info] [agent] [tool_log] [alert] [result] [tasks]`); `--quiet` to silence.
 - **Full traceability** - claim/contradiction ledgers, token/agent/tool audit, HTML replay.
 - **TUI cockpit** - live read-only run view plus guided new-run onboarding.
 - **Low-disk mode** - run in portions, prune between, then merge into one report.

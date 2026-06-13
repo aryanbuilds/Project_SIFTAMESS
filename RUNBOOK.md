@@ -351,6 +351,12 @@ a new one, or onboard agents. The cockpit is read-only; launching a run reuses t
 - **Cost/time:** hashing 22.6 GB ≈ ~1 min; Sleuthkit extraction = minutes; Volatility
   `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`–`2` and a narrow set of
   extracted artifacts.
+- **Real-time logs:** every long-running command (`run`/`dispatch`/`critique`/`report`/`evidence …`)
+  streams a tagged, scrolling log to **stderr** as it works — `[info] [agent] [tool_log] [alert]
+  [output] [result] [tasks]`, with a `TASK-NNN` separator per task and a `▸ N/M (P%) · elapsed`
+  progress line. On by default in a terminal; add `--quiet` (or `--no-stream`) to silence, or
+  `--stream` to force it on when piping (e.g. `siftmesh --stream run … 2>run.log`). It is
+  stderr-only, so stdout (the machine-readable summary) and the run-dir ledgers are unchanged.
 - **Fail-closed:** a missing SIFT-lane tool yields a clean `BackendUnavailableError` when invoked —
   install the tool; never a fake result.
 - **Config precedence:** init args > env (`SIFTMESH_*`) > project `./siftmesh.toml` > global

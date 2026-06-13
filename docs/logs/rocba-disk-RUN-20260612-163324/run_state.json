@@ -1,0 +1,111 @@
+{
+  "run_id": "RUN-20260612-163324",
+  "state": "done",
+  "mode": "auto",
+  "iteration": 2,
+  "max_iterations": 6,
+  "agent_tasks_completed": 18,
+  "per_task": {
+    "TASK-001": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-002": {
+      "attempt": 2,
+      "max_attempts": 2,
+      "status": "retry_required"
+    },
+    "TASK-003": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-004": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-005": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-006": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-007": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-008": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-009": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-010": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-011": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-012": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-013": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-014": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-015": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-016": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-017": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    }
+  },
+  "pending_dispatch": [],
+  "quarantined_tasks": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-009",
+    "TASK-016",
+    "TASK-017"
+  ],
+  "gates": {
+    "plan": "pending",
+    "retry": "pending",
+    "report": "pending"
+  },
+  "blocked_gate": null,
+  "terminal": true,
+  "updated_utc": "2026-06-12T16:49:23.544347Z"
+}

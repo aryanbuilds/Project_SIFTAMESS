@@ -1,0 +1,11 @@
+{
+  "enforcement": "posture_only",
+  "note": "Records intended read-only posture: SIFTMesh opens originals read-only and never writes to a source. This is NOT OS-level RO-mount enforcement (mount -o ro / blockdev --setro), which is deferred to a later epic.",
+  "sources": [
+    {
+      "access": "read_only",
+      "file_count": 1,
+      "path": "/home/sansforensics/projects/ev_disk"
+    }
+  ]
+}

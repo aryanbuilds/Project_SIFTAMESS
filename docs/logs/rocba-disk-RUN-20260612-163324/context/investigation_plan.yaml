@@ -1,0 +1,49 @@
+plan_id: RUN-20260612-163324
+case_id: rocba_full
+template: windows_initial_triage
+review_only: false
+artifact_count: 1
+steps:
+- step_id: step-001
+  kind: deep_context
+  description: Build the deep-context pack.
+  depends_on: []
+  task_id: null
+  tool: null
+  input_artifacts: []
+- step_id: step-002
+  kind: executor
+  description: Recover loose triage artifacts (event logs, hives, prefetch, $MFT)
+    from the disk image.
+  depends_on:
+  - step-001
+  task_id: TASK-001
+  tool: extract_artifacts_from_image
+  input_artifacts:
+  - rocba-cdrive.e01
+- step_id: step-003
+  kind: executor
+  description: Build a Plaso super-timeline across the whole disk image.
+  depends_on:
+  - step-001
+  task_id: TASK-002
+  tool: build_super_timeline
+  input_artifacts:
+  - rocba-cdrive.e01
+- step_id: step-004
+  kind: critique
+  description: Validate every claim's evidence binding; reject unsupported claims.
+  depends_on:
+  - step-002
+  - step-003
+  task_id: null
+  tool: null
+  input_artifacts: []
+- step_id: step-005
+  kind: report
+  description: Render the final evidence-backed report.
+  depends_on:
+  - step-004
+  task_id: null
+  tool: null
+  input_artifacts: []

@@ -5,9 +5,11 @@ evidence on the SANS SIFT workstation — the exact JSONL records, with timestam
 **trace any finding back to the specific tool execution that produced it.** Nothing here is a fixture
 or a demo; every line below is copied from the run's append-only ledgers.
 
-> The full run directories are **not committed** (real-evidence outputs stay off the repo, CLAUDE.md
-> §2B). This file is the curated, verifiable excerpt; the maintainer can show the complete ledgers live
-> on the workstation, and every record is reproducible with the commands in §4.
+> The **complete ledgers for both runs are committed** under [`logs/`](logs/) — the full `audit/`,
+> `claims/`, `reports/`, `context/`, `tasks/`, and chain-of-custody ledgers (see
+> [`logs/README.md`](logs/README.md)). This file is the guided walkthrough of one trace. Only the heavy
+> *derived* trees (per-tool `results/`, the carved `evidence/extracted/`, the 11 GB Plaso
+> `super_timeline/`) and the raw evidence images stay off-repo (size + chain of custody).
 
 | Run | Evidence | SHA-256 | Result |
 |---|---|---|---|

@@ -7,6 +7,11 @@
   The LLM proposes; the code decides. Every finding is anchored to a real tool call, and every run is replayable.
 </p>
 
+<p align="center">
+  🎥 <b>Demo video:</b> <i>&lt;TODO — paste the recorded URL&gt;</i> &nbsp;·&nbsp;
+  📋 <b>Submission index (all 8 components):</b> <a href="docs/submission.md"><code>docs/submission.md</code></a>
+</p>
+
 ---
 
 ## Tech stack
@@ -57,7 +62,9 @@ lives in the code.**
 **Real results (ROCBA dataset):** [`docs/findings_rocba.md`](docs/findings_rocba.md) +
 [`docs/accuracy_report.md`](docs/accuracy_report.md) are produced by a real run against the provided
 evidence (disk image + memory); [`docs/dataset_documentation.md`](docs/dataset_documentation.md) has
-the sealed hashes + how to reproduce.
+the sealed hashes + how to reproduce; [`docs/execution_logs_sample.md`](docs/execution_logs_sample.md)
+traces a finding back to its exact tool execution with real timestamps. The project story is in
+[`docs/project_story.md`](docs/project_story.md).
 
 ---
 

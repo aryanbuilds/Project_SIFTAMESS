@@ -50,10 +50,6 @@ The authoritative outputs land under the new run dir:
 - `claims/claim_ledger.jsonl` — the raw findings, each citing `tool_call_id` + `source_sha256`.
 - `audit/*.jsonl` + `uv run siftmesh replay RUN --html` — the full, timestamped, replayable trail.
 
-## Note on the committed demo fixture
-
-`examples/demo_case/` ships a tiny **public** `Security.evtx` (the `Security_short_selected.evtx`
-sample from [omerbenamram/evtx](https://github.com/omerbenamram/evtx), 7 records) purely as a
-**no-keys reproducibility harness** — it lets anyone exercise the real pipeline end to end without
-licensed evidence. It is **not** the case data, and its output is **not** a finding on the ROCBA
-dataset.
+The real findings, accuracy self-assessment, and a traceable execution-log excerpt from this dataset are
+in [`findings_rocba.md`](findings_rocba.md), [`accuracy_report.md`](accuracy_report.md), and
+[`execution_logs_sample.md`](execution_logs_sample.md).

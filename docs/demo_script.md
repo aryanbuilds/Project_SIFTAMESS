@@ -1,11 +1,18 @@
-# Demo script (≤5 minutes)
+# Demo script (≤5 minutes) — recorded against the REAL ROCBA evidence
 
-A shot list + narration for the submission video. Two acts: **(A)** the zero-keys deterministic proof
-(reliable, always works), then **(B)** the live self-correction hero (Claude). If recording time is
-tight, Act A alone satisfies criteria 2/4/5; add Act B for criterion 1.
+A shot list + narration for the submission video, recorded **by the maintainer on the SANS SIFT
+workstation against the real ROCBA evidence** (the disk image + memory capture). Component 2 requires
+*real case data* and *a self-correction sequence* — both are below.
 
-Record a real terminal. Pre-stage the repo (`uv sync`) so the camera starts on the run.
-Target ≈4:30 to leave buffer.
+> **On CLAUDE §2B:** that rule forbids the *coding agent* from autonomously running the pipeline against
+> real evidence — it does **not** forbid the maintainer operating their own authorized run for the
+> recording. The maintainer runs every command here.
+
+**Pre-stage (before the camera rolls):** `uv sync --all-extras`; `claude setup-token`; have the
+**completed** real ROCBA run dir ready (`./case_rocba/case_runs/RUN-*` from
+`docs/try_it_out.md` §4) so Act A reads real findings instantly, and pre-extract a small slice of its
+artifacts for the live Act B so it self-corrects within the time budget. Keep the terminal font large;
+never show a token. Target ≈4:30.
 
 ---
 
@@ -13,84 +20,77 @@ Target ≈4:30 to leave buffer.
 
 > "SIFTMesh is a CLI-first, evidence-safe controller for autonomous DFIR. The LLM proposes; **code
 > decides**. Every finding is anchored to a real tool call, every claim is critiqued by deterministic
-> code, and the whole run replays from an audit log. And it's honest about agent risk — it labels
-> every agent's safety tier."
+> code, and the whole run replays from an audit log — and it labels every agent's safety tier."
 
-Show: `uv run siftmesh agents list` — point at the **tier** column (T0 floor, T1 Claude, T2
-opencode/gemini/codex, T3 judge) and the legend.
+Show: `uv run siftmesh agents list` — point at the **tier** column (T0 floor · T1 Claude · T2
+opencode/gemini/codex · T3 judge).
 
-## 0:15 — Act A: zero-keys run (45s)
+## 0:15 — The real case + the result (45s)
+
+> "This is the real ROCBA case — a 23 GB Windows disk image and a 19 GB memory capture. SIFTMesh sealed
+> them read-only, then ran nineteen real forensic tools on its own."
+
+Show the completed real run:
 
 ```bash
-bash examples/demo_case/run_demo.sh
+RUN=$(ls -dt ./case_rocba/case_runs/RUN-* | head -1)
+sed -n '1,40p' "$RUN/reports/final_report.md"   # ADAMANTIUM → Google Drive + USB exfil; SDelete cleanup
 ```
 
-> "No API keys. This runs the deterministic real-tool floor — tier T0 — over a real Windows Security
-> event log. It hashes the evidence, plans, dispatches, runs the real evtx parser, and reaches done."
-
-Show the tail: `state: done`, and the printed run directory.
+> "634 evidence-anchored findings, zero unsupported, zero contradictions — stolen ADAMANTIUM research
+> exfiltrated to a personal Google Drive and USB, with SDelete and forty-eight thousand journal
+> deletions as cleanup."
 
 ## 1:00 — Evidence safety + anchored claims (60s)
 
 ```bash
-RUN=$(ls -dt examples/demo_case/case_runs/RUN-* | head -1)
-cat "$RUN/evidence/evidence_manifest.json"     # SHA-256 sealed at ingest
-cat "$RUN/claims/claim_ledger.jsonl"           # every claim cites tool_call_id + source_sha256
+cat "$RUN/evidence/evidence_manifest.json"     # the .E01 sealed at ingest: sha256 f2eb856d…
+grep -m1 PowerShell "$RUN/claims/claim_ledger.jsonl"   # a finding citing tool_call_id + source_sha256
+grep -m1 '"tool_call_id":"TOOL-004"' "$RUN/audit/tool_calls.jsonl"   # the exact tool exec it points to
 ```
 
 > "Evidence is SHA-256 sealed and never modified — chain of custody. Each finding cites the exact tool
-> call and the source hash. A claim *without* that anchor can't be a fact — it's the hallucination
-> firewall."
+> call and the source hash; the claim's hash matches the tool's hash. A claim without that anchor can't
+> be a fact — that's the hallucination firewall. (Walked end-to-end in `docs/execution_logs_sample.md`.)"
 
-## 2:00 — The critic gate + report (45s)
+## 2:00 — The critic gate + replay (45s)
 
 ```bash
 cat "$RUN/audit/critic_verdicts.jsonl"         # the deterministic governance gate
-sed -n '1,40p' "$RUN/reports/final_report.md"  # evidence-backed findings + ATT&CK
+uv run siftmesh replay "$RUN"                  # the whole run reconstructed from timestamped JSONL
 ```
 
-> "The deterministic critic is the sole promoter. Here both tasks are accepted because every claim is
-> anchored. Unsupported claims would be confined to Appendix B — never the findings body."
+> "The deterministic critic is the sole promoter — accepted, retry, human-review, escalate. Every action
+> is a timestamped record, so the entire investigation replays. That's audit-trail quality."
 
-## 2:45 — Replay / audit (30s)
+## 2:45 — Live self-correction against the real evidence (90s)
 
-```bash
-uv run siftmesh replay "$RUN"                  # the whole run reconstructed from JSONL
-```
-
-> "Every action is a timestamped JSONL record. The entire investigation replays — that's criterion 5,
-> audit-trail quality."
-
-(Optional B-roll: `uv run siftmesh tui` — the minimal home (recent runs + a centered *New run*), the
-new-run wizard browsing the filesystem for evidence with `#file`/`#folder` fuzzy search, then
-`uv run siftmesh tui "$RUN"` — the live cockpit: vitals, pipeline ribbon, task table,
-claims/agents/budget, audit ticker.)
-
-## 3:15 — Act B: live self-correction hero (75s)
+Run the live agent on a small slice of the real ROCBA artifacts so it finishes on camera:
 
 ```bash
-bash examples/demo_case/run_demo.sh --agent claude
-RUNL=$(ls -dt examples/demo_case/case_runs/RUN-* | head -1)
+uv run siftmesh run ./case_live --evidence ~/projects/rocba_slice \
+  --agent claude --auto-human-loop --max-iterations 2
+RUNL=$(ls -dt ./case_live/case_runs/RUN-* | head -1)
 cat "$RUNL/audit/agent_calls.jsonl"            # attempt 1 … then attempt 2
 cat "$RUNL/audit/critic_verdicts.jsonl"        # retry_required → accepted
 cat "$RUNL/claims/unsupported_claims.jsonl"    # the rejected, under-anchored attempt-1 over-claim
 cat "$RUNL/claims/claim_ledger.jsonl"          # the corrected, anchored attempt-2 claim
 ```
 
-> "Now the live agent — Claude, sandboxed to the typed tools via strict-MCP, tier T1. It investigates
-> on its own. When it over-claims without an anchor, the deterministic critic returns
-> `retry_required`; the rejection reasons are fed back into the prompt; the agent revises against the
-> real tool output; and the corrected, anchored claim is accepted on attempt 2. The mistake and the
-> correction are both in the audit log — emergent self-correction, not scripted."
+> "Now the live agent — Claude, sandboxed to the typed tools via strict-MCP, tier T1 — investigating
+> real evidence on its own. When it over-claims without an anchor, the deterministic critic returns
+> `retry_required`; the rejection reasons are fed back into the prompt; it revises against the real tool
+> output; and the corrected, anchored claim is accepted on attempt 2. Both the mistake and the
+> correction are in the audit log — emergent self-correction, not scripted."
 
-> "Crucially: even a successful prompt injection can't exfiltrate (no network tool), can't write
-> outside the run dir, and can't become a reported fact without passing the critic. LLM proposes,
+> "And even a successful prompt injection over the evidence can't exfiltrate — no network tool — can't
+> write outside the run dir, and can't become a reported fact without passing the critic. LLM proposes,
 > code decides."
 
-## 4:30 — Close (15s)
+## 4:15 — Close (15s)
 
-> "Real tools, evidence-safe, agent-agnostic with honest safety tiers, fully replayable — and it
-> self-corrects. That's SIFTMesh."
+> "Real tools on real evidence, evidence-safe, agent-agnostic with honest safety tiers, fully
+> replayable — and it self-corrects. That's SIFTMesh."
 
 Show: `README.md` top + the repo URL + Apache-2.0.
 
@@ -98,8 +98,13 @@ Show: `README.md` top + the repo URL + Apache-2.0.
 
 ## Recording notes
 
-- Use the committed `examples/demo_case` so the run is fast and identical every take.
-- Act B needs `claude setup-token` (subscription) — do it before recording; never show the token.
-- If a live take is flaky, Act A is the guaranteed-green fallback (golden-tested determinism).
-- Keep terminal font large; pre-set `siftmesh tui` theme with `ctrl+t` if needed.
-- Per CLAUDE §2B, do **not** record against real SANS/ROCBA evidence — the demo case is public data.
+- **Act A reads the completed real run** (instant); only **Act B runs live** — keep its evidence slice
+  small (a few extracted artifacts: the PowerShell evtx + a couple registry hives) so the self-correction
+  loop completes inside the 90s budget.
+- Act B needs `claude setup-token` (subscription) done **before** recording; never show the token.
+- If a live take is flaky, fall back to **replaying a previously-recorded real live run's** ledgers
+  (`agent_calls`/`critic_verdicts`/`unsupported_claims`/`claim_ledger`) — still real, still
+  self-correction, just not live-typed.
+- Optional B-roll: `uv run siftmesh tui "$RUN"` — the live cockpit (vitals, pipeline ribbon, task
+  table, claims, audit ticker) over the real run; and the default real-time tagged log stream in the
+  plain CLI.

@@ -1,13 +1,13 @@
-# Submission index — the 8 required components
+# Submission index: the 8 required components
 
-Every required component, mapped to its artifact. All results/metrics/logs are from the **real ROCBA
-investigation** (disk `RUN-20260612-163324` + memory `RUN-20260612-082630`) on the SANS SIFT
-workstation — not a demo fixture.
+Every required component maps to its artifact. All results, metrics, and logs come from the **real ROCBA
+investigation** (disk `RUN-20260612-163324` plus memory `RUN-20260612-082630`) on the SANS SIFT
+workstation, not a demo fixture.
 
 | # | Component | Where it lives | Status |
 |---|---|---|---|
 | 1 | **Code repository + license** | Public GitHub repo · [`LICENSE`](../LICENSE) (Apache-2.0) · [`README.md`](../README.md) | ✅ |
-| 2 | **Demo video (≤5 min, narrated, real data + self-correction)** | **Link: _TODO — paste the recorded URL here and in the README_** · shot list: [`demo_script.md`](demo_script.md) | ⏳ record |
+| 2 | **Demo video (≤5 min, narrated, real data + self-correction)** | **Link: _TODO - paste the recorded URL here and in the README_** · shot list: [`demo_script.md`](demo_script.md) | ⏳ record |
 | 3 | **Architecture diagram (pattern + boundaries + prompt-vs-architectural)** | [`architecture.md`](architecture.md) · [`threat_model.md`](threat_model.md) · [`diagrams/security_boundaries.mmd`](diagrams/security_boundaries.mmd) | ✅ |
 | 4 | **Written project description (Devpost story)** | [`project_story.md`](project_story.md) | ✅ |
 | 5 | **Dataset documentation** | [`dataset_documentation.md`](dataset_documentation.md) (sealed ROCBA hashes, source, reproduce) | ✅ |
@@ -17,30 +17,31 @@ workstation — not a demo fixture.
 
 ## Headline real-evidence results (ROCBA)
 
-- **Disk** `RUN-20260612-163324` — `rocba-cdrive.e01`, sha `f2eb856d…` (23.7 GB): **634 claims**
-  (220 confirmed / 414 inferred), **0 unsupported, 0 contradictions**; 19 tools fired; 3,949 injection
-  strings flagged (logged, never executed); 5.7 M-event Plaso super-timeline.
-- **Memory** `RUN-20260612-082630` — `Rocba-Memory.raw`, sha `eb33bdf6…` (19 GB): Volatility 3, 6
-  plugins, 0 failed; 2,186 processes, 430 network endpoints.
-- **Answers the brief:** stolen ADAMANTIUM research → personal Google Drive + USB exfil; SDelete +
-  47,966 USN deletions as cleanup. Full narrative: [`findings_rocba.md`](findings_rocba.md);
-  end-to-end operation log: [`complete_operation.md`](complete_operation.md).
+- **Disk** `RUN-20260612-163324` ran against `rocba-cdrive.e01`, sha `f2eb856d…` (23.7 GB). It produced
+  **634 claims** (220 confirmed / 414 inferred), with **0 unsupported and 0 contradictions**. 19 tools fired,
+  3,949 injection strings were flagged (logged, never executed), and the Plaso super-timeline holds 5.7 M events.
+- **Memory** `RUN-20260612-082630` ran against `Rocba-Memory.raw`, sha `eb33bdf6…` (19 GB). Volatility 3 ran
+  6 plugins with 0 failures, recovering 2,186 processes and 430 network endpoints.
+- **Answers the brief:** stolen ADAMANTIUM research went to a personal Google Drive plus USB exfil, and
+  SDelete with 47,966 USN deletions handled cleanup. Read the full narrative in
+  [`findings_rocba.md`](findings_rocba.md); the end-to-end operation log lives in
+  [`complete_operation.md`](complete_operation.md).
 
 ## At-a-glance integrity posture (for a quick trust read)
 
-- **Pattern:** "LLM proposes, code decides" — autonomous agent + deterministic governance FSM.
-- **Architectural (code-enforced) guardrails:** read-only evidence + SHA-256 seal, the 19-tool MCP
-  allowlist (no raw shell), `safe_write_path` run-dir write-jail, the critic (sole promoter), the
-  injection ledger. These hold **regardless of which agent runs** — see [`threat_model.md`](threat_model.md) §1, §4–5.
-- **Prompt-based (advisory) guardrails:** the per-harness sandbox flags (e.g. Claude
-  `--disallowedTools` / `--permission-mode dontAsk`) — clearly distinguished as the *inner*, weaker
+- **Pattern:** "LLM proposes, code decides." An autonomous agent runs under a deterministic governance FSM.
+- **Architectural (code-enforced) guardrails:** read-only evidence with a SHA-256 seal, the 19-tool MCP
+  allowlist (no raw shell), the `safe_write_path` run-dir write-jail, the critic as sole promoter, and the
+  injection ledger. These hold **regardless of which agent runs**. See [`threat_model.md`](threat_model.md) §1, §4 to 5.
+- **Prompt-based (advisory) guardrails:** the per-harness sandbox flags such as Claude
+  `--disallowedTools` / `--permission-mode dontAsk`. We mark these as the inner, weaker
   layer that the architectural layer does not depend on.
 
 ## Notes
 
-- The **full execution-log ledgers** for both real runs are committed under [`logs/`](logs/) (audit /
-  claims / reports / context / tasks / custody). Only the heavy *derived* bulk (per-tool `results/`, the
-  carved `evidence/extracted/`, the 11 GB Plaso `super_timeline/`) and the raw evidence images stay
-  off-repo — size + chain of custody (CLAUDE.md §2B).
-- `examples/demo_case/` + `tests/golden/` exist purely as **test infrastructure** (golden-determinism +
-  CI without licensed evidence) — they are **not** the submission's results.
+- We commit the **full execution-log ledgers** for both real runs under [`logs/`](logs/) (audit,
+  claims, reports, context, tasks, custody). Only the heavy derived bulk stays off-repo: per-tool `results/`, the
+  carved `evidence/extracted/`, and the 11 GB Plaso `super_timeline/`, along with the raw evidence images.
+  Size and chain of custody drive that choice (CLAUDE.md §2B).
+- `examples/demo_case/` and `tests/golden/` exist purely as **test infrastructure** for golden-determinism
+  and CI without licensed evidence. They are **not** the submission's results.

@@ -45,7 +45,7 @@ you don't name — always `--all-extras` (or use `setup`/`doctor --setup`).
 
 What matters:
 
-- `[ ok ] gateway tool allowlist: 10 tools, no forbidden` — core is healthy.
+- `[ ok ] gateway tool allowlist: 19 tools, no forbidden` — core is healthy.
 - SIFT-lane lines for **Sleuthkit (mmls/ifind/icat/fls)**, **Volatility 3 (vol)**, **7z**. These are
   `[warn]` if absent (fine for `doctor`), but the tool **fails closed** when actually invoked. For the
   ROCBA disk + memory you need them present:
@@ -128,9 +128,12 @@ uv run siftmesh report   "$RUN"
 ```
 
 Note: only extracted artifacts that map to a typed tool get a task — PowerShell evtx →
-`parse_evtx_powershell`, SOFTWARE/SYSTEM/user hives → `extract_registry_run_keys`, Prefetch →
-`analyze_prefetch`, Security evtx → `parse_evtx_security`. `System.evtx` and `$MFT` have no dedicated
-parser in the 10-tool allowlist and are reported as coverage gaps rather than parsed.
+`parse_evtx_powershell`, Security evtx → `parse_evtx_security`, SOFTWARE/SYSTEM/user hives →
+`extract_registry_run_keys` (plus `parse_recentdocs_mru` / `parse_usb_registry` / `parse_shellbags` /
+`parse_amcache_shimcache` on the hives that carry those artifacts), Prefetch → `analyze_prefetch`,
+`$MFT` → `parse_mft_filesystem`, browser `History` → `parse_browser_history`, `.lnk` / JumpLists →
+`parse_lnk_jumplists`, `$UsnJrnl:$J` → `parse_usnjrnl`. `System.evtx` has no dedicated parser in the
+19-tool allowlist and is reported as a coverage gap rather than parsed.
 
 Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 `"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).

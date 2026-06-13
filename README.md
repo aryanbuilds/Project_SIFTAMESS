@@ -43,8 +43,9 @@ lives in the code.**
 - Run fully on its own (`run --auto`) or step by step with human gates.
 - Stay **agent-neutral** - Claude, Codex, Gemini, OpenCode, or a no-keys deterministic floor.
 - Self-correct when the critic rejects an unsupported claim.
-- Use **10 real typed forensic tools** (Sleuth Kit, Volatility 3, EZ Tools, evtx, regipy, prefetch,
-  MFT). No mocks, no fake output.
+- Use **19 real typed forensic tools** (Sleuth Kit, Volatility 3, EZ Tools, evtx, regipy, prefetch,
+  `$MFT`, registry, browser history, LNK/JumpLists, shellbags, Amcache/ShimCache, USN journal, Plaso
+  super-timeline). No mocks, no fake output.
 
 **What it's NOT**
 

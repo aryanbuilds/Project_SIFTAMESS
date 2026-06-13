@@ -10,8 +10,8 @@ self-tests against real forensic evidence, and real-evidence outputs stay on the
 ## The case dataset (ROCBA)
 
 Provided evidence, held read-only on the workstation at `~/projects/data/`. The SHA-256 values below
-are the **real sealed manifest** from the runs (`RUN-20260612-082004` disk, `RUN-20260612-082630`
-memory) — the chain-of-custody anchor computed at ingest:
+are the **real sealed manifest** from the runs (`RUN-20260612-163324` disk — the full 19-tool sweep,
+`RUN-20260612-082630` memory) — the chain-of-custody anchor computed at ingest:
 
 | Artifact | Size (bytes) | SHA-256 | Role |
 | --- | --- | --- | --- |

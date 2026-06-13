@@ -27,7 +27,7 @@ deterministic floor over a real Windows `Security.evtx`. Ground truth: `examples
 | --- | --- | --- |
 | 1 | **Autonomous execution / self-correction** | live run §4; deterministic loop in `tests/golden/` + `docs/demo_script.md`; engine: `siftmesh_core/orchestrator/` |
 | 2 | **IR accuracy / no hallucination** | real ROCBA results in `docs/findings_rocba.md` + `docs/accuracy_report.md`; in any run `"$RUN/claims/claim_ledger.jsonl"` — every claim cites `tool_call_id`+`source_sha256`; unanchored claims are confined to Appendix B of `reports/final_report.md` |
-| 3 | **Breadth & depth** | the 10-tool allowlist (`siftmesh doctor`), real backends (evtx/regipy/pyscca/mft + Sleuthkit/Volatility for disk/memory in `RUNBOOK.md`) |
+| 3 | **Breadth & depth** | the 19-tool allowlist (`siftmesh doctor`), real backends (evtx/regipy/pyscca/mft + browser/LNK/shellbag/Amcache/USN parsers + Sleuthkit/Volatility/Plaso for disk/memory/super-timeline in `RUNBOOK.md`) |
 | 4 | **Constraint implementation (bypass-tested)** | `docs/threat_model.md`; `uv run pytest tests/EPIC_L_TESTS -q` (80+ effect-asserting bypass tests); agent **safety tiers** in `docs/architecture.md §2a` |
 | 5 | **Audit trail quality** | `"$RUN/audit/*.jsonl"` + `uv run siftmesh replay "$RUN"` (every transition is timestamped JSONL); chain of custody in `docs/evidence_integrity.md` |
 | 6 | **Usability & docs** | `docs/try_it_out.md`, this runbook, `README.md`, the cockpit `uv run siftmesh tui "$RUN"` |

@@ -26,6 +26,7 @@ import os
 import shutil
 import subprocess
 import sys
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -33,7 +34,7 @@ from siftmesh_core.adapters.agent_result import parse_agent_result
 from siftmesh_core.adapters.base import AdapterContext, ExecutorAdapter, register
 from siftmesh_core.adapters.profiles import effective_model
 from siftmesh_core.adapters.prompt_builder import build_task_prompt
-from siftmesh_core.adapters.sandbox import scratch_cwd
+from siftmesh_core.adapters.sandbox import minimal_child_env, scratch_cwd
 from siftmesh_core.adapters.spotlight import scan_injection
 from siftmesh_core.evidence.path_policy import safe_write_path
 from siftmesh_core.ledgers.injection_alerts import append_injection_alert, next_alert_id
@@ -152,6 +153,11 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
         prompt,
         "--output-format",
         "json",
+        # Fresh, non-persisted session: never resume/continue an ambient or concurrent interactive
+        # session, and never write this advisory call to the on-disk session cache (see _execute).
+        "--session-id",
+        str(uuid.uuid4()),
+        "--no-session-persistence",
         "--strict-mcp-config",
         "--tools",
         "",
@@ -170,6 +176,7 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
             timeout=timeout or getattr(settings, "agent_timeout_seconds", 600),
             shell=False,
             check=False,
+            env=minimal_child_env(keep=_AUTH_ENV),  # base + Claude auth only; no stray env
         )
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return None
@@ -189,16 +196,25 @@ def _build_claude_argv(
     mcp_config: Path,
     allowed_tools: list[str],
     *,
+    session_id: str | None = None,
     model: str | None = None,
     permission_mode: str = "dontAsk",
 ) -> list[str]:
-    """Build the SANDBOXED headless ``claude -p`` argv (flags isolated here; confirmed v2.1.x).
+    """Build the SANDBOXED headless ``claude -p`` argv (flags isolated here; confirmed v2.1.177).
 
     The agent is constrained to ONLY the contract's ``mcp__siftmesh__*`` tools:
     ``--allowedTools`` pre-approves them, ``--disallowedTools`` denies the built-in shell/file/web/
     spawn tools (``--allowedTools`` alone is additive, not exclusive), ``--permission-mode dontAsk``
     auto-denies anything else with no prompt/hang, and ``--strict-mcp-config`` ignores ambient MCP
     servers. ``--model`` (when set) pins the model. Re-confirm ``claude --help`` on version bumps.
+
+    SESSION ISOLATION (Project_SIFTAMESS, live-run contamination fix): ``--session-id <fresh uuid>``
+    pins a brand-new session so the run can never resume/continue an ambient or **concurrent
+    interactive** Claude session (observed: a headless run returned an interactive transcript with a
+    raw ``<invoke name="Bash">`` block + ``[Request interrupted by user]`` rather than calling the
+    typed tool), and ``--no-session-persistence`` keeps this run out of the on-disk session cache.
+    NOT ``--bare`` (it skips keychain reads and would break subscription auth). Confirmed on claude
+    v2.1.177; re-confirm on bumps.
     """
     argv = [
         cli_path,
@@ -206,6 +222,9 @@ def _build_claude_argv(
         prompt,
         "--output-format",
         "json",
+        "--session-id",
+        session_id or str(uuid.uuid4()),
+        "--no-session-persistence",
         "--mcp-config",
         str(mcp_config),
         "--strict-mcp-config",
@@ -247,6 +266,9 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
             prompt,
             mcp_config,
             contract.allowed_tools,
+            session_id=str(
+                uuid.uuid4()
+            ),  # fresh session per dispatch (no concurrent-session bleed)
             model=effective_model(self.settings, self.profile_id, prof.model if prof else None),
             permission_mode=self.settings.claude_permission_mode,
         )
@@ -261,6 +283,7 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
                 cwd=scratch_cwd(
                     ctx.run, contract.task_id
                 ),  # never the operator CWD (injection/escape)
+                env=minimal_child_env(keep=_AUTH_ENV),  # base + Claude auth only; no stray env
             )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return self._error(contract, ctx, started, "agent_failed_or_timeout")

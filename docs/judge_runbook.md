@@ -12,21 +12,69 @@ uv run siftmesh doctor          # host health (fail-closed); doctor --agents sho
 uv run pytest -q                # full suite (no evidence needed) - confirms the build is healthy
 ```
 
-## 1. The real run (ROCBA, on the workstation)
+## 1. Run it against the provided evidence
 
-With the ROCBA evidence read-only on the box (`~/projects/data/`), one command runs the whole case:
+Two paths. Both run the whole case end to end (hash and seal, plan, extract, parse, critique, report)
+against the same evidence. Pick by how much time you have.
+
+**Prerequisite:** the provided ROCBA evidence read-only at `~/projects/data/` (the 23.7 GB disk
+`.e01`, the memory `.zip`, and `ROCBA-BACKGROUND.pptx`).
+
+| Path | What runs | Time | Needs |
+| --- | --- | --- | --- |
+| **A. Deterministic engine** | real forensic tools on the deterministic floor (no LLM) | **~1 hour** (~40 min without the super-timeline) | nothing (no API keys) |
+| **B. Live autonomous agent** | Claude investigates via the typed tools and self-corrects under the critic | **~2 to 3 hours** | Claude auth |
+
+### Path A: deterministic engine (fast, reproducible) - start here
+
+No live agent: every finding is produced by a real forensic tool on the deterministic floor. This is
+exactly how the committed ROCBA results were generated, needs no API keys, and is fully reproducible.
 
 ```bash
 SIFTMESH_ENABLE_SUPER_TIMELINE=true \
 uv run siftmesh run ./case_rocba --evidence ~/projects/data \
-  --brief ~/projects/data/ROCBA-BACKGROUND.pptx --auto --max-agent-tasks 400 --max-iterations 6
-RUN=$(ls -dt ./case_rocba/case_runs/RUN-* | head -1)
+  --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
+  --auto --max-agent-tasks 400 --max-iterations 6
+RUN=$(ls -dt ./case_rocba/case_runs/RUN-* | head -1); echo "RUN=$RUN"
 ```
 
-This command hashes and seals, plans, extracts (Sleuth Kit), re-ingests the carved artifacts, parses
-(evtx/registry/prefetch/MFT/USN/Plaso), critiques, then reports. For the full staged, memory, and
-portions flows, see [`../RUNBOOK.md`](../RUNBOOK.md). Run dirs stay off-repo per CLAUDE §2B, so the
-committed real-evidence record lives in [`findings_rocba.md`](findings_rocba.md),
+**Time: ~55 to 75 min** (measured on the workstation: disk extraction ~9 min, Plaso super-timeline
+~24 min, memory triage ~8 min, the parsers near-instant). Drop the `SIFTMESH_ENABLE_SUPER_TIMELINE=true`
+prefix to skip the ~24-min timeline and finish in **~35 to 45 min**.
+
+### Path B: live autonomous agent (the self-correcting hero)
+
+A real Claude agent investigates the black-box evidence through the strict-MCP typed-tool boundary,
+forms evidence-anchored claims, and self-corrects when the deterministic critic rejects an unsupported
+one. The heavy tools (extraction, memory, timeline) still run on the floor; the agent drives the parse
+and reasoning tasks.
+
+```bash
+claude setup-token            # subscription login (or: export ANTHROPIC_API_KEY=…)
+
+SIFTMESH_ENABLE_SUPER_TIMELINE=true \
+uv run siftmesh run ./case_trail --evidence ~/projects/data \
+  --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
+  --objective "What key projects did Fred Rocba had access to?, What was stolen?, Where was it transferred to?, How was it stolen?, When did the activity occur?" \
+  --auto --agent claude --judge opencode --parallel \
+  --max-agent-tasks 400 --max-iterations 6
+RUN=$(ls -dt ./case_trail/case_runs/RUN-* | head -1); echo "RUN=$RUN"
+```
+
+**Time: ~2 to 3 hours** (measured ~5 min per live-agent task across ~26 tasks, plus up to several
+self-correction rounds under `--max-iterations 6`). It is resumable: `Ctrl-C` is safe, then
+`uv run siftmesh resume <RUN-ID>`.
+
+- `--brief` (the case-background pptx) and `--objective` (your questions) COMBINE into one trusted
+  objective.
+- `--agent claude` opts into the live executor; `--judge opencode` adds the advisory Tier-2 judge
+  (fail-soft if absent). Heavy tools stay deterministic unless you add `--all-live` (much slower,
+  rarely needed).
+
+Both paths hash and seal the evidence, plan, extract (Sleuth Kit), re-ingest the carved artifacts,
+parse (evtx/registry/prefetch/MFT/USN/Plaso), critique, then report. For the staged, memory-only, and
+low-disk "run in portions" flows see [`../RUNBOOK.md`](../RUNBOOK.md). Run dirs stay off-repo per
+CLAUDE §2B, so the committed real-evidence record lives in [`findings_rocba.md`](findings_rocba.md),
 [`accuracy_report.md`](accuracy_report.md),
 [`execution_logs_sample.md`](execution_logs_sample.md), and
 [`complete_operation.md`](complete_operation.md).
@@ -57,19 +105,15 @@ uv run siftmesh tui "$RUN"                   # live cockpit (optional `tui` extr
 an **Agents** tab and a **Tier-2 judge** tab. SIFTMesh validates LiteLLM keys and saves them to a
 600-perm `~/.config/siftmesh/.env`, never to the committed config.
 
-## 4. See the live self-correction hero (optional)
+## 4. Watch the live self-correction (Path B)
 
-Claude is the constrained (tier T1) executor. Add auth, then one flag, against the real ROCBA evidence:
+While Path B (§1) runs, or afterward, watch the loop in the run's ledgers: `audit/agent_calls.jsonl`
+(attempt 1 → 2), `audit/critic_verdicts.jsonl` (`retry_required` → `accepted`),
+`claims/unsupported_claims.jsonl` (the rejected attempt-1 over-claim), then
+`claims/claim_ledger.jsonl` (the corrected, anchored claim).
 
-```bash
-claude setup-token                                   # or export ANTHROPIC_API_KEY=…
-uv run siftmesh run ./case_rocba --evidence ~/projects/data \
-  --brief ~/projects/data/ROCBA-BACKGROUND.pptx --agent claude --auto-human-loop --max-iterations 2
-```
-
-Watch the loop in the new run's ledgers: `audit/agent_calls.jsonl` (attempt 1 → 2),
-`audit/critic_verdicts.jsonl` (`retry_required` → `accepted`), `claims/unsupported_claims.jsonl` (the
-rejected attempt-1 over-claim), then `claims/claim_ledger.jsonl` (the corrected, anchored claim).
+For a gentler, gated variant, swap `--auto` for `--auto-human-loop` (it stops at meaningful approval
+gates instead of running to completion) and lower `--max-iterations` (e.g. `2`) for a quicker look.
 
 ## 5. Honesty notes (please read)
 

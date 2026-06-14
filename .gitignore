@@ -29,10 +29,9 @@ htmlcov/
 case_runs/
 
 # Local case workspaces holding real evidence + run output (NEVER commit; multi-GB
-# images/memory captures live here). Covers the maintainer's manual test dirs.
-case_trail/
-case_trial/
-case_verify/
+# images/memory captures live here). Broad glob covers any case_* dir the maintainer
+# creates (case_trail / case_trial / case_rocba / ...), so evidence can never be staged.
+case_*/
 
 # Protocol SIFT case-workspace artifact (a global Stop-hook writes here on every claude run)
 analysis/

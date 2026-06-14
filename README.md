@@ -109,8 +109,12 @@ ready and shows the fix.
 
 ## Setup & install
 
+`uv sync` creates the project virtualenv (`.venv`) and installs everything from the committed
+`uv.lock`, so there is no manual `python -m venv` or `activate` step. `uv run …` then runs the
+`siftmesh` console script inside that managed env (and re-syncs if anything is stale).
+
 ```bash
-uv sync                  # base deps + dev tools
+uv sync                  # creates .venv + installs base deps + dev tools (from uv.lock)
 uv run siftmesh setup    # installs all backends, probes your agents, lets you pick a set + judge,
                          # and remembers the choice (~/.config/siftmesh/siftmesh.toml)
 uv run siftmesh doctor   # fail-closed health check (host + every tool backend)

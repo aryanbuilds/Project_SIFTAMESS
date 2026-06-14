@@ -1,8 +1,8 @@
 # Dataset Documentation
 
-This documents the **dataset SIFTMesh investigates** and how to reproduce a run against it. The real
-findings, accuracy report, and audit trail are produced by running the pipeline against this data on
-the SANS SIFT workstation — they are **not** committed to the repo (CLAUDE.md §2B: SIFTMesh never
+This documents the dataset SIFTMesh investigates and how to reproduce a run against it. Findings,
+the accuracy report, and the audit trail are produced by running the pipeline against this data on
+the SANS SIFT workstation; they are not committed to the repo (CLAUDE.md §2B: SIFTMesh never
 self-tests against real forensic evidence, and real-evidence outputs stay on the box).
 
 ---
@@ -10,8 +10,8 @@ self-tests against real forensic evidence, and real-evidence outputs stay on the
 ## The case dataset (ROCBA)
 
 Provided evidence, held read-only on the workstation at `~/projects/data/`. The SHA-256 values below
-are the **real sealed manifest** from the runs (`RUN-20260612-082004` disk, `RUN-20260612-082630`
-memory) — the chain-of-custody anchor computed at ingest:
+are the sealed manifest from the runs (`RUN-20260612-082004` disk, `RUN-20260612-082630` memory)
+and serve as the chain-of-custody anchor:
 
 | Artifact | Size (bytes) | SHA-256 | Role |
 | --- | --- | --- | --- |
@@ -33,8 +33,8 @@ memory) — the chain-of-custody anchor computed at ingest:
 
 ## Reproduce a run on this data
 
-On the SANS box (heavy: the disk image yields 200+ derived tasks and memory triage re-scans the image
-per plugin):
+On the SANS box (the disk image yields 200+ derived tasks and memory triage re-scans the image per
+plugin):
 
 ```bash
 uv run siftmesh run ~/cases/rocba --evidence ~/projects/data \
@@ -53,7 +53,6 @@ The authoritative outputs land under the new run dir:
 ## Note on the committed demo fixture
 
 `examples/demo_case/` ships a tiny **public** `Security.evtx` (the `Security_short_selected.evtx`
-sample from [omerbenamram/evtx](https://github.com/omerbenamram/evtx), 7 records) purely as a
-**no-keys reproducibility harness** — it lets anyone exercise the real pipeline end to end without
-licensed evidence. It is **not** the case data, and its output is **not** a finding on the ROCBA
-dataset.
+sample from [omerbenamram/evtx](https://github.com/omerbenamram/evtx), 7 records) as a
+reproducibility harness — it lets anyone exercise the real pipeline end to end without licensed
+evidence. It is **not** the case data, and its output is **not** a finding on the ROCBA dataset.

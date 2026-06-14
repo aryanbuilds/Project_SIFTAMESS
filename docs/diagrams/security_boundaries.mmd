@@ -1,4 +1,3 @@
-%% SIFTMesh security boundaries (Epic L6) — source of truth for the diagram.
 %% Render:  mmdc -i security_boundaries.mmd -o security_boundaries.svg   (npm i -g @mermaid-js/mermaid-cli)
 %% GitHub renders this natively when embedded in a fenced ```mermaid block (see architecture.md).
 flowchart TB
@@ -8,7 +7,7 @@ flowchart TB
         A2A["Remote A2A agent<br/>(Epic P — untrusted by default)"]
     end
 
-    subgraph POLICY["SIFTMesh forensic policy layer — code-decided, always on"]
+    subgraph POLICY["SIFTMesh forensic policy layer"]
         direction TB
         B1{{"① Evidence-vault boundary<br/>read-only · hash-before-analysis<br/>evidence/readonly.py · manifest.py"}}
         B4{{"④ Evidence-as-hostile boundary<br/>spotlight DATA · injection ledger<br/>adapters/spotlight.py · injection_alerts.py"}}

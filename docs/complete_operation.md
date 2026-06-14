@@ -1,8 +1,7 @@
 # ROCBA — Complete Operation Log
 
-A record of the SIFTMesh investigation against the ROCBA dataset on the SANS SIFT workstation — every
-command, its result, the findings, and the mapping to the five questions the incident brief asks.
-Nothing here is fabricated; where the data does not answer a question, this document says so.
+This log records every command, its result, the findings, and the mapping to the five brief questions.
+Where the data does not answer a question, this document says so.
 
 > **Scope.** This run used SIFTMesh's **19-tool** governed allowlist — the original 10 (hash · vault ·
 > EVTX-security · EVTX-PowerShell · prefetch · registry-Run-keys · timeline · claim-validation ·
@@ -47,10 +46,10 @@ SIFTMESH_ENABLE_SUPER_TIMELINE=true SIFTMESH_HEAVY_TOOL_TIMEOUT_SECONDS=7200 \
 RUN=rocba_full/case_runs/RUN-20260612-163324
 ```
 Real results:
-- `init-case` hashed the 23.7 GB e01 → sha256 `f2eb856d…`; brief ingested as the trusted objective.
+- `init-case` hashed the 23.7 GB e01 → sha256 `f2eb856d…`; brief ingested as the objective.
 - The engine **extracted** the high-value artifacts (TSK) — incl. `$MFT`, per-user `NTUSER.DAT` /
   `UsrClass.dat`, browser `History`, the Recent/JumpList tree, `Amcache.hve`, and the `$UsnJrnl:$J`
-  ADS — then **auto re-ingested** them and dispatched the typed parsers (the derived-gap loop).
+  ADS — then **re-ingested** them and dispatched the typed parsers (the derived-gap loop).
 - **634 claims promoted, 0 unsupported, 0 contradictions.** Tool successes: `parse_mft_filesystem` 1,
   `parse_browser_history` 3, `parse_lnk_jumplists` 201, `parse_shellbags` 4, `parse_amcache_shimcache` 2,
   `parse_recentdocs_mru` 2, `parse_usb_registry` 3, `parse_usnjrnl` 1, `build_super_timeline` 1,
@@ -91,7 +90,7 @@ Plaso super-timeline. Memory shows live OneDrive/iCloud/Teams cloud egress.
 
 ## 4. Objective coverage — does this run answer the brief's 5 questions?
 
-**Verdict: yes — leads for all five** (analyst-grade, not a legal conclusion).
+**Verdict: yes — leads for all five**.
 
 | Brief question | Status | What the run shows (tool) |
 |---|---|---|

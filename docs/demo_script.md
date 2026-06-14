@@ -1,7 +1,7 @@
 # Demo script (≤5 minutes)
 
 A shot list + narration for the submission video. Two acts: **(A)** the zero-keys deterministic proof
-(reliable, always works), then **(B)** the live self-correction hero (Claude). If recording time is
+(reliable, always works), then **(B)** the live self-correction demo (Claude). If recording time is
 tight, Act A alone satisfies criteria 2/4/5; add Act B for criterion 1.
 
 Record a real terminal. Pre-stage the repo (`uv sync`) so the camera starts on the run.
@@ -39,8 +39,7 @@ cat "$RUN/claims/claim_ledger.jsonl"           # every claim cites tool_call_id 
 ```
 
 > "Evidence is SHA-256 sealed and never modified — chain of custody. Each finding cites the exact tool
-> call and the source hash. A claim *without* that anchor can't be a fact — it's the hallucination
-> firewall."
+> call and the source hash. A claim *without* that anchor can't be accepted."
 
 ## 2:00 — The critic gate + report (45s)
 
@@ -49,8 +48,9 @@ cat "$RUN/audit/critic_verdicts.jsonl"         # the deterministic governance ga
 sed -n '1,40p' "$RUN/reports/final_report.md"  # evidence-backed findings + ATT&CK
 ```
 
-> "The deterministic critic is the sole promoter. Here both tasks are accepted because every claim is
-> anchored. Unsupported claims would be confined to Appendix B — never the findings body."
+> "The deterministic critic is the only gate that can accept a finding. Here both tasks are accepted
+> because every claim is anchored. Unsupported claims would be confined to Appendix B — never the
+> findings body."
 
 ## 2:45 — Replay / audit (30s)
 
@@ -77,11 +77,11 @@ cat "$RUNL/claims/unsupported_claims.jsonl"    # the rejected, under-anchored at
 cat "$RUNL/claims/claim_ledger.jsonl"          # the corrected, anchored attempt-2 claim
 ```
 
-> "Now the live agent — Claude, sandboxed to the typed tools via strict-MCP, tier T1. It investigates
+> "Now the live agent — Claude, restricted to typed tools via strict-MCP, tier T1. It investigates
 > on its own. When it over-claims without an anchor, the deterministic critic returns
 > `retry_required`; the rejection reasons are fed back into the prompt; the agent revises against the
 > real tool output; and the corrected, anchored claim is accepted on attempt 2. The mistake and the
-> correction are both in the audit log — emergent self-correction, not scripted."
+> correction are both in the audit log — self-correction, not scripted."
 
 > "Crucially: even a successful prompt injection can't exfiltrate (no network tool), can't write
 > outside the run dir, and can't become a reported fact without passing the critic. LLM proposes,

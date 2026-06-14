@@ -47,7 +47,7 @@ onboarding: an **Agents** tab (which agents are ready, with one-click *Launch au
 judge** tab (pick a provider, log in or paste an API key — LiteLLM keys are validated and saved to a
 600-perm `~/.config/siftmesh/.env`, never to the committed config).
 
-## 4. See the live self-correction hero (optional)
+## 4. See the live self-correction loop (optional)
 
 Claude is the constrained (tier T1) executor. Add auth, then one flag:
 
@@ -63,10 +63,9 @@ step-by-step in `docs/demo_script.md`.
 
 ## 5. Honesty notes (please read)
 
-- **Tiers, not theatre.** `siftmesh agents list` labels each agent T0–T3. Only Claude reaches the
-  typed tools through the strict-MCP boundary (T1); opencode/gemini/codex are honestly labelled
-  unconstrained opt-ins (T2). LiteLLM is advisory-only (T3, tool-less judge). Tiers never gate
-  dispatch — they make the containment posture visible.
+- **Tiers are informational, not gatekeeping.** `siftmesh agents list` labels each agent T0–T3.
+  Only Claude reaches the typed tools through the strict-MCP boundary (T1); opencode/gemini/codex
+  are unconstrained opt-ins (T2). LiteLLM is advisory-only (T3, tool-less judge).
 - **Real-only.** No mock tool backends; a missing backend fails closed, never fakes output.
 - **Real evidence is maintainer-gated** (CLAUDE §2B). The committed demo uses public test fixtures so
   you can reproduce everything; the full ROCBA disk/memory walkthrough is in `RUNBOOK.md`.

@@ -1,7 +1,7 @@
 # SIFTMesh Threat Model
 
 _Epic L · primary artifact for hackathon criterion 4 (architectural, bypass-tested
-constraints). Pairs with [`evidence_integrity.md`](evidence_integrity.md) (chain of
+controls). Pairs with [`evidence_integrity.md`](evidence_integrity.md) (chain of
 custody) and [`architecture.md`](architecture.md) (security-boundary diagram). Every
 control named here is a **deterministic gate in code** with a **bypass test** in
 `tests/EPIC_L_TESTS/` — not a prompt that asks the model nicely._
@@ -16,8 +16,7 @@ but it decides nothing that affects evidence integrity, the tool surface, or wha
 final report asserts as fact. Every security-relevant decision is made by deterministic
 SIFTMesh code that runs **regardless of which agent or harness is driving** — Claude
 Code, OpenCode, a generic shell agent, the deterministic floor, or (later) a remote A2A
-agent. The guardrails are not in the prompt; they are in the gate the prompt's output
-must pass through.
+agent. Guardrails live in code, not prompts.
 
 Three concentric boundaries enforce this:
 
@@ -39,19 +38,16 @@ The **outer ring (policy layer) is the differentiator.** It holds even if the in
 harness sandbox is misconfigured or absent, because SIFTMesh re-checks every write,
 every tool name, and every claim in its own code path.
 
-**Framework framing.** This model is analysed in three layers, per current (2025–2026)
-practice: **STRIDE / data-flow** for the deterministic SIFTMesh *system* (vault, path
-policy, run-dir, audit); the **OWASP Top-10 for LLM Applications 2025** for the *model*
-layer (the T1–T9 table in §3); and an **agentic overlay** — the **OWASP Top-10 for
-Agentic Applications (ASI01–ASI10, 2025-12-09)** + **OWASP Agentic Threats & Mitigations**
-+ the **MAESTRO** seven-layer method, with **MITRE ATLAS** technique IDs naming the
-attacker move — for the *autonomy* layer (§3A). Governance references: **NIST AI RMF 1.0**
-+ the **Generative-AI Profile (NIST AI 600-1)** and **SSDF SP 800-218** (note: SP 800-218A
-was withdrawn after EO 14110's rescission, 2025-01-20 — cited only as historical).
-SIFTMesh's anti-injection posture is, in the literature's terms, **Plan-Then-Execute +
-Action-Selector** (Beurer-Kellner et al., arXiv:2506.08837) with CaMeL-style provenance
-tracking (arXiv:2503.18813) realised by the critic's claim-anchoring — not a prompt that
-asks the model to behave.
+**Framework framing.** This model uses **STRIDE / data-flow** for the deterministic
+SIFTMesh system (vault, path policy, run-dir, audit), the **OWASP Top-10 for LLM
+Applications 2025** for the model layer (§3), and an **agentic overlay** — the **OWASP
+Top-10 for Agentic Applications (ASI01–ASI10, 2025-12-09)**, **OWASP Agentic Threats &
+Mitigations**, **MAESTRO**, and **MITRE ATLAS** — for the autonomy layer (§3A).
+Governance references: **NIST AI RMF 1.0**, the **Generative-AI Profile (NIST AI 600-1)**,
+and **SSDF SP 800-218**; SP 800-218A is cited only as historical context.
+SIFTMesh's anti-injection posture is **Plan-Then-Execute + Action-Selector**
+(Beurer-Kellner et al., arXiv:2506.08837) with CaMeL-style provenance tracking
+(arXiv:2503.18813) implemented through critic claim-anchoring.
 
 ---
 

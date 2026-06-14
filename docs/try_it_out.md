@@ -14,13 +14,14 @@ public fixture. Going live (tier T1/T2) is one extra flag (§5).
 
 ```bash
 git clone <repo-url> siftmesh && cd siftmesh
-uv sync                       # base deps + dev tools
-# Optional: install ALL backends (forensic parsers, brief readers, TUI) + onboard agents:
-uv run siftmesh setup         # one command — see §5; or `uv run siftmesh setup --no-tui --yes`
+uv sync
+uv run siftmesh setup
 ```
 
-> `uv sync --extra X` is *declarative* (it removes extras you don't name). To add an extra always use
-> `uv sync --all-extras` (or `siftmesh setup`, which does that for you).
+Use `uv run siftmesh setup` if you want all backends and agent onboarding in one step.
+
+> `uv sync --extra X` is *declarative* (it removes extras you don't name). To add an extra, use
+> `uv sync --all-extras` or `siftmesh setup`.
 
 ## 3. Verify the host (fail-closed)
 
@@ -42,18 +43,16 @@ Expect `state: done`. Then inspect the real run directory:
 
 ```bash
 RUN=$(ls -dt examples/demo_case/case_runs/RUN-* | head -1)
-cat "$RUN/claims/claim_ledger.jsonl"       # evidence-anchored findings (each cites tool_call_id+sha)
-cat "$RUN/audit/tool_calls.jsonl"          # every real tool call
-cat "$RUN/audit/critic_verdicts.jsonl"     # the critic gate (accepted/retry_required/…)
-cat "$RUN/reports/final_report.md"         # the deterministic, evidence-backed report
-uv run siftmesh replay "$RUN"              # replay the audit timeline (add --html for a file)
+cat "$RUN/claims/claim_ledger.jsonl"
+cat "$RUN/audit/tool_calls.jsonl"
+cat "$RUN/audit/critic_verdicts.jsonl"
+cat "$RUN/reports/final_report.md"
+uv run siftmesh replay "$RUN"
 ```
 
 What you just proved: evidence is SHA-256 sealed and never modified; the real `parse_evtx_security` +
 `build_timeline` backends ran; every promoted claim is anchored; the critic accepted both tasks; the
-whole run is replayable from JSONL. See `examples/demo_case/expected_findings.md` for the ground
-truth, and inspect `"$RUN/audit/*.jsonl"` (or `uv run siftmesh replay "$RUN"`) for the full
-timestamped, tool-traceable audit trail.
+run is replayable from JSONL. See `examples/demo_case/expected_findings.md` for the ground truth.
 
 ## 5. Go live (optional — tier T1/T2)
 
@@ -72,14 +71,11 @@ uv run siftmesh tui            # home: recent runs + a centered "New run" + onbo
 uv run siftmesh tui "$RUN"     # attach the live cockpit to a run
 ```
 
-The home screen is minimal — a left list of recent runs (badged `terminal`/`blocked`/`paused`/
-`running`) and a centered **New run**, with the shortcuts always visible (`n` new · `Enter` attach ·
-`r` resume · `o` agents · `q` quit). **New run** is a 2-screen wizard: pick evidence by browsing the
-whole filesystem (the tree is reachable *above* the project dir; type `#file <name>` or
-`#folder <name>` to fuzzy-search anywhere) + give the objective, then review the host/space readiness
-and launch. Press **`o`** for onboarding — an **Agents** tab (greys out anything not installed/authed
-and offers a one-click *Launch auth*) and a **Tier-2 judge** tab (pick a provider, log in or paste an
-API key; LiteLLM keys are validated and saved to a 600-perm `~/.config/siftmesh/.env`).
+The home screen shows recent runs on the left and a centered **New run** action, with shortcuts
+always visible (`n` new · `Enter` attach · `r` resume · `o` agents · `q` quit). **New run** is a
+2-screen wizard: pick evidence by browsing the filesystem (the tree is reachable *above* the project
+dir; type `#file <name>` or `#folder <name>` to fuzzy-search anywhere), add the objective, review
+readiness, and launch. Press **`o`** for onboarding: an **Agents** tab and a **Tier-2 judge** tab.
 
 ## 7. Real evidence
 

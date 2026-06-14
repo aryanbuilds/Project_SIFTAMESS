@@ -1,6 +1,6 @@
-# ROCBA — Findings (real run, full 19-tool sweep)
+# ROCBA — Findings (full 19-tool sweep)
 
-Real output from running SIFTMesh against the provided ROCBA dataset on the SANS SIFT workstation.
+Output from running SIFTMesh against the provided ROCBA dataset on the SANS SIFT workstation.
 Every finding below is anchored to a real tool call + the SHA-256 of its source artifact (chain of
 custody). This is an **automated triage to guide an analyst — not a court-ready conclusion.**
 
@@ -91,7 +91,7 @@ The USN journal carries per-record FILETIME timestamps across 149,424 creates / 
 - **Execution history (`analyze_prefetch`, 200 prefetch files):** AcroRd32, Slack, SmartScreen,
   MicrosoftEdgeUpdate, Adobe ARM, etc., each with run count + source `.pf`.
 - **PowerShell (`parse_evtx_powershell`, host `SRL-FORGE`):** 2× EventID 4104 (script-block) — a
-  **benign Microsoft troubleshooting-pack script**, not attacker activity (honest).
+  **benign Microsoft troubleshooting-pack script**, not attacker activity.
 
 ## Memory — runtime state (Volatility 3, separate run `RUN-20260612-082630`, 6 plugins, 0 failed)
 
@@ -100,7 +100,7 @@ egress to iCloud/Apple (`17.248.x`, `17.57.144.165`), OneDrive/Teams cloud, and 
 `81.30.144.115:56687` / `213.202.233.104:13939` (flagged for review, not concluded malicious). 16
 `malfind` RWX hits were in system processes (MsMpEng/SearchApp/dllhost/Teams) — flagged, not malicious.
 
-## Honest caveats (recorded, never fabricated)
+## Caveats
 
 - **`Security.evtx`** failed extraction — a genuine TSK LZNT1 decompression error on this image
   (recorded in `failed[]`).
@@ -117,7 +117,7 @@ egress to iCloud/Apple (`17.248.x`, `17.57.144.165`), OneDrive/Teams cloud, and 
 
 - Evidence opened read-only; SHA-256 sealed at ingest (chain of custody) — see
   [`evidence_integrity.md`](evidence_integrity.md) and [`dataset_documentation.md`](dataset_documentation.md).
-- Every claim cites `tool_call_id` + `source_sha256`; unsupported claims are firewalled out of the
+- Every claim cites `tool_call_id` + `source_sha256`; unsupported claims are excluded from the
   findings (Appendix B of the run's `reports/final_report.md`).
 - Reproduce: see [`complete_operation.md`](complete_operation.md). The full ledgers + replay live in the
   run dirs (`rocba_full/…`, `case_mem/…`), uncommitted per CLAUDE.md §2B.

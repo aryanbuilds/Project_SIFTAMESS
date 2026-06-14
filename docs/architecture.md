@@ -8,11 +8,10 @@ _Static architecture reference. The run-specific companion is the generated
 
 ## 1. One sentence
 
-SIFTMesh is a **CLI-first, evidence-safe, agent-agnostic DFIR orchestration controller**:
-it hashes and protects evidence, plans an investigation, dispatches a (possibly live,
-possibly deterministic) agent constrained to typed forensic tools, validates every claim
-against the evidence with a deterministic critic, self-corrects, and emits byte-deterministic,
-replayable reports — all under the rule **"LLM proposes, code decides."**
+SIFTMesh is a **CLI-first, evidence-safe DFIR orchestration controller**. It hashes and
+protects evidence, plans an investigation, dispatches agents constrained to typed forensic
+tools, validates every claim against the evidence with a deterministic critic, self-corrects,
+and emits byte-deterministic, replayable reports under the rule **"LLM proposes, code decides."**
 
 ## 2. Layers
 
@@ -25,9 +24,9 @@ Layer 1  Typed SIFT MCP gateway            10 allowlisted forensic tools (in-pro
 Layer 0  SANS SIFT / Protocol SIFT host    real DFIR tooling (TSK, Volatility, evtx/regipy/scca, …)
 ```
 
-The CLI calls the typed tool **service** directly (CLI-first); a live agent reaches the
-same functions over MCP. The TUI (optional `tui` extra) is a **read-only cockpit** over the
-same run-dir files plus a thin launcher — never a second copy of the logic (see §2b).
+The CLI calls the typed tool **service** directly. A live agent reaches the same functions over
+MCP. The TUI (optional `tui` extra) is read-only over the same run-dir files plus a thin launcher
+(see §2b).
 
 ### 2a. Agent safety tiers (honest labels, never a gate)
 
@@ -44,9 +43,9 @@ derived purely from the probed capability facts (`schemas/agent_capabilities.py`
 
 Tiers are **labels only** — they never gate dispatch (`--agent opencode` is unchanged); they make
 the containment posture visible in `agents list` / `doctor --agents` / the cockpit and in
-`context/agent_capabilities.json`. This is the "measure capability, label risk" posture: the floor
-is the default, Claude is the constrained executor, opencode/codex/gemini are explicit
-unconstrained opt-ins, and LiteLLM is advisory-only (it never executes a tool).
+`context/agent_capabilities.json`. The floor is the default, Claude is the constrained executor,
+opencode/codex/gemini are explicit unconstrained opt-ins, and LiteLLM is advisory-only (it never
+executes a tool).
 
 ### 2b. The Textual cockpit (read-only over the run dir)
 
@@ -73,10 +72,10 @@ The cockpit renders `run_state.json` + the JSONL ledgers on a poll; launching a 
 
 ## 3. Agent roles → multi-agent patterns
 
-Each role maps to a pattern from Anthropic's _Building Effective Agents_. The split that matters:
-**autonomy lives in the agent (the Executor + the optional LLM Planner/Deep-Context/judge);
-determinism lives in the governance (Ultraworker state machine · Critic · `decide()` · caps ·
-evidence-safety · replayable audit).** "LLM proposes, code decides."
+Each role maps to a pattern from Anthropic's _Building Effective Agents_. Autonomy lives in the
+agent (the Executor + the optional LLM Planner/Deep-Context/judge); determinism lives in the
+governance (Ultraworker state machine · Critic · `decide()` · caps · evidence-safety · replayable
+audit). **"LLM proposes, code decides."**
 
 | Role | Pattern | Responsibility | MVP backing |
 |---|---|---|---|
@@ -213,12 +212,11 @@ flowchart TB
 | ④ | Evidence-as-hostile | spotlight + injection ledger | `adapters/spotlight.py` | `test_bypass_injection.py` |
 | ⑤ | Critic | anchor-or-reject | `orchestrator/critic.py` | `test_bypass_claim_no_toolcall.py` |
 
-**Why boundary ② is strong:** the core real path is **in-process typed Python lib calls** — 8 of the
-10 tools never spawn a subprocess, so there is no command string to inject into at all. Only image
+**Why boundary ② is strong:** the core path is **in-process typed Python lib calls** — 8 of the 10
+tools never spawn a subprocess, so there is no command string to inject into at all. Only image
 extraction (Sleuth Kit) and memory triage (Volatility 3) shell out, and those use **fixed-argv,
-`shell=False`** with no evidence string ever interpolated into a command (PLAN/08). Why this is a
-forensic *policy* layer (not just a harness sandbox), and how it compares to CAO/Valhuntir, is in
-[`threat_model.md`](threat_model.md) §6.
+`shell=False`** with no evidence string interpolated into a command (PLAN/08). See
+[`threat_model.md`](threat_model.md) §6 for the policy-layer comparison to CAO/Valhuntir.
 
 ## 7. Key directories
 

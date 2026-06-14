@@ -13,7 +13,7 @@ pytest.importorskip("textual")
 
 from siftmesh_core.config import load_settings
 from siftmesh_core.tui.app import SiftmeshTUI
-from siftmesh_core.tui.wizard import RunSetupScreen, WizardDraft
+from siftmesh_core.tui.wizard import RunSetupScreen, WizardDraft, resolve_brief_path
 
 # ── headless: the load-bearing WizardDraft ───────────────────────────────────
 
@@ -129,5 +129,40 @@ def test_setup_fuzzy_search_populates_and_adds(tmp_path: Path) -> None:
         # selecting a hit adds it to the picked list (Enter on a result → _add_hit)
         screen._add_hit(0)
         assert screen._hits[0] in screen.draft.selected_paths
+
+    _drive(app, scenario)
+
+
+# ── brief selection: full resolved path (not a bare filename) + reuse the fuzzy/tree picker ──
+
+
+def test_resolve_brief_path_relative_absolute_and_missing(tmp_path: Path) -> None:
+    brief = tmp_path / "ROCBA-BACKGROUND.pptx"
+    brief.write_bytes(b"x")
+    # a bare filename resolves under the browse root to its full absolute path
+    assert resolve_brief_path("ROCBA-BACKGROUND.pptx", tmp_path) == str(brief.resolve())
+    # an absolute path passes through (browse root irrelevant)
+    assert resolve_brief_path(str(brief), "/nonexistent") == str(brief.resolve())
+    # a missing brief is rejected (None) so _next can stop with an error
+    assert resolve_brief_path("nope.pptx", tmp_path) is None
+
+
+def test_set_brief_captures_full_path_and_drops_from_evidence(tmp_path: Path) -> None:
+    brief = tmp_path / "brief.pptx"
+    brief.write_bytes(b"x")
+    app = SiftmeshTUI(settings=load_settings())
+
+    async def scenario(pilot: Any) -> None:
+        draft = WizardDraft(case_name="c", base_dir=str(tmp_path))
+        screen = RunSetupScreen(settings=load_settings(), draft=draft)
+        await pilot.app.push_screen(screen)
+        await pilot.pause()
+        screen._set_current(brief)  # a tree/fuzzy selection
+        screen.draft.add_path(brief)  # pretend the fuzzy hit had added it to evidence
+        await pilot.click("#setbrief")
+        await pilot.pause()
+        assert screen.draft.brief_path == str(brief.resolve())  # full resolved path, not a filename
+        assert brief not in screen.draft.selected_paths  # a brief is never also evidence
+        assert brief.resolve() not in screen.draft.selected_paths
 
     _drive(app, scenario)

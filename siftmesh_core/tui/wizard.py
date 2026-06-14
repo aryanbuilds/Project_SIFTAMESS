@@ -133,6 +133,25 @@ class WizardDraft:
         return settings, (int(mi) if mi.isdigit() else None)
 
 
+def resolve_brief_path(text: str, browse_root: str | Path) -> str | None:
+    """Resolve a brief reference to an existing ABSOLUTE file path, or None if not found.
+
+    Accepts an absolute path, a ``~`` path, or a bare filename / relative path (tried under the
+    browse root first, then the cwd). The run needs the brief's full path - a bare filename would
+    otherwise resolve against the wrong dir and the brief intake would fail closed.
+    """
+    p = Path(text).expanduser()
+    candidates = [p] if p.is_absolute() else [p, Path(browse_root) / p, Path.cwd() / p]
+    for c in candidates:
+        try:
+            resolved = c.resolve()
+        except OSError:
+            continue
+        if resolved.is_file():
+            return str(resolved)
+    return None
+
+
 # ── Screen 1: setup (case + filesystem-wide evidence picker + brief) ──────────
 
 
@@ -171,15 +190,18 @@ class RunSetupScreen(Screen):
                 yield ListView(id="picked")
                 with Horizontal(id="pickbtns"):
                     yield Button("Add", id="add", variant="success")
+                    yield Button("Set brief", id="setbrief")
                     yield Button("Remove", id="remove")
         with Horizontal(id="searchrow"):
             yield Input(
-                placeholder="#file <name>   or   #folder <name>   — Enter to search", id="evsearch"
+                placeholder="#file <name>   or   #folder <name>   — Enter to search "
+                "(then Add evidence or Set brief)",
+                id="evsearch",
             )
         yield OptionList(id="evhits")
         yield Input(
             value=self.draft.brief_path or "",
-            placeholder="brief file (.pptx/.pdf/.md) — optional",
+            placeholder="brief file path (.pptx/.pdf/.md) — type a path, or pick + Set brief",
             id="brief",
         )
         yield Input(
@@ -299,8 +321,12 @@ class RunSetupScreen(Screen):
                 return
             if self.draft.add_path(self._current):
                 self._sync_picked()
+                kind = "folder" if self._current.is_dir() else "file"
+                self.notify(f"added {kind}: {self._current.name}")
             else:
                 self.notify("already selected")
+        elif bid == "setbrief":
+            self._set_brief()
         elif bid == "remove":
             lv = self.query_one("#picked", ListView)
             i = lv.index
@@ -309,6 +335,24 @@ class RunSetupScreen(Screen):
                 self._sync_picked()
         elif bid == "next":
             self._next()
+
+    def _set_brief(self) -> None:
+        """Mark the current tree/fuzzy selection as the brief (full path); brief is not evidence."""
+        if self._current is None:
+            self.notify(
+                "pick a file in the tree or via #file search, then Set brief", severity="warning"
+            )
+            return
+        if not self._current.is_file():
+            self.notify("the brief must be a file", severity="error")
+            return
+        abs_path = self._current.expanduser().resolve()
+        self.draft.remove_path(self._current)  # a brief is the trusted objective, never evidence
+        self.draft.remove_path(abs_path)
+        self._sync_picked()
+        self.draft.brief_path = str(abs_path)
+        self.query_one("#brief", Input).value = str(abs_path)  # show the full resolved path
+        self.notify(f"brief set: {abs_path.name}")
 
     def _sync_picked(self) -> None:
         lv = self.query_one("#picked", ListView)
@@ -329,12 +373,19 @@ class RunSetupScreen(Screen):
         if not self.draft.selected_paths:
             self.notify("add at least one file or folder", severity="error")
             return
-        brief = self.query_one("#brief", Input).value.strip() or None
+        brief_text = self.query_one("#brief", Input).value.strip() or None
         objective = self.query_one("#objective", Input).value.strip() or None
-        if brief and objective:
+        if brief_text and objective:
             self.notify("give a brief OR an objective, not both", severity="error")
             return
-        self.draft.brief_path = brief
+        brief_abs: str | None = None
+        if brief_text:
+            root = self.query_one("#evroot", Input).value or "."
+            brief_abs = resolve_brief_path(brief_text, root)
+            if brief_abs is None:
+                self.notify(f"brief file not found: {brief_text}", severity="error")
+                return
+        self.draft.brief_path = brief_abs  # full resolved path (the run reads it by absolute path)
         self.draft.objective = objective
         self.query_one("#pickstatus", Static).update("curating evidence (hardlinks)…")
         self._curate()

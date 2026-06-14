@@ -206,7 +206,7 @@ class RunSetupScreen(Screen):
         )
         yield Input(
             value=self.draft.objective or "",
-            placeholder="…or inline objective text",
+            placeholder="inline objective / steering prompt (combines with the brief if both set)",
             id="objective",
         )
         yield Static(id="pickstatus", markup=False)
@@ -375,9 +375,7 @@ class RunSetupScreen(Screen):
             return
         brief_text = self.query_one("#brief", Input).value.strip() or None
         objective = self.query_one("#objective", Input).value.strip() or None
-        if brief_text and objective:
-            self.notify("give a brief OR an objective, not both", severity="error")
-            return
+        # brief + objective COMBINE (file background + inline steering); both is allowed.
         brief_abs: str | None = None
         if brief_text:
             root = self.query_one("#evroot", Input).value or "."

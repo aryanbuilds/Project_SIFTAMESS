@@ -76,15 +76,29 @@ def test_init_case_with_inline_objective(
     assert all("incident_brief" not in f.path for f in manifest.files)
 
 
-def test_init_case_rejects_brief_and_objective_together(
+def test_init_case_merges_brief_and_objective(
     tmp_path: Path, build_evidence: Callable[..., None]
 ) -> None:
+    # A brief FILE (case background) + an inline objective (operator steering) COMBINE into one
+    # trusted objective — more context is better; they are no longer mutually exclusive.
     evidence = tmp_path / "evidence"
     build_evidence(evidence)
     brief = tmp_path / "objective.md"
     brief.write_bytes((BRIEF_FIXTURES / "objective.md").read_bytes())
-    try:
-        init_case(tmp_path / "case", evidence, brief_path=brief, objective_text="also this")
-    except BriefIntakeError:
-        return
-    raise AssertionError("init_case should reject --brief and --objective together")
+    run = init_case(
+        tmp_path / "case",
+        evidence,
+        brief_path=brief,
+        objective_text="Prioritize USB exfiltration and the suspect timeline.",
+    )
+    manifest = EvidenceManifest.model_validate_json(
+        run.evidence_manifest.read_text(encoding="utf-8")
+    )
+    # the inline ask LEADS the bounded objective; the file background still contributes
+    assert manifest.incident_objective.startswith("Prioritize USB exfiltration")
+    assert manifest.incident_brief_path == "context/incident_brief.md"
+    body = run.incident_brief.read_text(encoding="utf-8")
+    assert "Operator instructions (inline --objective)" in body
+    assert "Prioritize USB exfiltration" in body  # operator prompt rendered verbatim
+    assert "ROCBA" in body  # the file briefing is merged in too
+    assert all("incident_brief" not in f.path for f in manifest.files)  # never hostile evidence

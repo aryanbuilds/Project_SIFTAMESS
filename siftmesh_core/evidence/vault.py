@@ -70,15 +70,12 @@ def init_case(
     """Ingest evidence into a fresh run dir; return its :class:`RunPaths`.
 
     ``brief_path`` (optional) is the operator's TRUSTED incident briefing FILE; ``objective_text``
-    (optional) is the same objective supplied INLINE (no file). Either is rendered into
-    ``context/incident_brief.md`` and recorded as manifest metadata only — never added to the
-    hostile evidence ``files`` set. A brief that cannot be read fails closed
-    (:class:`~siftmesh_core.intake.brief.BriefIntakeError`); passing both is an error.
+    (optional) is operator objective/steering text supplied INLINE (no file). Either — or BOTH — is
+    rendered into ``context/incident_brief.md`` and recorded as manifest metadata only, never added
+    to the hostile evidence ``files`` set. Passing both MERGES them (file background + inline
+    steering) into one trusted objective. A brief that cannot be read fails closed
+    (:class:`~siftmesh_core.intake.brief.BriefIntakeError`).
     """
-    if brief_path is not None and objective_text is not None:
-        from siftmesh_core.intake.brief import BriefIntakeError
-
-        raise BriefIntakeError("pass either --brief FILE or --objective TEXT, not both")
     case_path = Path(case_dir)
     evidence_path = Path(evidence_dir)
     if not evidence_path.is_dir():
@@ -114,12 +111,20 @@ def init_case(
         case_id=case_path.name, run_id=run.run_id, facts=facts, created_utc=ingest_started
     )
     if brief_path is not None or objective_text is not None:
-        from siftmesh_core.intake.brief import ingest_brief, ingest_objective_text
+        from siftmesh_core.intake.brief import (
+            ingest_brief,
+            ingest_brief_and_objective,
+            ingest_objective_text,
+        )
 
-        if brief_path is not None:
+        if brief_path is not None and objective_text is not None:
+            brief_md, objective = ingest_brief_and_objective(
+                brief_path, objective_text, run, evidence_root=evidence_path
+            )
+        elif brief_path is not None:
             brief_md, objective = ingest_brief(brief_path, run, evidence_root=evidence_path)
         else:
-            assert objective_text is not None  # guarded above
+            assert objective_text is not None
             brief_md, objective = ingest_objective_text(
                 objective_text, run, evidence_root=evidence_path
             )

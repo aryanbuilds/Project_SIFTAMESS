@@ -119,15 +119,16 @@ def init_case(
         typer.Option(
             "--brief",
             help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective, "
-            "not evidence.",
+            "not evidence. Can be paired with --objective for extra steering.",
         ),
     ] = None,
     objective: Annotated[
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
-            'X compromised?". Alternative to --brief.',
+            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            'host X compromised?". COMBINES with --brief when both are given (more context = '
+            "better).",
         ),
     ] = None,
     verify_after: Annotated[
@@ -655,15 +656,16 @@ def run(
         typer.Option(
             "--brief",
             help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective the "
-            "agent investigates toward.",
+            "agent investigates toward. Can be paired with --objective for extra steering.",
         ),
     ] = None,
     objective: Annotated[
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
-            'X compromised?". Alternative to --brief.',
+            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            'host X compromised?". COMBINES with --brief when both are given (more context = '
+            "better).",
         ),
     ] = None,
     all_live: Annotated[

@@ -163,14 +163,18 @@ def _write_brief(
     source_name: str,
     text: str,
     evidence_root: Path | str | None,
+    objective: str | None = None,
 ) -> tuple[Path, str]:
     """Render TRUSTED brief text to ``context/incident_brief.md``; return (path, objective).
 
     The brief is TRUSTED, so its text is rendered raw (never datamarked). It IS injection-scanned
     for visibility — any signature is logged to the orchestration audit, but it never blocks or
-    changes the trust posture (the operator supplied this content explicitly).
+    changes the trust posture (the operator supplied this content explicitly). ``objective`` may be
+    a precomputed excerpt (e.g. a merged brief + inline objective); when ``None`` it is derived
+    from ``text``.
     """
-    objective = derive_objective(text)
+    if objective is None:
+        objective = derive_objective(text)
     target = safe_write_path(run.root, "context/incident_brief.md", evidence_root=evidence_root)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(_render_brief_md(source_name, objective, text), encoding="utf-8")
@@ -218,4 +222,34 @@ def ingest_objective_text(
         raise BriefIntakeError("inline objective is empty — pass real objective text")
     return _write_brief(
         run, source_name="(inline --objective)", text=text, evidence_root=evidence_root
+    )
+
+
+def ingest_brief_and_objective(
+    brief_path: Path | str,
+    objective_text: str,
+    run: RunPaths,
+    *,
+    evidence_root: Path | str | None = None,
+) -> tuple[Path, str]:
+    """Merge a TRUSTED brief FILE + an INLINE operator objective into one incident brief.
+
+    The case background (the file) and the operator's steering prompt (``--objective``) are both
+    TRUSTED context, so more is better: the file briefing is rendered verbatim and the inline ask
+    is appended as a clearly-delimited operator-instructions section. The bounded objective excerpt
+    threaded into the agent prompt LEADS with the inline ask (the operator's explicit question),
+    then the case background. An empty inline objective fails closed.
+    """
+    file_text = extract_brief_text(Path(brief_path))
+    inline = objective_text.strip()
+    if not inline:
+        raise BriefIntakeError("inline objective is empty — pass real objective text")
+    rendered = f"{file_text.strip()}\n\n## Operator instructions (inline --objective)\n\n{inline}\n"
+    objective = derive_objective(f"{inline}\n\n{file_text}")
+    return _write_brief(
+        run,
+        source_name=f"{Path(brief_path).name} + inline --objective",
+        text=rendered,
+        evidence_root=evidence_root,
+        objective=objective,
     )

@@ -45,7 +45,7 @@ you don't name — always `--all-extras` (or use `setup`/`doctor --setup`).
 
 What matters:
 
-- `[ ok ] gateway tool allowlist: 10 tools, no forbidden` — core is healthy.
+- `[ ok ] gateway tool allowlist: 19 tools, no forbidden` — core is healthy.
 - SIFT-lane lines for **Sleuthkit (mmls/ifind/icat/fls)**, **Volatility 3 (vol)**, **7z**. These are
   `[warn]` if absent (fine for `doctor`), but the tool **fails closed** when actually invoked. For the
   ROCBA disk + memory you need them present:
@@ -128,9 +128,12 @@ uv run siftmesh report   "$RUN"
 ```
 
 Note: only extracted artifacts that map to a typed tool get a task — PowerShell evtx →
-`parse_evtx_powershell`, SOFTWARE/SYSTEM/user hives → `extract_registry_run_keys`, Prefetch →
-`analyze_prefetch`, Security evtx → `parse_evtx_security`. `System.evtx` and `$MFT` have no dedicated
-parser in the 10-tool allowlist and are reported as coverage gaps rather than parsed.
+`parse_evtx_powershell`, Security evtx → `parse_evtx_security`, SOFTWARE/SYSTEM/user hives →
+`extract_registry_run_keys` (plus `parse_recentdocs_mru` / `parse_usb_registry` / `parse_shellbags` /
+`parse_amcache_shimcache` on the hives that carry those artifacts), Prefetch → `analyze_prefetch`,
+`$MFT` → `parse_mft_filesystem`, browser `History` → `parse_browser_history`, `.lnk` / JumpLists →
+`parse_lnk_jumplists`, `$UsnJrnl:$J` → `parse_usnjrnl`. `System.evtx` has no dedicated parser in the
+19-tool allowlist and is reported as a coverage gap rather than parsed.
 
 Inspect: `cat "$RUN/claims/claim_ledger.jsonl"` (evidence-anchored findings) and
 `"$RUN/audit/critic_verdicts.jsonl"` (one verdict per task).
@@ -348,6 +351,12 @@ a new one, or onboard agents. The cockpit is read-only; launching a run reuses t
 - **Cost/time:** hashing 22.6 GB ≈ ~1 min; Sleuthkit extraction = minutes; Volatility
   `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`–`2` and a narrow set of
   extracted artifacts.
+- **Real-time logs:** every long-running command (`run`/`dispatch`/`critique`/`report`/`evidence …`)
+  streams a tagged, scrolling log to **stderr** as it works — `[info] [agent] [tool_log] [alert]
+  [output] [result] [tasks]`, with a `TASK-NNN` separator per task and a `▸ N/M (P%) · elapsed`
+  progress line. On by default in a terminal; add `--quiet` (or `--no-stream`) to silence, or
+  `--stream` to force it on when piping (e.g. `siftmesh --stream run … 2>run.log`). It is
+  stderr-only, so stdout (the machine-readable summary) and the run-dir ledgers are unchanged.
 - **Fail-closed:** a missing SIFT-lane tool yields a clean `BackendUnavailableError` when invoked —
   install the tool; never a fake result.
 - **Config precedence:** init args > env (`SIFTMESH_*`) > project `./siftmesh.toml` > global

@@ -271,10 +271,26 @@ extract_artifacts_from_image()   # Sleuthkit (mmls/ifind/icat/fls) on .E01/raw, 
 analyze_memory()                 # Volatility 3 via fixed-argv subprocess (VSL: never imported)
 ```
 
-The allowlist is now **exactly 10**. Adding any further tool stays a governed change
+Further governed expansion (Phases A–C, maintainer-approved 2026-06; full incl. Plaso 2026-06-12) —
+nine real-tool, audited, fail-closed deep-evidence parsers so the allowlist can answer the brief's
+"what files existed / were opened / were taken / when" questions:
+
+```text
+parse_mft_filesystem()      # $MFT inventory + timestamps (in-proc, mft 0.7)
+parse_recentdocs_mru()      # NTUSER RecentDocs / OpenSavePidlMRU (in-proc, regipy)
+parse_usb_registry()        # USBSTOR / MountedDevices / MountPoints2 (in-proc, regipy)
+parse_browser_history()     # Chrome/Edge/Firefox history + downloads (in-proc, stdlib sqlite3)
+parse_lnk_jumplists()       # .lnk + JumpLists (in-proc, LnkParse3 + olefile)
+parse_shellbags()           # USRCLASS/NTUSER BagMRU (in-proc, regipy[full] PIDL decode)
+parse_amcache_shimcache()   # Amcache.hve + SYSTEM ShimCache program execution (in-proc, regipy)
+parse_usnjrnl()             # $Extend\$UsnJrnl:$J change journal (in-proc, custom USN_RECORD_V2)
+build_super_timeline()      # whole-image Plaso log2timeline/psort (subprocess, opt-in/gated)
+```
+
+The allowlist is now **exactly 19**. Adding any further tool stays a governed change
 (maintainer sign-off + this list + `registry.ALLOWED_TOOLS` + `doctor` self-check, in
-lockstep). Volatility 3 is **VSL-licensed → invoked only as an external subprocess, never
-imported** (enforced by a guard test).
+lockstep). Volatility 3 (and Plaso) are **external subprocesses, never imported** — Volatility 3 is
+**VSL-licensed** (enforced by a guard test).
 
 Every tool call must log to:
 

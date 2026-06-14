@@ -10,6 +10,7 @@ no '--yolo' turns the sandbox off. Plus operational edge cases (timeout / bad-JS
 
 from __future__ import annotations
 
+import json
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
@@ -75,6 +76,18 @@ def test_sandbox_flags_present() -> None:
     assert "--strict-mcp-config" in argv
     assert argv[argv.index("--permission-mode") + 1] == "dontAsk"
     assert "--disallowedTools" in argv
+
+
+def test_executor_never_zeroes_the_tool_universe() -> None:
+    # Regression (Project_SIFTAMESS, claude v2.1.177): the executor passed `--tools ""`, which sets
+    # the AVAILABLE tool universe to empty and disables the typed mcp__siftmesh__* tools as well.
+    # The agent then got zero tools, emitted `<invoke name="Bash">` as text, never called a tool,
+    # and the critic looped on empty results. The executor must never emit an empty `--tools`.
+    argv = _argv()
+    if "--tools" in argv:  # if ever reintroduced, it must NOT be empty
+        assert argv[argv.index("--tools") + 1] != "", "empty --tools zeroes the MCP tool universe"
+    allowed = argv[argv.index("--allowedTools") + 1].split(",")
+    assert any(e.startswith("mcp__siftmesh__") for e in allowed)  # typed tools still exposed
 
 
 def test_gssw_ambient_hooks_disabled() -> None:
@@ -193,3 +206,70 @@ def test_bad_json_returns_error_and_persists_raw(
     assert "agent_bad_json" in result.errors
     # the raw envelope is still persisted for audit even on a parse failure
     assert (run.root / "results" / "TASK-001.agent_raw.json").is_file()
+
+
+def test_execute_persists_stderr_for_debugging(
+    dispatched_case: DispatchedCase, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    # MCP connection/startup errors go to stderr; the adapter used to discard it, which hid the
+    # root cause of the no-tools failure. Non-empty stderr must be persisted for audit/debugging.
+    run, evidence = dispatched_case(dispatch=False)
+
+    def _fake(*_a: object, **_k: object) -> subprocess.CompletedProcess[str]:
+        envelope = {"is_error": False, "subtype": "success", "result": json.dumps({"claims": []})}
+        return subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=json.dumps(envelope), stderr="MCP server failed: boom"
+        )
+
+    monkeypatch.setattr(subprocess, "run", _fake)
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    adapter._execute(_contract(), ctx)
+    stderr_path = run.root / "results" / "TASK-001.agent_stderr.txt"
+    assert stderr_path.is_file() and "MCP server failed" in stderr_path.read_text(encoding="utf-8")
+
+
+# ── session isolation: a headless run never bleeds an ambient/concurrent Claude session ──
+
+
+def test_argv_pins_fresh_isolated_session() -> None:
+    # The live-run contamination bug: a headless run returned an interactive transcript. Each
+    # dispatch must pin a BRAND-NEW session id and never persist it to the on-disk cache.
+    a1, a2 = _argv(), _argv()
+    for argv in (a1, a2):
+        assert "--session-id" in argv
+        assert "--no-session-persistence" in argv
+        assert "--bare" not in argv  # --bare would break subscription auth
+    sid1 = a1[a1.index("--session-id") + 1]
+    sid2 = a2[a2.index("--session-id") + 1]
+    assert sid1 != sid2 and len(sid1) == 36  # a fresh uuid4 per call
+
+
+def test_execute_minimal_env_drops_foreign_secrets(
+    dispatched_case: DispatchedCase, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    run, evidence = dispatched_case(dispatch=False)
+    captured: dict[str, object] = {}
+
+    def _fake(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured["argv"] = argv
+        captured["env"] = kwargs.get("env")
+        envelope = {"is_error": False, "subtype": "success", "result": json.dumps({"claims": []})}
+        return subprocess.CompletedProcess(
+            args=argv, returncode=0, stdout=json.dumps(envelope), stderr=""
+        )
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")  # auth: must survive
+    monkeypatch.setenv("OPENAI_API_KEY", "leak-me")  # foreign secret: must be dropped
+    monkeypatch.setattr(subprocess, "run", _fake)
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    adapter._execute(_contract(), ctx)
+
+    env = captured["env"]
+    assert isinstance(env, dict)
+    assert env.get("ANTHROPIC_API_KEY") == "sk-test"  # Claude auth kept
+    assert "OPENAI_API_KEY" not in env  # other-provider secret never inherited
+    assert "PATH" in env and "HOME" in env  # base env + ~/.claude creds path kept
+    argv = captured["argv"]
+    assert "--session-id" in argv and "--no-session-persistence" in argv  # fresh isolated session

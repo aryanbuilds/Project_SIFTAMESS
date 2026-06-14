@@ -127,7 +127,7 @@ Every row must be green to submit (owned in full by Epic N9 checklist).
 | # | Mandatory artifact | Owning task | Produced file(s) |
 |---|---|---|---|
 | 1 | Public repo + MIT/Apache-2.0 license | A1 / N6 | `LICENSE` (Apache 2.0) |
-| 2 | Demo video ≤5 min (live terminal + narration) | K5 / N7 | recorded video, `docs/demo_script.md` |
+| 2 | Demo video ≤5 min (live terminal + narration) | K5 / N7 | recorded video |
 | 3 | Architecture diagram **with security boundaries** | L6 / N3 | `docs/diagrams/security_boundaries.*` |
 | 4 | Written project description | N1 | `README.md`, `docs/project_description.md` |
 | 5 | Dataset documentation | J5 / N4 | `docs/dataset_documentation.md` |

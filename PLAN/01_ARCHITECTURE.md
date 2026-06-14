@@ -289,7 +289,7 @@ siftmesh/
   docs/
     architecture.md  threat_model.md  evidence_integrity.md
     dataset_documentation.md  accuracy_report.md  try_it_out.md
-    judge_runbook.md  demo_script.md  project_description.md  submission_checklist.md
+    judge_runbook.md  project_description.md  submission_checklist.md
     diagrams/security_boundaries.{drawio,svg,png}
   siftmesh_core/
     __init__.py  cli.py  config.py  run_dir.py  logging.py

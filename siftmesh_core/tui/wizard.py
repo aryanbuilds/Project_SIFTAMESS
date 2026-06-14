@@ -1,17 +1,16 @@
 """New-investigation wizard (hybrid 2-screen flow) — thin wiring over the governed engine.
 
 Screen 1 ``RunSetupScreen``: name the case + **browse the whole filesystem** for evidence (a
-re-rootable ``DirectoryTree`` reachable ABOVE the project dir, a left showcase, and a ``#file`` /
-``#folder`` fuzzy search box) + the brief/objective. Screen 2 ``RunLaunchScreen``: host/space
-synthesis + the run options + Launch. The load-bearing, Textual-FREE unit is ``WizardDraft`` (every
-screen reads/writes it; ``build_settings`` is the single source the legacy ``NewRunScreen`` also
-delegates to). Screens are thin renderers; heavy work (curate, readiness, fuzzy search) runs in
-``@work`` threads. No orchestration here — launch routes through ``CockpitScreen`` as before.
+re-rootable ``DirectoryTree`` reachable ABOVE the project dir + a ``#file`` / ``#folder`` fuzzy
+search box, with the picked list beside it) + the brief/objective. Screen 2 ``RunLaunchScreen``:
+host/space synthesis + the run options + Launch. The load-bearing, Textual-FREE unit is
+``WizardDraft`` (every screen reads/writes it; ``build_settings`` is the single source the legacy
+``NewRunScreen`` also delegates to). Screens are thin renderers; heavy work (curate, readiness,
+fuzzy search) runs in ``@work`` threads. Launch routes through ``CockpitScreen`` as before.
 """
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -23,6 +22,7 @@ from textual.screen import Screen
 from textual.widgets import (
     Button,
     Checkbox,
+    Collapsible,
     DirectoryTree,
     Footer,
     Header,
@@ -43,6 +43,13 @@ from siftmesh_core.config import SiftmeshSettings
 from siftmesh_core.schemas.run import RunMode
 
 _MODES = ("manual", "review_only", "auto_human_loop", "auto")
+# Run-type choices shown as a labelled RadioSet (clearer than a bare dropdown). Order == _MODES.
+_MODE_LABELS = (
+    ("manual", "manual — one step per action"),
+    ("review_only", "review-only — plan, then stop"),
+    ("auto_human_loop", "auto + human gates"),
+    ("auto", "auto — run end to end"),
+)
 _JUDGE_CHOICES = [
     ("(persisted default)", ""),
     ("Tier-1 only", "none"),
@@ -52,11 +59,6 @@ _JUDGE_CHOICES = [
     ("opencode", "cli:opencode"),
 ]
 _MODEL_AGENTS = ("claude", "gemini", "codex", "opencode")
-# Files small + texty enough to preview in the showcase (NEVER read a 22 GB .E01 into memory).
-_SHOWCASE_TEXT = frozenset(
-    {".md", ".markdown", ".json", ".jsonl", ".yaml", ".yml", ".txt", ".log", ".csv", ".ini", ".xml"}
-)
-_SHOWCASE_MAX_BYTES = 256 * 1024
 
 
 @dataclass
@@ -131,31 +133,23 @@ class WizardDraft:
         return settings, (int(mi) if mi.isdigit() else None)
 
 
-def _render_showcase(path: Path) -> Any:
-    """A safe preview of the highlighted path for the picker's LEFT showcase.
+def resolve_brief_path(text: str, browse_root: str | Path) -> str | None:
+    """Resolve a brief reference to an existing ABSOLUTE file path, or None if not found.
 
-    Directories → child count + first names; small text files → rendered content; everything else
-    (binary / large / a 22 GB image) → metadata only. NEVER reads a big/binary file into memory.
+    Accepts an absolute path, a ``~`` path, or a bare filename / relative path (tried under the
+    browse root first, then the cwd). The run needs the brief's full path - a bare filename would
+    otherwise resolve against the wrong dir and the brief intake would fail closed.
     """
-    from siftmesh_core.evidence.space import human_bytes
-    from siftmesh_core.tui.widgets import render_file
-
-    try:
-        st = path.stat()
-    except OSError as exc:
-        return f"cannot stat {path.name}: {exc}"
-    if path.is_dir():
+    p = Path(text).expanduser()
+    candidates = [p] if p.is_absolute() else [p, Path(browse_root) / p, Path.cwd() / p]
+    for c in candidates:
         try:
-            names = sorted(e.name for e in os.scandir(path))
-        except OSError as exc:
-            return f"{path}\n(cannot list: {exc})"
-        shown = "\n".join(f"  {n}" for n in names[:40])
-        more = f"\n  … (+{len(names) - 40} more)" if len(names) > 40 else ""
-        return f"{path}\n[dir · {len(names)} entries]\n{shown}{more}"
-    header = f"{path}\n[file · {human_bytes(st.st_size)}]\n"
-    if path.suffix.lower() in _SHOWCASE_TEXT and st.st_size <= _SHOWCASE_MAX_BYTES:
-        return render_file(path)
-    return header + "(binary or large — not previewed; it can still be added as evidence)"
+            resolved = c.resolve()
+        except OSError:
+            continue
+        if resolved.is_file():
+            return str(resolved)
+    return None
 
 
 # ── Screen 1: setup (case + filesystem-wide evidence picker + brief) ──────────
@@ -187,33 +181,32 @@ class RunSetupScreen(Screen):
             )
             yield Input(value=self.draft.base_dir, placeholder="runs base dir (.)", id="base")
         with Horizontal(id="navrow"):
-            yield Input(value=str(Path.home()), placeholder="path to browse", id="evroot")
+            yield Input(value=str(Path.home()), placeholder="path to browse — Enter", id="evroot")
             yield Button("Up", id="up")
-            yield Button("Home", id="home")
-            yield Button("/", id="root")
         with Horizontal(id="pickrow"):
-            with VerticalScroll(id="showcase"):
-                yield Static("select a file or folder to preview", id="showcaseview", markup=False)
             yield DirectoryTree(str(Path.home()), id="fstree")
             with Vertical(id="pickedcol"):
                 yield Label("Selected evidence:")
                 yield ListView(id="picked")
                 with Horizontal(id="pickbtns"):
                     yield Button("Add", id="add", variant="success")
+                    yield Button("Set brief", id="setbrief")
                     yield Button("Remove", id="remove")
         with Horizontal(id="searchrow"):
             yield Input(
-                placeholder="#file <name>   or   #folder <name>   — Enter to search", id="evsearch"
+                placeholder="#file <name>   or   #folder <name>   — Enter to search "
+                "(then Add evidence or Set brief)",
+                id="evsearch",
             )
         yield OptionList(id="evhits")
         yield Input(
             value=self.draft.brief_path or "",
-            placeholder="brief file (.pptx/.pdf/.md) — optional",
+            placeholder="brief file path (.pptx/.pdf/.md) — type a path, or pick + Set brief",
             id="brief",
         )
         yield Input(
             value=self.draft.objective or "",
-            placeholder="…or inline objective text",
+            placeholder="inline objective / steering prompt (combines with the brief if both set)",
             id="objective",
         )
         yield Static(id="pickstatus", markup=False)
@@ -222,6 +215,7 @@ class RunSetupScreen(Screen):
 
     def on_mount(self) -> None:
         self._sync_picked()
+        self.query_one("#evhits", OptionList).display = False  # appears only after a search
 
     # -- navigation / re-root --------------------------------------------------
     def _reroot(self, path: Path) -> None:
@@ -260,7 +254,6 @@ class RunSetupScreen(Screen):
 
     def _set_current(self, path: Path) -> None:
         self._current = path
-        self.query_one("#showcaseview", Static).update(_render_showcase(path))
 
     # -- fuzzy search ----------------------------------------------------------
     def _search(self, raw: str) -> None:
@@ -293,6 +286,7 @@ class RunSetupScreen(Screen):
 
         self._hits = hits
         optlist = self.query_one("#evhits", OptionList)
+        optlist.display = True  # reveal the results pane now that we have hits
         optlist.clear_options()
         matcher = Matcher(query)
         for i, p in enumerate(hits):
@@ -321,18 +315,18 @@ class RunSetupScreen(Screen):
         bid = event.button.id
         if bid == "up":
             self.action_go_up()
-        elif bid == "home":
-            self._reroot(Path.home())
-        elif bid == "root":
-            self._reroot(Path("/"))
         elif bid == "add":
             if self._current is None:
                 self.notify("select a file/folder in the tree, or search with #file / #folder")
                 return
             if self.draft.add_path(self._current):
                 self._sync_picked()
+                kind = "folder" if self._current.is_dir() else "file"
+                self.notify(f"added {kind}: {self._current.name}")
             else:
                 self.notify("already selected")
+        elif bid == "setbrief":
+            self._set_brief()
         elif bid == "remove":
             lv = self.query_one("#picked", ListView)
             i = lv.index
@@ -341,6 +335,24 @@ class RunSetupScreen(Screen):
                 self._sync_picked()
         elif bid == "next":
             self._next()
+
+    def _set_brief(self) -> None:
+        """Mark the current tree/fuzzy selection as the brief (full path); brief is not evidence."""
+        if self._current is None:
+            self.notify(
+                "pick a file in the tree or via #file search, then Set brief", severity="warning"
+            )
+            return
+        if not self._current.is_file():
+            self.notify("the brief must be a file", severity="error")
+            return
+        abs_path = self._current.expanduser().resolve()
+        self.draft.remove_path(self._current)  # a brief is the trusted objective, never evidence
+        self.draft.remove_path(abs_path)
+        self._sync_picked()
+        self.draft.brief_path = str(abs_path)
+        self.query_one("#brief", Input).value = str(abs_path)  # show the full resolved path
+        self.notify(f"brief set: {abs_path.name}")
 
     def _sync_picked(self) -> None:
         lv = self.query_one("#picked", ListView)
@@ -361,12 +373,17 @@ class RunSetupScreen(Screen):
         if not self.draft.selected_paths:
             self.notify("add at least one file or folder", severity="error")
             return
-        brief = self.query_one("#brief", Input).value.strip() or None
+        brief_text = self.query_one("#brief", Input).value.strip() or None
         objective = self.query_one("#objective", Input).value.strip() or None
-        if brief and objective:
-            self.notify("give a brief OR an objective, not both", severity="error")
-            return
-        self.draft.brief_path = brief
+        # brief + objective COMBINE (file background + inline steering); both is allowed.
+        brief_abs: str | None = None
+        if brief_text:
+            root = self.query_one("#evroot", Input).value or "."
+            brief_abs = resolve_brief_path(brief_text, root)
+            if brief_abs is None:
+                self.notify(f"brief file not found: {brief_text}", severity="error")
+                return
+        self.draft.brief_path = brief_abs  # full resolved path (the run reads it by absolute path)
         self.draft.objective = objective
         self.query_one("#pickstatus", Static).update("curating evidence (hardlinks)…")
         self._curate()
@@ -416,33 +433,37 @@ class RunLaunchScreen(Screen):
                 yield RadioButton("Full (parallel)", value=True, id="rs-full")
                 yield RadioButton("Single op + report", id="rs-single")
                 yield RadioButton("Run in portions (low disk)", id="rs-portions")
-            yield Label("Mode")
-            yield Select(
-                [(m, m) for m in _MODES], value=self.draft.mode, id="mode", allow_blank=False
-            )
+            yield Label("Run type")
+            with RadioSet(id="mode"):
+                for m, label in _MODE_LABELS:
+                    yield RadioButton(label, value=(m == self.draft.mode), id=f"mode-{m}")
             yield Label("Agent")
             yield Select(agent_opts, value=self.draft.agent, id="agent", allow_blank=False)
             yield Label("Tier-2 judge")
             yield Select(_JUDGE_CHOICES, value=self.draft.judge, id="judge", allow_blank=False)
-            yield Label("max iterations / max agent tasks (blank = default)")
-            yield Input(value=self.draft.max_iterations, placeholder="3", id="max-iterations")
-            yield Input(value=self.draft.max_agent_tasks, placeholder="10", id="max-agent-tasks")
-            for name in _MODEL_AGENTS:
+            with Collapsible(title="Advanced — caps · models · save", collapsed=True):
+                yield Label("max iterations / max agent tasks (blank = default)")
+                yield Input(value=self.draft.max_iterations, placeholder="3", id="max-iterations")
                 yield Input(
-                    value=self.draft.models.get(name, ""),
-                    placeholder=f"{name} model (blank = default)",
-                    id=f"model-{name}",
+                    value=self.draft.max_agent_tasks, placeholder="10", id="max-agent-tasks"
                 )
-            yield Checkbox("Parallel dispatch", value=self.draft.parallel, id="cb-parallel")
-            yield Checkbox(
-                "All-live (heavy tools on the agent)", value=self.draft.all_live, id="cb-alllive"
-            )
-            yield Label("Save agent config to:")
-            with RadioSet(id="scope"):
-                yield RadioButton("don't save", value=True, id="scope-none")
-                yield RadioButton("global (~/.config)", id="scope-global")
-                yield RadioButton("project (./siftmesh.toml)", id="scope-project")
-            yield Static(id="summary", markup=False)
+                for name in _MODEL_AGENTS:
+                    yield Input(
+                        value=self.draft.models.get(name, ""),
+                        placeholder=f"{name} model (blank = default)",
+                        id=f"model-{name}",
+                    )
+                yield Checkbox("Parallel dispatch", value=self.draft.parallel, id="cb-parallel")
+                yield Checkbox(
+                    "All-live (heavy tools on the agent)",
+                    value=self.draft.all_live,
+                    id="cb-alllive",
+                )
+                yield Label("Save agent config to:")
+                with RadioSet(id="scope"):
+                    yield RadioButton("don't save", value=True, id="scope-none")
+                    yield RadioButton("global (~/.config)", id="scope-global")
+                    yield RadioButton("project (./siftmesh.toml)", id="scope-project")
         yield Button("Launch", id="launch", variant="success")
         yield Footer()
 
@@ -523,7 +544,8 @@ class RunLaunchScreen(Screen):
 
     def _collect(self) -> None:
         d = self.draft
-        d.mode = str(self.query_one("#mode", Select).value)  # type: ignore[assignment]
+        mode_idx = self.query_one("#mode", RadioSet).pressed_index
+        d.mode = _MODES[mode_idx] if 0 <= mode_idx < len(_MODES) else "auto"  # type: ignore[assignment]
         d.agent = str(self.query_one("#agent", Select).value)
         d.judge = str(self.query_one("#judge", Select).value)
         d.max_iterations = self.query_one("#max-iterations", Input).value.strip()

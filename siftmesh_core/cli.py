@@ -71,6 +71,7 @@ def _version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     version: Annotated[
         bool | None,
         typer.Option(
@@ -80,6 +81,17 @@ def main(
             help="Show version and exit.",
         ),
     ] = None,
+    stream: Annotated[
+        bool | None,
+        typer.Option(
+            "--stream/--no-stream",
+            help="Real-time tagged log stream to stderr (default: on when attached to a terminal).",
+        ),
+    ] = None,
+    quiet: Annotated[
+        bool,
+        typer.Option("--quiet", "-q", help="Suppress the real-time log stream (= --no-stream)."),
+    ] = False,
 ) -> None:
     """App-level options. `siftmesh --version` works with no subcommand."""
     # Load provider credentials (LiteLLM judge keys) from ~/.config/siftmesh/.env into the
@@ -88,6 +100,13 @@ def main(
     from siftmesh_core.secrets_env import load_secrets_into_env
 
     load_secrets_into_env()
+
+    # Real-time log stream: register a stderr streamer for long-running commands so any run
+    # shows tagged, per-task, %-complete logs by default. TTY-gated, so CliRunner/pipes (and
+    # the golden recorder) get nothing; the TUI/mcp-serve are excluded (they own their I/O).
+    from siftmesh_core.observability import install_stream_if_enabled
+
+    install_stream_if_enabled(ctx.invoked_subcommand, stream=stream, quiet=quiet)
 
 
 @app.command("init-case")
@@ -100,15 +119,16 @@ def init_case(
         typer.Option(
             "--brief",
             help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective, "
-            "not evidence.",
+            "not evidence. Can be paired with --objective for extra steering.",
         ),
     ] = None,
     objective: Annotated[
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
-            'X compromised?". Alternative to --brief.',
+            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            'host X compromised?". COMBINES with --brief when both are given (more context = '
+            "better).",
         ),
     ] = None,
     verify_after: Annotated[
@@ -636,15 +656,16 @@ def run(
         typer.Option(
             "--brief",
             help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective the "
-            "agent investigates toward.",
+            "agent investigates toward. Can be paired with --objective for extra steering.",
         ),
     ] = None,
     objective: Annotated[
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective text (no file needed) — e.g. --objective "was host '
-            'X compromised?". Alternative to --brief.',
+            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            'host X compromised?". COMBINES with --brief when both are given (more context = '
+            "better).",
         ),
     ] = None,
     all_live: Annotated[
@@ -664,13 +685,15 @@ def run(
         ),
     ] = False,
     parallel: Annotated[
-        bool,
+        bool | None,
         typer.Option(
-            "--parallel",
+            "--parallel/--no-parallel",
             help="Dispatch tasks concurrently (up to caps.max_parallel_tasks) — deterministic "
-            "(byte-identical to sequential). The real win is the live-agent path. Default: off.",
+            "(byte-identical to sequential). Default: AUTO — ON when a live --agent executor is "
+            "used (slow live agents shouldn't run serially), OFF for the deterministic floor. "
+            "--no-parallel forces sequential.",
         ),
-    ] = False,
+    ] = None,
 ) -> None:
     """Init → plan → dispatch → collect → critique → decide → report, via one engine."""
     from pydantic import ValidationError
@@ -701,8 +724,18 @@ def run(
         )
     if all_live:
         settings = settings.model_copy(update={"live_extraction": True})
-    if parallel:
+    # Parallel dispatch is AUTO: default ON for a live AI executor (sequential live agents are slow
+    # and brittle over many tasks), OFF for the deterministic floor (keeps the byte-stable default).
+    # Explicit --parallel / --no-parallel win; the floor otherwise keeps its config default.
+    live_executor = agent is not None and agent != "deterministic"
+    if parallel is not None:
+        settings = settings.model_copy(update={"parallel_dispatch": parallel})
+    elif live_executor:
         settings = settings.model_copy(update={"parallel_dispatch": True})
+        typer.echo(
+            "note: live agent — parallel dispatch is ON (use --no-parallel for sequential)",
+            err=True,
+        )
     if agent is None:
         _hint_live_agent(settings)  # loud opt-in: surface the live agent when it's available
     if not force and not _space_preflight_ok(case_dir, evidence):

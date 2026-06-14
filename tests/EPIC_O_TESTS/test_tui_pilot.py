@@ -54,8 +54,8 @@ def test_cockpit_mounts_and_renders_golden() -> None:
         bar = app.screen.query_one("#taskbar", ProgressBar)
         assert bar.total == 4  # tasks_total from the golden snapshot
         assert app.screen.query_one("#side", TabbedContent) is not None
-        for tab in ("#claims", "#agents", "#budget"):
-            assert app.screen.query_one(tab, Static) is not None
+        # minimal cockpit: Claims (summary) · Claim list · Console (Agents/Budget tabs removed)
+        assert app.screen.query_one("#claims", Static) is not None
         assert app.screen.query_one("#loading", LoadingIndicator).display is False
 
     _drive(app, scenario)

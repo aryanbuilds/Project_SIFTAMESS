@@ -23,3 +23,8 @@ def open_orchestration_log(events_path: Path, run_id: str) -> structlog.typing.F
 def log_event(logger: structlog.typing.FilteringBoundLogger, event: str, **fields: Any) -> None:
     """Append one orchestration event at info level."""
     logger.info(event, **fields)
+    # Real-time stream (near-noop when no sink registered); after the durable write so a
+    # sink can never affect the ledger contents/ordering. Local import: no import-time cost.
+    from siftmesh_core.observability import sinks
+
+    sinks.emit_event(event, fields)

@@ -15,6 +15,7 @@ from siftmesh_core.intake.brief import (
     derive_objective,
     extract_brief_text,
     ingest_brief,
+    ingest_brief_and_objective,
     ingest_objective_text,
 )
 from siftmesh_core.run_dir import new_run_dir
@@ -119,3 +120,28 @@ def test_ingest_objective_text_empty_fails_closed(tmp_path: Path) -> None:
     run = new_run_dir(base=tmp_path / "case_runs")
     with pytest.raises(BriefIntakeError, match="empty"):
         ingest_objective_text("   \n\t ", run)
+
+
+def test_brief_and_objective_merge_keeps_both(tmp_path: Path) -> None:
+    # The product point: a case-background FILE + an inline steering prompt COMBINE (more trusted
+    # context = better) rather than being mutually exclusive.
+    run = new_run_dir(base=tmp_path / "case_runs")
+    inline = "Focus on USB exfiltration and reconstruct the suspect's timeline."
+    path, objective = ingest_brief_and_objective(BRIEF_FIXTURES / "objective.md", inline, run)
+    assert path == run.incident_brief
+    # The bounded objective excerpt LEADS with the operator's explicit ask...
+    assert objective.startswith("Focus on USB exfiltration")
+    # ...and the case background still contributes.
+    assert "ROCBA" in objective
+    body = path.read_text(encoding="utf-8")
+    assert "Full briefing (verbatim)" in body  # the file briefing is rendered verbatim
+    assert "Operator instructions (inline --objective)" in body  # the inline ask is delimited
+    assert inline in body  # the operator's prompt is present verbatim
+    assert "ROCBA" in body  # the file's content is present too
+    assert "incident_brief_ingested" in run.orchestration_events.read_text(encoding="utf-8")
+
+
+def test_brief_and_objective_empty_inline_fails_closed(tmp_path: Path) -> None:
+    run = new_run_dir(base=tmp_path / "case_runs")
+    with pytest.raises(BriefIntakeError, match="empty"):
+        ingest_brief_and_objective(BRIEF_FIXTURES / "objective.md", "   \n\t ", run)

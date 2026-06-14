@@ -57,4 +57,4 @@ claude setup-token        # subscription auth (or export ANTHROPIC_API_KEY=…)
 bash examples/demo_case/run_demo.sh --agent claude
 ```
 
-See `docs/demo_script.md` for the narrated walkthrough and `docs/judge_runbook.md` for what to look at.
+See `docs/judge_runbook.md` for what to look at.

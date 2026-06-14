@@ -40,6 +40,7 @@ FORBIDDEN_TOOLS: frozenset[str] = frozenset(
 class ToolNotAllowedError(RuntimeError):
     pass
 
+
 def assert_tool_allowed(name: str) -> None:
     if name in FORBIDDEN_TOOLS:
         raise ToolNotAllowedError(f"tool {name!r} is forbidden and must never be exposed")

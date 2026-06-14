@@ -78,6 +78,18 @@ def test_sandbox_flags_present() -> None:
     assert "--disallowedTools" in argv
 
 
+def test_executor_never_zeroes_the_tool_universe() -> None:
+    # Regression (Project_SIFTAMESS, claude v2.1.177): the executor passed `--tools ""`, which sets
+    # the AVAILABLE tool universe to empty and disables the typed mcp__siftmesh__* tools as well.
+    # The agent then got zero tools, emitted `<invoke name="Bash">` as text, never called a tool,
+    # and the critic looped on empty results. The executor must never emit an empty `--tools`.
+    argv = _argv()
+    if "--tools" in argv:  # if ever reintroduced, it must NOT be empty
+        assert argv[argv.index("--tools") + 1] != "", "empty --tools zeroes the MCP tool universe"
+    allowed = argv[argv.index("--allowedTools") + 1].split(",")
+    assert any(e.startswith("mcp__siftmesh__") for e in allowed)  # typed tools still exposed
+
+
 def test_gssw_ambient_hooks_disabled() -> None:
     # gssw: the user's ambient ~/.claude lifecycle hooks must NOT fire during the governed run —
     # `--settings {"disableAllHooks": true}` suppresses them while preserving subscription auth.
@@ -194,6 +206,27 @@ def test_bad_json_returns_error_and_persists_raw(
     assert "agent_bad_json" in result.errors
     # the raw envelope is still persisted for audit even on a parse failure
     assert (run.root / "results" / "TASK-001.agent_raw.json").is_file()
+
+
+def test_execute_persists_stderr_for_debugging(
+    dispatched_case: DispatchedCase, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    # MCP connection/startup errors go to stderr; the adapter used to discard it, which hid the
+    # root cause of the no-tools failure. Non-empty stderr must be persisted for audit/debugging.
+    run, evidence = dispatched_case(dispatch=False)
+
+    def _fake(*_a: object, **_k: object) -> subprocess.CompletedProcess[str]:
+        envelope = {"is_error": False, "subtype": "success", "result": json.dumps({"claims": []})}
+        return subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=json.dumps(envelope), stderr="MCP server failed: boom"
+        )
+
+    monkeypatch.setattr(subprocess, "run", _fake)
+    adapter = ClaudeHeadlessAdapter(settings=load_settings())
+    ctx = AdapterContext(run=run, evidence_root=evidence, settings=load_settings())
+    adapter._execute(_contract(), ctx)
+    stderr_path = run.root / "results" / "TASK-001.agent_stderr.txt"
+    assert stderr_path.is_file() and "MCP server failed" in stderr_path.read_text(encoding="utf-8")
 
 
 # ── session isolation: a headless run never bleeds an ambient/concurrent Claude session ──

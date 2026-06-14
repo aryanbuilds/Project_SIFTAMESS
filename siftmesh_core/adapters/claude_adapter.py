@@ -81,7 +81,7 @@ _DISALLOWED_TOOLS = (
 # `--settings`, overrides the user/project hooks WHILE PRESERVING subscription auth (the OAuth
 # credentials in ~/.claude/.credentials.json are still read) — unlike `--bare`, which disables the
 # keychain and breaks subscription auth. This TIGHTENS containment (it removes an uncontained side
-# effect); every real guardrail (--permission-mode dontAsk / --disallowedTools / --tools "" /
+# effect); every real guardrail (--permission-mode dontAsk / --disallowedTools /
 # --strict-mcp-config) is unchanged. Confirmed on claude v2.1.173: `--settings <file-or-json>`
 # accepts an inline JSON string. Re-confirm on version bumps.
 _DISABLE_HOOKS_SETTINGS = '{"disableAllHooks": true}'
@@ -92,18 +92,21 @@ def claude_sandbox_flags(
 ) -> list[str]:
     """The Claude-CLI sandbox flag block (shared by the claude adapter + the headless claude_flag).
 
-    Confirmed on Claude Code v2.1.x: ``--tools ""`` disables ALL built-in tools (a future-proof
-    kill-switch that, unlike a hand-maintained ``--disallowedTools`` list, also covers new built-ins
-    like Workflow/ToolSearch/ScheduleWakeup) while leaving the MCP tools available; ``--allowedTools
-    mcp__siftmesh__*`` pre-approves only the contract's typed tools; ``--disallowedTools`` stays as
-    defence-in-depth; ``--permission-mode dontAsk`` auto-denies anything else with no prompt/hang.
-    Wiring the typed tools (``--mcp-config``) WITHOUT this block would leave native tools enabled —
-    so the two must never be separated.
+    Confirmed on claude v2.1.177: ``claude --help`` documents ``--tools <tools...>`` as *the list of
+    AVAILABLE tools* ("'default' to use all tools, or specify tool names"). Passing ``--tools ""``
+    (empty) therefore sets the available universe to NOTHING — it disables the typed
+    ``mcp__siftmesh__*`` tools too, not just built-ins, so the agent gets zero tools, never calls a
+    tool (it emits ``<invoke name="Bash">`` as plain text), and the critic rejects every empty
+    result into a retry loop. NEVER pass an empty ``--tools`` on the executor path. We instead
+    expose the typed tools and deny built-ins explicitly: ``--allowedTools mcp__siftmesh__*``
+    pre-approves only the contract's typed tools (it is additive, not exclusive),
+    ``--disallowedTools`` denies the built-in shell/file/web/spawn tools, and ``--permission-mode
+    dontAsk`` auto-denies anything else (incl. new built-ins) with no prompt/hang. Wiring the typed
+    tools (``--mcp-config``) WITHOUT this block would leave native tools enabled — so the two must
+    never be separated.
     """
     tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
     return [
-        "--tools",
-        "",
         "--allowedTools",
         tools,
         "--disallowedTools",
@@ -176,6 +179,7 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
             timeout=timeout or getattr(settings, "agent_timeout_seconds", 600),
             shell=False,
             check=False,
+            stdin=subprocess.DEVNULL,  # headless: no interactive input (skip 3s stdin wait)
             env=minimal_child_env(keep=_AUTH_ENV),  # base + Claude auth only; no stray env
         )
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -283,11 +287,14 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
                 cwd=scratch_cwd(
                     ctx.run, contract.task_id
                 ),  # never the operator CWD (injection/escape)
+                stdin=subprocess.DEVNULL,  # headless: no interactive input (skip 3s stdin wait)
                 env=minimal_child_env(keep=_AUTH_ENV),  # base + Claude auth only; no stray env
             )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return self._error(contract, ctx, started, "agent_failed_or_timeout")
         self._write_raw(ctx, contract, proc.stdout)  # persist raw envelope for debugging
+        if proc.stderr:
+            self._write_stderr(ctx, contract, proc.stderr)  # MCP connect/startup errors land here
         try:
             envelope = json.loads(proc.stdout)
         except json.JSONDecodeError:
@@ -337,6 +344,12 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
         target = safe_write_path(ctx.run.root, f"results/{contract.task_id}.agent_raw.json")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(stdout, encoding="utf-8")
+
+    def _write_stderr(self, ctx: AdapterContext, contract: TaskContract, stderr: str) -> None:
+        """Persist raw stderr (MCP connection/startup errors land here, not on stdout)."""
+        target = safe_write_path(ctx.run.root, f"results/{contract.task_id}.agent_stderr.txt")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(stderr, encoding="utf-8")
 
     def _error(
         self, contract: TaskContract, ctx: AdapterContext, started: datetime, code: str

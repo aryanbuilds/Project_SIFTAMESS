@@ -47,9 +47,10 @@ def is_sandboxed(prof: AgentProfile) -> bool:
     """Whether a headless recipe denies the agent's native tools (REQUIRED to dispatch).
 
     True iff the profile carries explicit per-CLI deny/sandbox flags, OR it reaches the typed tools
-    via the Claude sandbox (``claude_flag`` — which appends the full ``--tools ""``/deny block). A
-    recipe with neither would run the agent with native shell/file/web tools enabled, so it fails
-    closed (``available()`` False → the registry falls to the deterministic floor).
+    via the Claude sandbox (``claude_flag`` — which appends the full ``--allowedTools`` /
+    ``--disallowedTools`` / ``--permission-mode dontAsk`` deny block). A recipe with neither would
+    run the agent with native shell/file/web tools enabled, so it fails closed (``available()``
+    False → the registry falls to the deterministic floor).
     """
     return bool(prof.native_tool_argv) or prof.mcp_strategy == "claude_flag"
 

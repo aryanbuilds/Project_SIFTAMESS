@@ -1,83 +1,56 @@
 # SIFTMesh: Project Story
 
+## Inspiration
+
+- Got handed a real insider-theft case (ROCBA): one suspect, a 23 GB disk, a 19 GB memory dump, and 5 questions I actually had to answer.
+- Two options, both bad: work it by hand and age ten years, or unleash an AI agent and pray it doesn't invent a culprit. In forensics, a confident wrong answer is worse than "I don't know."
+- So I went for door three: **the LLM proposes, the code decides.** Speed of an agent, spine of a deterministic pipeline.
+
 ## What it does
 
-SIFTMesh is a **CLI-first, evidence-safe controller for autonomous DFIR**. You point it at real
-forensic evidence (a disk image, a memory capture) and an incident objective. It hashes and seals the
-evidence read-only, plans the investigation, sends an agent to work the case, and runs a **deterministic
-critic** that checks every claim against actual tool output before it can become a reported finding. The
-governing principle is **"the LLM proposes; the code decides."**
-
-Against the provided **ROCBA** dataset (a 23.7 GB Windows disk image plus a 19 GB memory capture) it ran
-**19 real typed forensic tools**: Sleuth Kit, Volatility 3, Plaso, evtx, regipy, prefetch, `$MFT`,
-registry, browser history, LNK/JumpLists, shellbags, Amcache/ShimCache, and the USN journal. It
-produced **634 evidence-anchored claims (0 unsupported, 0 contradictions)** that materially answer the
-brief's five questions. Stolen **ADAMANTIUM** research was exfiltrated to a **personal Google Drive** and
-**USB**, with **SDelete** plus **47,966 USN deletions** as cleanup, on a **5.7 M-event super-timeline**.
-Every finding cites the `tool_call_id` and the SHA-256 of the bytes it came from
-([`findings_rocba.md`](findings_rocba.md), [`execution_logs_sample.md`](execution_logs_sample.md)).
+- CLI-first, evidence-safe controller for autonomous DFIR. Give it evidence and a question; it does the work and shows its receipts.
+- Seals evidence read-only (SHA-256), plans, sends an agent in, and a **deterministic critic** fact-checks every claim against real tool output before it's allowed to be a "finding."
+- Drives **19 real forensic tools** (Sleuth Kit, Volatility 3, Plaso, evtx, regipy, prefetch, `$MFT`, registry, browser, LNK, shellbags, Amcache/ShimCache, USN). No mocks, no vibes.
+- On the real ROCBA evidence: **634 findings, 0 unsupported, 0 contradictions.** It basically caught the guy: ADAMANTIUM research siphoned to a personal Google Drive and a USB, then SDelete and ~48K USN deletions to cover the tracks, all on a 5.7M-event timeline.
+- Every finding links back to the exact tool call and the hash of the bytes it came from. Trust, but verify - and here you can actually verify.
 
 ## How we built it
 
-Python throughout: a **Typer** CLI, **Pydantic** schemas, a **deterministic finite-state machine** for
-the engine (`plan → dispatch → critique → decide → report`), and append-only **JSONL ledgers** for
-claims, contradictions, and the full audit trail. The agent reaches forensic tools through a typed
-**MCP** boundary whose allowlist is a single `frozenset` of 19 names. There is no raw shell and no
-arbitrary code. The key design decisions and tradeoffs:
+- Python: a Typer CLI, Pydantic schemas, a deterministic state machine (`plan → dispatch → critique → decide → report`), and JSONL ledgers for everything.
+- The agent only touches tools through an MCP allowlist of exactly 19 names. No raw shell. (It asked to run "just one bash command." The answer was no.)
+- Core: an evidence vault, a write-jail so nothing escapes the run dir, a critic that's the **only** thing allowed to bless a finding, and a state machine that decides retry / escalate / human-review.
+- Stuff I bolted on while using it and getting annoyed:
+  - **Minimal TUI** - the cockpit was bloated, so I trimmed it to the stuff I actually look at.
+  - **Real-time logs by default** - tagged `[info] [agent] [tool_log] [alert] [result] [tasks]`, per task, with a live % so I'm not staring at a frozen screen wondering if it died.
+  - **Auto-parallel for live agents** - watching one run tasks one at a time was painful, so now it parallelizes itself.
 
-- **Autonomy in the agent; determinism in the governance.** The agent investigates freely, but code
-  makes every security-relevant decision (what counts as a fact, what tool may run, where a file may be
-  written), and that code runs regardless of which agent drives: Claude, OpenCode, Gemini, Codex, or the
-  no-keys **deterministic floor**. We kept a native FSM instead of a generic graph framework (ADR
-  PLAN/12) because typed state, `decide()`, and a resumable `run_state.json` already give the value
-  without re-introducing nondeterminism.
-- **A recorded-golden floor as the safety net.** The deterministic real-tool run is byte-reproducible
-  and golden-tested, so the demo and the regression suite never depend on a flaky live model.
-- **Agent-neutral, headless-first.** Adding an agent is a profile row, not a new adapter. Only Claude
-  reaches the typed tools today, and the others are honestly labelled unconstrained opt-ins.
+## Challenges we ran into
 
-## Challenges
+- **Plaso refused to cooperate.** The disk is a partial acquisition whose shadow-copy header points 81 GB into a 23 GB file (sure). It crashed even when told to skip VSS. I ran it over the extracted artifacts instead and still got 5.7M events.
+- **A genuinely corrupt event log.** `Security.evtx` died in three different NTFS readers at the same spot. For once, not my bug. I made it fail closed and say so instead of faking it.
+- **The agent went rogue and the critic caught it red-handed.** Testing parallel `claude_headless` plus an OpenCode judge, every run came back unparseable. I opened the raw output and the agent had wandered into a *different conversation*: reaching for Bash, hitting "Request interrupted by user," and literally echoing my own "wait, is this prompt injection?" rant back at me. I thought the evidence had pwned it. Nope. The critic had already thrown the whole mess out; the real bug was session isolation (headless Claude inherited my env with no pinned session, so a live session bled in). Fixed with a fresh session id, no persistence, and a minimal env.
+- **Evidence is hostile.** 3,949 strings tried to look like instructions. I log all of them and run none. Honest pitch: containment, not "we solved prompt injection" (nobody has).
+- **The small, real, dumb ones:** the brief field kept only a filename instead of the full path; my workstation hit 94% disk and started gasping (freed ~61 GB with prune / portions / merge); and I found my own GitHub token loitering in the git remote URL and rotated it before it caused trouble.
 
-- **Making autonomy safe without trusting the prompt.** A prompt that says "don't touch the evidence"
-  is not a control. We put the guardrails in the gate the model's output must pass through: read-only
-  evidence with hash-before-analysis, a `safe_write_path` write-jail, the tool allowlist, and a critic
-  that rejects any claim lacking a real anchor.
-- **Forensic evidence is hostile input.** Real artifacts contain strings that look like instructions,
-  and this run flagged **3,949** injection-like strings. We treat evidence as data, never as
-  instructions (raw bytes never enter a prompt; only `{path, sha256}` rows do), log every alert, and let
-  the critic force human-review on any affected claim. The honest claim is **containment plus
-  traceability, not prevention.**
-- **Real evidence breaks tools in real ways.** Two failures only a live run could surface: (1) the
-  ROCBA image is a **partial/sparse acquisition** whose VSS backup header is unreadable, which crashed
-  Plaso's volume scan, so we added a recorded fallback that builds the timeline over the extracted
-  artifacts (still 5.7 M events); (2) `Security.evtx` is **genuinely LZNT1-corrupt**, failing
-  identically across three independent NTFS implementations, so we **fail closed**, record it in
-  `failed[]`, and never fabricate a result. We document both as signal rather than hide them.
-- **Streaming real-time logs without breaking determinism.** Operators wanted a live tagged log, while
-  golden tests require byte-identical run dirs. We tapped the two ledger chokepoints after the durable
-  write and stream only to stderr, so the terminal lights up while the committed bytes never change.
+## Accomplishments that we're proud of
+
+- A real autonomous run that answered all 5 questions: **634 findings, none unsupported, none contradictory**, every one traceable to a tool call and a hash.
+- A critic that actually did its job and tossed a misbehaving live agent instead of trusting it.
+- I left the failures **in** (corrupt log, partial timeline). Honesty over polish.
+- Evidence came out untouched: the end hash matched the ingest seal.
+- Determinism I can prove: parallel == sequential, byte for byte, and a golden run reproduces it with zero keys.
 
 ## What we learned
 
-- **Evidence-safety has to be architectural.** Anything enforced only by a prompt fails the moment the
-  model ignores it. The only durable controls are the ones in code that run no matter what the agent
-  does. That reframing (guardrails in the gate, not the prompt) drove the whole design.
-- **Honest gaps are a feature.** A corrupt log, a partial image, a tool that cannot run: documenting
-  the failure mode is stronger than papering over it, and it is what a forensic examiner trusts.
-- **The right split is autonomous proposal plus deterministic adjudication.** Let the model be creative,
-  and let the code be the one that decides truth, safety, and what reaches the report.
+- **Safety has to be in the code, not the prompt.** "Please don't touch the evidence" is a wish, not a control. The guardrails live in the gate the agent's output has to pass through.
+- **The agent will surprise you** - so the whole game is the governance that catches the surprise (see: rogue agent reading my diary, above).
+- **Honest gaps are a feature.** A documented "this is corrupt" beats a confident lie every time.
+- The split that kept working: **agent proposes, code decides.**
 
-## What's next
+## What's next for SIFTMESH
 
-- **A2A** agent-to-agent interop (optional, governed by the SIFTMesh policy overlay).
-- **ACP round 2** so Gemini/Codex reach the typed tools (only Claude does today).
-- **Sigma / pySigma** detection breadth.
-- **Phase D** parsers: Outlook OST / OneDrive ODL (deferred until a clean Linux parse is confirmed).
-- **SRUM** per-app network bytes (no viable parser on this host yet).
-
----
-
-*Repository: Apache-2.0. Architecture plus trust boundaries: [`architecture.md`](architecture.md) and
-[`threat_model.md`](threat_model.md). Try it: [`try_it_out.md`](try_it_out.md). All eight submission
-components: [`submission.md`](submission.md). The full committed ledgers for both runs are at
-`docs/logs/rocba-disk-RUN-20260612-163324/` and `docs/logs/rocba-memory-RUN-20260612-082630/`.*
+- **A2A** so remote agents play by the same rules.
+- **ACP round 2** so Gemini and Codex reach the typed tools (only Claude does today).
+- **Sigma / pySigma** for more detections.
+- Deferred parsers (**Outlook OST**, **OneDrive ODL**) once a clean Linux parse exists, plus **SRUM** for per-app bytes.
+- Smarter low-disk handling so my workstation stops gasping.

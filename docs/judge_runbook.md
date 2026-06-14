@@ -35,7 +35,7 @@ committed real-evidence record lives in [`findings_rocba.md`](findings_rocba.md)
 
 | # | Criterion | Where to verify |
 | --- | --- | --- |
-| 1 | **Autonomous execution / self-correction** | live run §4; the deterministic FSM loop in `siftmesh_core/orchestrator/`; narrated in `docs/demo_script.md` |
+| 1 | **Autonomous execution / self-correction** | live run §4; the deterministic FSM loop in `siftmesh_core/orchestrator/` |
 | 2 | **IR accuracy / no hallucination** | real ROCBA results in `docs/findings_rocba.md` + `docs/accuracy_report.md`; in any run `"$RUN/claims/claim_ledger.jsonl"` - every claim cites `tool_call_id`+`source_sha256`; unanchored claims are confined to Appendix B of `reports/final_report.md` |
 | 3 | **Breadth & depth** | the 19-tool allowlist (`siftmesh doctor`), real backends (evtx/regipy/pyscca/mft + browser/LNK/shellbag/Amcache/USN parsers + Sleuth Kit/Volatility/Plaso for disk/memory/super-timeline in `RUNBOOK.md`) |
 | 4 | **Constraint implementation (bypass-tested)** | `docs/threat_model.md`; `uv run pytest tests/EPIC_L_TESTS -q` (80+ effect-asserting bypass tests); agent **safety tiers** in `docs/architecture.md §2a` |
@@ -69,8 +69,7 @@ uv run siftmesh run ./case_rocba --evidence ~/projects/data \
 
 Watch the loop in the new run's ledgers: `audit/agent_calls.jsonl` (attempt 1 → 2),
 `audit/critic_verdicts.jsonl` (`retry_required` → `accepted`), `claims/unsupported_claims.jsonl` (the
-rejected attempt-1 over-claim), then `claims/claim_ledger.jsonl` (the corrected, anchored claim). The
-demo script narrates this step by step in `docs/demo_script.md`.
+rejected attempt-1 over-claim), then `claims/claim_ledger.jsonl` (the corrected, anchored claim).
 
 ## 5. Honesty notes (please read)
 

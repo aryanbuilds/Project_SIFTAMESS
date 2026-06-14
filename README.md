@@ -14,6 +14,22 @@
 
 ---
 
+## Contents
+
+- [Tech stack](#tech-stack)
+- [About the project](#about-the-project)
+- [Pre-setup](#pre-setup-recommended)
+- [Setup & install](#setup--install)
+- [Features](#features)
+- [Architecture](#architecture)
+- [FAQ: how the agents work](#faq-how-the-agents-actually-work)
+- [What makes it different](#what-makes-it-different)
+- [All commands](#all-commands)
+- [Roadmap](#roadmap)
+- [License & thanks](#license--thanks)
+
+---
+
 ## Tech stack
 
 Use `uv`; avoid pip/venv. Everything is pinned in `pyproject.toml`.

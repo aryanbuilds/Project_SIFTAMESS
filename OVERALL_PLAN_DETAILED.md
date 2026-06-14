@@ -200,7 +200,6 @@ siftmesh/
     dataset_documentation.md
     accuracy_report_template.md
     judge_runbook.md
-    demo_script.md
 
   siftmesh_core/
     __init__.py

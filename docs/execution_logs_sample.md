@@ -117,8 +117,7 @@ policy), not LLM tokens:
 
 LLM token usage appears only when a live agent drives the run (`--agent claude`). That path writes
 agent attempts to `audit/agent_calls.jsonl` and the agent's raw envelope to `results/*.agent_raw.json`.
-The deterministic floor is the reproducible baseline; the live agent is the opt-in hero
-(`docs/demo_script.md`).
+The deterministic floor is the reproducible baseline; the live agent is the opt-in hero.
 
 ---
 

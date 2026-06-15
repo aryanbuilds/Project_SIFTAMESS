@@ -1,4 +1,4 @@
-"""C3 — TaskContract: safety_policy required + YAML round-trip."""
+"""C3 - TaskContract: safety_policy required + YAML round-trip."""
 
 from __future__ import annotations
 

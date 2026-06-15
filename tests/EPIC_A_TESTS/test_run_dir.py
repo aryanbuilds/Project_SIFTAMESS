@@ -1,4 +1,4 @@
-"""A4: run-directory generator — full subtree, UTC ids, collision-safe."""
+"""A4: run-directory generator - full subtree, UTC ids, collision-safe."""
 
 from __future__ import annotations
 

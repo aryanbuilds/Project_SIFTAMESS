@@ -1,4 +1,4 @@
-# Dataset Documentation — RUN-GOLDEN
+# Dataset Documentation - RUN-GOLDEN
 
 Provenance and integrity of every ingested artifact, generated from the sealed manifest.
 
@@ -22,10 +22,10 @@ Provenance and integrity of every ingested artifact, generated from the sealed m
 Originals are never modified; each derived file chains back to its source + producer.
 | Derived path | Source artifact | source_sha256 | Produced by | Method |
 | --- | --- | --- | --- | --- |
-| results/TOOL-001.structured.json | CMD.EXE-89305D47.pf | 6127d820b031cac7… | TOOL-001 | — |
-| results/TOOL-002.structured.json | NTUSER.DAT | 6a38fcea92411396… | TOOL-002 | — |
-| results/TOOL-003.structured.json | Security.evtx | 50c87926d2dfed97… | TOOL-003 | — |
-| results/TOOL-004.structured.json | timeline | 4ad00a02214d95f6… | TOOL-004 | — |
+| results/TOOL-001.structured.json | CMD.EXE-89305D47.pf | 6127d820b031cac7… | TOOL-001 | - |
+| results/TOOL-002.structured.json | NTUSER.DAT | 6a38fcea92411396… | TOOL-002 | - |
+| results/TOOL-003.structured.json | Security.evtx | 50c87926d2dfed97… | TOOL-003 | - |
+| results/TOOL-004.structured.json | timeline | 4ad00a02214d95f6… | TOOL-004 | - |
 
 ## License & provenance
 

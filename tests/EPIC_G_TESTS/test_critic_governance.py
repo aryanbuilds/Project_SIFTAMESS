@@ -1,4 +1,4 @@
-"""G7 — the deterministic self-correction GOVERNANCE (crafted inputs, not a live demo).
+"""G7 - the deterministic self-correction GOVERNANCE (crafted inputs, not a live demo).
 
 We construct the INPUTS to the critic (crafted-but-realistic TaskResults over a real
 run) and assert OUR critic + decide + retry logic. This is NOT a live agent

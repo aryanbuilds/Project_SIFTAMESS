@@ -2,9 +2,9 @@
 
 A real run writes large DERIVED data into the run dir (a 5.4 GB memory zip → ~19 GB raw; a 22 GB
 disk image → extracted triage artifacts) while the originals stay read-only and are never copied.
-This module estimates how much derived space the supplied evidence will need — exactly where an
+This module estimates how much derived space the supplied evidence will need - exactly where an
 archive header tells us (``zipfile.infolist`` uncompressed sizes; ``7z l`` listed sizes), with a
-labelled allowance where it cannot — checks it against free disk, and if it will not fit proposes a
+labelled allowance where it cannot - checks it against free disk, and if it will not fit proposes a
 deterministic first-fit-decreasing partition so the operator can run the evidence in portions
 (run → ``prune`` the bulky derived data → next portion → ``merge``). No LLM; pure arithmetic.
 """
@@ -49,7 +49,7 @@ class SpaceEstimate:
 
     @property
     def needed_bytes(self) -> int:
-        """Derived data + a safety margin — what the run dir's filesystem must have free."""
+        """Derived data + a safety margin - what the run dir's filesystem must have free."""
         return int(self.total_derived * _SAFETY_FACTOR)
 
     @property
@@ -134,7 +134,7 @@ def partition_plan(items: list[SpaceItem], budget_bytes: int) -> list[list[Space
     """First-fit-decreasing bin-pack of items into portions whose derived footprint ≤ budget.
 
     Deterministic (sort by derived desc, then path). An item whose derived alone exceeds the budget
-    gets its own (over-budget) portion — surfaced so the operator knows it needs more disk.
+    gets its own (over-budget) portion - surfaced so the operator knows it needs more disk.
     """
     if budget_bytes <= 0:
         return [[i] for i in items]

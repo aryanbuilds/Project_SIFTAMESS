@@ -2,16 +2,16 @@
 
 Usage:  uv run python tests/golden/record.py --update
 
-Produces (committed to git — the §2B "recorded-golden" regression floor):
+Produces (committed to git - the §2B "recorded-golden" regression floor):
   tests/golden/recorded_run/RUN-GOLDEN/   a complete, real run directory (ledgers + reports)
   tests/golden/bodies/                    the deterministic report BODIES (header-stripped)
 
 The pipeline is real end-to-end (manifest -> readonly -> plan -> dispatch of the Epic-D
 tools -> critique -> reports). One normalization is applied at record time: the absolute
 evidence path inside ``evidence/readonly_mounts.json`` (the only absolute path a run
-contains — verified) is rewritten to ``/EVIDENCE`` so the committed run is host-independent.
+contains - verified) is rewritten to ``/EVIDENCE`` so the committed run is host-independent.
 
-Re-recording refreshes ledger timestamps (real tools, real clock) — that is BY DESIGN; the
+Re-recording refreshes ledger timestamps (real tools, real clock) - that is BY DESIGN; the
 regression invariant is that rendering the COMMITTED run reproduces the COMMITTED bodies
 byte-for-byte (tests/EPIC_M_TESTS/test_reports_golden.py). Re-record only after an
 intentional schema/report change, then review the diff and commit both dirs together.
@@ -83,7 +83,7 @@ def record() -> None:
         encoding="utf-8",
     )
 
-    # Refresh the committed run, then render the reports INSIDE it — RunPaths derives the
+    # Refresh the committed run, then render the reports INSIDE it - RunPaths derives the
     # run_id from the directory name, so rendering in RUN-GOLDEN gives the bodies a stable
     # run_id forever (the golden test re-renders in a dir of the same name).
     if RECORDED_RUN.exists():
@@ -94,7 +94,7 @@ def record() -> None:
     generate_all_reports(recorded)
 
     # The report HEADERS are volatile by design (generated_utc/host/run_dir) and excluded
-    # from the golden bodies — but the committed run must still be host-independent, so
+    # from the golden bodies - but the committed run must still be host-independent, so
     # rewrite this repo's absolute path out of the committed headers.
     for report in (RECORDED_RUN / "reports").iterdir():
         report.write_text(

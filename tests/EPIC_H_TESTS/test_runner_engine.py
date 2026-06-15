@@ -1,4 +1,4 @@
-"""H3/H6/H7/H8 — the engine drives the real pipeline to DONE, resumes, and audits."""
+"""H3/H6/H7/H8 - the engine drives the real pipeline to DONE, resumes, and audits."""
 
 from __future__ import annotations
 

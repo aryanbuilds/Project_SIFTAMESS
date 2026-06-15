@@ -1,4 +1,4 @@
-"""I1 — AgentProfile schema + the packaged agent_profiles.yaml registry."""
+"""I1 - AgentProfile schema + the packaged agent_profiles.yaml registry."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ _EXPECTED = {
     "claude_headless",
     "opencode_headless",
     "generic_shell",
-    # Epic Q — agent-neutral headless connectors.
+    # Epic Q - agent-neutral headless connectors.
     "gemini_headless",
     "codex_headless",
 }

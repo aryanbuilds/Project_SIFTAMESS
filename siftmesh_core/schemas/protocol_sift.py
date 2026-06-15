@@ -4,7 +4,7 @@ The typed, validated map that ``siftmesh protocol-sift inspect --run-dir`` write
 ``context/protocol_sift_capabilities.json``. It is an honest, env-only snapshot: which
 Protocol SIFT skill-layer pieces and which underlying forensic tools are present on this
 host (with resolved paths), plus a per-check pass/fail list. A model that fails validation
-is never written (``StrictModel`` — fail closed).
+is never written (``StrictModel`` - fail closed).
 """
 
 from __future__ import annotations

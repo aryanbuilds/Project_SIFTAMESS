@@ -1,4 +1,4 @@
-"""Epic Q round 1 — the config-driven, agent-NEUTRAL headless connector (mocked; no live run)."""
+"""Epic Q round 1 - the config-driven, agent-NEUTRAL headless connector (mocked; no live run)."""
 
 from __future__ import annotations
 
@@ -224,7 +224,7 @@ def test_gemini_unavailable_falls_through_chain_to_floor(monkeypatch) -> None:  
 
 
 def test_agent_override_falls_back_only_to_floor() -> None:
-    # An operator who picks one agent is NEVER silently downgraded to a DIFFERENT live agent —
+    # An operator who picks one agent is NEVER silently downgraded to a DIFFERENT live agent -
     # the only fallback is the deterministic floor.
     ov = _agent_overrides("gemini")
     assert ov["executor_selection"] == "auto"

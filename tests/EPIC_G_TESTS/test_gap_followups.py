@@ -1,4 +1,4 @@
-"""G9 — coverage/corroboration gap detection + follow-up-task generation."""
+"""G9 - coverage/corroboration gap detection + follow-up-task generation."""
 
 from __future__ import annotations
 

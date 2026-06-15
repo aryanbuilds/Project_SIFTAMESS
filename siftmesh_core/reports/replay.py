@@ -1,4 +1,4 @@
-"""Replay (J7) — text replay (MVP) + self-contained HTML, both deterministic.
+"""Replay (J7) - text replay (MVP) + self-contained HTML, both deterministic.
 
 The replayable audit trail: every orchestration event in chronological order ``(timestamp, line)``
 from ``audit/orchestration_events.jsonl``. The text replay reconstructs the timeline from the JSONL
@@ -34,7 +34,7 @@ def _detail(e: OrchestrationEvent) -> str:
 
 def render_text_replay(view: ReportView) -> str:
     """Deterministic text timeline (for ``siftmesh replay`` stdout)."""
-    lines = [f"SIFTMesh replay — {view.run_id}", f"{len(view.events)} orchestration events", ""]
+    lines = [f"SIFTMesh replay - {view.run_id}", f"{len(view.events)} orchestration events", ""]
     for i, e in enumerate(view.events, 1):
         detail = _detail(e)
         lines.append(f"{i:04d}  {e.timestamp}  {e.event}" + (f"  [{detail}]" if detail else ""))

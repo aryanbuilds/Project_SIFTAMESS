@@ -1,9 +1,9 @@
 """Cross-run merge (scale fixes / PLAN 11): combine N completed runs into one report.
 
-Lets the operator analyse disk and memory (or portions of a huge case) in SEPARATE runs — deleting
-the bulky one with ``prune`` in between — and still get a single combined, evidence-anchored report
+Lets the operator analyse disk and memory (or portions of a huge case) in SEPARATE runs - deleting
+the bulky one with ``prune`` in between - and still get a single combined, evidence-anchored report
 with per-run provenance and cross-run contradiction detection. Deterministic core (no LLM); an
-opt-in agent SYNTHESIS section is advisory only — it re-presents already-promoted claims and every
+opt-in agent SYNTHESIS section is advisory only - it re-presents already-promoted claims and every
 claim reference it makes is validated against the merged set (LLM proposes, code decides). The merge
 never promotes a new fact; it only collates what each run already promoted.
 """
@@ -111,7 +111,7 @@ def _build_body(
                 f"{len(bearing)} finding(s) across {len(sources)} run(s) bear on the objective:"
             )
             for rid, c in bearing[:_MAX_FINDINGS]:
-                md.blank().line(f"**{rid}:{c.claim_id}** — {c.claim}")
+                md.blank().line(f"**{rid}:{c.claim_id}** - {c.claim}")
                 md.bullet(_anchor(c, rid))
 
     md.h2("Combined findings")
@@ -119,7 +119,7 @@ def _build_body(
         md.line("None.")
     else:
         for rid, c in promoted[:_MAX_FINDINGS]:
-            md.blank().line(f"**{rid}:{c.claim_id}** ({c.status}) — {c.claim}")
+            md.blank().line(f"**{rid}:{c.claim_id}** ({c.status}) - {c.claim}")
             md.bullet(_anchor(c, rid))
         if len(promoted) > _MAX_FINDINGS:
             md.blank().line(

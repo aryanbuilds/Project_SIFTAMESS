@@ -1,4 +1,4 @@
-"""Deterministic DECIDE function (Epic G, G4) — "code decides".
+"""Deterministic DECIDE function (Epic G, G4) - "code decides".
 
 ``decide`` is a **pure function** (no I/O) implementing CLAUDE.md §12 verbatim: it
 maps a critic verdict + run/task facts to one of four actions (done / retry /
@@ -38,7 +38,7 @@ def decide(
     if evidence_mismatch:
         return Decision(
             action="human_review",
-            reason="evidence path/hash mismatch — possible evidence modification",
+            reason="evidence path/hash mismatch - possible evidence modification",
         )
     if injection_affected or verdict == "human_review_required":
         return Decision(
@@ -53,7 +53,7 @@ def decide(
         )
 
     # 4b: coverage/corroboration gap on an otherwise-accepted task → do MORE work, not "done"
-    # (G9 — "recognize gaps and adjust": examine another artifact / gather corroboration).
+    # (G9 - "recognize gaps and adjust": examine another artifact / gather corroboration).
     if (coverage_gap or needs_corroboration) and verdict in ("accepted", "accepted_with_downgrade"):
         reason = "examine another artifact" if coverage_gap else "gather corroboration"
         return Decision(action="follow_up", reason=reason)

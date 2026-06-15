@@ -71,7 +71,7 @@ tui = [
 ]
 # Optional multi-provider model gateway for the ADVISORY Tier-2 judge + merge synthesis (SDK only,
 # MIT). Lazy-imported; absence is fail-SOFT (the optional judge is skipped, the run continues on
-# Tier-1). API-key/cloud providers only — subscription auth stays on the vendor CLIs.
+# Tier-1). API-key/cloud providers only - subscription auth stays on the vendor CLIs.
 llm = [
     "litellm>=1.7,<2",
 ]
@@ -79,7 +79,7 @@ llm = [
 [project.scripts]
 siftmesh = "siftmesh_core.cli:app"
 
-# PEP 735 dev group — installed BY DEFAULT by `uv sync` (dev is special-cased),
+# PEP 735 dev group - installed BY DEFAULT by `uv sync` (dev is special-cased),
 # so `uv run ruff/mypy/pytest` work after a single `uv sync`.
 [dependency-groups]
 dev = [

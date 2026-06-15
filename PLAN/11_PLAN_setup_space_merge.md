@@ -1,4 +1,4 @@
-# PLAN 11 — One-command setup, space-aware portioned runs, cross-run merge + docs restructure
+# PLAN 11 - One-command setup, space-aware portioned runs, cross-run merge + docs restructure
 
 _Status: **approved, NOT yet executed** (maintainer-directed, 2026-06-10). Execute as a
 bd-tracked refinement when scheduled. Supersedes nothing; additive to the shipped refinement
@@ -8,30 +8,30 @@ bd-tracked refinement when scheduled. Supersedes nothing; additive to the shippe
 
 Three maintainer asks rolled into one refinement:
 
-1. **Too many setup commands** — `uv sync --all-extras`, vol-symbols mkdir/export, doctor… merge
+1. **Too many setup commands** - `uv sync --all-extras`, vol-symbols mkdir/export, doctor… merge
    them: `siftmesh doctor --setup` checks AND installs/configures everything in one shot.
-2. **No hard "25 GB free" rule** — the ROCBA set is reference data, not a benchmark. Instead a
+2. **No hard "25 GB free" rule** - the ROCBA set is reference data, not a benchmark. Instead a
    **pre-flight space estimator** computes how large the derived data can get from the *actual
    supplied evidence* (exact where archive headers tell us: `zipfile.infolist()` for zips,
-   `7z l -slt` for 7z — confirmed via web research; labeled headroom where unknowable) and checks
-   it against free disk. If it won't fit, don't just abort: **propose a partitioned plan** —
+   `7z l -slt` for 7z - confirmed via web research; labeled headroom where unknowable) and checks
+   it against free disk. If it won't fit, don't just abort: **propose a partitioned plan** -
    split the evidence into portions that each fit, print the exact CLI commands per portion
    (run → prune the bulky derived data, keep ledgers → next portion), ending in a merge.
-3. **Cross-run merge** (decided: deterministic core + agent loop) — `siftmesh merge` combines N
+3. **Cross-run merge** (decided: deterministic core + agent loop) - `siftmesh merge` combines N
    completed runs' ledgers into one merged final report with per-run provenance and cross-run
    contradiction detection; opt-in `--agent claude` adds the deep-agent synthesis loop (agent
    reads all merged promoted claims → proposes a cross-run synthesis → deterministic validator
    checks every claim reference → retry on inconsistency → report; PLAN/01 "LLM proposes, code
    decides"). This lets the user analyze disk and memory in separate RUNs, delete the bulky one,
-   and still get one combined report — the RUN concept tracks which run did what.
+   and still get one combined report - the RUN concept tracks which run did what.
 4. **README + RUNBOOK rewritten** around command tables with a clear **automated vs manual
    (deterministic, staged)** separation.
 
-Hard constraints: CLAUDE.md §4 command names are frozen (nothing removed/renamed — `merge`,
+Hard constraints: CLAUDE.md §4 command names are frozen (nothing removed/renamed - `merge`,
 `prune` are additive). `run --brief/--objective` stay (they carry the objective, not setup). CI
 untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B).
 
-## Pillar A — `siftmesh doctor --setup` (check + install + configure)
+## Pillar A - `siftmesh doctor --setup` (check + install + configure)
 
 `doctor.py` + `cli.py` doctor command:
 - `run_doctor(*, protocol_sift=False, setup=False, settings=None)`. When `setup`:
@@ -40,7 +40,7 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
      after, so the dependency checks see the new packages.
   2. `mkdir -p` the vol symbol cache (new default below); report as a check line.
   3. Claude auth line gains the exact next step when absent (`claude setup-token` /
-     `ANTHROPIC_API_KEY`) — login itself is interactive, doctor only instructs.
+     `ANTHROPIC_API_KEY`) - login itself is interactive, doctor only instructs.
   4. Then the normal check report runs (proves setup worked). Plain `doctor` unchanged
      (existing 4 tests in `tests/EPIC_A_TESTS/test_doctor.py` stay green).
 - Kill the env-var step forever: `config.py` `vol_symbol_dirs` default `None` →
@@ -49,25 +49,25 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
 - Message consistency: every "uv sync --extra …" pointer (doctor.py, intake/brief.py,
   mcp_gateway/backends/real.py ×3, pyproject comment) → "run `siftmesh doctor --setup`".
 
-## Pillar B — pre-flight space estimator + partition plan + `siftmesh prune`
+## Pillar B - pre-flight space estimator + partition plan + `siftmesh prune`
 
 - **New `siftmesh_core/evidence/space.py`**:
-  - `estimate_required(evidence_dir) -> SpaceEstimate` — per top-level evidence item:
+  - `estimate_required(evidence_dir) -> SpaceEstimate` - per top-level evidence item:
     `.zip` → sum of `zipfile.infolist()` uncompressed sizes (exact, stdlib, no extraction; if a
     single member is itself a `.7z`/archive, add its `7z l -slt` listed size when `7z` present,
     else a labeled ×2 allowance); `.7z` → `7z l -slt` totals (fixed argv, no shell); `.gz` →
     labeled allowance (header size is mod-2³² unreliable); disk images (`.e01/.raw/...`) →
-    labeled extraction allowance (configurable fraction, default 5% of image size — extracted
+    labeled extraction allowance (configurable fraction, default 5% of image size - extracted
     triage artifacts are small relative to the image); everything else → 0 derived. Returns
     per-item rows {path, base_bytes, derived_bytes, exact|estimated} + totals.
   - `free_bytes(path)` via `shutil.disk_usage`.
-  - `partition_plan(rows, budget_bytes) -> list[Portion]` — first-fit-decreasing bin-pack of
+  - `partition_plan(rows, budget_bytes) -> list[Portion]` - first-fit-decreasing bin-pack of
     evidence items into portions whose derived footprint fits the budget; deterministic, pure
-    (code decides — no LLM needed for arithmetic).
+    (code decides - no LLM needed for arithmetic).
 - **Wire into `run`** (cli.py, before `vault_init_case` so nothing heavy starts): estimate vs
   free. Fits → one `space_check` line + proceed. Doesn't fit → exit 1 with: needed-vs-free
   table (exact/estimated labeled), sizes of existing `case_runs/RUN-*` dirs (what you could
-  delete), and a **printed portion plan**: per portion the exact commands —
+  delete), and a **printed portion plan**: per portion the exact commands -
   `mkdir + ln` (hard-link the portion's files into `ev_pN/`), `siftmesh run ./case_pN
   --evidence ev_pN …`, `siftmesh prune <run>` between portions, and the final
   `siftmesh merge` command. `--force` skips the gate. Estimator failure (corrupt archive) →
@@ -78,14 +78,14 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
   non-terminal run unless `--force`. This is what makes "analyze → free space → analyze next →
   merge" safe and auditable.
 
-## Pillar C — `siftmesh merge` (deterministic core + agent synthesis loop)
+## Pillar C - `siftmesh merge` (deterministic core + agent synthesis loop)
 
 - `siftmesh merge ./case_merged --run <RUN_A> --run <RUN_B> [...] [--agent claude]`:
   - Creates a fresh merge run dir (`case_merged/case_runs/RUN-*`, standard subtree) so outputs
     stay path-policed and inspectable like any run.
-  - Loads each source run via the existing `load_report_view` (reports/loader.py — graceful on
+  - Loads each source run via the existing `load_report_view` (reports/loader.py - graceful on
     pruned runs since ledgers are kept); writes `claims/merged_claims.jsonl` (one line per
-    source claim wrapped with `source_run` provenance — avoids fighting the strict Claim schema)
+    source claim wrapped with `source_run` provenance - avoids fighting the strict Claim schema)
     and a `context/merge_sources.json` (run ids, manifests, objectives).
   - **Cross-run contradiction pass**: expose the critic's `_detect_contradictions` as a public
     pure function and run it over the COMBINED promoted claims; results into the merged report.
@@ -104,7 +104,7 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
   key-free floor intact). Reuses the claude adapter subprocess seam; unit tests mock the
   subprocess exactly like `tests/EPIC_F_TESTS/test_live_adapters.py`.
 
-## Pillar D — README.md + RUNBOOK.md restructure (tables, automated vs manual)
+## Pillar D - README.md + RUNBOOK.md restructure (tables, automated vs manual)
 
 - **README**: pitch → Setup (`uv sync` + `uv run siftmesh doctor --setup`) → the one-command
   autonomous run (`--brief|--objective`, `--agent claude`, `--auto`) → **three command tables**
@@ -113,7 +113,7 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
      `doctor [--setup]`.
   2. *Manual / deterministic staged*: `init-case`, `plan`, `dispatch`, `collect`, `critique`,
      `report`, `replay`, `extract-artifacts`, `analyze-memory`, `decompress`, `ingest-derived`,
-     `retry`, `prune` — with the note that `run --auto` does all of this itself.
+     `retry`, `prune` - with the note that `run --auto` does all of this itself.
   3. *Inspection (read-only)*: `tasks list|show`, `claims list|show`, `audit tail`,
      `protocol-sift inspect`, `skills list`.
   → dev gates + license.
@@ -123,7 +123,7 @@ untouched (hard rule). No AI co-author. bd-tracked. Fixtures-only testing (§2B)
   DETERMINISTIC: old §2+§3 merged into one staged table (disk + memory lanes), keeping `--keys`
   guidance + the "don't re-plan after manual extract" warning; no vol-symbols step (default
   now). §3 live agent notes (auth, models, watching self-correction + merge synthesis ledgers).
-  §4 the same three command tables + practical notes — **the space note describes the
+  §4 the same three command tables + practical notes - **the space note describes the
   estimator/portion flow, no fixed GB number**.
 
 ## bd + tests + ship

@@ -1,4 +1,4 @@
-"""J3 edge cases — the real failures from live runs must render gracefully, never as facts."""
+"""J3 edge cases - the real failures from live runs must render gracefully, never as facts."""
 
 from __future__ import annotations
 

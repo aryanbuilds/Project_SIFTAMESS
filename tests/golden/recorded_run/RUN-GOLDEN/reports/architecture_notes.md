@@ -6,7 +6,7 @@
 <!-- load_mode: strict -->
 <!-- load_error: no run_state.json (run driven by discrete commands; engine snapshot absent) -->
 <!-- SIFTMESH-REPORT-BODY-BELOW -->
-# Run Architecture Notes — RUN-GOLDEN
+# Run Architecture Notes - RUN-GOLDEN
 
 ## Run mode & state
 

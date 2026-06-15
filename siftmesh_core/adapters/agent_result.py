@@ -6,9 +6,9 @@ respond with ONLY a JSON ``{"claims": [...]}`` payload, each claim citing the ``
 :class:`~siftmesh_core.schemas.claim.Claim` objects, with two HARD honesty rules:
 
 * **Never fabricate an anchor.** A claim the agent left under-anchored (missing ``source_sha256`` /
-  ``tool_call_id``, or a malformed sha) is recorded as ``status="unsupported"`` — the explicit
+  ``tool_call_id``, or a malformed sha) is recorded as ``status="unsupported"`` - the explicit
   "agent said it, evidence is missing" record. The deterministic critic then rejects it and the
-  orchestrator retries with feedback. That is the *genuine, emergent* self-correction loop — the
+  orchestrator retries with feedback. That is the *genuine, emergent* self-correction loop - the
   adapter records exactly what the agent did and did not anchor; it does not rig the outcome.
 * **Unparseable / empty output => ``retry_required``**, never a fabricated success.
 
@@ -71,7 +71,7 @@ def _normalize_claim(raw: dict[str, object], *, task_id: str, attempt: int, inde
     """One agent claim -> Claim; under-anchored or malformed => honest ``unsupported`` record.
 
     The ``claim_id`` is **attempt-scoped** (``…-A{attempt}-CLAIM-NNN``) so a corrected claim on a
-    retry never collides with the rejected claim it replaces — otherwise the critic's promotion
+    retry never collides with the rejected claim it replaces - otherwise the critic's promotion
     de-dup (``persisted_ids``) would silently drop the correction. The rejected attempt's record
     stays in its own ledger ("log, don't delete").
     """

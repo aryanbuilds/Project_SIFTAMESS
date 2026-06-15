@@ -16,7 +16,7 @@ and emits byte-deterministic, replayable reports under the rule **"LLM proposes,
 ## 2. Layers
 
 ```
-Layer 5  CLI (siftmesh …)                  source of truth — every stage callable
+Layer 5  CLI (siftmesh …)                  source of truth - every stage callable
 Layer 4  Terminal-agent adapters           claude / opencode / headless (gemini,codex) / generic shell / deterministic floor
 Layer 3  Orchestration core                planner · ultraworker state machine · critic · budget router
 Layer 2  Filesystem investigation bus      case_runs/RUN-*/ (context, tasks, results, claims, audit, reports)
@@ -36,12 +36,12 @@ derived purely from the probed capability facts (`schemas/agent_capabilities.py`
 
 | Tier | Definition | Today |
 |---|---|---|
-| **T0** deterministic_floor | real tools, no LLM execution — the safe default | deterministic executor |
+| **T0** deterministic_floor | real tools, no LLM execution - the safe default | deterministic executor |
 | **T1** constrained_live | sandboxed **and** typed tools via strict-MCP | `claude` |
 | **T2** unconstrained_live | capable but unsandboxed / tool-reach unproven (explicit opt-in) | `opencode`, `gemini`, `codex` |
-| **T3** advisory_llm | tool-less Tier-2 judge — never promotes | `--judge …` / `litellm:<model>` |
+| **T3** advisory_llm | tool-less Tier-2 judge - never promotes | `--judge …` / `litellm:<model>` |
 
-Tiers are **labels only** — they never gate dispatch (`--agent opencode` is unchanged); they make
+Tiers are **labels only** - they never gate dispatch (`--agent opencode` is unchanged); they make
 the containment posture visible in `agents list` / `doctor --agents` / the cockpit and in
 `context/agent_capabilities.json`. The floor is the default, Claude is the constrained executor,
 opencode/codex/gemini are explicit unconstrained opt-ins, and LiteLLM is advisory-only (it never
@@ -52,23 +52,23 @@ executes a tool).
 The cockpit renders `run_state.json` + the JSONL ledgers on a poll; launching a run goes through the
 **same** governed engine, so the UI never decides anything. Three surfaces:
 
-- **Home** — minimal: a centered *New run*, a left list of recent runs badged
+- **Home** - minimal: a centered *New run*, a left list of recent runs badged
   `terminal`/`blocked:<gate>`/`paused`/`running`, and visible key hints (`n` new · `Enter` attach ·
   `r` resume · `o` agents · `ctrl+t` theme · `q` quit).
-- **New-run wizard** (2 screens, Textual-free `WizardDraft` core) — Screen 1: case name + a
+- **New-run wizard** (2 screens, Textual-free `WizardDraft` core) - Screen 1: case name + a
   **filesystem-wide evidence picker** (a re-rootable `DirectoryTree` reachable *above* the project dir
   via Up/Home/`/` + a breadcrumb, a `#file` / `#folder` fuzzy search box backed by
   `tui/fs_search.py`, and a left preview that never reads a huge/binary file into memory) + the
   brief/objective. Picks are hardlinked into a curated dir (`evidence/curate.py`, originals untouched).
   Screen 2: the Verify + Space readiness synthesis (host checks + derived-size vs free disk →
   full / single / portions) + the run options + Launch.
-- **Onboarding** (`o` / Agent setup) — a `TabbedContent` with **Agents** (a greyed-until-ready
+- **Onboarding** (`o` / Agent setup) - a `TabbedContent` with **Agents** (a greyed-until-ready
   multiselect; not-installed/not-authed agents are disabled with the exact fix from
   `doctor.agent_remediation`; a *Launch auth* button runs the vendor login via `App.suspend()`; a 2 s
   background re-probe flips an agent selectable the moment auth lands) and **Tier-2 judge** (a provider
   radio: claude/codex/opencode via their own login, or gemini/opencode-go-zen/custom via a LiteLLM API
   key). Provider keys are validated then saved to a 600-perm `~/.config/siftmesh/.env`
-  (`secrets_env.py` + `tui/auth_actions.py`) — **never** to `siftmesh.toml`.
+  (`secrets_env.py` + `tui/auth_actions.py`) - **never** to `siftmesh.toml`.
 
 ## 3. Agent roles → multi-agent patterns
 
@@ -81,19 +81,19 @@ audit). **"LLM proposes, code decides."**
 |---|---|---|---|
 | **Planner** | prompt-chaining + orchestrator decomposition | plan + task graph; never executes tools | deterministic template (always) **+ optional LLM planning** |
 | **Deep-Context** | single-shot summarizer | compact reusable context pack | deterministic (always) **+ optional LLM** |
-| **Ultraworker** | orchestrator-workers + state machine | task order, dispatch, retry/escalate/human, caps | deterministic engine (always — governance) |
+| **Ultraworker** | orchestrator-workers + state machine | task order, dispatch, retry/escalate/human, caps | deterministic engine (always - governance) |
 | **Executor** | tool-use loop | one narrow task; extract/normalize; cite evidence; **no** final severity | **live LLM agent (PRIMARY)** via the agent-neutral headless connector (claude = T1 strict-MCP; opencode/gemini/codex = T2 opt-in) **+** deterministic real-tool floor (T0; regression floor) / generic shell |
 | **Critic** | evaluator-optimizer | reject unsupported, find contradictions, drive retry | deterministic structural (always; **sole promoter**) **+ advisory Tier-2 LLM judge** (`adapters/judge.py`, provider-flexible, fail-soft, never promotes) |
 | **Budget Router** | routing | cheap-vs-strong selection; escalate on retry/contradiction | static map + escalate-on-retry |
-| **Prompt-Injection Guard** | — | spotlight + scan evidence; alert, never execute | deterministic scanner (always) |
-| **Evidence Manager** | — | hashes, read-only posture, derived registry, claim↔evidence map | always real |
+| **Prompt-Injection Guard** | - | spotlight + scan evidence; alert, never execute | deterministic scanner (always) |
+| **Evidence Manager** | - | hashes, read-only posture, derived registry, claim↔evidence map | always real |
 
 **The agent loop (per task).** The Executor runs a bounded tool-use loop: it receives one narrow
 task contract + the **spotlighted** evidence (data, never instructions), calls the typed MCP tools,
 and returns evidence-anchored claims (each with a real `tool_call_id` + `source_sha256`). It never
 assigns final severity and never sees other tasks' raw evidence. The **run loop** around it is the
 self-correction cycle in §5: dispatch → collect → critique → decide → (retry with a tightened
-contract) — driven by code, not by the model.
+contract) - driven by code, not by the model.
 
 ## 4. Data-flow (one investigation)
 
@@ -153,7 +153,7 @@ INIT
   They gate different transitions.
 - `RunState` is persisted atomically (`run_state.json`, temp+rename) for crash-safe `resume`; the
   cockpit's cooperative pause stops at one of these boundaries (always resumable).
-- **Modes are config, not separate code** — `manual` (one step per call), `review_only` (plan, stop),
+- **Modes are config, not separate code** - `manual` (one step per call), `review_only` (plan, stop),
   `auto_human_loop` (run to a meaningful gate), `auto` (run to terminal under the caps).
 
 ## 6. Security boundaries
@@ -167,10 +167,10 @@ flowchart TB
     subgraph UNTRUSTED["HOSTILE / UNTRUSTED INPUTS"]
         EV["Evidence data<br/>(EVTX, registry, prefetch,<br/>$MFT, images, memory)"]
         AG["LLM agent<br/>(proposes claims only)"]
-        A2A["Remote A2A agent<br/>(Epic P — untrusted by default)"]
+        A2A["Remote A2A agent<br/>(Epic P - untrusted by default)"]
     end
 
-    subgraph POLICY["SIFTMesh forensic policy layer — code-decided, always on"]
+    subgraph POLICY["SIFTMesh forensic policy layer - code-decided, always on"]
         direction TB
         B1{{"① Evidence-vault boundary<br/>read-only · hash-before-analysis"}}
         B4{{"④ Evidence-as-hostile boundary<br/>spotlight DATA · injection ledger"}}
@@ -212,7 +212,7 @@ flowchart TB
 | ④ | Evidence-as-hostile | spotlight + injection ledger | `adapters/spotlight.py` | `test_bypass_injection.py` |
 | ⑤ | Critic | anchor-or-reject | `orchestrator/critic.py` | `test_bypass_claim_no_toolcall.py` |
 
-**Why boundary ② is strong:** the core path is **in-process typed Python lib calls** — 8 of the 10
+**Why boundary ② is strong:** the core path is **in-process typed Python lib calls** - 8 of the 10
 tools never spawn a subprocess, so there is no command string to inject into at all. Only image
 extraction (Sleuth Kit) and memory triage (Volatility 3) shell out, and those use **fixed-argv,
 `shell=False`** with no evidence string interpolated into a command (PLAN/08). See
@@ -222,7 +222,7 @@ extraction (Sleuth Kit) and memory triage (Volatility 3) shell out, and those us
 
 ```
 siftmesh_core/
-  cli.py                 # Typer CLI — the source of truth
+  cli.py                 # Typer CLI - the source of truth
   config.py              # SiftmeshSettings (+ agent_aliases · judge_api_base · judge_drop_params) · save_agent_selection
   secrets_env.py         # provider API keys → 600-perm ~/.config/siftmesh/.env (never in siftmesh.toml)
   orchestrator/          # state_machine · workflow_runner · planner · critic · ultraworker · decide · budget_router

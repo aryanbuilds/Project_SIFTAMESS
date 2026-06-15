@@ -447,8 +447,8 @@ def _build_tool_map(routed: list[RoutedArtifact]) -> str:
         "",
         "## Cross-cutting",
         "",
-        f"- `{TIMELINE_TOOL}` — unified chronology across event-log / prefetch / $MFT artifacts.",
-        f"- `{VALIDATION_TOOL}` — deterministic claim-evidence validation (used by the critic).",
+        f"- `{TIMELINE_TOOL}` - unified chronology across event-log / prefetch / $MFT artifacts.",
+        f"- `{VALIDATION_TOOL}` - deterministic claim-evidence validation (used by the critic).",
         "",
     ]
     return "\n".join(lines)

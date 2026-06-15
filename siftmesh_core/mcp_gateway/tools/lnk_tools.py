@@ -1,4 +1,4 @@
-"""LNK / JumpList tool — shortcuts + recent-item destinations (real, in-process).
+"""LNK / JumpList tool - shortcuts + recent-item destinations (real, in-process).
 
 Wraps ``LnkParse3`` (+ ``olefile`` for AutomaticDestinations OLE compounds) via the backend's
 ``parse_lnk_jumplists``. One tool covers ``.lnk`` files and both JumpList kinds

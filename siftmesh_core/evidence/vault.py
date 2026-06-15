@@ -1,4 +1,4 @@
-"""Evidence vault integrator — the real ``init-case`` (B7).
+"""Evidence vault integrator - the real ``init-case`` (B7).
 
 Wires B1-B6, B8, B9 into one command: create the run dir, hash every original
 (read-only, streaming, with a progress/ETA counter for large ingest), write the
@@ -70,7 +70,7 @@ def init_case(
     """Ingest evidence into a fresh run dir; return its :class:`RunPaths`.
 
     ``brief_path`` (optional) is the operator's TRUSTED incident briefing FILE; ``objective_text``
-    (optional) is operator objective/steering text supplied INLINE (no file). Either — or BOTH — is
+    (optional) is operator objective/steering text supplied INLINE (no file). Either - or BOTH - is
     rendered into ``context/incident_brief.md`` and recorded as manifest metadata only, never added
     to the hostile evidence ``files`` set. Passing both MERGES them (file background + inline
     steering) into one trusted objective. A brief that cannot be read fails closed

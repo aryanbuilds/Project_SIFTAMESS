@@ -1,4 +1,4 @@
-"""Shared pytest fixtures — the ONE real-fixture run factory + CLI harness (Epic M1).
+"""Shared pytest fixtures - the ONE real-fixture run factory + CLI harness (Epic M1).
 
 ``make_real_run`` is the consolidated builder every per-epic conftest delegates to
 (previously duplicated ~5x across EPIC_F/G/H/J/L): real committed forensic fixtures →
@@ -40,7 +40,7 @@ MakeRealRun = Callable[..., tuple[RunPaths, Path]]
 
 @pytest.fixture
 def runner() -> CliRunner:
-    # Do NOT pass mix_stderr= — removed in Typer 0.16+ (Click 8.2 alignment).
+    # Do NOT pass mix_stderr= - removed in Typer 0.16+ (Click 8.2 alignment).
     return CliRunner()
 
 

@@ -1,4 +1,4 @@
-"""Image extraction tool (Epic D deepening) — pull loose artifacts out of a disk image.
+"""Image extraction tool (Epic D deepening) - pull loose artifacts out of a disk image.
 
 ``extract_artifacts_from_image`` runs The Sleuth Kit (SIFT-lane, fixed-argv) over an
 ``.E01``/raw image to extract the high-value Windows artifacts into

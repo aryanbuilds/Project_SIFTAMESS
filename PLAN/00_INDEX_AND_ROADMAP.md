@@ -1,21 +1,21 @@
-# SIFTMesh — Master Index & Roadmap
+# SIFTMesh - Master Index & Roadmap
 
 _Plan set version 1.0 · authored 2026-06-04 · expands `OVERALL_PLAN_DETAILED.md` into a Plan → Epic → Task structure._
 
-> **Fact-hygiene note (read first).** The scope drivers below — submission deadline, the 6 judging criteria, the 8 mandatory artifacts, and the real tool list (tool/connector licenses are **not a blocker** — replaceable; see `PLAN/08 §0.1`) — come from research against `findevil.devpost.com` and primary tool/SDK sources. **Re-confirm the deadline, judging rubric, and artifact list against the live `findevil.devpost.com/rules` page before locking the schedule.** The claim "Protocol SIFT is a config/skill layer, not an MCP server" is **research-confirmed** (against `teamdfir/protocol-sift` — see `PLAN/09_PROTOCOL_SIFT_INTEGRATION.md`); the chosen **hybrid** architecture remains robust whether or not Protocol SIFT exposes MCP.
+> **Fact-hygiene note (read first).** The scope drivers below - submission deadline, the 6 judging criteria, the 8 mandatory artifacts, and the real tool list (tool/connector licenses are **not a blocker** - replaceable; see `PLAN/08 §0.1`) - come from research against `findevil.devpost.com` and primary tool/SDK sources. **Re-confirm the deadline, judging rubric, and artifact list against the live `findevil.devpost.com/rules` page before locking the schedule.** The claim "Protocol SIFT is a config/skill layer, not an MCP server" is **research-confirmed** (against `teamdfir/protocol-sift` - see `PLAN/09_PROTOCOL_SIFT_INTEGRATION.md`); the chosen **hybrid** architecture remains robust whether or not Protocol SIFT exposes MCP.
 >
 > **Real-only delivery (no mocks/placeholders): see `PLAN/08_REAL_TOOL_STACK.md` (authoritative, research-confirmed).**
 
-> **IMPLEMENTATION STATUS (current — 2026-06-11, supersedes the "ZERO implementation" framing below).**
-> The MVP spine is **shipped and green**: Epics **A–N core + L + M** plus the post-MVP refinements —
+> **IMPLEMENTATION STATUS (current - 2026-06-11, supersedes the "ZERO implementation" framing below).**
+> The MVP spine is **shipped and green**: Epics **A–N core + L + M** plus the post-MVP refinements -
 > agent-neutral connectors (**Epic Q**, `PLAN/13`), the **Textual cockpit + one-command `setup`/`tui`**
 > (**Epic O**, `PLAN/14`), one-command objective-driven `run --auto` (`--brief`/`--objective`),
 > per-family task aggregation + executor tiering, the advisory **Tier-2 judge**, and space-aware
-> `setup`/`prune`/`merge` (`PLAN/11`). Orchestration is the native deterministic FSM — **LangGraph and
+> `setup`/`prune`/`merge` (`PLAN/11`). Orchestration is the native deterministic FSM - **LangGraph and
 > CAO evaluated and rejected** (ADR `PLAN/12`). Real end-to-end runs against forensic evidence remain
 > maintainer-gated (CLAUDE.md §2B). The planning text below is retained as the historical record.
 >
-> **Winning MVP (narrow but deep) — the non-cuttable spine:** `init-case` (hash + **custody**) → live agent plans tasks → typed **real** tools run → every claim cites `artifact` + `sha256` + `tool_call_id` → **deterministic critic rejects/downgrades unsupported claims** → **retry _or follow-up task_** for coverage gaps → final report (confirmed + labelled-inferred only) → **replayable chain-of-custody audit**. Cut TUI / A2A / extra tools / broad parsers **before** cutting the live agent, the critic, the evidence + claim + **custody** ledgers, or replay. Protocol SIFT integration → `PLAN/09`.
+> **Winning MVP (narrow but deep) - the non-cuttable spine:** `init-case` (hash + **custody**) → live agent plans tasks → typed **real** tools run → every claim cites `artifact` + `sha256` + `tool_call_id` → **deterministic critic rejects/downgrades unsupported claims** → **retry _or follow-up task_** for coverage gaps → final report (confirmed + labelled-inferred only) → **replayable chain-of-custody audit**. Cut TUI / A2A / extra tools / broad parsers **before** cutting the live agent, the critic, the evidence + claim + **custody** ledgers, or replay. Protocol SIFT integration → `PLAN/09`.
 
 ---
 
@@ -25,19 +25,19 @@ The work is decomposed three levels deep: **Plan (file) → Epic (A–Q) → Tas
 
 | File | Epics | Theme |
 |---|---|---|
-| `00_INDEX_AND_ROADMAP.md` (this) | — | Index, deltas, criteria matrix, schedule, risks, roadmap |
-| `01_ARCHITECTURE.md` | — | Hybrid architecture, layers, security boundaries, state machine, stack |
+| `00_INDEX_AND_ROADMAP.md` (this) | - | Index, deltas, criteria matrix, schedule, risks, roadmap |
+| `01_ARCHITECTURE.md` | - | Hybrid architecture, layers, security boundaries, state machine, stack |
 | `02_PLAN_foundation_evidence.md` | A, B, C | Skeleton · Evidence vault · Schemas & ledgers |
 | `03_PLAN_mcp_tool_gateway.md` | D | Typed, evidence-safe MCP tool gateway |
 | `04_PLAN_orchestration_critic.md` | E, F, G, H | Planner · Executors · **Critic/self-correction (hero)** · State machine |
 | `05_PLAN_agents_automation.md` | I, **P** | Agent profiles · adapters · automation modes · **A2A interop (Epic P, stretch)** |
 | `06_PLAN_reports_demo_security.md` | J, K, L | Reports/replay · Demo case · **Threat model + bypass suite** |
 | `07_PLAN_testing_docs_submission.md` | M, N, O | Testing/CI · Docs & submission matrix · TUI |
-| `08_REAL_TOOL_STACK.md` | — | Authoritative real-tool/SDK stack (no mocks); licenses; gated upgrades |
-| `09_PROTOCOL_SIFT_INTEGRATION.md` | — | Protocol SIFT (~/.claude) layer: env-only inspect/govern |
-| `10_EVIDENCE_ACCESS_LAYER.md` | — | Disk-image / memory evidence access (Sleuthkit, Volatility) |
-| `11_PLAN_setup_space_merge.md` | — | `doctor --setup`, space estimator, `prune`, cross-run `merge` |
-| `12_ADR_orchestration_engine.md` | — | **ADR: keep the native FSM; reject LangGraph + CAO** (harvest Tier-2 judge + Sigma) |
+| `08_REAL_TOOL_STACK.md` | - | Authoritative real-tool/SDK stack (no mocks); licenses; gated upgrades |
+| `09_PROTOCOL_SIFT_INTEGRATION.md` | - | Protocol SIFT (~/.claude) layer: env-only inspect/govern |
+| `10_EVIDENCE_ACCESS_LAYER.md` | - | Disk-image / memory evidence access (Sleuthkit, Volatility) |
+| `11_PLAN_setup_space_merge.md` | - | `doctor --setup`, space estimator, `prune`, cross-run `merge` |
+| `12_ADR_orchestration_engine.md` | - | **ADR: keep the native FSM; reject LangGraph + CAO** (harvest Tier-2 judge + Sigma) |
 | `13_PLAN_agent_neutral_connectors.md` | **Q** | Agent-neutral headless connectors + onboarding (ACP round-2) |
 | `14_PLAN_cockpit_onboarding.md` | **O** | **Textual cockpit TUI + unified `setup`** (ADR: Textual over Ratatui) |
 
@@ -49,25 +49,25 @@ Each Epic file carries: goal, judging-criteria mapping, dependencies, a **full T
 
 SIFTMesh is a **CLI-first, evidence-safe, agent-agnostic control plane for autonomous DFIR** on SANS SIFT / Protocol SIFT. It turns a forensic investigation into a deterministic state machine that dispatches narrow task contracts to agents, runs typed read-only forensic tools, records every finding as an evidence-anchored claim, runs an adversarial critic that rejects unsupported claims and drives self-correction, and produces replayable, judge-ready reports. **The CLI is the source of truth; the LLM proposes, deterministic code decides.**
 
-**Protocol stack (who does what):** **MCP = agent→tool** (typed SIFT forensic tools) · **agent connectors = agent→runtime** (the agent-neutral headless adapter — Claude Code / Gemini / Codex / OpenCode; Epic Q, `PLAN/13`) · **A2A = agent→agent** (Agent Card discovery + remote delegation, optional stretch) · **SIFTMesh = DFIR control plane** (policy, evidence, claims, retries, reports). **CAO was evaluated and rejected** (it puts an LLM supervisor in the routing seat — ADR `PLAN/12`); the native deterministic FSM is kept. MCP and A2A are complementary; A2A never replaces SIFTMesh's governance (see Epic P + `01_ARCHITECTURE.md §2.1`).
+**Protocol stack (who does what):** **MCP = agent→tool** (typed SIFT forensic tools) · **agent connectors = agent→runtime** (the agent-neutral headless adapter - Claude Code / Gemini / Codex / OpenCode; Epic Q, `PLAN/13`) · **A2A = agent→agent** (Agent Card discovery + remote delegation, optional stretch) · **SIFTMesh = DFIR control plane** (policy, evidence, claims, retries, reports). **CAO was evaluated and rejected** (it puts an LLM supervisor in the routing seat - ADR `PLAN/12`); the native deterministic FSM is kept. MCP and A2A are complementary; A2A never replaces SIFTMesh's governance (see Epic P + `01_ARCHITECTURE.md §2.1`).
 
 ---
 
-## 2. What changed & why — deltas vs `OVERALL_PLAN_DETAILED.md` (the "improve" half)
+## 2. What changed & why - deltas vs `OVERALL_PLAN_DETAILED.md` (the "improve" half)
 
 The request was to **analyze and improve**, not only restructure. The substantive improvements:
 
 | # | Change | Why |
 |---|---|---|
-| Δ1 | **12-day schedule → 11-day reality**, with **2 reserved no-code days** for SIFT-VM validation + video + Devpost submission. | Submission closes **Jun 15, 2026, 11:45 PM EDT**; today is Jun 4 (~11 days). The original assumed 12 days and left submission/recording friction unscheduled — a classic deadline-day failure mode. |
-| Δ2 | **Two new Epics the original had no days for:** **L — Security & Threat Model** (with a *bypass-test suite*) and **M — Testing & CI** (threaded as TDD, not bolted on). | "Constraint Implementation" and "Audit Trail Quality" are **two of six equally-weighted judged criteria**, and constraints must be *architectural, bypass-tested* — not prose. The original plan had testing only implicitly and no threat model. |
-| Δ3 | **MCP gateway reframed** from "implement forensic parsers" to **thin, audited, evidence-safe wrappers** around the best **real** tools (license not a blocker — replaceable backends; see `PLAN/08 §0.1`, §5) — 8 real in-process backends now (`hashlib`/`evtx`/`regipy`/`pyscca`/`mft` + own-code; see `PLAN/08_REAL_TOOL_STACK.md §3`), with Plaso/SIFT-lane CLIs as gated upgrades behind the same typed interface (no placeholder backends). | Protocol SIFT + SIFT Workstation already ship 200+ tools; reimplementing parsers in 11 days is wasteful and risky. The wrapper's value is *typed output + provenance + safety + audit*, not parsing. |
+| Δ1 | **12-day schedule → 11-day reality**, with **2 reserved no-code days** for SIFT-VM validation + video + Devpost submission. | Submission closes **Jun 15, 2026, 11:45 PM EDT**; today is Jun 4 (~11 days). The original assumed 12 days and left submission/recording friction unscheduled - a classic deadline-day failure mode. |
+| Δ2 | **Two new Epics the original had no days for:** **L - Security & Threat Model** (with a *bypass-test suite*) and **M - Testing & CI** (threaded as TDD, not bolted on). | "Constraint Implementation" and "Audit Trail Quality" are **two of six equally-weighted judged criteria**, and constraints must be *architectural, bypass-tested* - not prose. The original plan had testing only implicitly and no threat model. |
+| Δ3 | **MCP gateway reframed** from "implement forensic parsers" to **thin, audited, evidence-safe wrappers** around the best **real** tools (license not a blocker - replaceable backends; see `PLAN/08 §0.1`, §5) - 8 real in-process backends now (`hashlib`/`evtx`/`regipy`/`pyscca`/`mft` + own-code; see `PLAN/08_REAL_TOOL_STACK.md §3`), with Plaso/SIFT-lane CLIs as gated upgrades behind the same typed interface (no placeholder backends). | Protocol SIFT + SIFT Workstation already ship 200+ tools; reimplementing parsers in 11 days is wasteful and risky. The wrapper's value is *typed output + provenance + safety + audit*, not parsing. |
 | Δ4 | **Explicit criteria→Epic mapping** + an **8-artifact traceability matrix and go/no-go checklist**. | Makes every task accountable to a scored dimension and guarantees no mandatory submission artifact is missed. |
-| Δ5 | **Linux-first (dev + target = SANS SIFT / Ubuntu)** — `pathlib` discipline (good hygiene), **Ubuntu-primary CI (= the SIFT target)**, and a **deterministic-governance + recorded-golden reproducibility floor** under the live autonomous agent (the agent is the headline; the deterministic critic/decide + a recorded real run give a no-keys reproducible regression — *not* a mock; see `PLAN/08 §6`). | Development and target are both Linux (SANS SIFT / Ubuntu); the plan is authored on Windows but no code is built or run there, so Windows is not a constraint (see `PLAN/08 §0.1`). The in-process real tools install natively on Linux; the live agent needs an LLM at run time, while the recorded-golden artifacts reproduce with no API keys/network. |
+| Δ5 | **Linux-first (dev + target = SANS SIFT / Ubuntu)** - `pathlib` discipline (good hygiene), **Ubuntu-primary CI (= the SIFT target)**, and a **deterministic-governance + recorded-golden reproducibility floor** under the live autonomous agent (the agent is the headline; the deterministic critic/decide + a recorded real run give a no-keys reproducible regression - *not* a mock; see `PLAN/08 §6`). | Development and target are both Linux (SANS SIFT / Ubuntu); the plan is authored on Windows but no code is built or run there, so Windows is not a constraint (see `PLAN/08 §0.1`). The in-process real tools install natively on Linux; the live agent needs an LLM at run time, while the recorded-golden artifacts reproduce with no API keys/network. |
 | Δ6 | **Self-correction elevated to "the hero"** and engineered as a deterministic, reproducible sequence (not emergent). | "Autonomous Execution Quality / real-time self-correction" is the **designated tiebreaker**. A **deterministic engine over REAL tool output** guarantees it fires every demo run: a genuinely under-specified first-pass contract makes the real claim fail the Critic, and the tightened retry makes the 2nd real attempt pass. Determinism comes from real tools over fixed committed evidence with no LLM and no randomness (see `PLAN/08_REAL_TOOL_STACK.md §6`); emergent LLM correction is shown as an upgrade in the video. |
 | Δ7 | **The live autonomous agent is the product headline (core)**; the deterministic path is the reliability *floor*, not the headline. | The point is a genuinely autonomous investigator that figures out a black-box dataset on its own (see `PLAN/01` / `PLAN/08 §6`). The live LLM agent is core and never cut; the deterministic governance + a recorded-golden run is the regression/safety-net floor. CAO is *one* optional harness; the simplest headless adapter (`claude -p`/OpenCode) is the core path. |
 | Δ8 | **Hybrid Protocol-SIFT positioning** (optional SIFT-orchestration lane behind the same typed interface). | Aligns with the hackathon's "improve Protocol SIFT / how agents use SIFT tools" framing while keeping a portable, demoable core. |
-| Δ9 | **A2A (Agent2Agent) added at the interop layer** as a new **Epic P** (Agent Card discovery + remote delegation, governed by an `x_siftmesh` policy overlay), with the protocol stack made explicit (MCP=tools, A2A=agents, CAO=local harness). | The original plan hand-maintained the agent registry and modeled only local agents. A2A standardizes discovery and unlocks remote/opaque agents — while SIFTMesh keeps all governance — strengthening the interop story without weakening constraints. **Optional / not MVP-mandatory.** |
+| Δ9 | **A2A (Agent2Agent) added at the interop layer** as a new **Epic P** (Agent Card discovery + remote delegation, governed by an `x_siftmesh` policy overlay), with the protocol stack made explicit (MCP=tools, A2A=agents, CAO=local harness). | The original plan hand-maintained the agent registry and modeled only local agents. A2A standardizes discovery and unlocks remote/opaque agents - while SIFTMesh keeps all governance - strengthening the interop story without weakening constraints. **Optional / not MVP-mandatory.** |
 
 ---
 
@@ -77,7 +77,7 @@ The request was to **analyze and improve**, not only restructure. The substantiv
 - **6 judging criteria, equal weight** (see §4 matrix). Tiebreaker = **Autonomous Execution Quality** (self-correction).
 - **8 mandatory submission artifacts** (see §6 and Epic N).
 - **Environment:** must run on Linux / SANS SIFT Workstation (Ubuntu). Repo must be public with **MIT or Apache 2.0** license (we use **Apache 2.0**).
-- **Reference bar:** Valhuntir (SANS). **Our lane:** image-based post-breach triage. **Our edge:** evidence/claim ledger + adversarial critic + deterministic state machine + replayable audit — a forensic policy layer *above* the harness.
+- **Reference bar:** Valhuntir (SANS). **Our lane:** image-based post-breach triage. **Our edge:** evidence/claim ledger + adversarial critic + deterministic state machine + replayable audit - a forensic policy layer *above* the harness.
 
 ---
 
@@ -85,14 +85,14 @@ The request was to **analyze and improve**, not only restructure. The substantiv
 
 | # | Criterion (equal weight) | Primary Epics | Supporting |
 |---|---|---|---|
-| 1 | **Autonomous Execution Quality** — real-time self-correction *(tiebreaker)* | **G** (critic/self-correction), **H** (state machine), **K** (real self-correction scenario) | F, J, M5 |
-| 2 | **IR Accuracy** — hallucination mitigation, false-positive assessment | **C** (claim validators), **G** (critic), **J4** (accuracy report) | D9, K2, L4 |
+| 1 | **Autonomous Execution Quality** - real-time self-correction *(tiebreaker)* | **G** (critic/self-correction), **H** (state machine), **K** (real self-correction scenario) | F, J, M5 |
+| 2 | **IR Accuracy** - hallucination mitigation, false-positive assessment | **C** (claim validators), **G** (critic), **J4** (accuracy report) | D9, K2, L4 |
 | 3 | **Breadth & Depth** of analysis | **D** (8 typed tools), **E** (plan coverage), **K** (case realism) | I, J, N |
-| 4 | **Constraint Implementation** — architectural, bypass-tested guardrails | **L** (threat model + bypass suite), **B** (path policy), **D** (forbidden-tool registry) | C, H caps, M4 |
-| 5 | **Audit Trail Quality** — traceability, chain of custody, JSONL+timestamps | **B** (manifest/hashes), **D2** (audited exec), **J7** (replay) | C7 ledgers, H8, N8 |
-| 6 | **Usability & Documentation** — deployment, extensibility | **N** (docs/runbook), **A**/**H** (clean CLI), **M6** (CI) | K5, J, O |
+| 4 | **Constraint Implementation** - architectural, bypass-tested guardrails | **L** (threat model + bypass suite), **B** (path policy), **D** (forbidden-tool registry) | C, H caps, M4 |
+| 5 | **Audit Trail Quality** - traceability, chain of custody, JSONL+timestamps | **B** (manifest/hashes), **D2** (audited exec), **J7** (replay) | C7 ledgers, H8, N8 |
+| 6 | **Usability & Documentation** - deployment, extensibility | **N** (docs/runbook), **A**/**H** (clean CLI), **M6** (CI) | K5, J, O |
 
-> If two submissions tie, criterion 1 decides — so the deterministic self-correction sequence (Epic G + K) is the highest-leverage investment in the plan.
+> If two submissions tie, criterion 1 decides - so the deterministic self-correction sequence (Epic G + K) is the highest-leverage investment in the plan.
 
 ---
 
@@ -108,7 +108,7 @@ The request was to **analyze and improve**, not only restructure. The substantiv
 | F | Executor Adapters & Dispatch/Collect | 04 | M | 1,4,5 |
 | G | **Critic & Self-Correction (HERO)** | 04 | L | 1,2,4,5 |
 | H | Ultraworker State Machine & `run` | 04 | L | 1,4,5,6 |
-| I | Agent Profiles & Adapters (CAO rejected — ADR `PLAN/12`) | 05 | M | 3,6 |
+| I | Agent Profiles & Adapters (CAO rejected - ADR `PLAN/12`) | 05 | M | 3,6 |
 | J | Reports & Replay | 06 | L | 2,5,6 |
 | K | Demo Case & Self-Correction Scenario | 06 | M | 1,2,3 |
 | L | Security & Threat Model + Bypass Suite | 06 | L | 4,5,2 |
@@ -163,20 +163,20 @@ all J/K/L/M ──> N (docs) ──> N9 (GO/NO-GO) ──> SUBMIT
 
 | Day | Date | Core focus | Threaded (L/M/J/K) | Cut-line if behind |
 |---|---|---|---|---|
-| 1 | Jun 4 | A: skeleton, Apache LICENSE, CLI stubs, run-dir, JSONL logger, Ubuntu-primary CI (= SIFT target) | L1 threat_model draft; M1 fixtures | — |
-| 2 | Jun 5 | B: evidence vault, manifest, hashes, **path policy**, audit | L2 spec; M2 evidence/path tests | — |
-| 3 | Jun 6 | C: schemas + ledgers — **freeze schemas** | J1 loader, J2 determinism; M2 schema tests | — |
+| 1 | Jun 4 | A: skeleton, Apache LICENSE, CLI stubs, run-dir, JSONL logger, Ubuntu-primary CI (= SIFT target) | L1 threat_model draft; M1 fixtures | - |
+| 2 | Jun 5 | B: evidence vault, manifest, hashes, **path policy**, audit | L2 spec; M2 evidence/path tests | - |
+| 3 | Jun 6 | C: schemas + ledgers - **freeze schemas** | J1 loader, J2 determinism; M2 schema tests | - |
 | 4 | Jun 7 | D: real in-process tool gateway (`evtx`/`regipy`/`pyscca`/`mft`) + **forbidden-tool registry** | L3 spec; J5 dataset-doc gen | trim to 4 core tools |
-| 5 | Jun 8 | E: plan/task generation; review-only | K1 demo evidence + K2 ground truth | — |
-| 6 | Jun 9 | F: **deterministic real-tool dispatch/collect** | K3 real self-correction (under-specified→retry→corrected); M5 e2e skeleton | — |
-| 7 | Jun 10 | G: critic + retry/escalate + report generators | L4 spotlighting; J3/J4 reports — **freeze the hero** | — |
+| 5 | Jun 8 | E: plan/task generation; review-only | K1 demo evidence + K2 ground truth | - |
+| 6 | Jun 9 | F: **deterministic real-tool dispatch/collect** | K3 real self-correction (under-specified→retry→corrected); M5 e2e skeleton | - |
+| 7 | Jun 10 | G: critic + retry/escalate + report generators | L4 spotlighting; J3/J4 reports - **freeze the hero** | - |
 | 8 | Jun 11 | H: `run` modes/gates/caps/resume | L5 bypass suite; J7 text replay; M2 mode tests | defer `replay.html` |
 | 9 | Jun 12 | **Spine lock:** live autonomous-agent run + genuine self-correction; record the golden run; CI | M3 golden, M5 e2e, M6 CI; J6/J8 wiring | cut extra harnesses/CAO (keep the core `claude -p` agent) |
-| 10 | Jun 13 | Hardening, coverage; N1/N3/N4/N6 + L6 diagram + N8 logs — **freeze code** | — | cut O (TUI), K4 injection event |
-| 11a | Jun 14 | *No-code:* validate on the SANS SIFT VM (Linux-native); N2 try_it_out + judge_runbook; N5; N7 script | — | ship Ubuntu CI-Linux evidence if the local VM is unavailable |
-| 11b | Jun 15 | *No-code:* record ≤5-min video; make repo public; **N9 go/no-go**; Devpost submit w/ buffer | — | submit minimum-winning even if polish slips |
+| 10 | Jun 13 | Hardening, coverage; N1/N3/N4/N6 + L6 diagram + N8 logs - **freeze code** | - | cut O (TUI), K4 injection event |
+| 11a | Jun 14 | *No-code:* validate on the SANS SIFT VM (Linux-native); N2 try_it_out + judge_runbook; N5; N7 script | - | ship Ubuntu CI-Linux evidence if the local VM is unavailable |
+| 11b | Jun 15 | *No-code:* record ≤5-min video; make repo public; **N9 go/no-go**; Devpost submit w/ buffer | - | submit minimum-winning even if polish slips |
 
-**Cut order (first→last):** O (TUI) → **A2A / Epic P** → `replay.html` (keep text replay) → MCP tools beyond the core → optional prompt-injection demo event. **The live autonomous agent is NOT in the cut order — it is the product headline (core).** CAO and *extra* harnesses are optional (the simplest `claude -p`/OpenCode headless adapter is the core path); the deterministic governance + recorded-golden run is the regression/safety-net floor (also never cut). *(Build priority: **P1 core incl. the autonomous agent** > P2 CAO/extra harnesses > P3 A2A > P4 TUI — least-important cut first.)*
+**Cut order (first→last):** O (TUI) → **A2A / Epic P** → `replay.html` (keep text replay) → MCP tools beyond the core → optional prompt-injection demo event. **The live autonomous agent is NOT in the cut order - it is the product headline (core).** CAO and *extra* harnesses are optional (the simplest `claude -p`/OpenCode headless adapter is the core path); the deterministic governance + recorded-golden run is the regression/safety-net floor (also never cut). *(Build priority: **P1 core incl. the autonomous agent** > P2 CAO/extra harnesses > P3 A2A > P4 TUI - least-important cut first.)*
 **Never cut:** the 8 artifacts · **the autonomous agent + its genuine self-correction** · the deterministic governance (critic/decide/evidence-safety) + the recorded-golden floor · the bypass suite.
 
 ---
@@ -185,14 +185,14 @@ all J/K/L/M ──> N (docs) ──> N9 (GO/NO-GO) ──> SUBMIT
 
 A **live autonomous-agent run** of
 `siftmesh run ./examples/demo_case --evidence ./examples/demo_case/evidence --auto`
-(and the `--auto-human-loop` variant for the video) — a real LLM agent investigates the **real demo evidence blind** with the real in-process tools (`evtx`/`regipy`/`pyscca`/`mft`; see `PLAN/08_REAL_TOOL_STACK.md`), governed by deterministic code — **plus a committed recorded-golden run** (its real ledgers) so the artifacts also reproduce on a fresh clone on Ubuntu/SANS SIFT with **no API keys and no network**. The run:
+(and the `--auto-human-loop` variant for the video) - a real LLM agent investigates the **real demo evidence blind** with the real in-process tools (`evtx`/`regipy`/`pyscca`/`mft`; see `PLAN/08_REAL_TOOL_STACK.md`), governed by deterministic code - **plus a committed recorded-golden run** (its real ledgers) so the artifacts also reproduce on a fresh clone on Ubuntu/SANS SIFT with **no API keys and no network**. The run:
 
 1. Produces every required run artifact (`evidence_manifest.json`, `tasks/*.yaml`, `results/*.json`, `claim_ledger.jsonl`, `unsupported_claims.jsonl`, `contradiction_ledger.jsonl`, `agent_calls.jsonl`, `tool_calls.jsonl`, `retries.jsonl`, `final_report.md`, `accuracy_report.md`).
-2. Shows a visible, **genuine** self-correction — the agent forms a real unsupported/over-broad claim, the deterministic critic rejects it → ultraworker-retry with the critic's reason fed back → the agent corrects to an evidence-backed claim — with the unsupported claim appearing only in the rejected section (never as a fact).
+2. Shows a visible, **genuine** self-correction - the agent forms a real unsupported/over-broad claim, the deterministic critic rejects it → ultraworker-retry with the critic's reason fed back → the agent corrects to an evidence-backed claim - with the unsupported claim appearing only in the rejected section (never as a fact).
 3. Has the **bypass-test suite green** (write-escape blocked, forbidden tool un-exposable, injection logged-not-executed, evidence read-only, claim-without-`tool_call_id` rejected).
 4. Satisfies **all 8 mandatory artifacts** (§6 + Epic N matrix + N9 checklist).
 
-> **Evidence note.** The real demo evidence — host-triage artifacts (EVTX / prefetch / registry hive / `$MFT`) analyzed *on Linux* — is **maintainer-provided on the SANS SIFT workstation** and is therefore **integration-gated** (K1/K3/M3/M5; see `PLAN/08_REAL_TOOL_STACK.md §4`). Real evidence (not tool buildability) is the only gate; every backend installs natively on Linux. The in-process real tools themselves run **locally now with no API keys/network** and are independently testable against any small committed real artifact.
+> **Evidence note.** The real demo evidence - host-triage artifacts (EVTX / prefetch / registry hive / `$MFT`) analyzed *on Linux* - is **maintainer-provided on the SANS SIFT workstation** and is therefore **integration-gated** (K1/K3/M3/M5; see `PLAN/08_REAL_TOOL_STACK.md §4`). Real evidence (not tool buildability) is the only gate; every backend installs natively on Linux. The in-process real tools themselves run **locally now with no API keys/network** and are independently testable against any small committed real artifact.
 
 Everything else (live agents, CAO, **A2A interop (Epic P)**, `replay.html`, tools beyond the core four, injection demo event, TUI) is an **upgrade** and a **legal cut**.
 
@@ -206,29 +206,29 @@ Everything else (live agents, CAO, **A2A interop (Epic P)**, `replay.html`, tool
 | R2 | Reports non-deterministic → golden tests flap | Med | Med | J2 determinism contract (UTC, sorted, header-segregated); M3 enforces | J2, M3 |
 | R3 | Linux-native breakage surfaces late on the SIFT target | Low | Med | Dev + target are both Linux (SANS SIFT / Ubuntu), so there is no cross-OS gap; `pathlib` discipline; Ubuntu-primary CI from Day 1–2; SANS SIFT VM validation Day 11a | M6, N2 |
 | R4 | A submission artifact missed | Low | Fatal | 8-artifact matrix + N9 go/no-go | N |
-| R5 | Live-agent harness fragility (env-dependent) — now **core** | High | High | The autonomous agent is core, so don't depend on a heavy harness: the simplest headless adapter (`claude -p`/OpenCode) is the core path; CAO + extra harnesses are optional; the recorded-golden run + deterministic governance is the floor if a live run fails in the room | I, roadmap |
+| R5 | Live-agent harness fragility (env-dependent) - now **core** | High | High | The autonomous agent is core, so don't depend on a heavy harness: the simplest headless adapter (`claude -p`/OpenCode) is the core path; CAO + extra harnesses are optional; the recorded-golden run + deterministic governance is the floor if a live run fails in the room | I, roadmap |
 | R6 | Bypass test asserts prompt text not behavior (false security) | Med | High (crit. 4) | Tests assert the code gate's *effect*; "LLM proposes/code decides" | L5, M4 |
-| R7 | Project-license requirement (public repo must be MIT/Apache-2.0) not met | Low | Med | Keep `LICENSE` = Apache-2.0; do **not copy source** from restrictive projects. Tool/connector licenses are **not a blocker** — runtime deps are replaceable (see `PLAN/08 §0.1`, §5) | N6 |
+| R7 | Project-license requirement (public repo must be MIT/Apache-2.0) not met | Low | Med | Keep `LICENSE` = Apache-2.0; do **not copy source** from restrictive projects. Tool/connector licenses are **not a blocker** - runtime deps are replaceable (see `PLAN/08 §0.1`, §5) | N6 |
 | R8 | Video/submission friction on Jun 15 | Med | Fatal | Two no-code days reserved with buffer | N7, roadmap |
 | R9 | Scope creep (TUI/web/extra tools) | Med | Med | Cut-line invariant + explicit cut order; O gated on CLI-stable | roadmap, O |
 | R10 | Overclaiming court-ready forensic soundness | Low | Med (credibility) | Explicit non-goal in report limitations + `evidence_integrity.md` | J3, N4 |
-| R11 | A scope-driver fact (deadline/rubric) shifted on the live site | Low | High | Re-confirm `findevil.devpost.com/rules` before Day 1 schedule lock | — |
-| R12 | A2A adds complexity / a new remote-agent attack surface | Med | Med | A2A is optional stretch (Epic P), cut before it touches the hero; remote agents **untrusted-by-default**, gated by conformance + policy overlay; output governed by the critic — surface already contained | Epic P, L |
+| R11 | A scope-driver fact (deadline/rubric) shifted on the live site | Low | High | Re-confirm `findevil.devpost.com/rules` before Day 1 schedule lock | - |
+| R12 | A2A adds complexity / a new remote-agent attack surface | Med | Med | A2A is optional stretch (Epic P), cut before it touches the hero; remote agents **untrusted-by-default**, gated by conformance + policy overlay; output governed by the critic - surface already contained | Epic P, L |
 
 ---
 
-## 11. Product roadmap (post-hackathon — first-class)
+## 11. Product roadmap (post-hackathon - first-class)
 
 Phased beyond Jun 15; each phase a one-line goal. These are explicitly **out of the 11-day MVP** and exist so the architecture's extensibility is legible.
 
 | Phase | Goal | Builds on |
 |---|---|---|
-| **R1 — Gated-backend hardening** | Harden the gated SIFT-lane / Plaso upgrade backends (EvtxECmd / PECmd / Plaso / MFTECmd / Volatility-3, behind the same typed interface as the shipped real in-process tools; see `PLAN/08_REAL_TOOL_STACK.md §4`), each with golden-output tests and digest/version pinning. | Epic D |
-| **R2 — Full SIFT-lane orchestration** | Drive the real 200+ SIFT / Protocol-SIFT tools on the SANS SIFT Workstation behind the same typed interface; inherit/extend Protocol SIFT skills. | Epics D, I |
-| **R3 — Live-agent & A2A integration** | Harden headless Claude Code / OpenCode / Codex / Gemini adapters + CAO; real cost-based Budget Router; parallel multi-agent fan-out; **graduate A2A** (Epic P) from discovery-only to full delegation + exposing SIFTMesh agents as A2A servers. | Epics F, I, **P**, H |
-| **R4 — Artifact breadth** | Add Amcache/ShimCache, USN Journal ($J), WMI-persistence, SRUM, ShellBags, browser-history parsers; **Sigma-rule detection** (rules as data, license-clean). | Epics D, E |
-| **R5 — Scale & search** | OpenSearch / Timesketch evidence indexing for retrieval-augmented planning over large multi-host cases. | Epics B, E, J |
-| **R6 — Operator UX & distribution** | Ratatui TUI cockpit (Epic O graduated); PyPI packaging, container image, signed releases, plugin SDK for custom tools/adapters. | Epics O, A |
+| **R1 - Gated-backend hardening** | Harden the gated SIFT-lane / Plaso upgrade backends (EvtxECmd / PECmd / Plaso / MFTECmd / Volatility-3, behind the same typed interface as the shipped real in-process tools; see `PLAN/08_REAL_TOOL_STACK.md §4`), each with golden-output tests and digest/version pinning. | Epic D |
+| **R2 - Full SIFT-lane orchestration** | Drive the real 200+ SIFT / Protocol-SIFT tools on the SANS SIFT Workstation behind the same typed interface; inherit/extend Protocol SIFT skills. | Epics D, I |
+| **R3 - Live-agent & A2A integration** | Harden headless Claude Code / OpenCode / Codex / Gemini adapters + CAO; real cost-based Budget Router; parallel multi-agent fan-out; **graduate A2A** (Epic P) from discovery-only to full delegation + exposing SIFTMesh agents as A2A servers. | Epics F, I, **P**, H |
+| **R4 - Artifact breadth** | Add Amcache/ShimCache, USN Journal ($J), WMI-persistence, SRUM, ShellBags, browser-history parsers; **Sigma-rule detection** (rules as data, license-clean). | Epics D, E |
+| **R5 - Scale & search** | OpenSearch / Timesketch evidence indexing for retrieval-augmented planning over large multi-host cases. | Epics B, E, J |
+| **R6 - Operator UX & distribution** | Ratatui TUI cockpit (Epic O graduated); PyPI packaging, container image, signed releases, plugin SDK for custom tools/adapters. | Epics O, A |
 
 ---
 

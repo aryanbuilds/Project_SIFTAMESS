@@ -1,4 +1,4 @@
-"""Investigation-plan schema (E4) — the ordered step graph the planner emits.
+"""Investigation-plan schema (E4) - the ordered step graph the planner emits.
 
 A :class:`InvestigationPlan` is the deterministic output of ``siftmesh plan``: an
 ordered DAG of steps (deep-context -> one executor per actionable artifact ->
@@ -57,7 +57,7 @@ class InvestigationPlan(StrictModel):
 
         Dependencies must reference an *earlier* step (already ``seen``), which
         enforces a topological order and so forbids both forward references and
-        cycles for free — the "ordered step graph" the docstring promises.
+        cycles for free - the "ordered step graph" the docstring promises.
         """
         ids = [s.step_id for s in self.steps]
         if len(ids) != len(set(ids)):

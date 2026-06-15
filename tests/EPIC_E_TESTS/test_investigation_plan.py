@@ -1,4 +1,4 @@
-"""E4 — investigation_plan.yaml: parses; unique ids; executor steps map to artifacts."""
+"""E4 - investigation_plan.yaml: parses; unique ids; executor steps map to artifacts."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""J1 — report loader: determinism, graceful-missing, strict/tolerant corruption handling."""
+"""J1 - report loader: determinism, graceful-missing, strict/tolerant corruption handling."""
 
 from __future__ import annotations
 

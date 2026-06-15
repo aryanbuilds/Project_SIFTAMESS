@@ -1,4 +1,4 @@
-"""Deterministic workflow runner (H3-H6, H8) — the Ultraworker engine.
+"""Deterministic workflow runner (H3-H6, H8) - the Ultraworker engine.
 
 ``run_engine`` drives one run through the frozen state machine
 (init → create_evidence_vault → deep_context → plan → dispatch → collect → critique → decide →
@@ -7,10 +7,10 @@ honouring approval gates (H5), persisting ``RunState`` atomically after every tr
 and emitting one orchestration event per transition/decision (H8). No LLM, fully deterministic.
 
 Mode policy (set by the caller via ``RunState.mode`` + ``single_step``):
-  * ``manual``          — one transition per call (``single_step=True``); gates auto-pass.
-  * ``review_only``     — plan, then stop (dispatch unreachable); gates auto-pass.
-  * ``auto_human_loop`` — run until a pending meaningful gate, then halt for ``approve``.
-  * ``auto``            — run to terminal; caps enforced; gates auto-pass.
+  * ``manual``          - one transition per call (``single_step=True``); gates auto-pass.
+  * ``review_only``     - plan, then stop (dispatch unreachable); gates auto-pass.
+  * ``auto_human_loop`` - run until a pending meaningful gate, then halt for ``approve``.
+  * ``auto``            - run to terminal; caps enforced; gates auto-pass.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ def _auto_handle_archives(
     tool) and the operator had to run ``decompress`` + ``ingest-derived`` by hand. Here each
     archive is decompressed once; the registered derived image is then picked up by the existing
     critique-driven derived re-ingest (G9), so the full-auto loop covers it end to end. Idempotent
-    (skips archives already decompressed — safe on resume); fail-soft (a missing ``7z`` / failed
+    (skips archives already decompressed - safe on resume); fail-soft (a missing ``7z`` / failed
     decompress is logged and skipped, never killing the run). bd 48me.
     """
     if not run.evidence_manifest.is_file():
@@ -209,7 +209,7 @@ def _decide(
     """DECIDE: aggregate per-task verdicts → loop (retry/follow_up) | report | halt.
 
     Mode policy: ``auto_human_loop``/``manual`` HALT on a per-task human_review/escalate (a human
-    resolves it off-engine). ``auto`` instead QUARANTINES the flagged task and proceeds — a single
+    resolves it off-engine). ``auto`` instead QUARANTINES the flagged task and proceeds - a single
     flagged task must not strand a 200-task run. The flagged claims were already kept out of the
     findings ledger by the critic (``_maybe_promote`` refuses ``_HUMAN``/``_REJECT``), so quarantine
     can never leak a fact; the items surface in the report's unsupported/injection appendices.
@@ -257,9 +257,9 @@ def _decide(
     if decision.action == "done":
         return state, next_state("decide", decision="done")
     if decision.action in ("retry", "follow_up"):
-        if state.iteration >= state.max_iterations:  # global cap (H4) — never loop unbounded
+        if state.iteration >= state.max_iterations:  # global cap (H4) - never loop unbounded
             # Hitting the cap means a task genuinely would not converge after max_iterations retry
-            # loops — a real "stop and ask a human" signal (CLAUDE §12), distinct from the
+            # loops - a real "stop and ask a human" signal (CLAUDE §12), distinct from the
             # single-flagged-task case the quarantine loop above already handles. Halt in all modes.
             log_event(audit, "cap_reached", cap="max_iterations", value=state.max_iterations)
             return state.model_copy(update={"blocked_gate": "retry"}), "decide"
@@ -289,7 +289,7 @@ def _decide(
             }
         )
         return state, next_state("decide", decision=decision.action)
-    # escalate / human_review in guided/manual modes — halt for a human (resolvable off-engine).
+    # escalate / human_review in guided/manual modes - halt for a human (resolvable off-engine).
     # (Full-auto can never reach here: the quarantine loop above resolved those actions.)
     return state.model_copy(update={"blocked_gate": "retry"}), "decide"
 
@@ -305,8 +305,8 @@ def run_engine(
     """Drive the persisted RunState forward; return the (possibly halted/terminal) state.
 
     ``should_stop`` (the TUI pause hook) is a cooperative checkpoint: when it returns True the
-    engine stops at the next SAFE boundary — only ever between FSM transitions, after the durable
-    ``write_run_state`` — so the returned/persisted state is consistent and a later ``run_engine``
+    engine stops at the next SAFE boundary - only ever between FSM transitions, after the durable
+    ``write_run_state`` - so the returned/persisted state is consistent and a later ``run_engine``
     call resumes from exactly the next state (identical artifacts to an uninterrupted run). Default
     ``None`` is byte-identical to the prior behaviour (golden + manual==auto unaffected).
     """
@@ -346,7 +346,7 @@ def run_engine(
         state = write_run_state(
             run, new_state.model_copy(update={"state": target, "terminal": terminal})
         )
-        # B3: per-stage wall-clock on the transition event. Engine-only channel — the golden
+        # B3: per-stage wall-clock on the transition event. Engine-only channel - the golden
         # recorder never runs run_engine, so these timed events never enter the golden bodies.
         log_event(
             audit,
@@ -359,7 +359,7 @@ def run_engine(
         if terminal:
             log_event(audit, "run_complete", run=run.run_id)
             break
-        # Cooperative pause (TUI): stop at this safe checkpoint — state is durable + consistent, so
+        # Cooperative pause (TUI): stop at this safe checkpoint - state is durable + consistent, so
         # the run is fully resumable. Only between transitions, never mid-_advance.
         if should_stop is not None and should_stop():
             log_event(audit, "paused", state=state.state, iteration=state.iteration)

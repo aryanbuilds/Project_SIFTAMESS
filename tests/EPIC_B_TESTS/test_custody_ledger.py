@@ -1,4 +1,4 @@
-"""B9: chain-of-custody ledger — validated append + re-hash verification."""
+"""B9: chain-of-custody ledger - validated append + re-hash verification."""
 
 from __future__ import annotations
 

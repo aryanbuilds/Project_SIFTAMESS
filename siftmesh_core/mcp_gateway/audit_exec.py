@@ -1,15 +1,15 @@
-"""Audited tool execution (D2) — the provenance keystone.
+"""Audited tool execution (D2) - the provenance keystone.
 
 Every typed tool runs through :func:`run_tool`: it allocates a deterministic
 ``TOOL-NNN`` id, stamps UTC start/end, runs the producer, writes the structured
 result under the run dir (path-policed), registers the derived artifact + a
 ``tool_invoked`` custody event, and appends exactly one fully-populated
-``ToolResult`` line to ``audit/tool_calls.jsonl`` — on success AND on failure
+``ToolResult`` line to ``audit/tool_calls.jsonl`` - on success AND on failure
 (criterion 5: every call is traceable). No tool bypasses this.
 
 A recoverable failure is logged as ``status=error`` and returned (the orchestrator
 decides retry). A missing backend (:class:`BackendUnavailableError`) is logged then
-re-raised — it fails closed rather than yielding a fake result.
+re-raised - it fails closed rather than yielding a fake result.
 """
 
 from __future__ import annotations
@@ -56,11 +56,11 @@ def _next_tool_call_id(run_root: Path | str) -> str:
 def _write_exclusion_root(
     run_root: Path | str, evidence_root: Path | str | None
 ) -> Path | str | None:
-    """The root to exclude from writes — the EXTERNAL original-evidence tree.
+    """The root to exclude from writes - the EXTERNAL original-evidence tree.
 
     A derived-artifact task (hth.2) resolves its source *under the run dir*, so its
     ``evidence_root`` is the run dir itself. There is then no external evidence to protect, and the
-    tool must be able to write its own outputs under the run — so return None (``safe_write_path``
+    tool must be able to write its own outputs under the run - so return None (``safe_write_path``
     still enforces run-dir containment). For a normal task (external evidence dir) it is unchanged.
     """
     if evidence_root is None:
@@ -221,7 +221,7 @@ def run_tool(
 
     # Indirect-injection guard (Project_SIFTAMESS-nkyo): a tool result is hostile-evidence-derived
     # and flows back into the agent context, so scan it (not only the agent's final message). The
-    # single chokepoint covering BOTH the floor and the live agent. Logged-only — never gates.
+    # single chokepoint covering BOTH the floor and the live agent. Logged-only - never gates.
     if status == "success" and payload:
         _scan_tool_result(
             run_root, tool_call_id, source_artifact, payload, evidence_root=evidence_root

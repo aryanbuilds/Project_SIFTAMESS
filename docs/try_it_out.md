@@ -1,7 +1,7 @@
-# Try it out — local deploy in 3 minutes
+# Try it out - local deploy in 3 minutes
 
 SIFTMesh runs on **Linux** (SANS SIFT / Ubuntu). It is `uv`-managed (not pip/venv). The path below
-needs **no API keys** — it runs the deterministic real-tool floor (tier **T0**) over a committed
+needs **no API keys** - it runs the deterministic real-tool floor (tier **T0**) over a committed
 public fixture. Going live (tier T1/T2) is one extra flag (§5).
 
 ## 1. Prerequisites
@@ -31,7 +31,7 @@ uv run siftmesh doctor --agents   # which coding agents are installed / authed /
 ```
 
 `doctor --agents` prints the honest **safety tiers** (T0–T3) and, for any not-ready agent, the exact
-fix (install / authenticate). A missing backend fails *closed* when invoked — never a fake result.
+fix (install / authenticate). A missing backend fails *closed* when invoked - never a fake result.
 
 ## 4. Run the zero-keys demo
 
@@ -54,10 +54,10 @@ What you just proved: evidence is SHA-256 sealed and never modified; the real `p
 `build_timeline` backends ran; every promoted claim is anchored; the critic accepted both tasks; the
 run is replayable from JSONL. See `examples/demo_case/expected_findings.md` for the ground truth.
 
-## 5. Go live (optional — tier T1/T2)
+## 5. Go live (optional - tier T1/T2)
 
 A live agent is opt-in. **Claude** is the only constrained (T1) executor today (typed tools via
-strict-MCP); opencode/gemini/codex are T2 (unconstrained opt-ins — see `docs/architecture.md §2a`).
+strict-MCP); opencode/gemini/codex are T2 (unconstrained opt-ins - see `docs/architecture.md §2a`).
 
 ```bash
 claude setup-token                                   # subscription auth (or export ANTHROPIC_API_KEY=…)
@@ -81,7 +81,7 @@ readiness, and launch. Press **`o`** for onboarding: an **Agents** tab and a **T
 
 Driving SIFTMesh against a real disk image / memory capture (Sleuthkit, Volatility 3, the live
 agent) is documented in `RUNBOOK.md`. Per CLAUDE.md §2B the project never self-tests against real
-forensic evidence — the operator runs those flows on a real SANS SIFT workstation.
+forensic evidence - the operator runs those flows on a real SANS SIFT workstation.
 
 ## Troubleshooting
 

@@ -86,7 +86,7 @@ def test_sift_lane_fails_closed_when_ez_tools_absent(tmp_path: Path) -> None:
 
 
 def test_sift_lane_prefetch_always_fails_closed() -> None:
-    # PECmd is not part of the EZ Tools set — prefetch fails closed regardless of host.
+    # PECmd is not part of the EZ Tools set - prefetch fails closed regardless of host.
     from siftmesh_core.mcp_gateway.backends.sift_lane import SiftLaneBackend
 
     with pytest.raises(BackendUnavailableError):
@@ -211,7 +211,7 @@ def test_validate_claim_evidence_rejects_bad_hash(tmp_path: Path) -> None:
 def test_validate_claim_evidence_grades_raw_malformed_claim(tmp_path: Path) -> None:
     run, evidence = _case(tmp_path)
     _manifest(run, evidence)
-    # Raw mapping missing tool_call_id — must be graded, not rejected at parse time.
+    # Raw mapping missing tool_call_id - must be graded, not rejected at parse time.
     raw = {
         "claim_id": "CLAIM-3",
         "task_id": "T",

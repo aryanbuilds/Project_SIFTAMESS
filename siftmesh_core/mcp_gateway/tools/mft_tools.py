@@ -1,8 +1,8 @@
-"""MFT filesystem tool — NTFS ``$MFT`` file inventory + timestamps (real, in-process).
+"""MFT filesystem tool - NTFS ``$MFT`` file inventory + timestamps (real, in-process).
 
 Wraps ``mft`` (pymft-rs) via the backend's existing ``parse_mft`` to expose a standalone filesystem
 listing: per-entry filename, logical size, directory flag, and ``$STANDARD_INFORMATION``
-created/modified/accessed times — answering "what files existed/were staged" (Q2) + the "when" (Q5).
+created/modified/accessed times - answering "what files existed/were staged" (Q2) + the "when" (Q5).
 The same rows also feed ``build_timeline`` (kind=mft); this surfaces them as their own anchored
 result. Provenance is logged to ``audit/tool_calls.jsonl``.
 

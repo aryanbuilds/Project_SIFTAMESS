@@ -1,4 +1,4 @@
-"""J3 — final report: sections, anchors, byte-stability, the unsupported firewall, empty run."""
+"""J3 - final report: sections, anchors, byte-stability, the unsupported firewall, empty run."""
 
 from __future__ import annotations
 
@@ -42,8 +42,8 @@ def test_final_report_sections_and_anchors(dispatched_run) -> None:  # type: ign
         "Executive summary",
         "Confirmed findings",
         "MITRE ATT&CK mapping",
-        "Appendix A — tool-execution log",
-        "Appendix B — unsupported claims",
+        "Appendix A - tool-execution log",
+        "Appendix B - unsupported claims",
         "Limitations",
     ):
         assert heading in body, heading
@@ -81,7 +81,7 @@ def test_unsupported_never_in_findings(tmp_path: Path) -> None:
         ),
     )
     body = split_body(generate_final_report(run).read_text(encoding="utf-8"))
-    appendix_idx = body.index("Appendix B — unsupported claims")
+    appendix_idx = body.index("Appendix B - unsupported claims")
     findings_region = body[:appendix_idx]
     assert "HALLUCINATED lateral movement" not in findings_region  # never a fact
     assert "HALLUCINATED lateral movement" in body[appendix_idx:]  # only in the rejected appendix

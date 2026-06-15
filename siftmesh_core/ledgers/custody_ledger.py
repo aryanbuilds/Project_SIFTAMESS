@@ -7,7 +7,7 @@ can never reach disk (validate-before-write).
 At ingest, one ``evidence_ingested`` event is recorded per artifact. The optional
 ``verify_unchanged`` re-hashes a single original once and records a
 ``source_rehash_verified`` event (detects *external* change only; the ingest hash
-is the custody baseline). Per-tool-access re-hashing is Epic-D scope — it is only
+is the custody baseline). Per-tool-access re-hashing is Epic-D scope - it is only
 meaningful once parsers actually touch artifacts.
 """
 

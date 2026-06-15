@@ -1,4 +1,4 @@
-"""Registry tool (D7) — autostart Run/RunOnce keys (real, in-process, real-on-both).
+"""Registry tool (D7) - autostart Run/RunOnce keys (real, in-process, real-on-both).
 
 Wraps ``regipy`` via the backend's ``extract_run_keys`` over an offline registry
 hive (NTUSER.DAT for HKCU, SOFTWARE for HKLM). Pure-Python on the real backend; the

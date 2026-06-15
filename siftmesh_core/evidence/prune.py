@@ -3,7 +3,7 @@
 A run's ``evidence/extracted/`` holds the large derived artifacts (a ~19 GB decompressed memory
 image, disk-extracted files) written BY DESIGN under the run dir (originals are read-only). Once a
 run is done and reported, those bytes can be reclaimed while every ledger / report / manifest is
-kept — so the run still merges and replays. This is what makes the "run → prune → next portion →
+kept - so the run still merges and replays. This is what makes the "run → prune → next portion →
 merge" workflow safe and auditable. Refuses a non-terminal run unless forced.
 """
 

@@ -1,7 +1,7 @@
 """Rich terminal log streamer: scrolling tagged lines + per-task separators + % complete.
 
 Writes ONLY to stderr (never a run-dir file), so it cannot affect golden bytes. It is NOT a
-full-screen ``Live`` — the Textual cockpit is the full TUI; this is the lightweight,
+full-screen ``Live`` - the Textual cockpit is the full TUI; this is the lightweight,
 scrollback-friendly "simple realtime logs" experience for the plain CLI. Streaming is on by
 default when stderr is a TTY; ``--quiet``/``--no-stream`` forces it off, ``--stream`` forces
 it on (e.g. for a piped demo recording).
@@ -20,7 +20,7 @@ from typing import Any
 from siftmesh_core.observability import sinks
 from siftmesh_core.observability.events import TAG_STYLE, classify_event, classify_record
 
-# Events after which we refresh the one-line progress summary (not every line — keeps it cheap).
+# Events after which we refresh the one-line progress summary (not every line - keeps it cheap).
 _PROGRESS_EVENTS = frozenset(
     {
         "transition",
@@ -31,10 +31,10 @@ _PROGRESS_EVENTS = frozenset(
         "plan_complete",
     }
 )
-# Orchestration events that merely duplicate a ledger record we already stream — suppress the
+# Orchestration events that merely duplicate a ledger record we already stream - suppress the
 # event so each fact appears once (critic_verdict↔critic_verdicts.jsonl,
 # claim_promoted↔claim_ledger.jsonl, critic_injection_detected↔injection_alerts.jsonl). The last
-# matters at scale: the ROCBA run logs ~3,949 injection alerts — double-printing would flood.
+# matters at scale: the ROCBA run logs ~3,949 injection alerts - double-printing would flood.
 _SUPPRESS_EVENTS = frozenset({"critic_verdict", "claim_promoted", "critic_injection_detected"})
 # Commands that get a streamer by default; excludes the TUI (owns the terminal) and the MCP
 # server (a stdio protocol subprocess). Read-only/inspection commands simply emit nothing.
@@ -79,7 +79,7 @@ class LogStreamer:
             self._progress()
 
     def on_record(self, run_root: Path, rel: str, record: Any) -> None:
-        if ".staging" in run_root.parts:  # parallel-dispatch worker write — re-emitted at commit
+        if ".staging" in run_root.parts:  # parallel-dispatch worker write - re-emitted at commit
             return
         if self.run_root is None:
             self.run_root = run_root  # latch the real run dir for the progress %
@@ -159,7 +159,7 @@ def stream_logs(*, run_root: Path | None = None, force: bool | None = None) -> I
 
 
 def install_stream_if_enabled(command: str | None, *, stream: bool | None, quiet: bool) -> None:
-    """CLI hook: register a streamer for a long-running command (no unregister — process-scoped).
+    """CLI hook: register a streamer for a long-running command (no unregister - process-scoped).
 
     ``stream``/``quiet`` come from the global flags: ``--quiet``/``--no-stream`` → off,
     ``--stream`` → on, default (``None``) → on iff stderr is a TTY (so CliRunner/pipes get

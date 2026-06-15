@@ -1,4 +1,4 @@
-"""Incident-brief intake — TRUSTED objective extraction, fail-closed, deterministic.
+"""Incident-brief intake - TRUSTED objective extraction, fail-closed, deterministic.
 
 Public synthetic fixtures only; no SANS evidence, no live agent (CLAUDE §2B).
 """

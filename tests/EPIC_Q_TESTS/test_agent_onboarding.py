@@ -1,4 +1,4 @@
-"""Epic Q round 1 — agent onboarding: `doctor --agents`, capability map, `agents` CLI (mocked)."""
+"""Epic Q round 1 - agent onboarding: `doctor --agents`, capability map, `agents` CLI (mocked)."""
 
 from __future__ import annotations
 
@@ -116,7 +116,7 @@ def test_default_is_floor_under_deterministic_default(monkeypatch, tmp_path) -> 
 
 def test_live_candidate_surfaced_without_becoming_default(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
     # A ready Claude (present + authed + sandboxed + tool-reaching) is offered as the --agent opt-in
-    # — but under the deterministic default it is NOT what a plain run dispatches.
+    # - but under the deterministic default it is NOT what a plain run dispatches.
     _isolate_host(monkeypatch, present={"claude"}, home=tmp_path)
     monkeypatch.setattr(
         "siftmesh_core.adapters.claude_adapter.claude_available", lambda settings: True

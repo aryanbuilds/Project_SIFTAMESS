@@ -1,9 +1,9 @@
-"""The live run cockpit (Epic O redesign) — vitals + progress + pipeline + tabbed panels + nav.
+"""The live run cockpit (Epic O redesign) - vitals + progress + pipeline + tabbed panels + nav.
 
 A `set_interval` poll (main thread) rebuilds the tested `CockpitSnapshot` and pushes it into the
 widgets; when the screen launched the run, a `@work(thread=True)` worker drives the deterministic
 engine while the same poll renders its file writes. Read-only except the gate keys (a/r), which call
-the governed `human_gate.set_gate` + resume. Presentation only — `build_snapshot` is unchanged.
+the governed `human_gate.set_gate` + resume. Presentation only - `build_snapshot` is unchanged.
 """
 
 from __future__ import annotations
@@ -276,7 +276,7 @@ class CockpitScreen(Screen):
         self._resume_engine()
 
     def action_pause(self) -> None:
-        """Request a cooperative pause — the engine stops at the next safe checkpoint (durable)."""
+        """Request a cooperative pause - the engine stops at the next safe checkpoint (durable)."""
         if self.run is None or (self._snap and self._snap.terminal):
             self.notify("nothing to pause")
             return
@@ -375,7 +375,7 @@ class CockpitScreen(Screen):
     def _sync_console(self) -> None:
         """Tail the live agent's persisted stdout (results/*.agent_raw.json) by byte offset.
 
-        Read-only file tailing — NOT a live subprocess stream (which would need core plumbing). The
+        Read-only file tailing - NOT a live subprocess stream (which would need core plumbing). The
         claude adapter already persists each agent's raw envelope; this surfaces it incrementally.
         """
         if self.run is None:

@@ -1,8 +1,8 @@
-"""L5a — bypass test: run-dir write boundary (threat T3 · OWASP LLM06 · CWE-22).
+"""L5a - bypass test: run-dir write boundary (threat T3 · OWASP LLM06 · CWE-22).
 
 Asserts the EFFECT of ``safe_write_path`` / ``resolved_source``: every traversal/escape vector is
 rejected with ``PathPolicyViolation`` (writes) or ``ValueError`` (reads), and legitimate in-run
-paths return a contained target — the LangGraph CVE-2026-34070 / zip-slip class, foreclosed in code.
+paths return a contained target - the LangGraph CVE-2026-34070 / zip-slip class, foreclosed in code.
 Includes the Step-1 regressions (NUL byte, target==run) and a Hypothesis property: no input ever
 yields a returned path outside the run dir.
 """
@@ -21,7 +21,7 @@ from siftmesh_core.evidence.path_policy import (
 )
 from siftmesh_core.mcp_gateway.tools._common import resolved_source
 
-# (rel, expected-message-fragment) — each MUST raise PathPolicyViolation.
+# (rel, expected-message-fragment) - each MUST raise PathPolicyViolation.
 _ESCAPES: list[tuple[str, str]] = [
     ("..", "escapes run dir"),
     ("../..", "escapes run dir"),
@@ -92,7 +92,7 @@ def test_prefix_collision_sibling_rejected(tmp_path: Path) -> None:
 
 
 def test_write_under_evidence_root_rejected(tmp_path: Path) -> None:
-    # evidence nested under run (a legitimate layout) — a target landing in it is still rejected.
+    # evidence nested under run (a legitimate layout) - a target landing in it is still rejected.
     run = _run(tmp_path)
     evidence = run / "evidence" / "originals"
     evidence.mkdir(parents=True)
@@ -185,7 +185,7 @@ def test_property_never_escapes_run(tmp_path: Path, segments: list[str]) -> None
     try:
         target = safe_write_path(run, rel)
     except PathPolicyViolation:
-        return  # rejected — the safe outcome
+        return  # rejected - the safe outcome
     # if it returned, the target is ALWAYS contained and is never the run dir itself
     assert target.is_relative_to(run)
     assert target != run

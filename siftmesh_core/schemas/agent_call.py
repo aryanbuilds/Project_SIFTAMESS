@@ -1,9 +1,9 @@
-"""Agent-call audit record (Epic F, F6) — one line per dispatch.
+"""Agent-call audit record (Epic F, F6) - one line per dispatch.
 
 Every executor dispatch appends an :class:`AgentCall` to ``audit/agent_calls.jsonl``
 so a run's agent activity is replayable: which profile was requested, which adapter
 actually ran (and whether it fell back to the deterministic floor), the attempt, and
-the outcome. Distinct from ``tool_calls.jsonl`` (per-tool provenance) — this is the
+the outcome. Distinct from ``tool_calls.jsonl`` (per-tool provenance) - this is the
 per-task/per-agent layer.
 """
 

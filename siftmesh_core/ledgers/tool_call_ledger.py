@@ -2,7 +2,7 @@
 
 Appends a :class:`ToolResult` (the provenance CLAUDE.md §7 mandates for every
 tool output) to ``audit/tool_calls.jsonl``. The audited-execution wrapper that
-*calls* this on every tool run is Epic D — here we provide the typed ledger it
+*calls* this on every tool run is Epic D - here we provide the typed ledger it
 will use, built on the generic validate-before-write JSONL ledger.
 """
 

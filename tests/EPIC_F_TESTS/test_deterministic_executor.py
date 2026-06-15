@@ -1,4 +1,4 @@
-"""F1/F2 — adapter protocol + deterministic real-tool executor over real fixtures."""
+"""F1/F2 - adapter protocol + deterministic real-tool executor over real fixtures."""
 
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ def test_every_anchored_claim_has_binding(real_case: RealCase) -> None:
 def test_claim_content_deterministic_across_runs(real_case: RealCase) -> None:
     # Two independent runs over identical fixtures → identical claim CONTENT (text/
     # status/confidence/evidence_type). tool_call_id/timestamps vary by run and are
-    # deliberately excluded — the result file is not byte-stable, the content is.
+    # deliberately excluded - the result file is not byte-stable, the content is.
     run_a, _ = real_case()
     run_b, _ = real_case()
     dispatch_run(run_a, settings=load_settings())

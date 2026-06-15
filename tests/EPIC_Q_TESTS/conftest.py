@@ -1,4 +1,4 @@
-"""Epic Q shared fixtures — thin wrapper over the root ``make_real_run`` factory (M1).
+"""Epic Q shared fixtures - thin wrapper over the root ``make_real_run`` factory (M1).
 
 Agent-neutral connector tests need a real run dir (manifest + context) but NEVER a live agent or
 SANS evidence: the subprocess boundary is always mocked (CLAUDE §2B).

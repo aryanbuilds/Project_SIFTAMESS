@@ -1,7 +1,7 @@
 """Deterministic state-machine transition table (H2).
 
 A frozen successor map over :data:`RunStateName` plus a pure ``step`` that rejects any
-transition not in the table. This module is the *authoritative legality oracle* — the engine
+transition not in the table. This module is the *authoritative legality oracle* - the engine
 (``workflow_runner``) proposes the next state, this code decides whether it is legal
 ("LLM proposes, code decides"). No I/O, no side effects, fully deterministic.
 

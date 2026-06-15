@@ -2,19 +2,19 @@
 
 One generic adapter launches a CLI coding agent (Gemini, Codex, …) from its profile ``launch_argv``
 recipe, hands it the SAME spotlighted task prompt every executor gets, and parses its
-``{claims:[…]}`` output through the same ``parse_agent_result`` — adding an agent is a YAML row.
+``{claims:[…]}`` output through the same ``parse_agent_result`` - adding an agent is a YAML row.
 
 Governance / evidence safety (Epic Q audit corrections): a headless profile is dispatchable ONLY if
-its recipe carries explicit native-tool deny/sandbox flags (``native_tool_argv``) — a recipe without
+its recipe carries explicit native-tool deny/sandbox flags (``native_tool_argv``) - a recipe without
 them fails closed (``available()`` False → deterministic floor), since an un-denied agent could run
 native shell/file/web tools. Every agent subprocess also runs with a pinned, run-scoped cwd (never
-the operator's CWD — which these CLIs auto-load TRUSTED ``GEMINI.md``/``AGENTS.md`` from) and a
+the operator's CWD - which these CLIs auto-load TRUSTED ``GEMINI.md``/``AGENTS.md`` from) and a
 minimized env (only the agent's own declared credentials, not every provider's keys). The
 deterministic critic still governs truth.
 
 Honest tool-reachability: only the ``claude_flag`` MCP strategy reaches our typed tools today (it
 also injects the full Claude sandbox block). Gemini/Codex are ``mcp_strategy: none`` (verify-live;
-per-run MCP wiring is round-2 / ACP) — they run sandboxed but reach no typed tools yet, so their
+per-run MCP wiring is round-2 / ACP) - they run sandboxed but reach no typed tools yet, so their
 claims go ``unsupported`` and the run falls to the floor; ``doctor --agents`` reports per agent.
 """
 
@@ -47,7 +47,7 @@ def is_sandboxed(prof: AgentProfile) -> bool:
     """Whether a headless recipe denies the agent's native tools (REQUIRED to dispatch).
 
     True iff the profile carries explicit per-CLI deny/sandbox flags, OR it reaches the typed tools
-    via the Claude sandbox (``claude_flag`` — which appends the full ``--allowedTools`` /
+    via the Claude sandbox (``claude_flag`` - which appends the full ``--allowedTools`` /
     ``--disallowedTools`` / ``--permission-mode dontAsk`` deny block). A recipe with neither would
     run the agent with native shell/file/web tools enabled, so it fails closed (``available()``
     False → the registry falls to the deterministic floor).
@@ -169,7 +169,7 @@ def extract_agent_text(stdout: str, output_format: str) -> str:
 
     ``parse_agent_result`` then finds the ``{claims:[…]}`` JSON inside whatever this returns. It
     handles both a single JSON envelope AND a JSON-Lines EVENT STREAM (codex ``exec --json``, gemini
-    ``stream-json``, opencode) where the final message is escaped inside an event — the case a naive
+    ``stream-json``, opencode) where the final message is escaped inside an event - the case a naive
     whole-stdout ``json.loads`` fails on and the claims would otherwise be lost forever."""
     s = stdout.strip()
     if not s:

@@ -1,4 +1,4 @@
-"""I2 — registry resolution falls closed to the deterministic floor + audits adapter_unavailable."""
+"""I2 - registry resolution falls closed to the deterministic floor + audits adapter_unavailable."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Task contract schema (C3) — the per-worker work order (GUIDELINES §9).
+"""Task contract schema (C3) - the per-worker work order (GUIDELINES §9).
 
 A :class:`TaskContract` is the only thing handed to an executor: never the whole
 conversation or a raw evidence dump. ``safety_policy`` is required, so a contract
@@ -18,8 +18,8 @@ from siftmesh_core.schemas._base import Sha256, StrictModel
 ArtifactMode = Literal["read_only"]
 
 # Where an input artifact lives + which root its ``path`` resolves against:
-#   "evidence" — an original, sealed artifact (path is relative to the evidence root).
-#   "derived"  — a carved/decompressed artifact (path is run-relative; resolves under the run dir).
+#   "evidence" - an original, sealed artifact (path is relative to the evidence root).
+#   "derived"  - a carved/decompressed artifact (path is run-relative; resolves under the run dir).
 # Derived inputs keep the intake manifest immutable (hth.2); provenance back to the source lives in
 # evidence/derived_artifacts.json. Defaults to "evidence" so every pre-hth.2 contract stays valid.
 ArtifactOrigin = Literal["evidence", "derived"]

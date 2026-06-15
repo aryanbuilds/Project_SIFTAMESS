@@ -1,9 +1,9 @@
-"""Durable RunState persistence (H1) — crash-safe atomic snapshot.
+"""Durable RunState persistence (H1) - crash-safe atomic snapshot.
 
 The Epic-H state machine overwrites ``run_state.json`` on every transition. Writes are
 **atomic**: a temp file in the same directory is fully written, ``flush``ed + ``os.fsync``'d,
-then ``os.replace`` swaps it into place (atomic rename on POSIX / same filesystem). A reader —
-or a run resumed after a crash — therefore always sees a complete, valid snapshot, never a
+then ``os.replace`` swaps it into place (atomic rename on POSIX / same filesystem). A reader -
+or a run resumed after a crash - therefore always sees a complete, valid snapshot, never a
 partial write. Validate-before-write: the model is serialized through Pydantic.
 """
 

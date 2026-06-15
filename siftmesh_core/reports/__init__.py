@@ -1,8 +1,8 @@
-"""Reports & Replay (Epic J) — deterministic, code-generated artifacts from the run-dir ledgers.
+"""Reports & Replay (Epic J) - deterministic, code-generated artifacts from the run-dir ledgers.
 
 Public surface: ``generate_all_reports`` loads the :class:`ReportView` ONCE and writes every report
 + ``replay.html`` (one identical snapshot). Reports are byte-deterministic functions of the ledgers
-(NO LLM at report time) — the replayable-audit differentiator.
+(NO LLM at report time) - the replayable-audit differentiator.
 """
 
 from __future__ import annotations

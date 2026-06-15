@@ -1,4 +1,4 @@
-"""Agent-profile schema (C5 + Epic I) — a dispatchable agent's identity, cost, and wiring.
+"""Agent-profile schema (C5 + Epic I) - a dispatchable agent's identity, cost, and wiring.
 
 ``kind`` enumerates the adapter families SIFTMesh drives; ``model_tier`` / ``cost_class`` feed the
 Budget Router; ``output_format`` tells the collector how to read the result; ``command_template`` /
@@ -45,12 +45,12 @@ class AgentProfile(StrictModel):
     launch_argv: list[str] = Field(default_factory=list)  # fixed prefix, e.g. ["gemini", "-p"]
     model_flag: str | None = None  # e.g. "--model"; the model id is appended after it
     extra_argv: list[str] = Field(default_factory=list)  # e.g. ["--output-format", "json"]
-    # per-CLI deny/sandbox flags — REQUIRED for a headless profile to dispatch (else fails closed)
+    # per-CLI deny/sandbox flags - REQUIRED for a headless profile to dispatch (else fails closed)
     native_tool_argv: list[str] = Field(default_factory=list)
     auth_env: list[str] = Field(default_factory=list)  # any one set ⇒ authenticated
     auth_files: list[str] = Field(
         default_factory=list
-    )  # cached-credential paths (e.g. ~/.codex/auth.json) — existence ⇒ authenticated
+    )  # cached-credential paths (e.g. ~/.codex/auth.json) - existence ⇒ authenticated
     env_passthrough: list[str] = Field(
         default_factory=list
     )  # non-auth env the agent still needs in its minimized child env (e.g. Vertex project vars)

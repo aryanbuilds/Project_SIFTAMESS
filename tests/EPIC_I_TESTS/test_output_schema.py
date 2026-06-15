@@ -1,4 +1,4 @@
-"""I4 — executor output-schema enforcement: a malformed result drives the retry loop."""
+"""I4 - executor output-schema enforcement: a malformed result drives the retry loop."""
 
 from __future__ import annotations
 

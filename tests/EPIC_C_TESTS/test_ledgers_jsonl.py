@@ -1,4 +1,4 @@
-"""C7 — generic JSONL ledger + claim routing (validate-before-write)."""
+"""C7 - generic JSONL ledger + claim routing (validate-before-write)."""
 
 from __future__ import annotations
 

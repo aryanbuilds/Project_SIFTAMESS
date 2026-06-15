@@ -77,7 +77,7 @@ def test_decompress_fails_closed_without_7z(
 
 
 def test_zip_member_basename_neutralises_traversal(tmp_path: Path) -> None:
-    """A hostile member name is reduced to its basename — never escapes dest."""
+    """A hostile member name is reduced to its basename - never escapes dest."""
     zip_path = tmp_path / "evil.zip"
     with zipfile.ZipFile(zip_path, "w") as zf:
         zf.writestr("../../etc/pwned.raw", b"PAGEDU64" + b"\x00" * 16)

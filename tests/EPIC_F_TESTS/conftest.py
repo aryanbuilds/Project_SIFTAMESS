@@ -1,4 +1,4 @@
-"""Epic F shared fixtures — thin wrapper over the root ``make_real_run`` factory (M1).
+"""Epic F shared fixtures - thin wrapper over the root ``make_real_run`` factory (M1).
 
 The deterministic executor runs the real Epic-D tools, so these tests need real
 artifact bytes (incl. ``$MFT`` for the timeline lane). No keys, no live agent.

@@ -1,4 +1,4 @@
-"""Prefetch tool (D6) — Windows .pf execution evidence (real, in-process).
+"""Prefetch tool (D6) - Windows .pf execution evidence (real, in-process).
 
 Wraps ``pyscca`` (libscca) via the backend's ``analyze_prefetch``: executable name,
 run count, last-run timestamps, and referenced volumes/filenames. Logs a provenance

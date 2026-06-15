@@ -9,7 +9,7 @@
   ``anthropic/…``, ``moonshot/…``, ``minimax/…``) → the LiteLLM SDK (API-key/cloud providers).
 
 FAIL-SOFT everywhere: the Tier-2 judge is OPTIONAL + advisory, so any failure (missing CLI / key /
-``litellm`` extra, timeout, bad output) returns ``None`` — never raises, never fabricates. Caller
+``litellm`` extra, timeout, bad output) returns ``None`` - never raises, never fabricates. Caller
 logs ``tier2_judge_skipped`` and continues on Tier-1 (the deterministic critic stays the sole
 promoter). Fail-*closed* is reserved for the safety gates (path policy, forbidden tools, backends).
 """
@@ -49,7 +49,7 @@ def parse_judge(judge: str | None) -> tuple[str, str]:
 
 
 def judge_ready(settings: object) -> tuple[bool, str]:
-    """``(ready, label)`` for the configured judge — for doctor/agents display (no LLM call)."""
+    """``(ready, label)`` for the configured judge - for doctor/agents display (no LLM call)."""
     backend, target = parse_judge(getattr(settings, "judge", None))
     if backend == "litellm":
         if importlib.util.find_spec("litellm") is None:
@@ -60,7 +60,7 @@ def judge_ready(settings: object) -> tuple[bool, str]:
             return (bool(claude_available(settings)), "cli:claude")
         if target == "opencode":
             # opencode's profile has no launch_argv (its executor builds argv specially), so the
-            # generic launch_argv check would mis-report it as unavailable — probe the CLI directly.
+            # generic launch_argv check would mis-report it as unavailable - probe the CLI directly.
             cli = getattr(settings, "opencode_cli_path", "opencode")
             return (shutil.which(cli) is not None, "cli:opencode")
         prof_id = _CLI_PROFILE.get(target)
@@ -82,7 +82,7 @@ def invoke_judge_text(prompt: str, settings: object, *, timeout: int | None = No
             if target == "claude":
                 return invoke_claude_text(prompt, settings, timeout=timeout)
             return _cli_text(target, prompt, settings, timeout=timeout)
-    except Exception:  # any judge error is advisory — never propagate
+    except Exception:  # any judge error is advisory - never propagate
         return None
     return None
 
@@ -179,7 +179,7 @@ def _litellm_text(model: str, prompt: str, *, settings: object, timeout: int | N
 def judge_remediation(settings: object) -> list[str]:
     """Honest next steps to make the configured Tier-2 judge ready (advisory; empty when ready).
 
-    Sibling to ``doctor.agent_remediation`` — surfaced by the judge tab so a not-ready advisory
+    Sibling to ``doctor.agent_remediation`` - surfaced by the judge tab so a not-ready advisory
     judge is explained, never silently skipped. No subprocess / no LLM call.
     """
     backend, target = parse_judge(getattr(settings, "judge", None))
@@ -189,7 +189,7 @@ def judge_remediation(settings: object) -> list[str]:
     if backend == "litellm":
         if importlib.util.find_spec("litellm") is None:
             return ["install LiteLLM: `uv sync --extra llm`"]
-        # litellm present but a provider key is missing — name the likely env var from the prefix.
+        # litellm present but a provider key is missing - name the likely env var from the prefix.
         provider = target.split("/", 1)[0] if "/" in target else target
         env = {
             "gemini": "GEMINI_API_KEY (or GOOGLE_API_KEY)",

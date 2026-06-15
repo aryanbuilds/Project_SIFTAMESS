@@ -1,6 +1,6 @@
-"""L5f — bypass test: live-agent harness sandbox (threat T2/T5 · OWASP LLM06 · ASI03/ASI05).
+"""L5f - bypass test: live-agent harness sandbox (threat T2/T5 · OWASP LLM06 · ASI03/ASI05).
 
-Pure-function inspection of the argv/config the adapter WOULD launch — NO subprocess, NO live agent
+Pure-function inspection of the argv/config the adapter WOULD launch - NO subprocess, NO live agent
 (CLAUDE §2B): the sandbox is an architectural constraint, so we assert the constraint, not a live
 run. Encodes the four REAL bugs as permanent regression scenarios: 5dh9 (agent had Edit/Write and
 edited source), 8tcx (bare 'siftmesh' not on PATH -> zero tools), bhyv (derived artifact
@@ -91,7 +91,7 @@ def test_executor_never_zeroes_the_tool_universe() -> None:
 
 
 def test_gssw_ambient_hooks_disabled() -> None:
-    # gssw: the user's ambient ~/.claude lifecycle hooks must NOT fire during the governed run —
+    # gssw: the user's ambient ~/.claude lifecycle hooks must NOT fire during the governed run -
     # `--settings {"disableAllHooks": true}` suppresses them while preserving subscription auth.
     import json
 

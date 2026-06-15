@@ -1,6 +1,6 @@
 # Judge runbook
 
-A fast, reproducible path for evaluators to verify SIFTMesh against the hackathon criteria — with
+A fast, reproducible path for evaluators to verify SIFTMesh against the hackathon criteria - with
 **no API keys** (deterministic floor) and an optional one-flag live run.
 
 ## 0. Setup (≈2 min)
@@ -21,12 +21,12 @@ RUN=$(ls -dt examples/demo_case/case_runs/RUN-* | head -1)
 This runs the full pipeline (hash → plan → dispatch → real tools → claims → critic → report) on the
 deterministic floor over a real Windows `Security.evtx`. Ground truth: `examples/demo_case/expected_findings.md`.
 
-## 2. Criteria map — what to look at
+## 2. Criteria map - what to look at
 
 | # | Criterion | Where to verify |
 | --- | --- | --- |
 | 1 | **Autonomous execution / self-correction** | live run §4; deterministic loop in `tests/golden/` + `docs/demo_script.md`; engine: `siftmesh_core/orchestrator/` |
-| 2 | **IR accuracy / no hallucination** | real ROCBA results in `docs/findings_rocba.md` + `docs/accuracy_report.md`; in any run `"$RUN/claims/claim_ledger.jsonl"` — every claim cites `tool_call_id`+`source_sha256`; unanchored claims are confined to Appendix B of `reports/final_report.md` |
+| 2 | **IR accuracy / no hallucination** | real ROCBA results in `docs/findings_rocba.md` + `docs/accuracy_report.md`; in any run `"$RUN/claims/claim_ledger.jsonl"` - every claim cites `tool_call_id`+`source_sha256`; unanchored claims are confined to Appendix B of `reports/final_report.md` |
 | 3 | **Breadth & depth** | the 10-tool allowlist (`siftmesh doctor`), real backends (evtx/regipy/pyscca/mft + Sleuthkit/Volatility for disk/memory in `RUNBOOK.md`) |
 | 4 | **Constraint implementation (bypass-tested)** | `docs/threat_model.md`; `uv run pytest tests/EPIC_L_TESTS -q` (80+ effect-asserting bypass tests); agent **safety tiers** in `docs/architecture.md §2a` |
 | 5 | **Audit trail quality** | `"$RUN/audit/*.jsonl"` + `uv run siftmesh replay "$RUN"` (every transition is timestamped JSONL); chain of custody in `docs/evidence_integrity.md` |
@@ -44,7 +44,7 @@ uv run siftmesh tui "$RUN"                   # live cockpit (optional `tui` extr
 
 `siftmesh tui` (no arg) opens the minimal home (recent runs + a centered *New run*). Press **`o`** for
 onboarding: an **Agents** tab (which agents are ready, with one-click *Launch auth*) and a **Tier-2
-judge** tab (pick a provider, log in or paste an API key — LiteLLM keys are validated and saved to a
+judge** tab (pick a provider, log in or paste an API key - LiteLLM keys are validated and saved to a
 600-perm `~/.config/siftmesh/.env`, never to the committed config).
 
 ## 4. See the live self-correction loop (optional)

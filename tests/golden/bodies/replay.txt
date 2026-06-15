@@ -1,4 +1,4 @@
-SIFTMesh replay — RUN-GOLDEN
+SIFTMesh replay - RUN-GOLDEN
 10 orchestration events
 
 0001  2026-06-10T07:11:22.975665Z  plan_started  [review_only=False; template=windows_initial_triage]

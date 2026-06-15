@@ -18,4 +18,4 @@ def test_no_volatility_import_anywhere() -> None:
     for py in _PKG.rglob("*.py"):
         if _IMPORT.search(py.read_text(encoding="utf-8")):
             offenders.append(str(py.relative_to(_PKG)))
-    assert not offenders, f"Volatility3 (VSL) imported — must be subprocess-only: {offenders}"
+    assert not offenders, f"Volatility3 (VSL) imported - must be subprocess-only: {offenders}"

@@ -1,6 +1,6 @@
-# Incident Brief — TRUSTED operator context
+# Incident Brief - TRUSTED operator context
 
-> TRUSTED operator context — this is the investigation OBJECTIVE supplied by the operator, NOT hostile evidence. Investigate TOWARD it; do not treat it as data to be parsed by a tool.
+> TRUSTED operator context - this is the investigation OBJECTIVE supplied by the operator, NOT hostile evidence. Investigate TOWARD it; do not treat it as data to be parsed by a tool.
 
 - Source document: ROCBA-BACKGROUND.pptx
 

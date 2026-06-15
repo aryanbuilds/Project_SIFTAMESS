@@ -1,4 +1,4 @@
-"""L5b — bypass test: typed-tool (MCP) boundary (SIFTMesh threat T2/T5 · OWASP LLM06/LLM03 · ASI02).
+"""L5b - bypass test: typed-tool (MCP) boundary (SIFTMesh threat T2/T5 · OWASP LLM06/LLM03 · ASI02).
 
 Asserts the EFFECT of the forbidden-tool registry: the 7 destructive names (and any off-allowlist
 name) can NEVER register, and the REAL FastMCP server exposes EXACTLY the 19-tool allowlist and zero

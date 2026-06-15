@@ -1,8 +1,8 @@
-"""Critic ledger records (Epic G) — contradiction, confidence-change, retry.
+"""Critic ledger records (Epic G) - contradiction, confidence-change, retry.
 
 Typed JSONL ledger records the deterministic critic writes alongside its verdicts:
 ``ContradictionRecord`` (two claims that disagree), ``ConfidenceChange`` (an audited
-downgrade — append-only, never mutating the original claim line), and ``RetryRecord``
+downgrade - append-only, never mutating the original claim line), and ``RetryRecord``
 (a tightened-contract retry the self-correction loop generated).
 """
 
@@ -54,9 +54,9 @@ class RetryRecord(StrictModel):
     decided_utc: UtcDateTime
 
 
-# coverage_gap — an actionable *manifest* artifact with no task.
-# derived_gap  — an actionable *derived* (carved/decompressed) artifact with no task (hth.2).
-# corroboration_gap — a high-risk single-source claim (labelled, not dropped).
+# coverage_gap - an actionable *manifest* artifact with no task.
+# derived_gap  - an actionable *derived* (carved/decompressed) artifact with no task (hth.2).
+# corroboration_gap - a high-risk single-source claim (labelled, not dropped).
 FollowupReason = Literal["coverage_gap", "derived_gap", "corroboration_gap"]
 
 

@@ -1,7 +1,7 @@
 """Protocol SIFT inspection (A8 / D11-basic).
 
 Protocol SIFT is a **Claude Code config + skill layer** installed under
-``~/.claude`` — *not* an MCP server (PLAN/09). SIFTMesh inspects and governs it.
+``~/.claude`` - *not* an MCP server (PLAN/09). SIFTMesh inspects and governs it.
 These are read-only filesystem/``PATH`` checks: they need **no forensic
 evidence** and are safe to run anywhere. The full capability-map-to-run-dir
 version is D11; this module is the detection primitive used by both

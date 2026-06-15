@@ -37,7 +37,7 @@ _SIGNATURES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("new_instructions", re.compile(r"\bnew\s+instructions?\b", re.I)),
     ("reveal_prompt", re.compile(r"(reveal|print|show)\s+(your\s+)?system\s+prompt", re.I)),
 )
-# A long base64-ish blob is suspicious — but a pure-hex token (md5/sha1/sha256 and their upper/mixed
+# A long base64-ish blob is suspicious - but a pure-hex token (md5/sha1/sha256 and their upper/mixed
 # case forms, or any hex id) is a digest, not a base64 injection payload. Real base64 of a command
 # carries non-hex chars; excluding pure-hex avoids the DFIR false positives that flood real runs
 # (sha256 provenance, hash-named registry values).

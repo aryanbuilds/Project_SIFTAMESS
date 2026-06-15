@@ -717,7 +717,7 @@ def _tier2_prompt(claims: list[Claim], objective: str | None) -> str:
     obj = f"Investigation objective: {objective}\n\n" if objective else ""
     return (
         "You are an adversarial DFIR review judge. Below are EVIDENCE-ANCHORED findings a "
-        "deterministic critic already accepted. You may ONLY flag concerns — you cannot add facts, "
+        "deterministic critic already accepted. You may ONLY flag concerns - you cannot add facts, "
         "add citations, raise confidence, or promote anything.\n\n" + obj + rows + "\n\n"
         "Respond with ONLY a JSON object (no prose):\n"
         '{"judgements": [{"claim_id": "<exact id above>", '

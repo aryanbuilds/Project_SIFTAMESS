@@ -2,12 +2,12 @@
 
 Every SIFTMesh-controlled write routes through :func:`safe_write_path`, which
 resolves the real target and refuses anything that escapes the run directory
-(``..`` traversal, absolute paths, a symlink inside the run dir pointing out —
+(``..`` traversal, absolute paths, a symlink inside the run dir pointing out -
 ``resolve()`` follows symlinks) or lands under the original evidence tree.
 
 Scope (no overclaim): this governs *SIFTMesh's own* code paths. Combined with
 read-only opens at ingest and no raw-shell/destructive tools (CLAUDE.md §6) it
-upholds the "originals untouched" boundary — but it is not OS-level prevention
+upholds the "originals untouched" boundary - but it is not OS-level prevention
 of an external process, and later tool wrappers must keep routing through it.
 """
 
@@ -41,13 +41,13 @@ def safe_write_path(
     """Return the resolved write target under ``run_root``, or raise.
 
     Rejects ``..`` traversal, absolute-path escape, symlink-to-outside, an
-    embedded NUL byte, a target equal to the run dir itself, and — when
-    ``evidence_root`` is given — any path under the original evidence tree.
+    embedded NUL byte, a target equal to the run dir itself, and - when
+    ``evidence_root`` is given - any path under the original evidence tree.
 
     Scope (honest): canonicalize-then-check on a filesystem snapshot, so it is
     TOCTOU-exposed if a component is swapped for a symlink between this call and
     the real open; its correctness rests on ``Path.resolve()`` semantics (pinned
-    Python). It assumes ``rel`` is already the final decoded relpath — callers
+    Python). It assumes ``rel`` is already the final decoded relpath - callers
     must never URL-decode before calling. See ``docs/threat_model.md`` §5.1/§7.
     """
     run = Path(run_root).resolve()

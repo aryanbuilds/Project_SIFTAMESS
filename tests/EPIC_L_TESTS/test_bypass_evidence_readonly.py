@@ -1,9 +1,9 @@
-"""L5d — bypass test: evidence-vault boundary (threat T4 · OWASP LLM06 · chain of custody).
+"""L5d - bypass test: evidence-vault boundary (threat T4 · OWASP LLM06 · chain of custody).
 
 Asserts the EFFECT: after a REAL run (manifest + readonly vault + plan + dispatch of real Epic-D
 tools over real fixtures), every original is BYTE-IDENTICAL to its ingest-time sha256 baseline, and
-no original is added or removed — the Sleuth-Kit "open O_RDONLY, write outputs elsewhere" invariant
-(honestly posture-level: safe_write_path + read-only opens, not an OS `mount -o ro` — deferred, §7).
+no original is added or removed - the Sleuth-Kit "open O_RDONLY, write outputs elsewhere" invariant
+(honestly posture-level: safe_write_path + read-only opens, not an OS `mount -o ro` - deferred, §7).
 Satisfies CLAUDE §14 test_original_evidence_not_modified.
 """
 

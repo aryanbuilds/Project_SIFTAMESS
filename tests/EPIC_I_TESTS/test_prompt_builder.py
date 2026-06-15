@@ -1,4 +1,4 @@
-"""I3 — the task-prompt builder spotlights evidence and never dumps raw bytes."""
+"""I3 - the task-prompt builder spotlights evidence and never dumps raw bytes."""
 
 from __future__ import annotations
 

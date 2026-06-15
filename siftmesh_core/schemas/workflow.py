@@ -1,4 +1,4 @@
-"""Workflow schema (C5) — a typed run configuration (PROJECT_CONTEXT §6, GUIDELINES §4).
+"""Workflow schema (C5) - a typed run configuration (PROJECT_CONTEXT §6, GUIDELINES §4).
 
 A :class:`Workflow` declares how a run executes: its mode, hard caps, active
 approval gates, evidence-safety posture, agent roster, and stage order. Safety is

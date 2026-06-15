@@ -1,7 +1,7 @@
 """Orchestration audit log (B8): init-case state transitions.
 
 Thin wrapper over the base JSONL logger (A5) that appends one structured event
-per init-case transition to ``audit/orchestration_events.jsonl`` — UTC, ordered,
+per init-case transition to ``audit/orchestration_events.jsonl`` - UTC, ordered,
 replayable. The event vocabulary is kept fixed so the audit trail stays greppable.
 """
 

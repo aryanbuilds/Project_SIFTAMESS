@@ -1,4 +1,4 @@
-"""C1/C4/C5 — provenance, tool/critic/run, agent/workflow schemas."""
+"""C1/C4/C5 - provenance, tool/critic/run, agent/workflow schemas."""
 
 from __future__ import annotations
 

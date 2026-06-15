@@ -1,7 +1,7 @@
 """Chain-of-custody event schema (C10, pulled forward for Epic B's B9).
 
 ``CustodyEvent`` is the typed backbone of the custody ledger
-(``evidence/custody_log.jsonl``) — the criterion-5 (audit) differentiator,
+(``evidence/custody_log.jsonl``) - the criterion-5 (audit) differentiator,
 aligned to ISO 27037 / NIST SP 800-86 (auditability, repeatability,
 reproducibility). Validate-before-write: a malformed event never persists.
 Explicit non-goal: not court-admissible.

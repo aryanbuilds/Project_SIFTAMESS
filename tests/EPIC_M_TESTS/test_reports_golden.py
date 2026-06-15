@@ -1,8 +1,8 @@
-"""M3 — golden report-body tests over the committed recorded-golden run (criterion 5).
+"""M3 - golden report-body tests over the committed recorded-golden run (criterion 5).
 
 The recorded run (tests/golden/recorded_run/RUN-GOLDEN) holds REAL ledgers produced once by
 the real Epic-D tools over the committed fixtures (§2B recorded-golden floor). These tests
-prove Epic J's claim: reports are byte-deterministic pure functions of the ledgers — the
+prove Epic J's claim: reports are byte-deterministic pure functions of the ledgers - the
 header (timestamp/host/run_dir) is volatile by design and excluded via the sentinel split.
 
 Regen ONLY via:  uv run python tests/golden/record.py --update   (review the diff, commit).
@@ -57,7 +57,7 @@ def test_recorded_golden_body_byte_stable(tmp_path: Path, name: str) -> None:
     # Rendering the COMMITTED ledgers reproduces the COMMITTED body byte-for-byte.
     rendered = _render_from_recorded(tmp_path, "render1")[name]
     golden = (BODIES / name).read_text(encoding="utf-8")
-    assert rendered == golden, f"{name} drifted from its golden body — {_REGEN}"
+    assert rendered == golden, f"{name} drifted from its golden body - {_REGEN}"
 
 
 def test_double_render_identical(tmp_path: Path) -> None:
@@ -69,7 +69,7 @@ def test_double_render_identical(tmp_path: Path) -> None:
 
 def test_fresh_run_double_render_identical(tmp_path: Path, make_real_run: MakeRealRun) -> None:
     # Env-independence: a FRESH real run (new timestamps, new paths) also double-renders
-    # byte-identically — determinism is a property of the pipeline, not of the fixture.
+    # byte-identically - determinism is a property of the pipeline, not of the fixture.
     run, evidence = make_real_run(dispatch=True, critique=True)
     generate_all_reports(run, evidence_root=evidence)
     first = {n: split_body((run.root / "reports" / n).read_text(encoding="utf-8")) for n in REPORTS}
@@ -85,4 +85,4 @@ def test_recorded_run_is_host_independent() -> None:
     for p in RECORDED.rglob("*"):
         if p.is_file():
             text = p.read_text(encoding="utf-8", errors="ignore")
-            assert "/tmp/" not in text, f"absolute path leaked in {p.name} — {_REGEN}"
+            assert "/tmp/" not in text, f"absolute path leaked in {p.name} - {_REGEN}"

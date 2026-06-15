@@ -1,4 +1,4 @@
-"""Advisory Tier-2 LLM judge (G8): may lower confidence / flag corroboration / annotate — NEVER
+"""Advisory Tier-2 LLM judge (G8): may lower confidence / flag corroboration / annotate - NEVER
 promotes. Tier-1 deterministic code stays the sole promoter. Agent subprocess is mocked.
 """
 
@@ -96,7 +96,7 @@ def test_tier2_failsoft_when_agent_absent(make_real_run: MakeRealRun, monkeypatc
 
 
 def test_tier2_tolerates_markdown_fenced_json(make_real_run: MakeRealRun, monkeypatch) -> None:
-    # Real judges (gemini/codex/opencode) routinely wrap JSON in ```json fences — a well-formed
+    # Real judges (gemini/codex/opencode) routinely wrap JSON in ```json fences - a well-formed
     # opinion must NOT be silently dropped over a fence (regression: live opencode judge 2026-06).
     run, evidence = make_real_run(dispatch=True, critique=True)
     target = read_claims(run.root)[0]

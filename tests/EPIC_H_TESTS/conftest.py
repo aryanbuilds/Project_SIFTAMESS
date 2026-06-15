@@ -1,4 +1,4 @@
-"""Epic H shared fixtures — engine-ready runs built on the root factory (M1).
+"""Epic H shared fixtures - engine-ready runs built on the root factory (M1).
 
 ``built_run`` adds the one Epic-H-specific stage on top of the shared no-plan run:
 an initial persisted ``RunState``, so ``run_engine`` can drive the full state machine

@@ -1,4 +1,4 @@
-"""New-investigation wizard — WizardDraft (headless) + the hybrid 2-screen flow (pilot)."""
+"""New-investigation wizard - WizardDraft (headless) + the hybrid 2-screen flow (pilot)."""
 
 from __future__ import annotations
 

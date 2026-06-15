@@ -1,7 +1,7 @@
-"""Epic L shared fixtures — thin wrapper over the root ``make_real_run`` factory (M1).
+"""Epic L shared fixtures - thin wrapper over the root ``make_real_run`` factory (M1).
 
 The bypass tests assert the EFFECT of each control against a genuine manifest +
-tool_calls.jsonl + claim ledger — never a mock (CLAUDE §2B). No keys, no live agent:
+tool_calls.jsonl + claim ledger - never a mock (CLAUDE §2B). No keys, no live agent:
 the sandbox is bypass-tested by inspecting the pure argv builder, not by running one.
 """
 

@@ -1,4 +1,4 @@
-"""B7: init-case wires the whole vault — files, custody, evidence-unchanged."""
+"""B7: init-case wires the whole vault - files, custody, evidence-unchanged."""
 
 from __future__ import annotations
 

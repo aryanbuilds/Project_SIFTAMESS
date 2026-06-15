@@ -1,9 +1,9 @@
-"""L5h — bypass test: memory/context poisoning (OWASP Agentic ASI06 / ASI-T1 · OWASP LLM04).
+"""L5h - bypass test: memory/context poisoning (OWASP Agentic ASI06 / ASI-T1 · OWASP LLM04).
 
 SIFTMesh genuinely PERSISTS state across iterations (claim/contradiction ledgers, run_state) and
 re-ingests DERIVED artifacts into the plannable set (Epic H2), so "we have no memory, N/A" would be
 inaccurate. The honest, tested claim is: persisted state is RE-VALIDATED by the deterministic critic
-every iteration — an accumulated ledger never grants trust — and a derived/re-ingested artifact is
+every iteration - an accumulated ledger never grants trust - and a derived/re-ingested artifact is
 subject to the SAME injection scanning as a primary artifact. Asserts those effects.
 """
 
@@ -32,7 +32,7 @@ def test_existing_ledger_does_not_grant_trust_to_new_unanchored_claim(
     # The run already has a populated, accepted claim ledger (real Epic-D tools ran).
     assert read_claims(run.root), "precondition: prior accepted claims exist (the 'memory')"
     # A NEW claim carrying a FORGED anchor (as if asserted from a prior iteration) must still be
-    # rejected — the critic re-validates the anchor against real audited tool calls every iteration,
+    # rejected - the critic re-validates the anchor against real audited tool calls every iteration,
     # so accumulated state is no shortcut to trust.
     poisoned = Claim.model_validate(
         {

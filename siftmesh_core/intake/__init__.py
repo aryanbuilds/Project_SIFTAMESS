@@ -1,6 +1,6 @@
 """Operator-intake helpers (TRUSTED context, distinct from hostile evidence).
 
-The incident brief is the operator's investigation OBJECTIVE — trusted context, NOT hostile
+The incident brief is the operator's investigation OBJECTIVE - trusted context, NOT hostile
 evidence. It is designated explicitly (``--brief``), kept out of the manifest's hostile ``files``
 set, and rendered into ``context/incident_brief.md``. See :mod:`siftmesh_core.intake.brief`.
 """

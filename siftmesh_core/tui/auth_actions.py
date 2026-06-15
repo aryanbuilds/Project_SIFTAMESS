@@ -1,15 +1,15 @@
 """Auth helpers for the onboarding + judge tabs (Textual-free core; the screen runs them threaded).
 
 Two jobs:
-- ``auth_command(profile_id)`` — the exact vendor login argv to run interactively (the screen wraps
+- ``auth_command(profile_id)`` - the exact vendor login argv to run interactively (the screen wraps
   it in ``App.suspend()`` so the real TTY drives the browser/paste flow), or ``None`` for an agent
   with no interactive login (gemini → API-key only since consumer OAuth ended 2026).
-- ``save_provider_key`` / ``validate_provider_key`` — persist a LiteLLM provider key to the 600-perm
+- ``save_provider_key`` / ``validate_provider_key`` - persist a LiteLLM provider key to the 600-perm
   env file (``secrets_env``) only after it validates (free ``get_valid_models`` endpoint, then a
   minimal ``check_valid_key`` call). Never logs the key. A rejected key is NOT persisted; if LiteLLM
   is absent the key is saved unvalidated (honest message).
 
-Pure logic only — the caller is responsible for running ``save_provider_key`` (network) and the
+Pure logic only - the caller is responsible for running ``save_provider_key`` (network) and the
 ``subprocess.run(auth_command(...))`` in a worker thread, never on the UI thread.
 """
 
@@ -81,7 +81,7 @@ def validate_provider_key(
     try:
         import litellm
     except ImportError:
-        return (None, "saved — install the `llm` extra (`uv sync --extra llm`) to validate")
+        return (None, "saved - install the `llm` extra (`uv sync --extra llm`) to validate")
     # Primary: the free /models endpoint (lists models, no completion cost).
     try:
         models = litellm.get_valid_models(
@@ -91,15 +91,15 @@ def validate_provider_key(
             api_base=api_base,
         )
         if models:
-            return (True, f"valid — {len(models)} models available")
+            return (True, f"valid - {len(models)} models available")
     except Exception:
         pass
-    # Fallback: a minimal completion (max_tokens small) — costs ~nothing but proves the key.
+    # Fallback: a minimal completion (max_tokens small) - costs ~nothing but proves the key.
     full = model or spec.default_model
     if full and "/" not in full:
         full = spec.prefix + full
     if not full:
-        return (None, "saved — provide a model to validate this gateway key")
+        return (None, "saved - provide a model to validate this gateway key")
     try:
         if litellm.check_valid_key(model=full, api_key=key):
             return (True, "valid (verified via a minimal call)")

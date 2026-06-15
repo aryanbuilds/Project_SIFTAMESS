@@ -37,7 +37,7 @@ profiles:
   # Agent-neutral headless connectors (Epic Q). One config-driven adapter; adding an agent is a row.
   # Recipes are research-grounded (2026-06-11, PLAN/13) but drift; flags/ids tagged `verify-live` are
   # confirmed on the maintainer box before a live run (CLAUDE §2B). native_tool_argv carries the
-  # native-tool DENY/sandbox flags and is REQUIRED — a recipe without it fails closed (not dispatched).
+  # native-tool DENY/sandbox flags and is REQUIRED - a recipe without it fails closed (not dispatched).
   # mcp_strategy: only `claude_flag` reaches the run-scoped typed tools today; these are `none`
   # (run sandboxed, but no typed tools until per-run MCP wiring lands in round 2 / ACP).
   - profile_id: gemini_headless          # live Gemini CLI: `gemini -p "<prompt>" --output-format json`
@@ -65,7 +65,7 @@ profiles:
     cost_class: expensive
     model: gpt-5.5                        # verify-live (gpt-5.5 default; gpt-5.4-mini cheaper)
     launch_argv: ["codex", "exec"]        # confirmed (codex exec = non-interactive)
-    model_flag: "--model"                 # confirmed (-m/--model) — without this the model was silently never sent
+    model_flag: "--model"                 # confirmed (-m/--model) - without this the model was silently never sent
     # --skip-git-repo-check is MANDATORY (codex exec refuses to run outside a git repo; run dirs aren't).
     extra_argv: ["--json", "--skip-git-repo-check"]   # confirmed
     # Sandbox: read-only (no writes/network, OS-enforced) + never escalate approvals + --ephemeral

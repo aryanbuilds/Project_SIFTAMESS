@@ -1,4 +1,4 @@
-"""Epic O — the cockpit data layer (Textual-free; deterministic, against the golden run)."""
+"""Epic O - the cockpit data layer (Textual-free; deterministic, against the golden run)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ _NOW = datetime(2030, 1, 1, tzinfo=UTC)
 
 
 def test_golden_ledger_snapshot_renders_without_run_state() -> None:
-    # The golden run has full ledgers but NO run_state.json — the snapshot must still render the
+    # The golden run has full ledgers but NO run_state.json - the snapshot must still render the
     # tasks/claims/agents/events from the ledgers (run_state is optional).
     snap = build_snapshot(RunPaths(root=GOLDEN), now=_NOW)
     assert snap.exists is True

@@ -1,4 +1,4 @@
-"""Evidence tools (D4) — always-real, pure-stdlib.
+"""Evidence tools (D4) - always-real, pure-stdlib.
 
 ``compute_hash_manifest`` and ``create_readonly_evidence_vault`` wrap the Epic B
 evidence primitives (streaming SHA-256 walk, read-only posture) and run through the

@@ -1,4 +1,4 @@
-"""G1/G2/G3 — structural critic verdicts, ledgers, and the clean-floor no-op."""
+"""G1/G2/G3 - structural critic verdicts, ledgers, and the clean-floor no-op."""
 
 from __future__ import annotations
 

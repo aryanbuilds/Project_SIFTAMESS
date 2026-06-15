@@ -10,7 +10,7 @@ becomes a first-class, auditable derived artifact that the ``analyze-memory`` to
 * a ``derived_written`` custody event is recorded; and
 * ``decompress_start`` / ``decompress_done`` orchestration events are logged.
 
-Decompression is *evidence preparation*, not forensic analysis — so it is a CLI primitive, not
+Decompression is *evidence preparation*, not forensic analysis - so it is a CLI primitive, not
 an MCP tool. It never enters the typed-tool allowlist and never writes to ``tool_calls.jsonl``;
 its operation id uses a distinct ``DECOMP-NNN`` namespace. The original archive is read-only.
 """

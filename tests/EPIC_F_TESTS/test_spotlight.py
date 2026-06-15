@@ -1,4 +1,4 @@
-"""F3 — spotlight wrap/scan + injection-alert logging (logged, not acted upon)."""
+"""F3 - spotlight wrap/scan + injection-alert logging (logged, not acted upon)."""
 
 from __future__ import annotations
 

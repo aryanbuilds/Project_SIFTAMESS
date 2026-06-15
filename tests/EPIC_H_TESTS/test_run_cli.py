@@ -1,4 +1,4 @@
-"""H6/H7 — the `run`/`resume`/`status`/`approve`/`reject` CLI over the real engine."""
+"""H6/H7 - the `run`/`resume`/`status`/`approve`/`reject` CLI over the real engine."""
 
 from __future__ import annotations
 

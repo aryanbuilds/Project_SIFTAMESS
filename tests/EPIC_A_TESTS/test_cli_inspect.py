@@ -1,7 +1,7 @@
 """Debug inspection commands (CLAUDE §4): tasks list/show, claims list/show, audit tail.
 
 Real read-only views over a real run (the shared root factory: manifest + plan +
-dispatch of the committed fixtures) — these were the last CLI print stubs. Each test
+dispatch of the committed fixtures) - these were the last CLI print stubs. Each test
 asserts genuine run-dir content.
 """
 

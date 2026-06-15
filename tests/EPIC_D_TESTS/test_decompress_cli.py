@@ -1,4 +1,4 @@
-"""GAP 1 — `siftmesh decompress`: a memory archive becomes a first-class derived image.
+"""GAP 1 - `siftmesh decompress`: a memory archive becomes a first-class derived image.
 
 CI-safe: the "happy path" uses a *plain* zip whose member is a fake raw image, so no real
 ``7z`` binary is needed. The fail-closed test forces a ``.7z`` member with ``7z`` absent.

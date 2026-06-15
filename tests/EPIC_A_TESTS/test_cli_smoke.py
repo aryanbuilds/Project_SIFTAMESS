@@ -35,7 +35,7 @@ EXPECTED_COMMANDS = [
 ]
 
 # Forensic specialists are grouped under `siftmesh evidence` (old top-level names kept as hidden
-# deprecated aliases — see test_evidence_group.py).
+# deprecated aliases - see test_evidence_group.py).
 EVIDENCE_SUBCOMMANDS = ["extract", "memory", "decompress", "ingest"]
 
 # No print stubs remain: every registered command has real behaviour covered by its

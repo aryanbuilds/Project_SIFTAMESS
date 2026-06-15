@@ -1,10 +1,10 @@
 """Shared schema primitives (Epic C foundation, used by the B pull-forward).
 
 ``UtcDateTime`` forces JSON serialization to UTC ISO-8601 with a ``Z`` suffix
-(D4 — UTC everywhere) regardless of the input timezone, while keeping the
+(D4 - UTC everywhere) regardless of the input timezone, while keeping the
 in-memory value a real ``datetime``. ``Sha256`` is the validated lowercase-hex
 digest type reused as the evidence anchor across every schema. ``StrictModel``
-fails closed on unknown fields and invalid reassignment (D5 — a model that fails
+fails closed on unknown fields and invalid reassignment (D5 - a model that fails
 validation is never written to disk).
 """
 

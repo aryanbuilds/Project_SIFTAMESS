@@ -34,7 +34,7 @@ case_runs/
 case_*/
 
 # Per-machine project-scope config the TUI/setup writes (executor/agent preferences; no secrets).
-# Local choice, not a repo default — keep it off the remote. Secrets live in ~/.config/siftmesh/.env.
+# Local choice, not a repo default - keep it off the remote. Secrets live in ~/.config/siftmesh/.env.
 siftmesh.toml
 
 # Protocol SIFT case-workspace artifact (a global Stop-hook writes here on every claude run)

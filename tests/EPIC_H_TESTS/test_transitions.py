@@ -1,4 +1,4 @@
-"""H2 — frozen transition table: legal transitions allowed, illegal rejected."""
+"""H2 - frozen transition table: legal transitions allowed, illegal rejected."""
 
 from __future__ import annotations
 

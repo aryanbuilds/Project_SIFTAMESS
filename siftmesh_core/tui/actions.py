@@ -1,7 +1,7 @@
-"""Governed-call wrappers for the cockpit (Epic C full-console) — Textual-FREE, unit-testable.
+"""Governed-call wrappers for the cockpit (Epic C full-console) - Textual-FREE, unit-testable.
 
 These mirror the EXACT governed sequences the CLI uses (`cli.retry`, `cli._resolve_gate`) so the TUI
-duplicates no orchestration logic — it just calls these from `@work` threads. Each returns a short
+duplicates no orchestration logic - it just calls these from `@work` threads. Each returns a short
 status string for the UI to `notify()`; none touches the terminal.
 """
 
@@ -53,7 +53,7 @@ def retry_task(run: RunPaths, task_id: str, *, settings: SiftmeshSettings) -> Ac
         )
         if decision.action != "retry":
             return ActionResult(
-                False, f"retry refused: decide={decision.action} — {decision.reason}"
+                False, f"retry refused: decide={decision.action} - {decision.reason}"
             )
         write_retry(run, contract, from_attempt=result.attempt, cause=verdict.verdict)
         refs = dispatch_run(
@@ -101,7 +101,7 @@ def run_in_portions(
 
     Each portion is curated (hardlinked subset) → init → driven to terminal → pruned. After all
     portions, the runs are merged (``merge_runs`` needs >=2; a single portion just returns its run).
-    Each portion IS an independent resumable run (own run_state + persisted curated dir). Blocking —
+    Each portion IS an independent resumable run (own run_state + persisted curated dir). Blocking -
     call from a @work thread. ``progress`` reports per-portion; ``on_run`` hands each run to the UI
     so the cockpit can attach its live poll.
     """
@@ -141,9 +141,9 @@ def run_in_portions(
                 outcome = prune_run(run)
                 _emit(f"portion {n}/{total} done · pruned {human_bytes(outcome.bytes_freed)}")
             except PrunePolicyError:
-                _emit(f"portion {n}/{total} done (not pruned — run not terminal)")
+                _emit(f"portion {n}/{total} done (not pruned - run not terminal)")
         if len(source_runs) < 2:
-            one = source_runs[0].run_id if source_runs else "—"
+            one = source_runs[0].run_id if source_runs else "-"
             return ActionResult(True, f"single portion complete: {one}")
         merged = merge_runs(case_dir, [r.root for r in source_runs], settings=settings)
     except Exception as exc:

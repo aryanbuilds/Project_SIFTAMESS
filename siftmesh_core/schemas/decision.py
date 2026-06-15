@@ -1,4 +1,4 @@
-"""Decision schema (Epic G, G4) — the pure DECIDE function's output.
+"""Decision schema (Epic G, G4) - the pure DECIDE function's output.
 
 ``decide()`` (``orchestrator/decide.py``) maps a critic verdict + run/task facts to
 one of four actions per CLAUDE.md §12. The model is intentionally minimal and

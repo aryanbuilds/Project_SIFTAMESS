@@ -2,7 +2,7 @@
 
 ``EvidenceManifest`` is the typed contract the evidence vault serializes to
 ``evidence/evidence_manifest.json``; ``EvidenceFile`` is one hashed artifact.
-The I/O lives in ``evidence/manifest.py`` — these are types only.
+The I/O lives in ``evidence/manifest.py`` - these are types only.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class EvidenceManifest(StrictModel):
 
     ``incident_objective`` / ``incident_brief_path`` record an OPERATOR-supplied incident
     briefing (the investigation objective) when one is given via ``--brief``. The brief is
-    TRUSTED operator context, NOT hostile evidence — it is deliberately kept out of ``files``
+    TRUSTED operator context, NOT hostile evidence - it is deliberately kept out of ``files``
     (the hostile set the artifact router consumes) and lives under ``context/`` instead. Both
     default to ``None`` so manifests without a brief stay valid.
     """

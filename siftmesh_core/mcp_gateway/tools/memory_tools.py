@@ -1,4 +1,4 @@
-"""Memory analysis tool (Epic D deepening) — Volatility 3 triage (subprocess-only).
+"""Memory analysis tool (Epic D deepening) - Volatility 3 triage (subprocess-only).
 
 ``analyze_memory`` runs a curated set of Volatility 3 Windows plugins over a decompressed
 memory image and normalises the JSON output into typed rows. Volatility 3 is **VSL-licensed**,
@@ -177,7 +177,7 @@ def analyze_memory(
 
     def produce() -> dict[str, Any]:
         vol_exe = _vol_binary(vol_path)
-        # Symbol gate: windows.info must succeed, else nothing can be analysed — fail closed.
+        # Symbol gate: windows.info must succeed, else nothing can be analysed - fail closed.
         info_rows, _info_raw = _run_plugin(
             vol_exe,
             memory_path,

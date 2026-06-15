@@ -1,8 +1,8 @@
-"""Prompt-injection alert (Epic F, F3) — evidence that looks like an instruction.
+"""Prompt-injection alert (Epic F, F3) - evidence that looks like an instruction.
 
 When the spotlight scanner flags injection-like content in an evidence row or in a
 live agent's returned reasoning, an :class:`InjectionAlert` is appended to
-``claims/injection_alerts.jsonl``. In Epic F the alert is *logged only* — it never
+``claims/injection_alerts.jsonl``. In Epic F the alert is *logged only* - it never
 changes control flow (criterion 4: "injection changes nothing"). The downgrade /
 human-review consequence is wired by the critic in Epic G.
 """

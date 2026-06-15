@@ -5,7 +5,7 @@
 <!-- run_dir: rocba_full/case_runs/RUN-20260612-163324 -->
 <!-- load_mode: strict -->
 <!-- SIFTMESH-REPORT-BODY-BELOW -->
-# SIFTMesh Forensic Report — RUN-20260612-163324
+# SIFTMesh Forensic Report - RUN-20260612-163324
 
 ## Executive summary
 
@@ -25,154 +25,154 @@
 
 634 evidence-anchored finding(s) bear on the objective; the highest-signal are listed here (full set under Findings):
 
-**TASK-003-CLAIM-001** — Parsed 2 PowerShell event(s).
+**TASK-003-CLAIM-001** - Parsed 2 PowerShell event(s).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.950
 
-**TASK-003-CLAIM-002** — PowerShell EventID 4104 (script-block logging) observed (event #1).
+**TASK-003-CLAIM-002** - PowerShell EventID 4104 (script-block logging) observed (event #1).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.900
 
-**TASK-003-CLAIM-003** — PowerShell EventID 4104 (script-block logging) observed (event #2).
+**TASK-003-CLAIM-003** - PowerShell EventID 4104 (script-block logging) observed (event #2).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.900
 
-**TASK-005-CLAIM-001** — ACCOUNTSCONTROLHOST.EXE executed 1 time(s).
+**TASK-005-CLAIM-001** - ACCOUNTSCONTROLHOST.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/ACCOUNTSCONTROLHOST.EXE-00EAE375.pf` · sha256 `cdf96e8f8fe515b6…` · tool `analyze_prefetch` · call `TOOL-009` · confidence 0.900
 
-**TASK-005-CLAIM-003** — ACRORD32.EXE executed 6 time(s).
+**TASK-005-CLAIM-003** - ACRORD32.EXE executed 6 time(s).
 - artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA2.pf` · sha256 `1fa5b2baeef7a85d…` · tool `analyze_prefetch` · call `TOOL-010` · confidence 0.900
 
-**TASK-005-CLAIM-005** — ACRORD32.EXE executed 9 time(s).
+**TASK-005-CLAIM-005** - ACRORD32.EXE executed 9 time(s).
 - artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA3.pf` · sha256 `5a0067a046e788b4…` · tool `analyze_prefetch` · call `TOOL-011` · confidence 0.900
 
-**TASK-005-CLAIM-007** — ADOBEARM.EXE executed 12 time(s).
+**TASK-005-CLAIM-007** - ADOBEARM.EXE executed 12 time(s).
 - artifact `evidence/extracted/Prefetch/ADOBEARM.EXE-F9223367.pf` · sha256 `0eb5444acf83f966…` · tool `analyze_prefetch` · call `TOOL-012` · confidence 0.900
 
-**TASK-005-CLAIM-009** — SLACK.EXE executed 3 time(s).
+**TASK-005-CLAIM-009** - SLACK.EXE executed 3 time(s).
 - artifact `evidence/extracted/Prefetch/SLACK.EXE-BB3709B1.pf` · sha256 `9f8599da800a2bfe…` · tool `analyze_prefetch` · call `TOOL-013` · confidence 0.900
 
-**TASK-005-CLAIM-011** — SMARTSCREEN.EXE executed 55 time(s).
+**TASK-005-CLAIM-011** - SMARTSCREEN.EXE executed 55 time(s).
 - artifact `evidence/extracted/Prefetch/SMARTSCREEN.EXE-EACC1250.pf` · sha256 `ae489f142ae80a31…` · tool `analyze_prefetch` · call `TOOL-014` · confidence 0.900
 
-**TASK-005-CLAIM-013** — SMSS.EXE executed 2 time(s).
+**TASK-005-CLAIM-013** - SMSS.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SMSS.EXE-B5B810DB.pf` · sha256 `53141117e95f410f…` · tool `analyze_prefetch` · call `TOOL-015` · confidence 0.900
 
-**TASK-005-CLAIM-015** — MICROSOFTEDGEUPDATE.EXE executed 42 time(s).
+**TASK-005-CLAIM-015** - MICROSOFTEDGEUPDATE.EXE executed 42 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFTEDGEUPDATE.EXE-7A595326.pf` · sha256 `a9e95014a8f0efba…` · tool `analyze_prefetch` · call `TOOL-016` · confidence 0.900
 
-**TASK-005-CLAIM-017** — MICROSOFTEDGE_X64_86.0.622.69 executed 1 time(s).
+**TASK-005-CLAIM-017** - MICROSOFTEDGE_X64_86.0.622.69 executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFTEDGE_X64_86.0.622.69-3BAFD419.pf` · sha256 `fcc2d46fb313bdd1…` · tool `analyze_prefetch` · call `TOOL-017` · confidence 0.900
 
-**TASK-005-CLAIM-019** — MPCMDRUN.EXE executed 8 time(s).
+**TASK-005-CLAIM-019** - MPCMDRUN.EXE executed 8 time(s).
 - artifact `evidence/extracted/Prefetch/MPCMDRUN.EXE-26D355DD.pf` · sha256 `9316e46b9682a555…` · tool `analyze_prefetch` · call `TOOL-019` · confidence 0.900
 
-**TASK-005-CLAIM-021** — MPSIGSTUB.EXE executed 1 time(s).
+**TASK-005-CLAIM-021** - MPSIGSTUB.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MPSIGSTUB.EXE-5D0450B3.pf` · sha256 `1038a802dc7de27f…` · tool `analyze_prefetch` · call `TOOL-020` · confidence 0.900
 
-**TASK-005-CLAIM-023** — MRC.EXE executed 1 time(s).
+**TASK-005-CLAIM-023** - MRC.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MRC.EXE-AF664503.pf` · sha256 `7e14509938c14313…` · tool `analyze_prefetch` · call `TOOL-021` · confidence 0.900
 
-**TASK-005-CLAIM-025** — MSCORSVW.EXE executed 10 time(s).
+**TASK-005-CLAIM-025** - MSCORSVW.EXE executed 10 time(s).
 - artifact `evidence/extracted/Prefetch/MSCORSVW.EXE-16B291C4.pf` · sha256 `44d155129139b6ef…` · tool `analyze_prefetch` · call `TOOL-022` · confidence 0.900
 
-**TASK-005-CLAIM-027** — SVCHOST.EXE executed 40 time(s).
+**TASK-005-CLAIM-027** - SVCHOST.EXE executed 40 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-C625B657.pf` · sha256 `8d69efd0c65687a5…` · tool `analyze_prefetch` · call `TOOL-024` · confidence 0.900
 
-**TASK-005-CLAIM-029** — SVCHOST.EXE executed 38 time(s).
+**TASK-005-CLAIM-029** - SVCHOST.EXE executed 38 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-D8C907E1.pf` · sha256 `5019325e11e9c4d5…` · tool `analyze_prefetch` · call `TOOL-025` · confidence 0.900
 
-**TASK-005-CLAIM-031** — SVCHOST.EXE executed 2 time(s).
+**TASK-005-CLAIM-031** - SVCHOST.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FA38241C.pf` · sha256 `21e618d1fb9e23a5…` · tool `analyze_prefetch` · call `TOOL-027` · confidence 0.900
 
-**TASK-005-CLAIM-033** — SVCHOST.EXE executed 2 time(s).
+**TASK-005-CLAIM-033** - SVCHOST.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FB759C0F.pf` · sha256 `6447616f59ab15be…` · tool `analyze_prefetch` · call `TOOL-028` · confidence 0.900
 
-**TASK-005-CLAIM-035** — MSEDGE.EXE executed 16 time(s).
+**TASK-005-CLAIM-035** - MSEDGE.EXE executed 16 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9A.pf` · sha256 `b8d2abbcc3bf4bf6…` · tool `analyze_prefetch` · call `TOOL-029` · confidence 0.900
 
-**TASK-005-CLAIM-037** — MSEDGE.EXE executed 79 time(s).
+**TASK-005-CLAIM-037** - MSEDGE.EXE executed 79 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9B.pf` · sha256 `03c7a584003b24f5…` · tool `analyze_prefetch` · call `TOOL-030` · confidence 0.900
 
-**TASK-005-CLAIM-039** — MSEDGE.EXE executed 15 time(s).
+**TASK-005-CLAIM-039** - MSEDGE.EXE executed 15 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9C.pf` · sha256 `45f525b3e9b19520…` · tool `analyze_prefetch` · call `TOOL-031` · confidence 0.900
 
-**TASK-005-CLAIM-041** — MSEDGE.EXE executed 18 time(s).
+**TASK-005-CLAIM-041** - MSEDGE.EXE executed 18 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA1.pf` · sha256 `5c244fe5434258e4…` · tool `analyze_prefetch` · call `TOOL-032` · confidence 0.900
 
-**TASK-005-CLAIM-043** — MSEDGE.EXE executed 140 time(s).
+**TASK-005-CLAIM-043** - MSEDGE.EXE executed 140 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA2.pf` · sha256 `b9be7d0d92440393…` · tool `analyze_prefetch` · call `TOOL-033` · confidence 0.900
 
-**TASK-005-CLAIM-045** — MSIEXEC.EXE executed 4 time(s).
+**TASK-005-CLAIM-045** - MSIEXEC.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-8FFB1633.pf` · sha256 `36525dffc25a45b4…` · tool `analyze_prefetch` · call `TOOL-034` · confidence 0.900
 
-**TASK-005-CLAIM-047** — MSIEXEC.EXE executed 2 time(s).
+**TASK-005-CLAIM-047** - MSIEXEC.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-CDBFC0F7.pf` · sha256 `93802ebdfc0aa146…` · tool `analyze_prefetch` · call `TOOL-035` · confidence 0.900
 
-**TASK-005-CLAIM-049** — MSTSC.EXE executed 2 time(s).
+**TASK-005-CLAIM-049** - MSTSC.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/MSTSC.EXE-2A83B7D7.pf` · sha256 `e82fb7274688efba…` · tool `analyze_prefetch` · call `TOOL-036` · confidence 0.900
 
-**TASK-005-CLAIM-051** — NETSH.EXE executed 1 time(s).
+**TASK-005-CLAIM-051** - NETSH.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/NETSH.EXE-8174DA63.pf` · sha256 `6a51b32f4aed31b4…` · tool `analyze_prefetch` · call `TOOL-037` · confidence 0.900
 
-**TASK-005-CLAIM-053** — NGEN.EXE executed 24 time(s).
+**TASK-005-CLAIM-053** - NGEN.EXE executed 24 time(s).
 - artifact `evidence/extracted/Prefetch/NGEN.EXE-4A8DA13E.pf` · sha256 `9efeb37b2cc7665f…` · tool `analyze_prefetch` · call `TOOL-038` · confidence 0.900
 
-**TASK-005-CLAIM-055** — NGEN.EXE executed 11 time(s).
+**TASK-005-CLAIM-055** - NGEN.EXE executed 11 time(s).
 - artifact `evidence/extracted/Prefetch/NGEN.EXE-734C6620.pf` · sha256 `e96c38adda740686…` · tool `analyze_prefetch` · call `TOOL-039` · confidence 0.900
 
-**TASK-005-CLAIM-057** — BACKGROUNDTASKHOST.EXE executed 258 time(s).
+**TASK-005-CLAIM-057** - BACKGROUNDTASKHOST.EXE executed 258 time(s).
 - artifact `evidence/extracted/Prefetch/BACKGROUNDTASKHOST.EXE-7EF448C4.pf` · sha256 `9f028f151904897a…` · tool `analyze_prefetch` · call `TOOL-040` · confidence 0.900
 
-**TASK-005-CLAIM-059** — DLLHOST.EXE executed 17 time(s).
+**TASK-005-CLAIM-059** - DLLHOST.EXE executed 17 time(s).
 - artifact `evidence/extracted/Prefetch/DLLHOST.EXE-1BAE06BB.pf` · sha256 `cdf815a557889b9c…` · tool `analyze_prefetch` · call `TOOL-041` · confidence 0.900
 
-**TASK-005-CLAIM-061** — FIREFOX.EXE executed 18 time(s).
+**TASK-005-CLAIM-061** - FIREFOX.EXE executed 18 time(s).
 - artifact `evidence/extracted/Prefetch/FIREFOX.EXE-66015FD1.pf` · sha256 `6d6dea00fc26ca73…` · tool `analyze_prefetch` · call `TOOL-042` · confidence 0.900
 
-**TASK-005-CLAIM-063** — MICROSOFT.PHOTOS.EXE executed 14 time(s).
+**TASK-005-CLAIM-063** - MICROSOFT.PHOTOS.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFT.PHOTOS.EXE-3F2DACAC.pf` · sha256 `8b07f1912d9db71a…` · tool `analyze_prefetch` · call `TOOL-043` · confidence 0.900
 
-**TASK-005-CLAIM-065** — RUNDLL32.EXE executed 14 time(s).
+**TASK-005-CLAIM-065** - RUNDLL32.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-52A71BD0.pf` · sha256 `4feb64e53e299e4e…` · tool `analyze_prefetch` · call `TOOL-044` · confidence 0.900
 
-**TASK-005-CLAIM-067** — SIHCLIENT.EXE executed 31 time(s).
+**TASK-005-CLAIM-067** - SIHCLIENT.EXE executed 31 time(s).
 - artifact `evidence/extracted/Prefetch/SIHCLIENT.EXE-98C47F6C.pf` · sha256 `d106c83fab75c296…` · tool `analyze_prefetch` · call `TOOL-045` · confidence 0.900
 
-**TASK-005-CLAIM-069** — SPPSVC.EXE executed 166 time(s).
+**TASK-005-CLAIM-069** - SPPSVC.EXE executed 166 time(s).
 - artifact `evidence/extracted/Prefetch/SPPSVC.EXE-96070FE0.pf` · sha256 `87f37b97b2d2e528…` · tool `analyze_prefetch` · call `TOOL-046` · confidence 0.900
 
-**TASK-005-CLAIM-071** — SVCHOST.EXE executed 14 time(s).
+**TASK-005-CLAIM-071** - SVCHOST.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-117C4441.pf` · sha256 `885ebba7552ecfeb…` · tool `analyze_prefetch` · call `TOOL-047` · confidence 0.900
 
-**TASK-005-CLAIM-073** — SVCHOST.EXE executed 284 time(s).
+**TASK-005-CLAIM-073** - SVCHOST.EXE executed 284 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-A79A44A2.pf` · sha256 `b8d21e858f9a4f01…` · tool `analyze_prefetch` · call `TOOL-048` · confidence 0.900
 
-**TASK-005-CLAIM-075** — SYSTEMPROPERTIESADVANCED.EXE executed 1 time(s).
+**TASK-005-CLAIM-075** - SYSTEMPROPERTIESADVANCED.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESADVANCED.EXE-27792BE5.pf` · sha256 `e790d0ab0b60e347…` · tool `analyze_prefetch` · call `TOOL-049` · confidence 0.900
 
-**TASK-005-CLAIM-077** — SYSTEMPROPERTIESPROTECTION.EX executed 4 time(s).
+**TASK-005-CLAIM-077** - SYSTEMPROPERTIESPROTECTION.EX executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESPROTECTION.EX-81A2FDE2.pf` · sha256 `81a66a5373d5bd75…` · tool `analyze_prefetch` · call `TOOL-050` · confidence 0.900
 
-**TASK-005-CLAIM-079** — SYSTEMSETTINGS.EXE executed 4 time(s).
+**TASK-005-CLAIM-079** - SYSTEMSETTINGS.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMSETTINGS.EXE-BE0858C5.pf` · sha256 `8ebd52120900bb5f…` · tool `analyze_prefetch` · call `TOOL-051` · confidence 0.900
 
-**TASK-005-CLAIM-081** — TABTIP.EXE executed 27 time(s).
+**TASK-005-CLAIM-081** - TABTIP.EXE executed 27 time(s).
 - artifact `evidence/extracted/Prefetch/TABTIP.EXE-9740CA06.pf` · sha256 `9e04d178d54b5c28…` · tool `analyze_prefetch` · call `TOOL-052` · confidence 0.900
 
-**TASK-005-CLAIM-083** — TASKHOSTW.EXE executed 284 time(s).
+**TASK-005-CLAIM-083** - TASKHOSTW.EXE executed 284 time(s).
 - artifact `evidence/extracted/Prefetch/TASKHOSTW.EXE-2E5D4B75.pf` · sha256 `3bfda9f3bd9d1be7…` · tool `analyze_prefetch` · call `TOOL-053` · confidence 0.900
 
-**TASK-005-CLAIM-085** — TASKMGR.EXE executed 5 time(s).
+**TASK-005-CLAIM-085** - TASKMGR.EXE executed 5 time(s).
 - artifact `evidence/extracted/Prefetch/TASKMGR.EXE-4C8500BA.pf` · sha256 `5d75b8cc4365e949…` · tool `analyze_prefetch` · call `TOOL-054` · confidence 0.900
 
-**TASK-005-CLAIM-087** — TEAMS.EXE executed 1 time(s).
+**TASK-005-CLAIM-087** - TEAMS.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB058.pf` · sha256 `30ed53ec0940064d…` · tool `analyze_prefetch` · call `TOOL-055` · confidence 0.900
 
-**TASK-005-CLAIM-089** — TEAMS.EXE executed 10 time(s).
+**TASK-005-CLAIM-089** - TEAMS.EXE executed 10 time(s).
 - artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB060.pf` · sha256 `300ad0adfbfa7b55…` · tool `analyze_prefetch` · call `TOOL-057` · confidence 0.900
 
-**TASK-005-CLAIM-091** — TEXTINPUTHOST.EXE executed 4 time(s).
+**TASK-005-CLAIM-091** - TEXTINPUTHOST.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/TEXTINPUTHOST.EXE-8D3D20AC.pf` · sha256 `da259d41ada81a81…` · tool `analyze_prefetch` · call `TOOL-058` · confidence 0.900
 
-**TASK-005-CLAIM-093** — RUNDLL32.EXE executed 1 time(s).
+**TASK-005-CLAIM-093** - RUNDLL32.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-171F7F04.pf` · sha256 `5fe3d125e2e7d677…` · tool `analyze_prefetch` · call `TOOL-059` · confidence 0.900
 
 ## Scope & case metadata
@@ -202,19 +202,19 @@
 | parse_usnjrnl | real | 1 |
 
 **13 tool invocation(s) failed** (partial coverage):
-- `TOOL-002` build_super_timeline on `rocba-cdrive.e01` — error (plaso_error)
-- `TOOL-003` build_super_timeline on `rocba-cdrive.e01` — error (plaso_error)
-- `TOOL-018` analyze_prefetch on `evidence/extracted/Prefetch/MOUSOCOREWORKER.EXE-4429AC2B.pf` — error (parse_error)
-- `TOOL-023` analyze_prefetch on `evidence/extracted/Prefetch/MSCORSVW.EXE-8CE1A322.pf` — error (parse_error)
-- `TOOL-026` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-F952D9A9.pf` — error (parse_error)
-- `TOOL-056` analyze_prefetch on `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB059.pf` — error (parse_error)
-- `TOOL-087` analyze_prefetch on `evidence/extracted/Prefetch/NGENTASK.EXE-0E6CEC17.pf` — error (parse_error)
-- `TOOL-088` analyze_prefetch on `evidence/extracted/Prefetch/NGENTASK.EXE-849BFD75.pf` — error (parse_error)
-- `TOOL-105` analyze_prefetch on `evidence/extracted/Prefetch/RUNTIMEBROKER.EXE-19D1E571.pf` — error (parse_error)
-- `TOOL-115` analyze_prefetch on `evidence/extracted/Prefetch/RUNTIMEBROKER.EXE-E07C8EBA.pf` — error (parse_error)
-- `TOOL-145` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-73D024B2.pf` — error (parse_error)
-- `TOOL-148` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-852EC587.pf` — error (parse_error)
-- `TOOL-213` analyze_prefetch on `evidence/extracted/Prefetch/WMIPRVSE.EXE-E8B8DD29.pf` — error (parse_error)
+- `TOOL-002` build_super_timeline on `rocba-cdrive.e01` - error (plaso_error)
+- `TOOL-003` build_super_timeline on `rocba-cdrive.e01` - error (plaso_error)
+- `TOOL-018` analyze_prefetch on `evidence/extracted/Prefetch/MOUSOCOREWORKER.EXE-4429AC2B.pf` - error (parse_error)
+- `TOOL-023` analyze_prefetch on `evidence/extracted/Prefetch/MSCORSVW.EXE-8CE1A322.pf` - error (parse_error)
+- `TOOL-026` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-F952D9A9.pf` - error (parse_error)
+- `TOOL-056` analyze_prefetch on `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB059.pf` - error (parse_error)
+- `TOOL-087` analyze_prefetch on `evidence/extracted/Prefetch/NGENTASK.EXE-0E6CEC17.pf` - error (parse_error)
+- `TOOL-088` analyze_prefetch on `evidence/extracted/Prefetch/NGENTASK.EXE-849BFD75.pf` - error (parse_error)
+- `TOOL-105` analyze_prefetch on `evidence/extracted/Prefetch/RUNTIMEBROKER.EXE-19D1E571.pf` - error (parse_error)
+- `TOOL-115` analyze_prefetch on `evidence/extracted/Prefetch/RUNTIMEBROKER.EXE-E07C8EBA.pf` - error (parse_error)
+- `TOOL-145` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-73D024B2.pf` - error (parse_error)
+- `TOOL-148` analyze_prefetch on `evidence/extracted/Prefetch/SVCHOST.EXE-852EC587.pf` - error (parse_error)
+- `TOOL-213` analyze_prefetch on `evidence/extracted/Prefetch/WMIPRVSE.EXE-E8B8DD29.pf` - error (parse_error)
 
 ## Timeline of events (UTC)
 
@@ -274,203 +274,203 @@ _… 584 more timestamped findings._
 
 ## Confirmed findings
 
-**TASK-003-CLAIM-001** — Parsed 2 PowerShell event(s).
+**TASK-003-CLAIM-001** - Parsed 2 PowerShell event(s).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.950
 - ATT&CK: Execution / T1059 Command and Scripting Interpreter
 
-**TASK-003-CLAIM-002** — PowerShell EventID 4104 (script-block logging) observed (event #1).
+**TASK-003-CLAIM-002** - PowerShell EventID 4104 (script-block logging) observed (event #1).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.900
 - ATT&CK: Execution / T1059.001 PowerShell
 
-**TASK-003-CLAIM-003** — PowerShell EventID 4104 (script-block logging) observed (event #2).
+**TASK-003-CLAIM-003** - PowerShell EventID 4104 (script-block logging) observed (event #2).
 - artifact `evidence/extracted/Microsoft-Windows-PowerShell%4Operational.evtx` · sha256 `e81d6040eaacd01e…` · tool `parse_evtx_powershell` · call `TOOL-004` · confidence 0.900
 - ATT&CK: Execution / T1059.001 PowerShell
 
-**TASK-005-CLAIM-001** — ACCOUNTSCONTROLHOST.EXE executed 1 time(s).
+**TASK-005-CLAIM-001** - ACCOUNTSCONTROLHOST.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/ACCOUNTSCONTROLHOST.EXE-00EAE375.pf` · sha256 `cdf96e8f8fe515b6…` · tool `analyze_prefetch` · call `TOOL-009` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-003** — ACRORD32.EXE executed 6 time(s).
+**TASK-005-CLAIM-003** - ACRORD32.EXE executed 6 time(s).
 - artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA2.pf` · sha256 `1fa5b2baeef7a85d…` · tool `analyze_prefetch` · call `TOOL-010` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-005** — ACRORD32.EXE executed 9 time(s).
+**TASK-005-CLAIM-005** - ACRORD32.EXE executed 9 time(s).
 - artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA3.pf` · sha256 `5a0067a046e788b4…` · tool `analyze_prefetch` · call `TOOL-011` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-007** — ADOBEARM.EXE executed 12 time(s).
+**TASK-005-CLAIM-007** - ADOBEARM.EXE executed 12 time(s).
 - artifact `evidence/extracted/Prefetch/ADOBEARM.EXE-F9223367.pf` · sha256 `0eb5444acf83f966…` · tool `analyze_prefetch` · call `TOOL-012` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-009** — SLACK.EXE executed 3 time(s).
+**TASK-005-CLAIM-009** - SLACK.EXE executed 3 time(s).
 - artifact `evidence/extracted/Prefetch/SLACK.EXE-BB3709B1.pf` · sha256 `9f8599da800a2bfe…` · tool `analyze_prefetch` · call `TOOL-013` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-011** — SMARTSCREEN.EXE executed 55 time(s).
+**TASK-005-CLAIM-011** - SMARTSCREEN.EXE executed 55 time(s).
 - artifact `evidence/extracted/Prefetch/SMARTSCREEN.EXE-EACC1250.pf` · sha256 `ae489f142ae80a31…` · tool `analyze_prefetch` · call `TOOL-014` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-013** — SMSS.EXE executed 2 time(s).
+**TASK-005-CLAIM-013** - SMSS.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SMSS.EXE-B5B810DB.pf` · sha256 `53141117e95f410f…` · tool `analyze_prefetch` · call `TOOL-015` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-015** — MICROSOFTEDGEUPDATE.EXE executed 42 time(s).
+**TASK-005-CLAIM-015** - MICROSOFTEDGEUPDATE.EXE executed 42 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFTEDGEUPDATE.EXE-7A595326.pf` · sha256 `a9e95014a8f0efba…` · tool `analyze_prefetch` · call `TOOL-016` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-017** — MICROSOFTEDGE_X64_86.0.622.69 executed 1 time(s).
+**TASK-005-CLAIM-017** - MICROSOFTEDGE_X64_86.0.622.69 executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFTEDGE_X64_86.0.622.69-3BAFD419.pf` · sha256 `fcc2d46fb313bdd1…` · tool `analyze_prefetch` · call `TOOL-017` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-019** — MPCMDRUN.EXE executed 8 time(s).
+**TASK-005-CLAIM-019** - MPCMDRUN.EXE executed 8 time(s).
 - artifact `evidence/extracted/Prefetch/MPCMDRUN.EXE-26D355DD.pf` · sha256 `9316e46b9682a555…` · tool `analyze_prefetch` · call `TOOL-019` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-021** — MPSIGSTUB.EXE executed 1 time(s).
+**TASK-005-CLAIM-021** - MPSIGSTUB.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MPSIGSTUB.EXE-5D0450B3.pf` · sha256 `1038a802dc7de27f…` · tool `analyze_prefetch` · call `TOOL-020` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-023** — MRC.EXE executed 1 time(s).
+**TASK-005-CLAIM-023** - MRC.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/MRC.EXE-AF664503.pf` · sha256 `7e14509938c14313…` · tool `analyze_prefetch` · call `TOOL-021` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-025** — MSCORSVW.EXE executed 10 time(s).
+**TASK-005-CLAIM-025** - MSCORSVW.EXE executed 10 time(s).
 - artifact `evidence/extracted/Prefetch/MSCORSVW.EXE-16B291C4.pf` · sha256 `44d155129139b6ef…` · tool `analyze_prefetch` · call `TOOL-022` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-027** — SVCHOST.EXE executed 40 time(s).
+**TASK-005-CLAIM-027** - SVCHOST.EXE executed 40 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-C625B657.pf` · sha256 `8d69efd0c65687a5…` · tool `analyze_prefetch` · call `TOOL-024` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-029** — SVCHOST.EXE executed 38 time(s).
+**TASK-005-CLAIM-029** - SVCHOST.EXE executed 38 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-D8C907E1.pf` · sha256 `5019325e11e9c4d5…` · tool `analyze_prefetch` · call `TOOL-025` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-031** — SVCHOST.EXE executed 2 time(s).
+**TASK-005-CLAIM-031** - SVCHOST.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FA38241C.pf` · sha256 `21e618d1fb9e23a5…` · tool `analyze_prefetch` · call `TOOL-027` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-033** — SVCHOST.EXE executed 2 time(s).
+**TASK-005-CLAIM-033** - SVCHOST.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FB759C0F.pf` · sha256 `6447616f59ab15be…` · tool `analyze_prefetch` · call `TOOL-028` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-035** — MSEDGE.EXE executed 16 time(s).
+**TASK-005-CLAIM-035** - MSEDGE.EXE executed 16 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9A.pf` · sha256 `b8d2abbcc3bf4bf6…` · tool `analyze_prefetch` · call `TOOL-029` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-037** — MSEDGE.EXE executed 79 time(s).
+**TASK-005-CLAIM-037** - MSEDGE.EXE executed 79 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9B.pf` · sha256 `03c7a584003b24f5…` · tool `analyze_prefetch` · call `TOOL-030` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-039** — MSEDGE.EXE executed 15 time(s).
+**TASK-005-CLAIM-039** - MSEDGE.EXE executed 15 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9C.pf` · sha256 `45f525b3e9b19520…` · tool `analyze_prefetch` · call `TOOL-031` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-041** — MSEDGE.EXE executed 18 time(s).
+**TASK-005-CLAIM-041** - MSEDGE.EXE executed 18 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA1.pf` · sha256 `5c244fe5434258e4…` · tool `analyze_prefetch` · call `TOOL-032` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-043** — MSEDGE.EXE executed 140 time(s).
+**TASK-005-CLAIM-043** - MSEDGE.EXE executed 140 time(s).
 - artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA2.pf` · sha256 `b9be7d0d92440393…` · tool `analyze_prefetch` · call `TOOL-033` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-045** — MSIEXEC.EXE executed 4 time(s).
+**TASK-005-CLAIM-045** - MSIEXEC.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-8FFB1633.pf` · sha256 `36525dffc25a45b4…` · tool `analyze_prefetch` · call `TOOL-034` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-047** — MSIEXEC.EXE executed 2 time(s).
+**TASK-005-CLAIM-047** - MSIEXEC.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-CDBFC0F7.pf` · sha256 `93802ebdfc0aa146…` · tool `analyze_prefetch` · call `TOOL-035` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-049** — MSTSC.EXE executed 2 time(s).
+**TASK-005-CLAIM-049** - MSTSC.EXE executed 2 time(s).
 - artifact `evidence/extracted/Prefetch/MSTSC.EXE-2A83B7D7.pf` · sha256 `e82fb7274688efba…` · tool `analyze_prefetch` · call `TOOL-036` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-051** — NETSH.EXE executed 1 time(s).
+**TASK-005-CLAIM-051** - NETSH.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/NETSH.EXE-8174DA63.pf` · sha256 `6a51b32f4aed31b4…` · tool `analyze_prefetch` · call `TOOL-037` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-053** — NGEN.EXE executed 24 time(s).
+**TASK-005-CLAIM-053** - NGEN.EXE executed 24 time(s).
 - artifact `evidence/extracted/Prefetch/NGEN.EXE-4A8DA13E.pf` · sha256 `9efeb37b2cc7665f…` · tool `analyze_prefetch` · call `TOOL-038` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-055** — NGEN.EXE executed 11 time(s).
+**TASK-005-CLAIM-055** - NGEN.EXE executed 11 time(s).
 - artifact `evidence/extracted/Prefetch/NGEN.EXE-734C6620.pf` · sha256 `e96c38adda740686…` · tool `analyze_prefetch` · call `TOOL-039` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-057** — BACKGROUNDTASKHOST.EXE executed 258 time(s).
+**TASK-005-CLAIM-057** - BACKGROUNDTASKHOST.EXE executed 258 time(s).
 - artifact `evidence/extracted/Prefetch/BACKGROUNDTASKHOST.EXE-7EF448C4.pf` · sha256 `9f028f151904897a…` · tool `analyze_prefetch` · call `TOOL-040` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-059** — DLLHOST.EXE executed 17 time(s).
+**TASK-005-CLAIM-059** - DLLHOST.EXE executed 17 time(s).
 - artifact `evidence/extracted/Prefetch/DLLHOST.EXE-1BAE06BB.pf` · sha256 `cdf815a557889b9c…` · tool `analyze_prefetch` · call `TOOL-041` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-061** — FIREFOX.EXE executed 18 time(s).
+**TASK-005-CLAIM-061** - FIREFOX.EXE executed 18 time(s).
 - artifact `evidence/extracted/Prefetch/FIREFOX.EXE-66015FD1.pf` · sha256 `6d6dea00fc26ca73…` · tool `analyze_prefetch` · call `TOOL-042` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-063** — MICROSOFT.PHOTOS.EXE executed 14 time(s).
+**TASK-005-CLAIM-063** - MICROSOFT.PHOTOS.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/MICROSOFT.PHOTOS.EXE-3F2DACAC.pf` · sha256 `8b07f1912d9db71a…` · tool `analyze_prefetch` · call `TOOL-043` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-065** — RUNDLL32.EXE executed 14 time(s).
+**TASK-005-CLAIM-065** - RUNDLL32.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-52A71BD0.pf` · sha256 `4feb64e53e299e4e…` · tool `analyze_prefetch` · call `TOOL-044` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-067** — SIHCLIENT.EXE executed 31 time(s).
+**TASK-005-CLAIM-067** - SIHCLIENT.EXE executed 31 time(s).
 - artifact `evidence/extracted/Prefetch/SIHCLIENT.EXE-98C47F6C.pf` · sha256 `d106c83fab75c296…` · tool `analyze_prefetch` · call `TOOL-045` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-069** — SPPSVC.EXE executed 166 time(s).
+**TASK-005-CLAIM-069** - SPPSVC.EXE executed 166 time(s).
 - artifact `evidence/extracted/Prefetch/SPPSVC.EXE-96070FE0.pf` · sha256 `87f37b97b2d2e528…` · tool `analyze_prefetch` · call `TOOL-046` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-071** — SVCHOST.EXE executed 14 time(s).
+**TASK-005-CLAIM-071** - SVCHOST.EXE executed 14 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-117C4441.pf` · sha256 `885ebba7552ecfeb…` · tool `analyze_prefetch` · call `TOOL-047` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-073** — SVCHOST.EXE executed 284 time(s).
+**TASK-005-CLAIM-073** - SVCHOST.EXE executed 284 time(s).
 - artifact `evidence/extracted/Prefetch/SVCHOST.EXE-A79A44A2.pf` · sha256 `b8d21e858f9a4f01…` · tool `analyze_prefetch` · call `TOOL-048` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-075** — SYSTEMPROPERTIESADVANCED.EXE executed 1 time(s).
+**TASK-005-CLAIM-075** - SYSTEMPROPERTIESADVANCED.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESADVANCED.EXE-27792BE5.pf` · sha256 `e790d0ab0b60e347…` · tool `analyze_prefetch` · call `TOOL-049` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-077** — SYSTEMPROPERTIESPROTECTION.EX executed 4 time(s).
+**TASK-005-CLAIM-077** - SYSTEMPROPERTIESPROTECTION.EX executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESPROTECTION.EX-81A2FDE2.pf` · sha256 `81a66a5373d5bd75…` · tool `analyze_prefetch` · call `TOOL-050` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-079** — SYSTEMSETTINGS.EXE executed 4 time(s).
+**TASK-005-CLAIM-079** - SYSTEMSETTINGS.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/SYSTEMSETTINGS.EXE-BE0858C5.pf` · sha256 `8ebd52120900bb5f…` · tool `analyze_prefetch` · call `TOOL-051` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-081** — TABTIP.EXE executed 27 time(s).
+**TASK-005-CLAIM-081** - TABTIP.EXE executed 27 time(s).
 - artifact `evidence/extracted/Prefetch/TABTIP.EXE-9740CA06.pf` · sha256 `9e04d178d54b5c28…` · tool `analyze_prefetch` · call `TOOL-052` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-083** — TASKHOSTW.EXE executed 284 time(s).
+**TASK-005-CLAIM-083** - TASKHOSTW.EXE executed 284 time(s).
 - artifact `evidence/extracted/Prefetch/TASKHOSTW.EXE-2E5D4B75.pf` · sha256 `3bfda9f3bd9d1be7…` · tool `analyze_prefetch` · call `TOOL-053` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-085** — TASKMGR.EXE executed 5 time(s).
+**TASK-005-CLAIM-085** - TASKMGR.EXE executed 5 time(s).
 - artifact `evidence/extracted/Prefetch/TASKMGR.EXE-4C8500BA.pf` · sha256 `5d75b8cc4365e949…` · tool `analyze_prefetch` · call `TOOL-054` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-087** — TEAMS.EXE executed 1 time(s).
+**TASK-005-CLAIM-087** - TEAMS.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB058.pf` · sha256 `30ed53ec0940064d…` · tool `analyze_prefetch` · call `TOOL-055` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-089** — TEAMS.EXE executed 10 time(s).
+**TASK-005-CLAIM-089** - TEAMS.EXE executed 10 time(s).
 - artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB060.pf` · sha256 `300ad0adfbfa7b55…` · tool `analyze_prefetch` · call `TOOL-057` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-091** — TEXTINPUTHOST.EXE executed 4 time(s).
+**TASK-005-CLAIM-091** - TEXTINPUTHOST.EXE executed 4 time(s).
 - artifact `evidence/extracted/Prefetch/TEXTINPUTHOST.EXE-8D3D20AC.pf` · sha256 `da259d41ada81a81…` · tool `analyze_prefetch` · call `TOOL-058` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-093** — RUNDLL32.EXE executed 1 time(s).
+**TASK-005-CLAIM-093** - RUNDLL32.EXE executed 1 time(s).
 - artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-171F7F04.pf` · sha256 `5fe3d125e2e7d677…` · tool `analyze_prefetch` · call `TOOL-059` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
@@ -479,203 +479,203 @@ Counts by evidence type: browser_history=3, filesystem_mft=1, image_extraction=1
 
 ## Inferred findings (lower confidence)
 
-**TASK-005-CLAIM-002** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-002** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/ACCOUNTSCONTROLHOST.EXE-00EAE375.pf` · sha256 `cdf96e8f8fe515b6…` · tool `analyze_prefetch` · call `TOOL-009` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-004** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-004** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA2.pf` · sha256 `1fa5b2baeef7a85d…` · tool `analyze_prefetch` · call `TOOL-010` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-006** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-006** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/ACRORD32.EXE-F7519AA3.pf` · sha256 `5a0067a046e788b4…` · tool `analyze_prefetch` · call `TOOL-011` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-008** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-008** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/ADOBEARM.EXE-F9223367.pf` · sha256 `0eb5444acf83f966…` · tool `analyze_prefetch` · call `TOOL-012` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-010** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-010** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SLACK.EXE-BB3709B1.pf` · sha256 `9f8599da800a2bfe…` · tool `analyze_prefetch` · call `TOOL-013` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-012** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-012** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SMARTSCREEN.EXE-EACC1250.pf` · sha256 `ae489f142ae80a31…` · tool `analyze_prefetch` · call `TOOL-014` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-014** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-014** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SMSS.EXE-B5B810DB.pf` · sha256 `53141117e95f410f…` · tool `analyze_prefetch` · call `TOOL-015` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-016** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-016** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MICROSOFTEDGEUPDATE.EXE-7A595326.pf` · sha256 `a9e95014a8f0efba…` · tool `analyze_prefetch` · call `TOOL-016` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-018** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-018** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MICROSOFTEDGE_X64_86.0.622.69-3BAFD419.pf` · sha256 `fcc2d46fb313bdd1…` · tool `analyze_prefetch` · call `TOOL-017` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-020** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-020** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MPCMDRUN.EXE-26D355DD.pf` · sha256 `9316e46b9682a555…` · tool `analyze_prefetch` · call `TOOL-019` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-022** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-022** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MPSIGSTUB.EXE-5D0450B3.pf` · sha256 `1038a802dc7de27f…` · tool `analyze_prefetch` · call `TOOL-020` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-024** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-024** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MRC.EXE-AF664503.pf` · sha256 `7e14509938c14313…` · tool `analyze_prefetch` · call `TOOL-021` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-026** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-026** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSCORSVW.EXE-16B291C4.pf` · sha256 `44d155129139b6ef…` · tool `analyze_prefetch` · call `TOOL-022` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-028** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-028** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-C625B657.pf` · sha256 `8d69efd0c65687a5…` · tool `analyze_prefetch` · call `TOOL-024` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-030** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-030** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-D8C907E1.pf` · sha256 `5019325e11e9c4d5…` · tool `analyze_prefetch` · call `TOOL-025` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-032** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-032** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FA38241C.pf` · sha256 `21e618d1fb9e23a5…` · tool `analyze_prefetch` · call `TOOL-027` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-034** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-034** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-FB759C0F.pf` · sha256 `6447616f59ab15be…` · tool `analyze_prefetch` · call `TOOL-028` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-036** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-036** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9A.pf` · sha256 `b8d2abbcc3bf4bf6…` · tool `analyze_prefetch` · call `TOOL-029` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-038** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-038** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9B.pf` · sha256 `03c7a584003b24f5…` · tool `analyze_prefetch` · call `TOOL-030` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-040** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-040** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25F9C.pf` · sha256 `45f525b3e9b19520…` · tool `analyze_prefetch` · call `TOOL-031` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-042** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-042** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA1.pf` · sha256 `5c244fe5434258e4…` · tool `analyze_prefetch` · call `TOOL-032` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-044** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-044** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSEDGE.EXE-37D25FA2.pf` · sha256 `b9be7d0d92440393…` · tool `analyze_prefetch` · call `TOOL-033` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-046** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-046** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-8FFB1633.pf` · sha256 `36525dffc25a45b4…` · tool `analyze_prefetch` · call `TOOL-034` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-048** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-048** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSIEXEC.EXE-CDBFC0F7.pf` · sha256 `93802ebdfc0aa146…` · tool `analyze_prefetch` · call `TOOL-035` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-050** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-050** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MSTSC.EXE-2A83B7D7.pf` · sha256 `e82fb7274688efba…` · tool `analyze_prefetch` · call `TOOL-036` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-052** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-052** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/NETSH.EXE-8174DA63.pf` · sha256 `6a51b32f4aed31b4…` · tool `analyze_prefetch` · call `TOOL-037` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-054** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-054** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/NGEN.EXE-4A8DA13E.pf` · sha256 `9efeb37b2cc7665f…` · tool `analyze_prefetch` · call `TOOL-038` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-056** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-056** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/NGEN.EXE-734C6620.pf` · sha256 `e96c38adda740686…` · tool `analyze_prefetch` · call `TOOL-039` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-058** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-058** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/BACKGROUNDTASKHOST.EXE-7EF448C4.pf` · sha256 `9f028f151904897a…` · tool `analyze_prefetch` · call `TOOL-040` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-060** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-060** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/DLLHOST.EXE-1BAE06BB.pf` · sha256 `cdf815a557889b9c…` · tool `analyze_prefetch` · call `TOOL-041` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-062** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-062** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/FIREFOX.EXE-66015FD1.pf` · sha256 `6d6dea00fc26ca73…` · tool `analyze_prefetch` · call `TOOL-042` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-064** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-064** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/MICROSOFT.PHOTOS.EXE-3F2DACAC.pf` · sha256 `8b07f1912d9db71a…` · tool `analyze_prefetch` · call `TOOL-043` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-066** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-066** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-52A71BD0.pf` · sha256 `4feb64e53e299e4e…` · tool `analyze_prefetch` · call `TOOL-044` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-068** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-068** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SIHCLIENT.EXE-98C47F6C.pf` · sha256 `d106c83fab75c296…` · tool `analyze_prefetch` · call `TOOL-045` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-070** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-070** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SPPSVC.EXE-96070FE0.pf` · sha256 `87f37b97b2d2e528…` · tool `analyze_prefetch` · call `TOOL-046` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-072** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-072** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-117C4441.pf` · sha256 `885ebba7552ecfeb…` · tool `analyze_prefetch` · call `TOOL-047` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-074** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-074** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SVCHOST.EXE-A79A44A2.pf` · sha256 `b8d21e858f9a4f01…` · tool `analyze_prefetch` · call `TOOL-048` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-076** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-076** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESADVANCED.EXE-27792BE5.pf` · sha256 `e790d0ab0b60e347…` · tool `analyze_prefetch` · call `TOOL-049` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-078** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-078** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SYSTEMPROPERTIESPROTECTION.EX-81A2FDE2.pf` · sha256 `81a66a5373d5bd75…` · tool `analyze_prefetch` · call `TOOL-050` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-080** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-080** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/SYSTEMSETTINGS.EXE-BE0858C5.pf` · sha256 `8ebd52120900bb5f…` · tool `analyze_prefetch` · call `TOOL-051` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-082** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-082** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TABTIP.EXE-9740CA06.pf` · sha256 `9e04d178d54b5c28…` · tool `analyze_prefetch` · call `TOOL-052` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-084** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-084** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TASKHOSTW.EXE-2E5D4B75.pf` · sha256 `3bfda9f3bd9d1be7…` · tool `analyze_prefetch` · call `TOOL-053` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-086** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-086** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TASKMGR.EXE-4C8500BA.pf` · sha256 `5d75b8cc4365e949…` · tool `analyze_prefetch` · call `TOOL-054` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-088** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-088** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB058.pf` · sha256 `30ed53ec0940064d…` · tool `analyze_prefetch` · call `TOOL-055` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-090** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-090** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TEAMS.EXE-AC6AB060.pf` · sha256 `300ad0adfbfa7b55…` · tool `analyze_prefetch` · call `TOOL-057` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-092** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-092** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/TEXTINPUTHOST.EXE-8D3D20AC.pf` · sha256 `da259d41ada81a81…` · tool `analyze_prefetch` · call `TOOL-058` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-094** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-094** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-171F7F04.pf` · sha256 `5fe3d125e2e7d677…` · tool `analyze_prefetch` · call `TOOL-059` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-096** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-096** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/RUNDLL32.EXE-36D847E4.pf` · sha256 `92be431822039778…` · tool `analyze_prefetch` · call `TOOL-060` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-098** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-098** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/DLLHOST.EXE-6F625E57.pf` · sha256 `7fe7e7195bddeb91…` · tool `analyze_prefetch` · call `TOOL-061` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-005-CLAIM-100** — 8 execution timestamp(s) recorded.
+**TASK-005-CLAIM-100** - 8 execution timestamp(s) recorded.
 - INFERRED · artifact `evidence/extracted/Prefetch/DLLHOST.EXE-7617EDA2.pf` · sha256 `a5e59dcc57c0d5f7…` · tool `analyze_prefetch` · call `TOOL-062` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
@@ -686,16 +686,16 @@ Counts by evidence type: browser_history=3, filesystem_mft=1, image_extraction=1
 
 | Evidence type | Tactic / Technique | Name | Claims |
 | --- | --- | --- | --- |
-| browser_history | (unmapped) | — | 3 |
-| filesystem_mft | (unmapped) | — | 1 |
+| browser_history | (unmapped) | - | 3 |
+| filesystem_mft | (unmapped) | - | 1 |
 | image_extraction | Collection / T1005 | Data from Local System | 1 |
-| lnk_target | (unmapped) | — | 201 |
+| lnk_target | (unmapped) | - | 201 |
 | program_execution | Execution / T1204 | User Execution | 402 |
-| recent_files | (unmapped) | — | 2 |
+| recent_files | (unmapped) | - | 2 |
 | registry_autostart | Persistence / T1547.001 | Registry Run Keys / Startup Folder | 13 |
-| removable_media | (unmapped) | — | 3 |
-| shell_folder_access | (unmapped) | — | 4 |
-| usn_journal | (unmapped) | — | 1 |
+| removable_media | (unmapped) | - | 3 |
+| shell_folder_access | (unmapped) | - | 4 |
+| usn_journal | (unmapped) | - | 1 |
 | windows_event_log | Execution / T1059 | Command and Scripting Interpreter | 3 |
 _ATT&CK reference: MITRE ATT&CK (https://attack.mitre.org/) (CC-BY-4.0)._
 
@@ -770,453 +770,453 @@ None detected.
 | evidence/extracted/Prefetch/SYSTEMPROPE… | e790d0ab0b60e347… | analyze_prefetch | siftmesh | analyze_prefetch | success |
 _… 388 more custody events._
 
-## Appendix A — tool-execution log (complete)
+## Appendix A - tool-execution log (complete)
 
 | tool_call_id | Tool | Source artifact | source_sha256 | Status | Code |
 | --- | --- | --- | --- | --- | --- |
-| TOOL-001 | extract_artifacts_from_image | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | success | — |
+| TOOL-001 | extract_artifacts_from_image | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | success | - |
 | TOOL-002 | build_super_timeline | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | error | plaso_error |
 | TOOL-003 | build_super_timeline | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | error | plaso_error |
-| TOOL-004 | parse_evtx_powershell | evidence/extracted/Microsoft-Windows-PowerS… | e81d6040eaacd01ee9c4c4f3d26c94aa3fbe14e95d276caa4a23d79b310d3f8c | success | — |
-| TOOL-005 | extract_registry_run_keys | evidence/extracted/SOFTWARE | d74dc1acc24e3817dab82acfa5cc808dac95647f2fb58924cb668aa9d932b30b | success | — |
-| TOOL-006 | extract_registry_run_keys | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | — |
-| TOOL-007 | extract_registry_run_keys | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | — |
-| TOOL-008 | extract_registry_run_keys | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | — |
-| TOOL-009 | analyze_prefetch | evidence/extracted/Prefetch/ACCOUNTSCONTROL… | cdf96e8f8fe515b6f2b4d8859487ed90a4d81aa46dd6522c11034c002e69d1b9 | success | — |
-| TOOL-010 | analyze_prefetch | evidence/extracted/Prefetch/ACRORD32.EXE-F7… | 1fa5b2baeef7a85d9371610b02b5ec21f39d5ae9567606e3a76279b9cca61ad0 | success | — |
-| TOOL-011 | analyze_prefetch | evidence/extracted/Prefetch/ACRORD32.EXE-F7… | 5a0067a046e788b4830630ec750109ee3692542b410920c0888eb11636237a04 | success | — |
-| TOOL-012 | analyze_prefetch | evidence/extracted/Prefetch/ADOBEARM.EXE-F9… | 0eb5444acf83f966659ae9be93c063ea21fb5f49e65b0be63ab8f17dc717710f | success | — |
-| TOOL-013 | analyze_prefetch | evidence/extracted/Prefetch/SLACK.EXE-BB370… | 9f8599da800a2bfe83b36c73febf14dacee5514e75364095830805ab9801406a | success | — |
-| TOOL-014 | analyze_prefetch | evidence/extracted/Prefetch/SMARTSCREEN.EXE… | ae489f142ae80a316cc023ccdbd3783be9948f6c28403a0a33e82dbaea91cbbe | success | — |
-| TOOL-015 | analyze_prefetch | evidence/extracted/Prefetch/SMSS.EXE-B5B810… | 53141117e95f410fe4836f21e100d7ff6e4dec598f8103e93a986d6550ef69b7 | success | — |
-| TOOL-016 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFTEDGEUP… | a9e95014a8f0efbaf1856f0159d07574539ab23db5a2c145a2f68bf3f1c10ce4 | success | — |
-| TOOL-017 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFTEDGE_X… | fcc2d46fb313bdd1cd3e811be515fbb5f469f1da4f9a3f8a62f72f1e2a0a9b6f | success | — |
+| TOOL-004 | parse_evtx_powershell | evidence/extracted/Microsoft-Windows-PowerS… | e81d6040eaacd01ee9c4c4f3d26c94aa3fbe14e95d276caa4a23d79b310d3f8c | success | - |
+| TOOL-005 | extract_registry_run_keys | evidence/extracted/SOFTWARE | d74dc1acc24e3817dab82acfa5cc808dac95647f2fb58924cb668aa9d932b30b | success | - |
+| TOOL-006 | extract_registry_run_keys | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | - |
+| TOOL-007 | extract_registry_run_keys | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | - |
+| TOOL-008 | extract_registry_run_keys | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | - |
+| TOOL-009 | analyze_prefetch | evidence/extracted/Prefetch/ACCOUNTSCONTROL… | cdf96e8f8fe515b6f2b4d8859487ed90a4d81aa46dd6522c11034c002e69d1b9 | success | - |
+| TOOL-010 | analyze_prefetch | evidence/extracted/Prefetch/ACRORD32.EXE-F7… | 1fa5b2baeef7a85d9371610b02b5ec21f39d5ae9567606e3a76279b9cca61ad0 | success | - |
+| TOOL-011 | analyze_prefetch | evidence/extracted/Prefetch/ACRORD32.EXE-F7… | 5a0067a046e788b4830630ec750109ee3692542b410920c0888eb11636237a04 | success | - |
+| TOOL-012 | analyze_prefetch | evidence/extracted/Prefetch/ADOBEARM.EXE-F9… | 0eb5444acf83f966659ae9be93c063ea21fb5f49e65b0be63ab8f17dc717710f | success | - |
+| TOOL-013 | analyze_prefetch | evidence/extracted/Prefetch/SLACK.EXE-BB370… | 9f8599da800a2bfe83b36c73febf14dacee5514e75364095830805ab9801406a | success | - |
+| TOOL-014 | analyze_prefetch | evidence/extracted/Prefetch/SMARTSCREEN.EXE… | ae489f142ae80a316cc023ccdbd3783be9948f6c28403a0a33e82dbaea91cbbe | success | - |
+| TOOL-015 | analyze_prefetch | evidence/extracted/Prefetch/SMSS.EXE-B5B810… | 53141117e95f410fe4836f21e100d7ff6e4dec598f8103e93a986d6550ef69b7 | success | - |
+| TOOL-016 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFTEDGEUP… | a9e95014a8f0efbaf1856f0159d07574539ab23db5a2c145a2f68bf3f1c10ce4 | success | - |
+| TOOL-017 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFTEDGE_X… | fcc2d46fb313bdd1cd3e811be515fbb5f469f1da4f9a3f8a62f72f1e2a0a9b6f | success | - |
 | TOOL-018 | analyze_prefetch | evidence/extracted/Prefetch/MOUSOCOREWORKER… | 7cbea21996bbb9a1d3b670cbf9f4fe58fadbfd82885b7d497d6b3898164a6ad5 | error | parse_error |
-| TOOL-019 | analyze_prefetch | evidence/extracted/Prefetch/MPCMDRUN.EXE-26… | 9316e46b9682a555bf919983e946e31d281e479145214ecf4dfc8a6b765b157e | success | — |
-| TOOL-020 | analyze_prefetch | evidence/extracted/Prefetch/MPSIGSTUB.EXE-5… | 1038a802dc7de27f6a09f3364fa79f6eeeef9e00cc7b1e5fd7a7b6008dc13b73 | success | — |
-| TOOL-021 | analyze_prefetch | evidence/extracted/Prefetch/MRC.EXE-AF66450… | 7e14509938c143135b95c64eeddc4721d907bbd5c40f1387dedc18b7c6ee8ed8 | success | — |
-| TOOL-022 | analyze_prefetch | evidence/extracted/Prefetch/MSCORSVW.EXE-16… | 44d155129139b6efccddaf2916108dbca875f1c80ccd6a293a0ee9c39511827b | success | — |
+| TOOL-019 | analyze_prefetch | evidence/extracted/Prefetch/MPCMDRUN.EXE-26… | 9316e46b9682a555bf919983e946e31d281e479145214ecf4dfc8a6b765b157e | success | - |
+| TOOL-020 | analyze_prefetch | evidence/extracted/Prefetch/MPSIGSTUB.EXE-5… | 1038a802dc7de27f6a09f3364fa79f6eeeef9e00cc7b1e5fd7a7b6008dc13b73 | success | - |
+| TOOL-021 | analyze_prefetch | evidence/extracted/Prefetch/MRC.EXE-AF66450… | 7e14509938c143135b95c64eeddc4721d907bbd5c40f1387dedc18b7c6ee8ed8 | success | - |
+| TOOL-022 | analyze_prefetch | evidence/extracted/Prefetch/MSCORSVW.EXE-16… | 44d155129139b6efccddaf2916108dbca875f1c80ccd6a293a0ee9c39511827b | success | - |
 | TOOL-023 | analyze_prefetch | evidence/extracted/Prefetch/MSCORSVW.EXE-8C… | 5d9eeb518a8d6abb06ff89c1378b688b5a570a60ab2aca54924e483adb990400 | error | parse_error |
-| TOOL-024 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-C62… | 8d69efd0c65687a5c39bfea7043d714356625ea295e187566dc095da526da574 | success | — |
-| TOOL-025 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-D8C… | 5019325e11e9c4d55aa6dec25b786eab0430a0eff3ce27dc640ccf9c98acc18f | success | — |
+| TOOL-024 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-C62… | 8d69efd0c65687a5c39bfea7043d714356625ea295e187566dc095da526da574 | success | - |
+| TOOL-025 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-D8C… | 5019325e11e9c4d55aa6dec25b786eab0430a0eff3ce27dc640ccf9c98acc18f | success | - |
 | TOOL-026 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-F95… | eed3b8ea67e09339b0d41ce582a187c5603617a0957174a7d9264e28f932134f | error | parse_error |
-| TOOL-027 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-FA3… | 21e618d1fb9e23a5a2751dba08b9f467ed444689113a9f532f7a785995b4260c | success | — |
-| TOOL-028 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-FB7… | 6447616f59ab15be0eebd65b0054fd52e7b1491cd33e59e65903edceb37ccfea | success | — |
-| TOOL-029 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | b8d2abbcc3bf4bf6b875b6fd9b9a9a1be3a7c970d7d858380015026e596a352d | success | — |
-| TOOL-030 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 03c7a584003b24f5fa07a8b2e6ec2ba5e6a9db5299d0a27debe067fd7ad97c38 | success | — |
-| TOOL-031 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 45f525b3e9b19520907bba203655b5bd9bc2bae94f5e2038e77dfe297189b819 | success | — |
-| TOOL-032 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 5c244fe5434258e46a91ed212ab683c88d5f40d30ab7c67aa563cae75e4e4be1 | success | — |
-| TOOL-033 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | b9be7d0d92440393c241219d5181b1b3512b328378f6d7730aa642bc35db5208 | success | — |
-| TOOL-034 | analyze_prefetch | evidence/extracted/Prefetch/MSIEXEC.EXE-8FF… | 36525dffc25a45b4912d20a1d48c7869631b536830feca459e428e42798429cc | success | — |
-| TOOL-035 | analyze_prefetch | evidence/extracted/Prefetch/MSIEXEC.EXE-CDB… | 93802ebdfc0aa146033f7b0781bd903947f4e3c6f72d63fc20f2df25c5e2557d | success | — |
-| TOOL-036 | analyze_prefetch | evidence/extracted/Prefetch/MSTSC.EXE-2A83B… | e82fb7274688efbae01091e4d41056cea1adb6ab3469ca77f13581e0d92eca55 | success | — |
-| TOOL-037 | analyze_prefetch | evidence/extracted/Prefetch/NETSH.EXE-8174D… | 6a51b32f4aed31b492febe2c217c9c3bada6e04b0ebbd48efb69e8e3dc43d639 | success | — |
-| TOOL-038 | analyze_prefetch | evidence/extracted/Prefetch/NGEN.EXE-4A8DA1… | 9efeb37b2cc7665ff31a9dc4ca9ee5efaa5dc9788394907948cb23157ef73f45 | success | — |
-| TOOL-039 | analyze_prefetch | evidence/extracted/Prefetch/NGEN.EXE-734C66… | e96c38adda740686ac00028b4eff34cc66496ad0cda668126e0ba5bfc107e69d | success | — |
-| TOOL-040 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | 9f028f151904897a94997cdc3260e12e0a009d54e6a52a6ad175c6a482980fa3 | success | — |
-| TOOL-041 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-1BA… | cdf815a557889b9c0f9e8d05cbb4121cd218c2731c678512ae83e5e564d178ba | success | — |
-| TOOL-042 | analyze_prefetch | evidence/extracted/Prefetch/FIREFOX.EXE-660… | 6d6dea00fc26ca7389a61ef23d718039f9beae498f9640a1efdebd533027b1cf | success | — |
-| TOOL-043 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFT.PHOTO… | 8b07f1912d9db71a85ba63294c217b03ed6d8d9d9b12f24c5a8be9a2624590db | success | — |
-| TOOL-044 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-52… | 4feb64e53e299e4e609c39c520416a4f62c7ece247550be107750fd0480f7fd8 | success | — |
-| TOOL-045 | analyze_prefetch | evidence/extracted/Prefetch/SIHCLIENT.EXE-9… | d106c83fab75c2966ce780ffce463ef6fcfb290390a35415db0fbce331a9ccc0 | success | — |
-| TOOL-046 | analyze_prefetch | evidence/extracted/Prefetch/SPPSVC.EXE-9607… | 87f37b97b2d2e528df4c6e9d70c3e91e966317add1b57f8e956d06668533053f | success | — |
-| TOOL-047 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-117… | 885ebba7552ecfebfc4c65b627982b8b5df177409ae058e538b53609f834e15c | success | — |
-| TOOL-048 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-A79… | b8d21e858f9a4f015488dd0e8f6d9ae0c16fbf5e8296907f29a1e4d83600083c | success | — |
-| TOOL-049 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMPROPERTIE… | e790d0ab0b60e34748530880a52e322ced52917e36873d20246246de0e647926 | success | — |
-| TOOL-050 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMPROPERTIE… | 81a66a5373d5bd75f278b587d30d64ab5ab438d9450eb32ccea0a0b537529fd5 | success | — |
-| TOOL-051 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMSETTINGS.… | 8ebd52120900bb5fa81f2d6943e6309e189fc8f8ef35cb3ff5ed6d51808d86d3 | success | — |
-| TOOL-052 | analyze_prefetch | evidence/extracted/Prefetch/TABTIP.EXE-9740… | 9e04d178d54b5c281ca6109662d028e6e58ad65d1bf9cb785c764c663f3cd49f | success | — |
-| TOOL-053 | analyze_prefetch | evidence/extracted/Prefetch/TASKHOSTW.EXE-2… | 3bfda9f3bd9d1be7fbfb6e83b9ddddc785d3a552a5dc4f091d404bcb385ff378 | success | — |
-| TOOL-054 | analyze_prefetch | evidence/extracted/Prefetch/TASKMGR.EXE-4C8… | 5d75b8cc4365e949f5769ab800e60cda8f2ff19c0e709957a29bd7b09d837b17 | success | — |
-| TOOL-055 | analyze_prefetch | evidence/extracted/Prefetch/TEAMS.EXE-AC6AB… | 30ed53ec0940064d6fcf2d622dfacc9726b0e29fb95c3c3b96fec796db85c51c | success | — |
+| TOOL-027 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-FA3… | 21e618d1fb9e23a5a2751dba08b9f467ed444689113a9f532f7a785995b4260c | success | - |
+| TOOL-028 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-FB7… | 6447616f59ab15be0eebd65b0054fd52e7b1491cd33e59e65903edceb37ccfea | success | - |
+| TOOL-029 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | b8d2abbcc3bf4bf6b875b6fd9b9a9a1be3a7c970d7d858380015026e596a352d | success | - |
+| TOOL-030 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 03c7a584003b24f5fa07a8b2e6ec2ba5e6a9db5299d0a27debe067fd7ad97c38 | success | - |
+| TOOL-031 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 45f525b3e9b19520907bba203655b5bd9bc2bae94f5e2038e77dfe297189b819 | success | - |
+| TOOL-032 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | 5c244fe5434258e46a91ed212ab683c88d5f40d30ab7c67aa563cae75e4e4be1 | success | - |
+| TOOL-033 | analyze_prefetch | evidence/extracted/Prefetch/MSEDGE.EXE-37D2… | b9be7d0d92440393c241219d5181b1b3512b328378f6d7730aa642bc35db5208 | success | - |
+| TOOL-034 | analyze_prefetch | evidence/extracted/Prefetch/MSIEXEC.EXE-8FF… | 36525dffc25a45b4912d20a1d48c7869631b536830feca459e428e42798429cc | success | - |
+| TOOL-035 | analyze_prefetch | evidence/extracted/Prefetch/MSIEXEC.EXE-CDB… | 93802ebdfc0aa146033f7b0781bd903947f4e3c6f72d63fc20f2df25c5e2557d | success | - |
+| TOOL-036 | analyze_prefetch | evidence/extracted/Prefetch/MSTSC.EXE-2A83B… | e82fb7274688efbae01091e4d41056cea1adb6ab3469ca77f13581e0d92eca55 | success | - |
+| TOOL-037 | analyze_prefetch | evidence/extracted/Prefetch/NETSH.EXE-8174D… | 6a51b32f4aed31b492febe2c217c9c3bada6e04b0ebbd48efb69e8e3dc43d639 | success | - |
+| TOOL-038 | analyze_prefetch | evidence/extracted/Prefetch/NGEN.EXE-4A8DA1… | 9efeb37b2cc7665ff31a9dc4ca9ee5efaa5dc9788394907948cb23157ef73f45 | success | - |
+| TOOL-039 | analyze_prefetch | evidence/extracted/Prefetch/NGEN.EXE-734C66… | e96c38adda740686ac00028b4eff34cc66496ad0cda668126e0ba5bfc107e69d | success | - |
+| TOOL-040 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | 9f028f151904897a94997cdc3260e12e0a009d54e6a52a6ad175c6a482980fa3 | success | - |
+| TOOL-041 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-1BA… | cdf815a557889b9c0f9e8d05cbb4121cd218c2731c678512ae83e5e564d178ba | success | - |
+| TOOL-042 | analyze_prefetch | evidence/extracted/Prefetch/FIREFOX.EXE-660… | 6d6dea00fc26ca7389a61ef23d718039f9beae498f9640a1efdebd533027b1cf | success | - |
+| TOOL-043 | analyze_prefetch | evidence/extracted/Prefetch/MICROSOFT.PHOTO… | 8b07f1912d9db71a85ba63294c217b03ed6d8d9d9b12f24c5a8be9a2624590db | success | - |
+| TOOL-044 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-52… | 4feb64e53e299e4e609c39c520416a4f62c7ece247550be107750fd0480f7fd8 | success | - |
+| TOOL-045 | analyze_prefetch | evidence/extracted/Prefetch/SIHCLIENT.EXE-9… | d106c83fab75c2966ce780ffce463ef6fcfb290390a35415db0fbce331a9ccc0 | success | - |
+| TOOL-046 | analyze_prefetch | evidence/extracted/Prefetch/SPPSVC.EXE-9607… | 87f37b97b2d2e528df4c6e9d70c3e91e966317add1b57f8e956d06668533053f | success | - |
+| TOOL-047 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-117… | 885ebba7552ecfebfc4c65b627982b8b5df177409ae058e538b53609f834e15c | success | - |
+| TOOL-048 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-A79… | b8d21e858f9a4f015488dd0e8f6d9ae0c16fbf5e8296907f29a1e4d83600083c | success | - |
+| TOOL-049 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMPROPERTIE… | e790d0ab0b60e34748530880a52e322ced52917e36873d20246246de0e647926 | success | - |
+| TOOL-050 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMPROPERTIE… | 81a66a5373d5bd75f278b587d30d64ab5ab438d9450eb32ccea0a0b537529fd5 | success | - |
+| TOOL-051 | analyze_prefetch | evidence/extracted/Prefetch/SYSTEMSETTINGS.… | 8ebd52120900bb5fa81f2d6943e6309e189fc8f8ef35cb3ff5ed6d51808d86d3 | success | - |
+| TOOL-052 | analyze_prefetch | evidence/extracted/Prefetch/TABTIP.EXE-9740… | 9e04d178d54b5c281ca6109662d028e6e58ad65d1bf9cb785c764c663f3cd49f | success | - |
+| TOOL-053 | analyze_prefetch | evidence/extracted/Prefetch/TASKHOSTW.EXE-2… | 3bfda9f3bd9d1be7fbfb6e83b9ddddc785d3a552a5dc4f091d404bcb385ff378 | success | - |
+| TOOL-054 | analyze_prefetch | evidence/extracted/Prefetch/TASKMGR.EXE-4C8… | 5d75b8cc4365e949f5769ab800e60cda8f2ff19c0e709957a29bd7b09d837b17 | success | - |
+| TOOL-055 | analyze_prefetch | evidence/extracted/Prefetch/TEAMS.EXE-AC6AB… | 30ed53ec0940064d6fcf2d622dfacc9726b0e29fb95c3c3b96fec796db85c51c | success | - |
 | TOOL-056 | analyze_prefetch | evidence/extracted/Prefetch/TEAMS.EXE-AC6AB… | 4bffc6d8558324dd3d3779cfce350dd497d48cc6d572c0e9d86af1851423dd75 | error | parse_error |
-| TOOL-057 | analyze_prefetch | evidence/extracted/Prefetch/TEAMS.EXE-AC6AB… | 300ad0adfbfa7b553e75c8faba2e10bf8b2678dee10887584101e09aeb986145 | success | — |
-| TOOL-058 | analyze_prefetch | evidence/extracted/Prefetch/TEXTINPUTHOST.E… | da259d41ada81a8193570f627b0415def0a38e3bd930724d718c3906e420321a | success | — |
-| TOOL-059 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-17… | 5fe3d125e2e7d6775e62077146aa6c9f68ccbb339dcdf7786b0f4fa2a83752d0 | success | — |
-| TOOL-060 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-36… | 92be4318220397789bfebccd0ea7bc03213d411c72aada10485ef307a6baaf18 | success | — |
-| TOOL-061 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-6F6… | 7fe7e7195bddeb91e1d09c93445a6fa12ae881cec47feb365755a35a17eac2e7 | success | — |
-| TOOL-062 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-761… | a5e59dcc57c0d5f7bf40609aca6a0049b806836e829c141710b78990c5718d34 | success | — |
-| TOOL-063 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-810… | 4d572afec13049e54d03b0a62ab2cf7543f61da0107a46cc6db381445642ea1a | success | — |
-| TOOL-064 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-997… | 41c318c3f627b5e3b7227a291d63fec3a65434ce75ae1c445e20fce276b41ced | success | — |
-| TOOL-065 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-F7F… | d1002111d52392da431e5a9b44118ae1e1f3cd2f0b21e0a2ff714e837c1c89b2 | success | — |
-| TOOL-066 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOX.EXE-7EF… | eef89bf732f1bfa9a6a1cc15ff97d9fface44e2b988e33d1b2fa6fe294c4431c | success | — |
-| TOOL-067 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOXUNINSTAL… | 05978d94e299566ddd7546b26f1971fecea7fe616023a4a80d554dbad69d06c2 | success | — |
-| TOOL-068 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOXUPDATE.E… | 26c7d266bde45180cb96d1b2bfaf6e869318e228e419104d40661d23252e2ef8 | success | — |
-| TOOL-069 | analyze_prefetch | evidence/extracted/Prefetch/SCHTASKS.EXE-8B… | b682b413df47fcfb23e16342c6ae6e5fc2f2bf62a7a43583d8d397310f3e6a30 | success | — |
-| TOOL-070 | analyze_prefetch | evidence/extracted/Prefetch/SDELETE.EXE-0E8… | 3b2bbb632883440640ac875a12379c816815378fa8f08a89aa13f6b05c99940b | success | — |
-| TOOL-071 | analyze_prefetch | evidence/extracted/Prefetch/SDELETE.EXE-2BD… | 9aeaab1bcf4fb637efdf3786cb76d1e4172ac8fad0db546bf1f4b79ed565edb2 | success | — |
-| TOOL-072 | analyze_prefetch | evidence/extracted/Prefetch/SDXHELPER.EXE-8… | 929eaf1753003a7263395d53c13a14d07e7d4470f216d1b167d285e90ee859d5 | success | — |
-| TOOL-073 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHAPP.EXE-4… | 5320bd351938890d2cae64c839e84c5651bba6dd5393e8695b8cfcb211ea307e | success | — |
-| TOOL-074 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHFILTERHOS… | ee13014e081ab2836c8cde30489682c9239852dc7224685ea90efa1d893ff224 | success | — |
-| TOOL-075 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHINDEXER.E… | 77fdff398d28631c85299c74b9decc2ffed008860fde2ccf5901e92fabb03eb7 | success | — |
-| TOOL-076 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHPROTOCOLH… | 89d02a1d598b49b31906db4ec8e98f13214d455690348fbce4c683773974d246 | success | — |
-| TOOL-077 | analyze_prefetch | evidence/extracted/Prefetch/TIWORKER.EXE-74… | 6ae78c792f92eb3bcc385da21e46b332113b5cd3db36a625a8eecff553ff5692 | success | — |
-| TOOL-078 | analyze_prefetch | evidence/extracted/Prefetch/TRUSTEDINSTALLE… | d0a1d06ebbdc1d09c6d5ac40618d9f1947b2b8968e1c77ebee948f80ab05b90c | success | — |
-| TOOL-079 | analyze_prefetch | evidence/extracted/Prefetch/TSTHEME.EXE-01D… | b3cd8efc5cc2ed7257f93a5444f0c675aa4f6a6917acd808f5f21c6dd05353af | success | — |
-| TOOL-080 | analyze_prefetch | evidence/extracted/Prefetch/UPDATER.EXE-883… | acf3da6f1e1379d7270ceeefd6c053f5dc0c07ec42770744c2128062ff36e275 | success | — |
-| TOOL-081 | analyze_prefetch | evidence/extracted/Prefetch/CONSENT.EXE-404… | 32e3e46405484d81d84f7b06fbc1c3ea5a2f298ceb09d685d42550c7023e50f4 | success | — |
-| TOOL-082 | analyze_prefetch | evidence/extracted/Prefetch/CONTROL.EXE-6EA… | 8ab3cfe5b7bc184a1cb4e391a053bd8d7a77402dd342e87c65a47cd2cf9628cb | success | — |
-| TOOL-083 | analyze_prefetch | evidence/extracted/Prefetch/CRASHPAD_HANDLE… | b007e5c650a8bb7efe741682e15f3d30659e02c82b98a87d93baba6148862446 | success | — |
-| TOOL-084 | analyze_prefetch | evidence/extracted/Prefetch/CREDENTIALUIBRO… | b65bf453050db18f964beef2a6a2f744cf7bc8e95459af7e5f2c5a60603cda39 | success | — |
-| TOOL-085 | analyze_prefetch | evidence/extracted/Prefetch/CSRSS.EXE-F3C36… | 8938b93a10871df9cd448e3fcc621be44b2de6ee0daa5f58218e8481a19fb663 | success | — |
-| TOOL-086 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-077… | 81dd633f7ed9e183e870407e9f8593a0a951d9a75460e90f125466996c01ac58 | success | — |
+| TOOL-057 | analyze_prefetch | evidence/extracted/Prefetch/TEAMS.EXE-AC6AB… | 300ad0adfbfa7b553e75c8faba2e10bf8b2678dee10887584101e09aeb986145 | success | - |
+| TOOL-058 | analyze_prefetch | evidence/extracted/Prefetch/TEXTINPUTHOST.E… | da259d41ada81a8193570f627b0415def0a38e3bd930724d718c3906e420321a | success | - |
+| TOOL-059 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-17… | 5fe3d125e2e7d6775e62077146aa6c9f68ccbb339dcdf7786b0f4fa2a83752d0 | success | - |
+| TOOL-060 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-36… | 92be4318220397789bfebccd0ea7bc03213d411c72aada10485ef307a6baaf18 | success | - |
+| TOOL-061 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-6F6… | 7fe7e7195bddeb91e1d09c93445a6fa12ae881cec47feb365755a35a17eac2e7 | success | - |
+| TOOL-062 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-761… | a5e59dcc57c0d5f7bf40609aca6a0049b806836e829c141710b78990c5718d34 | success | - |
+| TOOL-063 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-810… | 4d572afec13049e54d03b0a62ab2cf7543f61da0107a46cc6db381445642ea1a | success | - |
+| TOOL-064 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-997… | 41c318c3f627b5e3b7227a291d63fec3a65434ce75ae1c445e20fce276b41ced | success | - |
+| TOOL-065 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-F7F… | d1002111d52392da431e5a9b44118ae1e1f3cd2f0b21e0a2ff714e837c1c89b2 | success | - |
+| TOOL-066 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOX.EXE-7EF… | eef89bf732f1bfa9a6a1cc15ff97d9fface44e2b988e33d1b2fa6fe294c4431c | success | - |
+| TOOL-067 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOXUNINSTAL… | 05978d94e299566ddd7546b26f1971fecea7fe616023a4a80d554dbad69d06c2 | success | - |
+| TOOL-068 | analyze_prefetch | evidence/extracted/Prefetch/DROPBOXUPDATE.E… | 26c7d266bde45180cb96d1b2bfaf6e869318e228e419104d40661d23252e2ef8 | success | - |
+| TOOL-069 | analyze_prefetch | evidence/extracted/Prefetch/SCHTASKS.EXE-8B… | b682b413df47fcfb23e16342c6ae6e5fc2f2bf62a7a43583d8d397310f3e6a30 | success | - |
+| TOOL-070 | analyze_prefetch | evidence/extracted/Prefetch/SDELETE.EXE-0E8… | 3b2bbb632883440640ac875a12379c816815378fa8f08a89aa13f6b05c99940b | success | - |
+| TOOL-071 | analyze_prefetch | evidence/extracted/Prefetch/SDELETE.EXE-2BD… | 9aeaab1bcf4fb637efdf3786cb76d1e4172ac8fad0db546bf1f4b79ed565edb2 | success | - |
+| TOOL-072 | analyze_prefetch | evidence/extracted/Prefetch/SDXHELPER.EXE-8… | 929eaf1753003a7263395d53c13a14d07e7d4470f216d1b167d285e90ee859d5 | success | - |
+| TOOL-073 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHAPP.EXE-4… | 5320bd351938890d2cae64c839e84c5651bba6dd5393e8695b8cfcb211ea307e | success | - |
+| TOOL-074 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHFILTERHOS… | ee13014e081ab2836c8cde30489682c9239852dc7224685ea90efa1d893ff224 | success | - |
+| TOOL-075 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHINDEXER.E… | 77fdff398d28631c85299c74b9decc2ffed008860fde2ccf5901e92fabb03eb7 | success | - |
+| TOOL-076 | analyze_prefetch | evidence/extracted/Prefetch/SEARCHPROTOCOLH… | 89d02a1d598b49b31906db4ec8e98f13214d455690348fbce4c683773974d246 | success | - |
+| TOOL-077 | analyze_prefetch | evidence/extracted/Prefetch/TIWORKER.EXE-74… | 6ae78c792f92eb3bcc385da21e46b332113b5cd3db36a625a8eecff553ff5692 | success | - |
+| TOOL-078 | analyze_prefetch | evidence/extracted/Prefetch/TRUSTEDINSTALLE… | d0a1d06ebbdc1d09c6d5ac40618d9f1947b2b8968e1c77ebee948f80ab05b90c | success | - |
+| TOOL-079 | analyze_prefetch | evidence/extracted/Prefetch/TSTHEME.EXE-01D… | b3cd8efc5cc2ed7257f93a5444f0c675aa4f6a6917acd808f5f21c6dd05353af | success | - |
+| TOOL-080 | analyze_prefetch | evidence/extracted/Prefetch/UPDATER.EXE-883… | acf3da6f1e1379d7270ceeefd6c053f5dc0c07ec42770744c2128062ff36e275 | success | - |
+| TOOL-081 | analyze_prefetch | evidence/extracted/Prefetch/CONSENT.EXE-404… | 32e3e46405484d81d84f7b06fbc1c3ea5a2f298ceb09d685d42550c7023e50f4 | success | - |
+| TOOL-082 | analyze_prefetch | evidence/extracted/Prefetch/CONTROL.EXE-6EA… | 8ab3cfe5b7bc184a1cb4e391a053bd8d7a77402dd342e87c65a47cd2cf9628cb | success | - |
+| TOOL-083 | analyze_prefetch | evidence/extracted/Prefetch/CRASHPAD_HANDLE… | b007e5c650a8bb7efe741682e15f3d30659e02c82b98a87d93baba6148862446 | success | - |
+| TOOL-084 | analyze_prefetch | evidence/extracted/Prefetch/CREDENTIALUIBRO… | b65bf453050db18f964beef2a6a2f744cf7bc8e95459af7e5f2c5a60603cda39 | success | - |
+| TOOL-085 | analyze_prefetch | evidence/extracted/Prefetch/CSRSS.EXE-F3C36… | 8938b93a10871df9cd448e3fcc621be44b2de6ee0daa5f58218e8481a19fb663 | success | - |
+| TOOL-086 | analyze_prefetch | evidence/extracted/Prefetch/DLLHOST.EXE-077… | 81dd633f7ed9e183e870407e9f8593a0a951d9a75460e90f125466996c01ac58 | success | - |
 | TOOL-087 | analyze_prefetch | evidence/extracted/Prefetch/NGENTASK.EXE-0E… | 1caeb8bb0a3b8755cf892b1d295db90f2def60cc6ec79619a62f574056cc9299 | error | parse_error |
 | TOOL-088 | analyze_prefetch | evidence/extracted/Prefetch/NGENTASK.EXE-84… | d9e1b57f91648b4ad53e570b8485c55829cd8831c98d472f54d07aee9f82a481 | error | parse_error |
-| TOOL-089 | analyze_prefetch | evidence/extracted/Prefetch/NOTEPAD.EXE-C56… | 13fa1e722f0d594117372eb1f7e34da8e737abc634c003bf0910382c58657ceb | success | — |
-| TOOL-090 | analyze_prefetch | evidence/extracted/Prefetch/NOTIFICATION_HE… | fecb4a0bfb3c18b533ee58e7ed6eef2a7c87b181de508b90236708a6d9e46ac7 | success | — |
-| TOOL-091 | analyze_prefetch | evidence/extracted/Prefetch/OFFICECLICKTORU… | 61aea4a5d7f0eae925e2ee102c157b21e12d2eed7e6dcad7715edcc44f1e1222 | success | — |
-| TOOL-092 | analyze_prefetch | evidence/extracted/Prefetch/OFFICECLICKTORU… | 1eeab396e2b8ae976a5d43b59cd701f8184d9cede173da53d978753518038300 | success | — |
-| TOOL-093 | analyze_prefetch | evidence/extracted/Prefetch/ONEDRIVE.EXE-D5… | e9255f3718aee4359e7766098f84ea85fefca1b54160d0c6ac6a5006fa0012f8 | success | — |
-| TOOL-094 | analyze_prefetch | evidence/extracted/Prefetch/Op-MSEDGE.EXE-3… | 724fbb79633a4e479c79f2519e367ff5ac9966993e40c9f8aa779bb7a85394cb | success | — |
-| TOOL-095 | analyze_prefetch | evidence/extracted/Prefetch/Op-SEARCHAPP.EX… | fc025032a206a7a3943986cc4e842f4bf6d1804bb1bc2f62013a7718a51cf208 | success | — |
-| TOOL-096 | analyze_prefetch | evidence/extracted/Prefetch/OPENWITH.EXE-8B… | 2e6e7f5664c9af2d7e57c3e22e1f39296aae288ce22aca9e358fb0304d2dee4c | success | — |
-| TOOL-097 | analyze_prefetch | evidence/extracted/Prefetch/OUTLOOK.EXE-FA9… | 5dd3aeb40738f08cac3029589db24c883ca19ffda5daa78356aa28770c8443d3 | success | — |
-| TOOL-098 | analyze_prefetch | evidence/extracted/Prefetch/PACJSWORKER.EXE… | 545c4bee3c26bf15255387643dae10b4974a96c557f9975949feb35dad088d3b | success | — |
-| TOOL-099 | analyze_prefetch | evidence/extracted/Prefetch/PERFBOOST.EXE-D… | d436ba6038f83c534ab89352cca90fad7c39d377433b88aa05a9a71dc21ad2f9 | success | — |
-| TOOL-100 | analyze_prefetch | evidence/extracted/Prefetch/PICKERHOST.EXE-… | a6b8e50e707aa78cf5ad112bb89e01dce365da7cb70b71f06c68deabd6e722c7 | success | — |
-| TOOL-101 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-75… | 4c6c51f0b590601cf4942cec50df122ebd49b848b52e3764794bc2b3012c80fa | success | — |
-| TOOL-102 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-E0… | 9219e06bfb340f1cdd70435790baec9dac6a0081e7f6aeb068652f68c27d45cc | success | — |
-| TOOL-103 | analyze_prefetch | evidence/extracted/Prefetch/RUNONCE.EXE-BD8… | 7c91b3c7d5aa333eda4de725d6d86215369c227c351e75d0afefbf00bcc9e503 | success | — |
-| TOOL-104 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 120a335ce66a5e9ea531b68028f33f115bbb5fe71b2b7518c6ec2fa9144a6bbd | success | — |
+| TOOL-089 | analyze_prefetch | evidence/extracted/Prefetch/NOTEPAD.EXE-C56… | 13fa1e722f0d594117372eb1f7e34da8e737abc634c003bf0910382c58657ceb | success | - |
+| TOOL-090 | analyze_prefetch | evidence/extracted/Prefetch/NOTIFICATION_HE… | fecb4a0bfb3c18b533ee58e7ed6eef2a7c87b181de508b90236708a6d9e46ac7 | success | - |
+| TOOL-091 | analyze_prefetch | evidence/extracted/Prefetch/OFFICECLICKTORU… | 61aea4a5d7f0eae925e2ee102c157b21e12d2eed7e6dcad7715edcc44f1e1222 | success | - |
+| TOOL-092 | analyze_prefetch | evidence/extracted/Prefetch/OFFICECLICKTORU… | 1eeab396e2b8ae976a5d43b59cd701f8184d9cede173da53d978753518038300 | success | - |
+| TOOL-093 | analyze_prefetch | evidence/extracted/Prefetch/ONEDRIVE.EXE-D5… | e9255f3718aee4359e7766098f84ea85fefca1b54160d0c6ac6a5006fa0012f8 | success | - |
+| TOOL-094 | analyze_prefetch | evidence/extracted/Prefetch/Op-MSEDGE.EXE-3… | 724fbb79633a4e479c79f2519e367ff5ac9966993e40c9f8aa779bb7a85394cb | success | - |
+| TOOL-095 | analyze_prefetch | evidence/extracted/Prefetch/Op-SEARCHAPP.EX… | fc025032a206a7a3943986cc4e842f4bf6d1804bb1bc2f62013a7718a51cf208 | success | - |
+| TOOL-096 | analyze_prefetch | evidence/extracted/Prefetch/OPENWITH.EXE-8B… | 2e6e7f5664c9af2d7e57c3e22e1f39296aae288ce22aca9e358fb0304d2dee4c | success | - |
+| TOOL-097 | analyze_prefetch | evidence/extracted/Prefetch/OUTLOOK.EXE-FA9… | 5dd3aeb40738f08cac3029589db24c883ca19ffda5daa78356aa28770c8443d3 | success | - |
+| TOOL-098 | analyze_prefetch | evidence/extracted/Prefetch/PACJSWORKER.EXE… | 545c4bee3c26bf15255387643dae10b4974a96c557f9975949feb35dad088d3b | success | - |
+| TOOL-099 | analyze_prefetch | evidence/extracted/Prefetch/PERFBOOST.EXE-D… | d436ba6038f83c534ab89352cca90fad7c39d377433b88aa05a9a71dc21ad2f9 | success | - |
+| TOOL-100 | analyze_prefetch | evidence/extracted/Prefetch/PICKERHOST.EXE-… | a6b8e50e707aa78cf5ad112bb89e01dce365da7cb70b71f06c68deabd6e722c7 | success | - |
+| TOOL-101 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-75… | 4c6c51f0b590601cf4942cec50df122ebd49b848b52e3764794bc2b3012c80fa | success | - |
+| TOOL-102 | analyze_prefetch | evidence/extracted/Prefetch/RUNDLL32.EXE-E0… | 9219e06bfb340f1cdd70435790baec9dac6a0081e7f6aeb068652f68c27d45cc | success | - |
+| TOOL-103 | analyze_prefetch | evidence/extracted/Prefetch/RUNONCE.EXE-BD8… | 7c91b3c7d5aa333eda4de725d6d86215369c227c351e75d0afefbf00bcc9e503 | success | - |
+| TOOL-104 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 120a335ce66a5e9ea531b68028f33f115bbb5fe71b2b7518c6ec2fa9144a6bbd | success | - |
 | TOOL-105 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | e24cb0943154d0028095672653ed9f22d37980fce5360f165c209762efcc8734 | error | parse_error |
-| TOOL-106 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | a78b282a338b3e2c0ef5221c1db6f37a80b7c9d62a71c690fddcedf778f5653e | success | — |
-| TOOL-107 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 7cda0d3407e798ffe39696cbf943c5b481d3dde06d57e0c4d1ccd408f95fb932 | success | — |
-| TOOL-108 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | d0ec9c7c70aa83d684a1606d93e3c90fe05dd6c61cd82914621109fab246c8f2 | success | — |
-| TOOL-109 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 60b2dc89394bc01b64dbbcefd282634adf9be829dd2afa359ae7a3e5f4203716 | success | — |
-| TOOL-110 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 5536888bcd63642c238bbb9ddaae805ec27271466e7a89d147e9f60976962160 | success | — |
-| TOOL-111 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | c05b4873aee122bdfa3be725a19abe17225ab56b6ad95bc9b1165f3ccd587590 | success | — |
-| TOOL-112 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 84705fca392b06e6101fd568d788eba4b838d98ae518218c5ff6c3903787fa09 | success | — |
-| TOOL-113 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | c08f4b12183a22c0a97c4fc4a351daf6a1b75af652011f925faf1190b9ece7bb | success | — |
-| TOOL-114 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | b29785ba9dd45e4484cf2a16039975b7c95a589fd4c5b0f51df77b7aabaa6e26 | success | — |
+| TOOL-106 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | a78b282a338b3e2c0ef5221c1db6f37a80b7c9d62a71c690fddcedf778f5653e | success | - |
+| TOOL-107 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 7cda0d3407e798ffe39696cbf943c5b481d3dde06d57e0c4d1ccd408f95fb932 | success | - |
+| TOOL-108 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | d0ec9c7c70aa83d684a1606d93e3c90fe05dd6c61cd82914621109fab246c8f2 | success | - |
+| TOOL-109 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 60b2dc89394bc01b64dbbcefd282634adf9be829dd2afa359ae7a3e5f4203716 | success | - |
+| TOOL-110 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 5536888bcd63642c238bbb9ddaae805ec27271466e7a89d147e9f60976962160 | success | - |
+| TOOL-111 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | c05b4873aee122bdfa3be725a19abe17225ab56b6ad95bc9b1165f3ccd587590 | success | - |
+| TOOL-112 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 84705fca392b06e6101fd568d788eba4b838d98ae518218c5ff6c3903787fa09 | success | - |
+| TOOL-113 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | c08f4b12183a22c0a97c4fc4a351daf6a1b75af652011f925faf1190b9ece7bb | success | - |
+| TOOL-114 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | b29785ba9dd45e4484cf2a16039975b7c95a589fd4c5b0f51df77b7aabaa6e26 | success | - |
 | TOOL-115 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | 8a2d3fe6fad319ba38341e6b50ce7a3c36996ca3d342c714849b3739c26a8328 | error | parse_error |
-| TOOL-116 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | d7782a593d9d4e71cf0bd10dbd4d9e6a2619712c6e0386c24913faba5b84a9de | success | — |
-| TOOL-117 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | ffc9720fc3ee46b6aa1562ba9136c8fc57d88de8aae3e8b4f5d376473ac6294d | success | — |
-| TOOL-118 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | 9e71e00dae38b5174e49bc67778ea691559c01cfc02681e66db1de7643de2698 | success | — |
-| TOOL-119 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTRANS… | afb7bd8127fcb63a24a7ef225f00830c99eac09cc705834b621d707bdc8953a1 | success | — |
-| TOOL-120 | analyze_prefetch | evidence/extracted/Prefetch/BDEUISRV.EXE-7B… | b44b6ba3aa53b13f4dbc64b9cdd613240e4c2fc017dd72de3c2436ed3ad62b04 | success | — |
-| TOOL-121 | analyze_prefetch | evidence/extracted/Prefetch/BDEUNLOCK.EXE-A… | 543ca5f20a4699bd9a8863c84a0dbd0ce40f115c846a10041ab7ee412bbaff37 | success | — |
-| TOOL-122 | analyze_prefetch | evidence/extracted/Prefetch/BITLOCKERWIZARD… | 0e318ccd3639d8570d3f81f428a5b0e343308105d87b28d9bcc3e0d8023bbaa8 | success | — |
-| TOOL-123 | analyze_prefetch | evidence/extracted/Prefetch/STARTMENUEXPERI… | 7aab3d94d0da722451e9f01d071066bb32abe4392863bb1061e4ac10d0f332e3 | success | — |
-| TOOL-124 | analyze_prefetch | evidence/extracted/Prefetch/STARTMENUEXPERI… | 00080b1ce57886da94cc1092c0d63029f65d0844de447b53b1674b240bb31e08 | success | — |
-| TOOL-125 | analyze_prefetch | evidence/extracted/Prefetch/SURFACEAPPDT.EX… | 171c141aef9a0ac1a321e2d2e4318663205e248b04e6436e56dba136b0206668 | success | — |
-| TOOL-126 | analyze_prefetch | evidence/extracted/Prefetch/HXTSR.EXE-D1BBC… | b69c5117d6b5431c25e1ce253134d8a5a334c9afbdd878cba54cbbe21231b9d1 | success | — |
-| TOOL-127 | analyze_prefetch | evidence/extracted/Prefetch/ICLOUDIE.EXE-5D… | 958c86ae49c5cdb7620501ee64fe92f58299e05087a65057a2b31d7cb7ac82e3 | success | — |
-| TOOL-128 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 4c5174da5ccf4f00eaa9a0c7a6892d39c71778cc4e6dd1ba320b7f3bb76a7e4c | success | — |
-| TOOL-129 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 6684d6dd45bbe4cbc59fb48e4adbb38fc41bbc054445deaf67c925db2ec628fb | success | — |
-| TOOL-130 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 37d26415bbb4dd068d48a0eed36ab09e95aa239c469b9b7c7768c830fa8d392e | success | — |
-| TOOL-131 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | f4d68e7a3f88a5c122d8884ecfe14d107033285b94f2cf8074e1ba8999748ea8 | success | — |
-| TOOL-132 | analyze_prefetch | evidence/extracted/Prefetch/INTEGRATOR.EXE-… | a21bb7e55c8ab01ecd851b826c269f197e61d0f7ad0ed8359460e9c225313553 | success | — |
-| TOOL-133 | analyze_prefetch | evidence/extracted/Prefetch/LOCALBRIDGE.EXE… | edf148b268b8c4424006c0cd9631f0237c76c20f81ae7a6e5879275fbdec94bf | success | — |
-| TOOL-134 | analyze_prefetch | evidence/extracted/Prefetch/LOGONUI.EXE-F63… | 4df3d4753826896d4e8c6e3566b3ab45960fa7146912bc08b0e3d0e049580783 | success | — |
-| TOOL-135 | analyze_prefetch | evidence/extracted/Prefetch/MAINTENANCESERV… | e13871b63d01c073c9bc9158600887b64f5460a8413e2af136b5a5d0454ef1cd | success | — |
-| TOOL-136 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-145… | 7e928aae56177ff47baf59bee3444a1487ea188bb73df0ecfaf96434fad0bb00 | success | — |
-| TOOL-137 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-19B… | aae416010d2a0f761cae326443f5626d7d07bc54b61a037c5a6a04385183eb2c | success | — |
-| TOOL-138 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-2F9… | e2bc66468f9fe734e5a8c352d0adfcf413c2532e8249754264b536b80c188ca5 | success | — |
-| TOOL-139 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-37D… | 29a72e29ce13d274ee40366cbf35fb28cc66606f85b6e480ee9e2f1814a0b87e | success | — |
-| TOOL-140 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-3D4… | 85e5bbccf60324274ace8e3dbc2c4f04e477d92043d4ac135ed8a4600d3ed2c0 | success | — |
-| TOOL-141 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-4B9… | be58ac7b21d8103f01e93149004faf9dead98c3cee815b2052442814090a7065 | success | — |
-| TOOL-142 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-529… | f50952d11df845c6d499e11755f82840cc14b2daa5a74df47da92258f3776c6b | success | — |
-| TOOL-143 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-597… | 51c15f402e6d42b9b04155e0ff1a172d006c32434578b8fd753f66cb18c728f9 | success | — |
-| TOOL-144 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-5F8… | 65a46a232ff01eed6831167a1d203a60971cb513a3821067099b319d0a696e94 | success | — |
+| TOOL-116 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | d7782a593d9d4e71cf0bd10dbd4d9e6a2619712c6e0386c24913faba5b84a9de | success | - |
+| TOOL-117 | analyze_prefetch | evidence/extracted/Prefetch/RUNTIMEBROKER.E… | ffc9720fc3ee46b6aa1562ba9136c8fc57d88de8aae3e8b4f5d376473ac6294d | success | - |
+| TOOL-118 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | 9e71e00dae38b5174e49bc67778ea691559c01cfc02681e66db1de7643de2698 | success | - |
+| TOOL-119 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTRANS… | afb7bd8127fcb63a24a7ef225f00830c99eac09cc705834b621d707bdc8953a1 | success | - |
+| TOOL-120 | analyze_prefetch | evidence/extracted/Prefetch/BDEUISRV.EXE-7B… | b44b6ba3aa53b13f4dbc64b9cdd613240e4c2fc017dd72de3c2436ed3ad62b04 | success | - |
+| TOOL-121 | analyze_prefetch | evidence/extracted/Prefetch/BDEUNLOCK.EXE-A… | 543ca5f20a4699bd9a8863c84a0dbd0ce40f115c846a10041ab7ee412bbaff37 | success | - |
+| TOOL-122 | analyze_prefetch | evidence/extracted/Prefetch/BITLOCKERWIZARD… | 0e318ccd3639d8570d3f81f428a5b0e343308105d87b28d9bcc3e0d8023bbaa8 | success | - |
+| TOOL-123 | analyze_prefetch | evidence/extracted/Prefetch/STARTMENUEXPERI… | 7aab3d94d0da722451e9f01d071066bb32abe4392863bb1061e4ac10d0f332e3 | success | - |
+| TOOL-124 | analyze_prefetch | evidence/extracted/Prefetch/STARTMENUEXPERI… | 00080b1ce57886da94cc1092c0d63029f65d0844de447b53b1674b240bb31e08 | success | - |
+| TOOL-125 | analyze_prefetch | evidence/extracted/Prefetch/SURFACEAPPDT.EX… | 171c141aef9a0ac1a321e2d2e4318663205e248b04e6436e56dba136b0206668 | success | - |
+| TOOL-126 | analyze_prefetch | evidence/extracted/Prefetch/HXTSR.EXE-D1BBC… | b69c5117d6b5431c25e1ce253134d8a5a334c9afbdd878cba54cbbe21231b9d1 | success | - |
+| TOOL-127 | analyze_prefetch | evidence/extracted/Prefetch/ICLOUDIE.EXE-5D… | 958c86ae49c5cdb7620501ee64fe92f58299e05087a65057a2b31d7cb7ac82e3 | success | - |
+| TOOL-128 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 4c5174da5ccf4f00eaa9a0c7a6892d39c71778cc4e6dd1ba320b7f3bb76a7e4c | success | - |
+| TOOL-129 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 6684d6dd45bbe4cbc59fb48e4adbb38fc41bbc054445deaf67c925db2ec628fb | success | - |
+| TOOL-130 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | 37d26415bbb4dd068d48a0eed36ab09e95aa239c469b9b7c7768c830fa8d392e | success | - |
+| TOOL-131 | analyze_prefetch | evidence/extracted/Prefetch/IDENTITY_HELPER… | f4d68e7a3f88a5c122d8884ecfe14d107033285b94f2cf8074e1ba8999748ea8 | success | - |
+| TOOL-132 | analyze_prefetch | evidence/extracted/Prefetch/INTEGRATOR.EXE-… | a21bb7e55c8ab01ecd851b826c269f197e61d0f7ad0ed8359460e9c225313553 | success | - |
+| TOOL-133 | analyze_prefetch | evidence/extracted/Prefetch/LOCALBRIDGE.EXE… | edf148b268b8c4424006c0cd9631f0237c76c20f81ae7a6e5879275fbdec94bf | success | - |
+| TOOL-134 | analyze_prefetch | evidence/extracted/Prefetch/LOGONUI.EXE-F63… | 4df3d4753826896d4e8c6e3566b3ab45960fa7146912bc08b0e3d0e049580783 | success | - |
+| TOOL-135 | analyze_prefetch | evidence/extracted/Prefetch/MAINTENANCESERV… | e13871b63d01c073c9bc9158600887b64f5460a8413e2af136b5a5d0454ef1cd | success | - |
+| TOOL-136 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-145… | 7e928aae56177ff47baf59bee3444a1487ea188bb73df0ecfaf96434fad0bb00 | success | - |
+| TOOL-137 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-19B… | aae416010d2a0f761cae326443f5626d7d07bc54b61a037c5a6a04385183eb2c | success | - |
+| TOOL-138 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-2F9… | e2bc66468f9fe734e5a8c352d0adfcf413c2532e8249754264b536b80c188ca5 | success | - |
+| TOOL-139 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-37D… | 29a72e29ce13d274ee40366cbf35fb28cc66606f85b6e480ee9e2f1814a0b87e | success | - |
+| TOOL-140 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-3D4… | 85e5bbccf60324274ace8e3dbc2c4f04e477d92043d4ac135ed8a4600d3ed2c0 | success | - |
+| TOOL-141 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-4B9… | be58ac7b21d8103f01e93149004faf9dead98c3cee815b2052442814090a7065 | success | - |
+| TOOL-142 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-529… | f50952d11df845c6d499e11755f82840cc14b2daa5a74df47da92258f3776c6b | success | - |
+| TOOL-143 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-597… | 51c15f402e6d42b9b04155e0ff1a172d006c32434578b8fd753f66cb18c728f9 | success | - |
+| TOOL-144 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-5F8… | 65a46a232ff01eed6831167a1d203a60971cb513a3821067099b319d0a696e94 | success | - |
 | TOOL-145 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-73D… | 7d38ee6138c2e8e3dac2d15f9b28b08b61aa6d1b26417cadfbb2a47602c3cd77 | error | parse_error |
-| TOOL-146 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-768… | 7028c754756a6ef8d96d800374406bacfa880492fa888c6fbe4feda8f569739c | success | — |
-| TOOL-147 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-84F… | 428641ab4ed5b8847ab4d476ccb55147c1f59165e6d8de61653fac16abda7fa2 | success | — |
+| TOOL-146 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-768… | 7028c754756a6ef8d96d800374406bacfa880492fa888c6fbe4feda8f569739c | success | - |
+| TOOL-147 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-84F… | 428641ab4ed5b8847ab4d476ccb55147c1f59165e6d8de61653fac16abda7fa2 | success | - |
 | TOOL-148 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-852… | e7756c8aac741931bc2279ce5cc0d3e08b0bbc04adf0238f2f5682995538c425 | error | parse_error |
-| TOOL-149 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-9A2… | 7447f4b803ca49f281683af5069453b129ba52ffb597e9caa3440c84e61a1cbe | success | — |
-| TOOL-150 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-9D0… | 9d88544f5fb1906389ed510fa223c96437458bcb563323f770bdb5bd51ca223e | success | — |
-| TOOL-151 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-6CFB8… | a9912adbeb6b9f72b0281d96adf2d0365e72315cc2f637ea1333c963b8fdcfb1 | success | — |
-| TOOL-152 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-D065E… | da5e6662ce6bc9970b5e47864033e1aa57beb6fbea37168b7b3752660de83aef | success | — |
-| TOOL-153 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-D065E… | 251cb42a164fc34acdd4359242060b34ddcb91ef7fdbea2330658018bd071b94 | success | — |
-| TOOL-154 | analyze_prefetch | evidence/extracted/Prefetch/SHELLEXPERIENCE… | 9e043d3eef38972cf07614fac49c8c6e9223f7d784419acd1927c0a6ea3d3903 | success | — |
-| TOOL-155 | analyze_prefetch | evidence/extracted/Prefetch/SHELLEXPERIENCE… | 329e2632d54c6e045303c53ddae026fd189f687d5f3024a99cee3fe61d9eec13 | success | — |
-| TOOL-156 | analyze_prefetch | evidence/extracted/Prefetch/FLIPBOARD.EXE-D… | eeebd2ea7384d12d7e6093a051b1bc0cab46ac48f50348bbdc92d2667a4995f0 | success | — |
-| TOOL-157 | analyze_prefetch | evidence/extracted/Prefetch/FONTDRVHOST.EXE… | adff0551f2c0d0084114da9348b50ee6adc64d50af760a7f790a925ba12f3e89 | success | — |
-| TOOL-158 | analyze_prefetch | evidence/extracted/Prefetch/FTK_IMAGER.EXE-… | 1211cce623d6845d5e6e2a3c86a70177a3b33a24d06719bf2d458b6c7ae6d667 | success | — |
-| TOOL-159 | analyze_prefetch | evidence/extracted/Prefetch/FVENOTIFY.EXE-E… | 8e78b0407fa2884b18f7f5d658e8e7500d6fbc0b70f5e1e16fe76e7edaff6ea1 | success | — |
-| TOOL-160 | analyze_prefetch | evidence/extracted/Prefetch/GAMEBAR.EXE-D99… | ceaae5293e26d908bc3c601a400b4a0544420401a285a46d64dcc9f8c6720f27 | success | — |
-| TOOL-161 | analyze_prefetch | evidence/extracted/Prefetch/AM_DELTA_PATCH_… | 7f4d8152e1e9ad2c54be0324f58ec7bb89457f63b41c31f34a1a3988acfe092f | success | — |
-| TOOL-162 | analyze_prefetch | evidence/extracted/Prefetch/APPVSHNOTIFY.EX… | 8585e5ced9bea21eb63b2dd313c14f7a440c2fb864fbfbf5f5f67b048921ba18 | success | — |
-| TOOL-163 | analyze_prefetch | evidence/extracted/Prefetch/ATBROKER.EXE-5C… | 6def30831a455e59328b2e5f7f1c4bcbee8c9490d738f8ed00e14f97b94dd1c7 | success | — |
-| TOOL-164 | analyze_prefetch | evidence/extracted/Prefetch/AUDIODG.EXE-AB2… | 0dea219e6f98a86e84e5ad2bc84c3b439fd881a868a0e809caf7c2d194b04996 | success | — |
-| TOOL-165 | analyze_prefetch | evidence/extracted/Prefetch/AU_.EXE-D9EEC27… | 3883daab41b2f068674207b42f79b4675296f5208f4caa16d8b0bb2dd90dc1ac | success | — |
-| TOOL-166 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | c8684588642cc8e953b441ae6d946c3144925c652be3a05868c8cec63e9d7591 | success | — |
-| TOOL-167 | analyze_prefetch | evidence/extracted/Prefetch/UPFC.EXE-89D4FA… | f6f441e91c831945a7eeb1631ba3a0ea682615e0d8db940e2d0ed03e03922388 | success | — |
-| TOOL-168 | analyze_prefetch | evidence/extracted/Prefetch/USEROOBEBROKER.… | c9baa56f6fe77c25f64df6a1831f7a480208ba7d5c18fc2f2b5f832097f1e223 | success | — |
-| TOOL-169 | analyze_prefetch | evidence/extracted/Prefetch/USOCLIENT.EXE-4… | 7836a13a33466a1f1bf34becaf5a09ed96cd11431d50452bc6eed272e21bbb32 | success | — |
-| TOOL-170 | analyze_prefetch | evidence/extracted/Prefetch/VSSADMIN.EXE-CE… | 7d3e08e96ee0b5325ebf73cccf02922c82a26c1736b5af225ed648b61e70cec9 | success | — |
-| TOOL-171 | analyze_prefetch | evidence/extracted/Prefetch/VSSVC.EXE-6C8F0… | 0d06de3516e7ffffcda40b74d5389f2c2706cccb767b8d9617f72534c3d607bf | success | — |
-| TOOL-172 | analyze_prefetch | evidence/extracted/Prefetch/WAASMEDICAGENT.… | 885d84a430f7ce527a3b2e255cf451e3311f0d6a7ee797c18bd17ae003b61c78 | success | — |
-| TOOL-173 | analyze_prefetch | evidence/extracted/Prefetch/WCCHROMENATIVEM… | 3c9d4ce882fbb7b9e11b719dcf41521e05251b06b02b5690d5eb21141700d909 | success | — |
-| TOOL-174 | analyze_prefetch | evidence/extracted/Prefetch/WERFAULT.EXE-15… | 09bba5753d10534374f146b4cb90d5f9de8bc8cbc4c2cf42785e6c761de96117 | success | — |
-| TOOL-175 | analyze_prefetch | evidence/extracted/Prefetch/WEVTUTIL.EXE-1E… | 345243e769b07e3f100e62e35a93c8ebe133e06a38920cd456dc7664759a65da | success | — |
-| TOOL-176 | analyze_prefetch | evidence/extracted/Prefetch/WINDOWSCAMERA.E… | 1333625962ca6701f0b229223f2fe968d5fa0efea0043c89b3f791caa0530dfd | success | — |
-| TOOL-177 | analyze_prefetch | evidence/extracted/Prefetch/WINLOGON.EXE-DE… | 7bc5bf6a2c62188d164f17330f55644ce1348d50007bef42d8644602c5c8f81c | success | — |
-| TOOL-178 | analyze_prefetch | evidence/extracted/Prefetch/WINWORD.EXE-AB6… | b4f882dd2f80fbf22c71f5d1e893430af7f39383e5ba7eaaba6f68493ae889e2 | success | — |
-| TOOL-179 | analyze_prefetch | evidence/extracted/Prefetch/PLUGIN_LAUNCHER… | f184cb5dd404bbf4bb94231f55925fb2ee385cfcab27f16d5ec09cb39d43edcb | success | — |
-| TOOL-180 | analyze_prefetch | evidence/extracted/Prefetch/POWERPNT.EXE-7A… | c262cd37c210f2a14585a75ff85a5ced27c1ae6561e9f21087e414b7b6f66abb | success | — |
-| TOOL-181 | analyze_prefetch | evidence/extracted/Prefetch/PRINTFILTERPIPE… | 4a2809edad8cb1cae9abfb83e068815326d44492385a5f4e0afc4c5a81986ccc | success | — |
-| TOOL-182 | analyze_prefetch | evidence/extracted/Prefetch/RDPCLIP.EXE-7D8… | 2b46d7c173472715ce4ee3fd107fe0600dfd28f948d96ebbcd3129e558701e52 | success | — |
-| TOOL-183 | analyze_prefetch | evidence/extracted/Prefetch/RDPINPUT.EXE-D8… | d7fc82a57179bc2cbe89c1df8f24a12b2ba57685ffded37f0ff9c3415479774a | success | — |
-| TOOL-184 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 4ce577433e3a58bc250b4b8bccbab3d361249ada02a87d3fbef0620dd2bceabb | success | — |
-| TOOL-185 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 88eff32926f8afc05d7aaedd210d4600031b1a11e39c993ca4dba4d1f7bc34d0 | success | — |
-| TOOL-186 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 75232a1c6d54f6cd3f30a4e6d6dbf28a99cdfe3e4a1e918ee21a34dd99226d0b | success | — |
-| TOOL-187 | analyze_prefetch | evidence/extracted/Prefetch/REGEDIT.EXE-DAB… | 4973f6e8146aa4305631cca10f7b563235dca4c7e0a48d9aea626113b0af17d1 | success | — |
-| TOOL-188 | analyze_prefetch | evidence/extracted/Prefetch/REGSVR32.EXE-03… | 682eb91a4eb49ed02b44a55c5ac791799f75f7578c179350f4db503350829665 | success | — |
-| TOOL-189 | analyze_prefetch | evidence/extracted/Prefetch/REGSVR32.EXE-B3… | 71a342c8849057424215731f753e46bcead35165adaa0363e8d3f5de300bd637 | success | — |
-| TOOL-190 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | b80b893f37ab86806265584dd172293aba21aaa825de50c9be29e6467bf32e62 | success | — |
-| TOOL-191 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | f72f4a9e4c0ac6ee1ab62caa94a0119bd3136e21f615c12b886fac413c0c9c0f | success | — |
-| TOOL-192 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 7e1931c932b92c6c8458074dbd6757a9e40e2f2251c92f16e9924acda12266f4 | success | — |
-| TOOL-193 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 1d1417f5b532c64380ef4ab58f352bf71c9a1950d360d10c26f01712aba804f4 | success | — |
-| TOOL-194 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 60a00defa6813c0c17d3138003431cdbb67331ba2b5be5e0a9ece70d154a0df6 | success | — |
-| TOOL-195 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 7207fcc583adf9c0284c5c7b57b8d0ad3918e49ad6803de93e4d14d0225ea8f5 | success | — |
-| TOOL-196 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | da92aa3e5b049b5536ab4ab48db05033dcc78c29c257443fd2528d12875e2c9d | success | — |
-| TOOL-197 | analyze_prefetch | evidence/extracted/Prefetch/CMD.EXE-0BD3098… | 574ecc7dd6b10bdfdd4e76802d81517000e51ff5b2318d5865608c6b8d73996b | success | — |
-| TOOL-198 | analyze_prefetch | evidence/extracted/Prefetch/COMPATTELRUNNER… | 79ccc0a5a096558967fabdacf8429dbf43d8de93516dd286de170c93dba0400f | success | — |
-| TOOL-199 | analyze_prefetch | evidence/extracted/Prefetch/COMPPKGSRV.EXE-… | f7e8d8d840613806117bd8a4674708c20b9f1461b814b95f699419c92223e01f | success | — |
-| TOOL-200 | analyze_prefetch | evidence/extracted/Prefetch/CONHOST.EXE-0C6… | 1867960e057e300fd1fead7d05fe0119b4663e96e3737e3d7ceea12d2a0d7e26 | success | — |
-| TOOL-201 | analyze_prefetch | evidence/extracted/Prefetch/DRVINST.EXE-39D… | 680fa60a68bcc4b328e7b5d27cb8775ca3eac46e5ed7e9828969b1a88067bfcc | success | — |
-| TOOL-202 | analyze_prefetch | evidence/extracted/Prefetch/DWM.EXE-314E93C… | 15062582eb7e2bb821a05e2d17319f50d5aa7458eb51265ba9c360b7e3cda4a4 | success | — |
-| TOOL-203 | analyze_prefetch | evidence/extracted/Prefetch/EXCEL.EXE-FE860… | 0af37295968acc30b08d9c2342c78d54d6965a0d55a87a1f3a108f7f2dd030d6 | success | — |
-| TOOL-204 | analyze_prefetch | evidence/extracted/Prefetch/EXPLORER.EXE-D5… | 2b6b2117f753e8a03c2c59189a7519d42cc0f56f01047183ac8b191df9e590ed | success | — |
-| TOOL-205 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 5d517cb28906fd90fa7867d55f53970870c80eb9a23d6e04b277a0e0d9793bd6 | success | — |
-| TOOL-206 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 67c33f9c0729f7bbc68b629422bb64a7aca29460893a5346a3a8f7df1e04ed0c | success | — |
-| TOOL-207 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 0a142a6acc494d52b9ebe475b6068b7ae405b18b1e44a6a878f3796a2a52a903 | success | — |
-| TOOL-208 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | f9fd08bfbf61f5c4b2dad3f583737591927e16e42a9d63b093b64a0b0a3365f1 | success | — |
-| TOOL-209 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFSSE… | dec8a4b032b2af299a9f13a33bc34f147e0b9161c6a36c13f2a3f1a6c3df5b3c | success | — |
-| TOOL-210 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | 41c8bb365e9e710ff1b8595d456d95cf74539eca6ae3ac82f4da9d2ffd4ce02c | success | — |
-| TOOL-211 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | d4b2dbc983b34609c5ddd0ca21539f0f9ac41b14d9198838bde60f6d5457e359 | success | — |
-| TOOL-212 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | c8e5647e159707e1f90c639cb924248df49daf57d7db2ce20524480b55136db7 | success | — |
+| TOOL-149 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-9A2… | 7447f4b803ca49f281683af5069453b129ba52ffb597e9caa3440c84e61a1cbe | success | - |
+| TOOL-150 | analyze_prefetch | evidence/extracted/Prefetch/SVCHOST.EXE-9D0… | 9d88544f5fb1906389ed510fa223c96437458bcb563323f770bdb5bd51ca223e | success | - |
+| TOOL-151 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-6CFB8… | a9912adbeb6b9f72b0281d96adf2d0365e72315cc2f637ea1333c963b8fdcfb1 | success | - |
+| TOOL-152 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-D065E… | da5e6662ce6bc9970b5e47864033e1aa57beb6fbea37168b7b3752660de83aef | success | - |
+| TOOL-153 | analyze_prefetch | evidence/extracted/Prefetch/SETUP.EXE-D065E… | 251cb42a164fc34acdd4359242060b34ddcb91ef7fdbea2330658018bd071b94 | success | - |
+| TOOL-154 | analyze_prefetch | evidence/extracted/Prefetch/SHELLEXPERIENCE… | 9e043d3eef38972cf07614fac49c8c6e9223f7d784419acd1927c0a6ea3d3903 | success | - |
+| TOOL-155 | analyze_prefetch | evidence/extracted/Prefetch/SHELLEXPERIENCE… | 329e2632d54c6e045303c53ddae026fd189f687d5f3024a99cee3fe61d9eec13 | success | - |
+| TOOL-156 | analyze_prefetch | evidence/extracted/Prefetch/FLIPBOARD.EXE-D… | eeebd2ea7384d12d7e6093a051b1bc0cab46ac48f50348bbdc92d2667a4995f0 | success | - |
+| TOOL-157 | analyze_prefetch | evidence/extracted/Prefetch/FONTDRVHOST.EXE… | adff0551f2c0d0084114da9348b50ee6adc64d50af760a7f790a925ba12f3e89 | success | - |
+| TOOL-158 | analyze_prefetch | evidence/extracted/Prefetch/FTK_IMAGER.EXE-… | 1211cce623d6845d5e6e2a3c86a70177a3b33a24d06719bf2d458b6c7ae6d667 | success | - |
+| TOOL-159 | analyze_prefetch | evidence/extracted/Prefetch/FVENOTIFY.EXE-E… | 8e78b0407fa2884b18f7f5d658e8e7500d6fbc0b70f5e1e16fe76e7edaff6ea1 | success | - |
+| TOOL-160 | analyze_prefetch | evidence/extracted/Prefetch/GAMEBAR.EXE-D99… | ceaae5293e26d908bc3c601a400b4a0544420401a285a46d64dcc9f8c6720f27 | success | - |
+| TOOL-161 | analyze_prefetch | evidence/extracted/Prefetch/AM_DELTA_PATCH_… | 7f4d8152e1e9ad2c54be0324f58ec7bb89457f63b41c31f34a1a3988acfe092f | success | - |
+| TOOL-162 | analyze_prefetch | evidence/extracted/Prefetch/APPVSHNOTIFY.EX… | 8585e5ced9bea21eb63b2dd313c14f7a440c2fb864fbfbf5f5f67b048921ba18 | success | - |
+| TOOL-163 | analyze_prefetch | evidence/extracted/Prefetch/ATBROKER.EXE-5C… | 6def30831a455e59328b2e5f7f1c4bcbee8c9490d738f8ed00e14f97b94dd1c7 | success | - |
+| TOOL-164 | analyze_prefetch | evidence/extracted/Prefetch/AUDIODG.EXE-AB2… | 0dea219e6f98a86e84e5ad2bc84c3b439fd881a868a0e809caf7c2d194b04996 | success | - |
+| TOOL-165 | analyze_prefetch | evidence/extracted/Prefetch/AU_.EXE-D9EEC27… | 3883daab41b2f068674207b42f79b4675296f5208f4caa16d8b0bb2dd90dc1ac | success | - |
+| TOOL-166 | analyze_prefetch | evidence/extracted/Prefetch/BACKGROUNDTASKH… | c8684588642cc8e953b441ae6d946c3144925c652be3a05868c8cec63e9d7591 | success | - |
+| TOOL-167 | analyze_prefetch | evidence/extracted/Prefetch/UPFC.EXE-89D4FA… | f6f441e91c831945a7eeb1631ba3a0ea682615e0d8db940e2d0ed03e03922388 | success | - |
+| TOOL-168 | analyze_prefetch | evidence/extracted/Prefetch/USEROOBEBROKER.… | c9baa56f6fe77c25f64df6a1831f7a480208ba7d5c18fc2f2b5f832097f1e223 | success | - |
+| TOOL-169 | analyze_prefetch | evidence/extracted/Prefetch/USOCLIENT.EXE-4… | 7836a13a33466a1f1bf34becaf5a09ed96cd11431d50452bc6eed272e21bbb32 | success | - |
+| TOOL-170 | analyze_prefetch | evidence/extracted/Prefetch/VSSADMIN.EXE-CE… | 7d3e08e96ee0b5325ebf73cccf02922c82a26c1736b5af225ed648b61e70cec9 | success | - |
+| TOOL-171 | analyze_prefetch | evidence/extracted/Prefetch/VSSVC.EXE-6C8F0… | 0d06de3516e7ffffcda40b74d5389f2c2706cccb767b8d9617f72534c3d607bf | success | - |
+| TOOL-172 | analyze_prefetch | evidence/extracted/Prefetch/WAASMEDICAGENT.… | 885d84a430f7ce527a3b2e255cf451e3311f0d6a7ee797c18bd17ae003b61c78 | success | - |
+| TOOL-173 | analyze_prefetch | evidence/extracted/Prefetch/WCCHROMENATIVEM… | 3c9d4ce882fbb7b9e11b719dcf41521e05251b06b02b5690d5eb21141700d909 | success | - |
+| TOOL-174 | analyze_prefetch | evidence/extracted/Prefetch/WERFAULT.EXE-15… | 09bba5753d10534374f146b4cb90d5f9de8bc8cbc4c2cf42785e6c761de96117 | success | - |
+| TOOL-175 | analyze_prefetch | evidence/extracted/Prefetch/WEVTUTIL.EXE-1E… | 345243e769b07e3f100e62e35a93c8ebe133e06a38920cd456dc7664759a65da | success | - |
+| TOOL-176 | analyze_prefetch | evidence/extracted/Prefetch/WINDOWSCAMERA.E… | 1333625962ca6701f0b229223f2fe968d5fa0efea0043c89b3f791caa0530dfd | success | - |
+| TOOL-177 | analyze_prefetch | evidence/extracted/Prefetch/WINLOGON.EXE-DE… | 7bc5bf6a2c62188d164f17330f55644ce1348d50007bef42d8644602c5c8f81c | success | - |
+| TOOL-178 | analyze_prefetch | evidence/extracted/Prefetch/WINWORD.EXE-AB6… | b4f882dd2f80fbf22c71f5d1e893430af7f39383e5ba7eaaba6f68493ae889e2 | success | - |
+| TOOL-179 | analyze_prefetch | evidence/extracted/Prefetch/PLUGIN_LAUNCHER… | f184cb5dd404bbf4bb94231f55925fb2ee385cfcab27f16d5ec09cb39d43edcb | success | - |
+| TOOL-180 | analyze_prefetch | evidence/extracted/Prefetch/POWERPNT.EXE-7A… | c262cd37c210f2a14585a75ff85a5ced27c1ae6561e9f21087e414b7b6f66abb | success | - |
+| TOOL-181 | analyze_prefetch | evidence/extracted/Prefetch/PRINTFILTERPIPE… | 4a2809edad8cb1cae9abfb83e068815326d44492385a5f4e0afc4c5a81986ccc | success | - |
+| TOOL-182 | analyze_prefetch | evidence/extracted/Prefetch/RDPCLIP.EXE-7D8… | 2b46d7c173472715ce4ee3fd107fe0600dfd28f948d96ebbcd3129e558701e52 | success | - |
+| TOOL-183 | analyze_prefetch | evidence/extracted/Prefetch/RDPINPUT.EXE-D8… | d7fc82a57179bc2cbe89c1df8f24a12b2ba57685ffded37f0ff9c3415479774a | success | - |
+| TOOL-184 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 4ce577433e3a58bc250b4b8bccbab3d361249ada02a87d3fbef0620dd2bceabb | success | - |
+| TOOL-185 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 88eff32926f8afc05d7aaedd210d4600031b1a11e39c993ca4dba4d1f7bc34d0 | success | - |
+| TOOL-186 | analyze_prefetch | evidence/extracted/Prefetch/RDRCEF.EXE-5214… | 75232a1c6d54f6cd3f30a4e6d6dbf28a99cdfe3e4a1e918ee21a34dd99226d0b | success | - |
+| TOOL-187 | analyze_prefetch | evidence/extracted/Prefetch/REGEDIT.EXE-DAB… | 4973f6e8146aa4305631cca10f7b563235dca4c7e0a48d9aea626113b0af17d1 | success | - |
+| TOOL-188 | analyze_prefetch | evidence/extracted/Prefetch/REGSVR32.EXE-03… | 682eb91a4eb49ed02b44a55c5ac791799f75f7578c179350f4db503350829665 | success | - |
+| TOOL-189 | analyze_prefetch | evidence/extracted/Prefetch/REGSVR32.EXE-B3… | 71a342c8849057424215731f753e46bcead35165adaa0363e8d3f5de300bd637 | success | - |
+| TOOL-190 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | b80b893f37ab86806265584dd172293aba21aaa825de50c9be29e6467bf32e62 | success | - |
+| TOOL-191 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | f72f4a9e4c0ac6ee1ab62caa94a0119bd3136e21f615c12b886fac413c0c9c0f | success | - |
+| TOOL-192 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 7e1931c932b92c6c8458074dbd6757a9e40e2f2251c92f16e9924acda12266f4 | success | - |
+| TOOL-193 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 1d1417f5b532c64380ef4ab58f352bf71c9a1950d360d10c26f01712aba804f4 | success | - |
+| TOOL-194 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 60a00defa6813c0c17d3138003431cdbb67331ba2b5be5e0a9ece70d154a0df6 | success | - |
+| TOOL-195 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | 7207fcc583adf9c0284c5c7b57b8d0ad3918e49ad6803de93e4d14d0225ea8f5 | success | - |
+| TOOL-196 | analyze_prefetch | evidence/extracted/Prefetch/CHROME.EXE-AED7… | da92aa3e5b049b5536ab4ab48db05033dcc78c29c257443fd2528d12875e2c9d | success | - |
+| TOOL-197 | analyze_prefetch | evidence/extracted/Prefetch/CMD.EXE-0BD3098… | 574ecc7dd6b10bdfdd4e76802d81517000e51ff5b2318d5865608c6b8d73996b | success | - |
+| TOOL-198 | analyze_prefetch | evidence/extracted/Prefetch/COMPATTELRUNNER… | 79ccc0a5a096558967fabdacf8429dbf43d8de93516dd286de170c93dba0400f | success | - |
+| TOOL-199 | analyze_prefetch | evidence/extracted/Prefetch/COMPPKGSRV.EXE-… | f7e8d8d840613806117bd8a4674708c20b9f1461b814b95f699419c92223e01f | success | - |
+| TOOL-200 | analyze_prefetch | evidence/extracted/Prefetch/CONHOST.EXE-0C6… | 1867960e057e300fd1fead7d05fe0119b4663e96e3737e3d7ceea12d2a0d7e26 | success | - |
+| TOOL-201 | analyze_prefetch | evidence/extracted/Prefetch/DRVINST.EXE-39D… | 680fa60a68bcc4b328e7b5d27cb8775ca3eac46e5ed7e9828969b1a88067bfcc | success | - |
+| TOOL-202 | analyze_prefetch | evidence/extracted/Prefetch/DWM.EXE-314E93C… | 15062582eb7e2bb821a05e2d17319f50d5aa7458eb51265ba9c360b7e3cda4a4 | success | - |
+| TOOL-203 | analyze_prefetch | evidence/extracted/Prefetch/EXCEL.EXE-FE860… | 0af37295968acc30b08d9c2342c78d54d6965a0d55a87a1f3a108f7f2dd030d6 | success | - |
+| TOOL-204 | analyze_prefetch | evidence/extracted/Prefetch/EXPLORER.EXE-D5… | 2b6b2117f753e8a03c2c59189a7519d42cc0f56f01047183ac8b191df9e590ed | success | - |
+| TOOL-205 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 5d517cb28906fd90fa7867d55f53970870c80eb9a23d6e04b277a0e0d9793bd6 | success | - |
+| TOOL-206 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 67c33f9c0729f7bbc68b629422bb64a7aca29460893a5346a3a8f7df1e04ed0c | success | - |
+| TOOL-207 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | 0a142a6acc494d52b9ebe475b6068b7ae405b18b1e44a6a878f3796a2a52a903 | success | - |
+| TOOL-208 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFS.E… | f9fd08bfbf61f5c4b2dad3f583737591927e16e42a9d63b093b64a0b0a3365f1 | success | - |
+| TOOL-209 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEDRIVEFSSE… | dec8a4b032b2af299a9f13a33bc34f147e0b9161c6a36c13f2a3f1a6c3df5b3c | success | - |
+| TOOL-210 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | 41c8bb365e9e710ff1b8595d456d95cf74539eca6ae3ac82f4da9d2ffd4ce02c | success | - |
+| TOOL-211 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | d4b2dbc983b34609c5ddd0ca21539f0f9ac41b14d9198838bde60f6d5457e359 | success | - |
+| TOOL-212 | analyze_prefetch | evidence/extracted/Prefetch/GOOGLEUPDATE.EX… | c8e5647e159707e1f90c639cb924248df49daf57d7db2ce20524480b55136db7 | success | - |
 | TOOL-213 | analyze_prefetch | evidence/extracted/Prefetch/WMIPRVSE.EXE-E8… | e3845a301130592c24340cce24f3e849ad51af500bc5a67576fe9464ff98c7b3 | error | parse_error |
-| TOOL-214 | analyze_prefetch | evidence/extracted/Prefetch/WUAPIHOST.EXE-7… | d5ffe6bd3a53d211d4ab07843f5938e979e3245814bfe534a6a382dfaf3e7b8f | success | — |
-| TOOL-215 | analyze_prefetch | evidence/extracted/Prefetch/WUAUCLT.EXE-5D5… | 4f0f5380529b0e02f3eac0a97c81111ff1cf2f3365b7e669afb696fc0b2c1ca0 | success | — |
-| TOOL-216 | analyze_prefetch | evidence/extracted/Prefetch/WUDFHOST.EXE-DE… | 56dba08259dbb49298a571d097302208292a7a5b5c4539b912ae4e74047da672 | success | — |
-| TOOL-217 | analyze_prefetch | evidence/extracted/Prefetch/WWAHOST.EXE-2A4… | af6cc02b240a933431a1c2be670ef69f626760bf86e1bb1be5c54c193dc04742 | success | — |
-| TOOL-218 | analyze_prefetch | evidence/extracted/Prefetch/WWAHOST.EXE-670… | 6ed89eb5aada80c91421b59c2d0d21a602ca04ca2cb5c89e4673d95f0c69b840 | success | — |
-| TOOL-219 | analyze_prefetch | evidence/extracted/Prefetch/ZOOM.EXE-8DBED8… | b26a5d09dbc7e0d4f85645d2ddee47d61e032b51a6244e8d246aa5d052ca4d94 | success | — |
-| TOOL-220 | parse_browser_history | evidence/extracted/chrome_history/fredr/His… | 21b7106fb67bf4e66c529b9a8ea9d3bef378885df3378f115a31b683c8644501 | success | — |
-| TOOL-221 | parse_browser_history | evidence/extracted/edge_history/fredr/Histo… | fe225e1b02f74e1cb69a7bd339de66709a808657b30bb8afa4c09df8c6aea019 | success | — |
-| TOOL-222 | parse_browser_history | evidence/extracted/firefox_history/fredr/pl… | c1fe0312b5566db1fab273e2d5e12abf1122ba778a9f4f610c5c004b980a27ee | success | — |
-| TOOL-223 | parse_shellbags | evidence/extracted/usrclass_hives/fredr/Usr… | ff30ae8beea42384a90d1fefb86f943b7342526c7aa213e03738fb9740ea2e87 | success | — |
-| TOOL-224 | parse_shellbags | evidence/extracted/usrclass_hives/srl-h/Usr… | 2b2108131ba93c08a6ecb6588448d7596822257ec66e43b57fd2114c5943493f | success | — |
-| TOOL-225 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/1… | 70e554423d6bc4692f8c965d6db4c158fa4a0942d181d3c1b0e4eff98553dacb | success | — |
-| TOOL-226 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | b1ce97466ba55bf6b24fbe1913d5e7b74a0d81cbf3fb46a3c4b6d056dd527d92 | success | — |
-| TOOL-227 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | 90d9e9468565ce03229d737db8fedbd1f3a9378b148c1526fc39d273293842eb | success | — |
-| TOOL-228 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | f960b6da362de412546556c51c49647c55c14079893a66703ebb787e585eeff8 | success | — |
-| TOOL-229 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | a621c0ea3cbad71776c7d877b38ddc9e89dcbc95a8183c76176fc6ccf0a4c744 | success | — |
-| TOOL-230 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | dfc5118a590af939dff3b374f251b7a8bc38d8129f6bbdb55f4f0fad4e9e4aae | success | — |
-| TOOL-231 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | aa32f207db58ef1982f07a8363679df1e36305b5c8d2570ec79758d934ed6cfb | success | — |
-| TOOL-232 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 2aa27b3a8038964f538ce470f180bc8aaab0800e844331163e1193127e13754b | success | — |
-| TOOL-233 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 80333512cf497a92712ab131a69bd848b5b1072f5374561a70a38f6970b05118 | success | — |
-| TOOL-234 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/a… | 4f4008a3c34cbed4fc5dddc50842f6ac25faa3c17fa482f1ecac900f70e783fe | success | — |
-| TOOL-235 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 5ac73ce506f6b7be37c96fa95eda2c82ffa0da42e9b548216ac5db0694fcd486 | success | — |
-| TOOL-236 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 791133fc0766d186b18962800b8c00d89649a7f8d870a6e8b04bfe87a0cd2153 | success | — |
-| TOOL-237 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/a… | eb3ae5b4001e7bb76bcc826fb4e29f00ca1bd841d8ff056272e7ad4d15c9c93a | success | — |
-| TOOL-238 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | f1403277193641bce1fec5548a0049949df3a4c67db8902d204f342f6c75ab93 | success | — |
-| TOOL-239 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | ae6f24616e7ea093475c0595c827acacae56360866894c80c53b007342d86140 | success | — |
-| TOOL-240 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a72304304794764414a0cc9d166ec351522f10ace78f0b51c9c2eb2783f04102 | success | — |
-| TOOL-241 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-242 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 77bf39ee58666bab728e59fa99f86772a5b9c99f0eedcf772b8a131b1639f996 | success | — |
-| TOOL-243 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 60bd612500181549656d741600f41e2353eabd909786b24eef490bf65f0f934f | success | — |
-| TOOL-244 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 5c5cf6d0d25b55645ab24e2ea6c5002e140440adaea94119615660aa0b438f20 | success | — |
-| TOOL-245 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-246 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 004a277614b9fd5858c212c5ceb48f7b7d7f51294ed7dcf76f35e925a7435898 | success | — |
-| TOOL-247 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 2eba6d1aa410f35a905a817e24b2e9a746a638beb648dc4e5a613935ad4bb0d1 | success | — |
-| TOOL-248 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 6028642f84416ef19c34227c68263498c6c671fccb3ed064813d9559ec0a3d7c | success | — |
-| TOOL-249 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 938d1ce9c66495e227bccbd8046f0c761b9210e976ddc99fbd9b557db7424529 | success | — |
-| TOOL-250 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 26fcda25e3b8cf2bd4084c815e6f10d03a6a83a22dc4322f4970499cadf66014 | success | — |
-| TOOL-251 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-252 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | b62a5e8b86380d1cef3b05c4a4addb30a8929c21c743312c941a2fd7c933044a | success | — |
-| TOOL-253 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 55a5806e836fbfa11e5f167c2786ad181f295f45dcebe58036602eef9cd58f76 | success | — |
-| TOOL-254 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | d390d94f2ba8faa3875b686c394c472f031f1d9937d58de59f899e7461093c90 | success | — |
-| TOOL-255 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | bf18dbc262dd857010dc4229e347f060a9416d32b61f849076f1c2800cbecfba | success | — |
-| TOOL-256 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 785aa33e655032f01e75c24a43d52e5b91f1a119c672c50a54d80c92350fffb4 | success | — |
-| TOOL-257 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1d30fd2f1c57e65781013676a8ec1fa5928fb684d2a3b25b7fc6ff1f354eb018 | success | — |
-| TOOL-258 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | c052659291293a7aa396c66018826a70058d848bc1ece293b741147f6587fd58 | success | — |
-| TOOL-259 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a372d6a5c91577421450a0c438d218d23107d95c855fe9d04854791e96eda7eb | success | — |
-| TOOL-260 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 4efbe563c9be61a66d21cdbc78380de558420083e9ad13f6008d78681e578d49 | success | — |
-| TOOL-261 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 4b1fc349d93996449af8733315916714fef041905d7675b35731fa1d8dbf3a2e | success | — |
-| TOOL-262 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 47e563c90ccd04bba8003c873b7a3e1b628115fb6b54bfd26a8ecec10531bd3d | success | — |
-| TOOL-263 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 3721153589ddd2e3e50b43ac6ee6ee9594cc9a3c75b5ada6c958259bcbd53710 | success | — |
-| TOOL-264 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 8da0c0d940e3104c4482535938c9b4e5a75bb2f98f3ba8bdcce0cc94f1c0b93c | success | — |
-| TOOL-265 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a389b840cf233042efd6eb43d9e504c04509a9a24e08559885462a6e137c1ee1 | success | — |
-| TOOL-266 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 7998bb1efd7855d3285a1d9b0204cbbc8a84d178dacaf84066a0f46834c85d23 | success | — |
-| TOOL-267 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | cfcec1f79c3a35e672424295fb991d12a7d7a9d726374e7496c91425ac19407f | success | — |
-| TOOL-268 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 645283df42db309956660cdfc86e3bc8a468fa79e3db6aa8a5db256f8f100670 | success | — |
-| TOOL-269 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | c5433a8432286b6895ebe84b1a53be07292dfd58bf06278596a24296f13372f0 | success | — |
-| TOOL-270 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 061498578f3b21c24b976899ab917b0e112aa5656b6f6ad413729a04fd1be7d2 | success | — |
-| TOOL-271 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 59e7846f2d51b09f7456d29592896ee579e2ae09d2528096ffd26932c2466ac2 | success | — |
-| TOOL-272 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 758178290acbb57ffea516e43cf9dcffb19de78f9795ee14512c3a51bf28b87d | success | — |
-| TOOL-273 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | aec692cb17440be06ea59aaa9533faf0ad757ba01051045daff151965a1939ab | success | — |
-| TOOL-274 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | e713d156a8519bd4946359746426f1d422a605ed0f93155c30276e7b695a19f0 | success | — |
-| TOOL-275 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 2a39e1638fdbc3a490fab13392eabd2c8413dd3cbace6526574f652aa1b6ce7f | success | — |
-| TOOL-276 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | 0c94e286897ebbe48ba0751fe32f4e5934bef07bfe4b906a8a62089b96a22f49 | success | — |
-| TOOL-277 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | 07bae499309d9af7ffca5a8823950f6afe6107b9871735be74bab5668dcbf17a | success | — |
-| TOOL-278 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/h… | 98c8ecdf2aa1c94d2426156e2f4edb985bc8b43978b3ed408b7e6e8e7be16e11 | success | — |
-| TOOL-279 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | f57caefc9f0afececbb2e5df5539da966123db1f8560c761ad17f6be7c589a0a | success | — |
-| TOOL-280 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | a91349af19e01b19d4311eee43173adb524577d672336195d2cd394a1dcde176 | success | — |
-| TOOL-281 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | 43a2948d90bcbf544e297fcd3367c8cec86365895219b20cadad16d335175149 | success | — |
-| TOOL-282 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/f… | 4a069245d0bd1968d93daae3f7d5d84b242b473a425c75631aafc3790e62d342 | success | — |
-| TOOL-283 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | ebce32615433989c79bdfbea74bbb37aa37d24457cae56d291f9d71862ea8f21 | success | — |
-| TOOL-284 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | 7f04d8d0806223f9cfe8b8bbfc3dd67faab65fcec2cdf76ff698e0d8bc74a795 | success | — |
-| TOOL-285 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 5509a436e570e8037c8d5962e64537ccc2562ce058bc4f018bf5231b4e46d522 | success | — |
-| TOOL-286 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 2e18ee59acd20c00a02a84e2ecf190d94b1775491866ea26c20ea90ccd18ecbc | success | — |
-| TOOL-287 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/O… | 0e65d04c90dcf9eb50a81fded726498895b9d6cd8532ca49d816c4ba27fce375 | success | — |
-| TOOL-288 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/s… | 997f0f43d8910ba2fac551b9e1d8a55564b28b58a52140c8d3d4108669f72b33 | success | — |
-| TOOL-289 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/O… | 6ff85a13dd366220022323b4fe7816554700bc073d05c85b97b2cd48e2d200b4 | success | — |
-| TOOL-290 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/P… | beca798c2e4f2cbcc433d66021d4ad326816ac44b53a105ba7c21c2e1da40768 | success | — |
-| TOOL-291 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/Q… | fa00d11eee2f3f725cb81f99ed9a96377dc36311d64824de26fb0e4dd3553cb3 | success | — |
-| TOOL-292 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/r… | 5f9b6d35cb3ae48c36198f91fa96266c5ce7c7192c2d8adb6a982cbe18a7d197 | success | — |
-| TOOL-293 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | a7706f69286168c30067b7378d5a0aadf832a76ca0fc2289cca630637a768e77 | success | — |
-| TOOL-294 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 886e25f1bdf6411b8ca87f78af8e83a25b852bb15293fc9debb36ba0cdcef5c2 | success | — |
-| TOOL-295 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 1392f7903ab3611b758d055ef421f99e7de0c92b6d40eb92203bb34bf1d83d4a | success | — |
-| TOOL-296 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 170ebe9958f48b6d5649c99576aa6ad1693c7b4a475e4d14f58f06de9839892f | success | — |
-| TOOL-297 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 90837e079617b3944007ccd0421d7eef6aca12a15441d2b44b5eb74f72fdf029 | success | — |
-| TOOL-298 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | d066fc2235671d3c001381e8fb921aa27119ad39a4e67a40065c11a15efa5aa0 | success | — |
-| TOOL-299 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 55e4e5e5a302cd1b7f03a9785908e334b2c7539cb4e1529cd3325c63cbe04cb3 | success | — |
-| TOOL-300 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 4637c16decdf98c71e5698be97b6e3f9a537e851382610a2a1fc8ba9fccea45c | success | — |
-| TOOL-301 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 7713b779014f43a1a072815c0d37acc373c836f6be14329adb38d75990abf3ca | success | — |
-| TOOL-302 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 411e4b30473868afb4182bce0b0bcbd156a7ed849ee587271efe77e2599cea20 | success | — |
-| TOOL-303 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/b… | 0eac03b296acdefee5fce9aa2355eb15bd9c03384432ca08f503c3509c565124 | success | — |
-| TOOL-304 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 4e03273943ab5c5d94ea7c36349176f16b889779ca25ed96d9cb2cf63c288619 | success | — |
-| TOOL-305 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | fb38c1d255c13992c2aed8392d2b5d595bd6a2a4cd74ff4f89245b66a01005b2 | success | — |
-| TOOL-306 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 0709a63fb64b52cc13656b7d2225bf3717a45d36b0f2f0cf2f4b84dce10b1ef0 | success | — |
-| TOOL-307 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 89a29c9c73da42725ed31fc26b8213173c611a018dd4055fc470b1c827631bab | success | — |
-| TOOL-308 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/b… | d04bb84e5b4c981d7a9c25736848213f72cce11d329c46df23e3d9022036944b | success | — |
-| TOOL-309 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 6627028cb5a5f7ca54a909bb6f022d803c993db08a2c08ac8a49c0583a3a7561 | success | — |
-| TOOL-310 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 46826aa6548f7839f51e9c943b23d9304130934260755c7e2be17d7300ab701a | success | — |
-| TOOL-311 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | 72a54dc1bd5f344f2fab10e74031b61b573fa42de0af4ba0535394aba1da3c9a | success | — |
-| TOOL-312 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | 0f6d4c2987fb2d9e168a7617577b80c7ed95c347c1fa4bea396ab03c528ca35c | success | — |
-| TOOL-313 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | a1b9c59ab6525d5a379717a232ca00e165b4bf5b9bdf0f2c178720e3d8cf0f8d | success | — |
-| TOOL-314 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | 6dc817f1e94af30de1fbf048a8efad575db1ac7128a8e7584b38caa2b216c2af | success | — |
-| TOOL-315 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 2215cdce515c5ccfec99c1ce1b1e00eda8c06c41133fbb2afa3726d18360f8d1 | success | — |
-| TOOL-316 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | f7ef66cf382e417619967ebe38922edd02174589a6c39dee594ccb57a9cdd7a7 | success | — |
-| TOOL-317 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | cb2663bd91c5aa17a4f939343a26e4eb90b6823c1852dd66396507e613b6a814 | success | — |
-| TOOL-318 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | c0b819a844cf8b524378854f13b25beb0ec89c5c000f0b51404f5d38de664734 | success | — |
-| TOOL-319 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 6e1df324da4ecb133e8d03022d0a3d552f684377a52a43f110e6bad310b88654 | success | — |
-| TOOL-320 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 86a17b3b023a370504f0003c32b3435f329f8b5767025b1c1ecd6309bedaf8f8 | success | — |
-| TOOL-321 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/f… | 5dc92b763f064c783ae496580b14676f0678adf029bbddd50fdc805204f4aacb | success | — |
-| TOOL-322 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 1af5c6f1bfbdb2298980bb05c5117c0a0086b7567a101ff3f5070bd0691d3ed0 | success | — |
-| TOOL-323 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 1af4897e2347dda5fa1a460d095b084747722e6b73099be4895123838eb6b906 | success | — |
-| TOOL-324 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 52594ba17b85dd0b3fdd9aecef3b4c22ca5109d5074455edbbecabe3484316c5 | success | — |
-| TOOL-325 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | b7d2024010549a7091fb4a422bc5783808f135ca097f123323091dd46c198b5c | success | — |
-| TOOL-326 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 5204b6b63789a4939bc96737c51441dd14aced90619d87dfd127ded799f25337 | success | — |
-| TOOL-327 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 6c8a99caf4f7be5177b5e1564399d38f6c610b11820e0d5eaa1f6b4288343a40 | success | — |
-| TOOL-328 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | bb9629390c6a1c443d7a7da6c8c0c937ec77f7ba2c0ea8b635045c9290aac429 | success | — |
-| TOOL-329 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | e3e4654d1e8cfd4c4bdad59c773974bbe867ca2ae0b142092e1534e5bda5cd81 | success | — |
-| TOOL-330 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | 64d4023b481c51a26d743821ff5539ea15dee5258b798150a4d1147d61f6b638 | success | — |
-| TOOL-331 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/t… | 7c8adb58da25b3b7241f44e58048b0c3a94f63ac7c24105fbdad760523fb13e8 | success | — |
-| TOOL-332 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | 07db6d5608afd31e4068fe8179dcf1749351f5036356728c672d545f3f955e42 | success | — |
-| TOOL-333 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/U… | b9855dd9390741ddc77d737eabe8fdfdd6f957ee2a5aa81708585e39b96653fb | success | — |
-| TOOL-334 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 480f2cd30d0469a3dd19d04e9c668f30df0948fac8ff6fb6769442898245c2fb | success | — |
-| TOOL-335 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 182cc89e0039cf3e6a46cf58338eb1957eba9f5aeeb3c62e98462da5031ac0a6 | success | — |
-| TOOL-336 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | b4a6a8d92f24df7ad1bcca24e2a1c46d0406ff1b6230f01d8fdfe5674448dfa0 | success | — |
-| TOOL-337 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 24366a77218e128717ee6678f3791a4110794325877ca71cc840d297ecebde6c | success | — |
-| TOOL-338 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/w… | ab4adedf4e95d9542aa99b235b06f6deb5e84ff05dd7fbee5558f128dab60521 | success | — |
-| TOOL-339 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | e9a8ab03f8e2c52f4e9de07efb33eb7d091d2ffeb138da662d1e56fd1d8d0b0d | success | — |
-| TOOL-340 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 6d11feffd0f3fe3ea8231b2693fab424802ff812c7ed443e624530c331baf683 | success | — |
-| TOOL-341 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 2aa4230b2e2d229551089dbc6bf8ec564829c3537593ef486ae6f222ec278d3d | success | — |
-| TOOL-342 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 315b37a74f7348d8f75b9974633cbaa53b4d36dff55ae3a1f7352a0d55fb2893 | success | — |
-| TOOL-343 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | 91fc0a26b466d04c6a5f1ad44744ff8a0489832e4706cf279582b6df50eafbe5 | success | — |
-| TOOL-344 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | adacfe10f597fb3419b5f4e4dd0d8b657174a712694c7d4e3e5121cf1559de5b | success | — |
-| TOOL-345 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | bb837d690f439a81f8e32f739222f729815ab1cdc741c694641856041d4258fd | success | — |
-| TOOL-346 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | 1860c2cd7a5c160e561ce79cf1dc8ad2eee46f79ea10104ecab45b51178e30cd | success | — |
-| TOOL-347 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/K… | 22350c3ef4e6d6b65580a285923f5a6e4eb37ed820c085e3b991982d900c69f1 | success | — |
-| TOOL-348 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/K… | fc39a7d4dcbdd2e6e3527908bc831214f51b729213fa0ffbc7823f966a3a03a2 | success | — |
-| TOOL-349 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | f39316f98acf49ce33eeec0180c2f00d3a837720b9e9efb84a8361e8e1539c3d | success | — |
-| TOOL-350 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | e66dff66010e18dad6e0778947a130c3358ea7f9bde0141674675109cfb7edf5 | success | — |
-| TOOL-351 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 8803cee3ae9030a7e99f53d6f57886301e73bc852398c16bbdab8566fa63cc31 | success | — |
-| TOOL-352 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 9463a5b41f46474d37e026de1e1b599dd0c280bd5822fdc0a2683daa456854f6 | success | — |
-| TOOL-353 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 13809c951faf1381bc79a5deb7b210e7dedd55d21f14db9eac98bfa11196d66a | success | — |
-| TOOL-354 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | c1efabd53c3440ca3116e38fdd223e61eb61ece00b2b039dac9548ed3d48aa31 | success | — |
-| TOOL-355 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 60ad79499c8b7f467f20d162880ec22e9253458a2782e0c721b0be2a59e49f4f | success | — |
-| TOOL-356 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 5dc01a0576bcd0bb685b8c61e82186993068997112ab926d6cb1c95ac7bf29a1 | success | — |
-| TOOL-357 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 0fc919eb2031d7d42689ab0cb0f8f4335048324df8c4fde42fecc6b12baac430 | success | — |
-| TOOL-358 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 41face2cb1e3aa14e8dbf01888b12060521a60ec9c6a5b50fbf3a1523fa8b104 | success | — |
-| TOOL-359 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 6d8079c6f02c69e747fa11a23ba07b21f4ceead42a469e6c4bdf658b5e6e7e86 | success | — |
-| TOOL-360 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 5a398c9ebaf1172f2fc54d399f451f79c07fea0994539960072a4a9981fdd112 | success | — |
-| TOOL-361 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 009587a8a5f6a21917f50f9adeb91a8f04e0f3dbcc7cd871d79f77bd0edd7641 | success | — |
-| TOOL-362 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 59318bcfaab3589445c50e72b471aaba968734d21c121ebc24202e2513a2584b | success | — |
-| TOOL-363 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/s… | f586becc4cdd2df953bfda3ba61c05b43c51abf85ad9034fd3b8f6f5f99d4a82 | success | — |
-| TOOL-364 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | c9dbc942f9766b8da2abe474bcd5c3df4fda458df59337f027afd6b8694167da | success | — |
-| TOOL-365 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 7813cc347fe700bd85cdec63224862531689c41e77faa8ff46065b72e628dfe3 | success | — |
-| TOOL-366 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | d8df2417b6ec9d849c5f6ae3a2732a621b757e2a2c883c1cdefa1716fd0a9ad2 | success | — |
-| TOOL-367 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 29d855f3aa9eefa0f4198d63699dd24fa030c65e62185f842f530174a9a59af1 | success | — |
-| TOOL-368 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | ec45cf23445b7f47ebe8b18c8b632191f7aac5a615bd61ce1b4e6bf1a294751a | success | — |
-| TOOL-369 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | cd8ef187bc332ed018296219352182820d157b31c481b3b4d31f6e682e0b602c | success | — |
-| TOOL-370 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | b68e121586ef846dc2be14897087566ac72f6e6339f193609a5fc6f766e5c4aa | success | — |
-| TOOL-371 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 27e31b0173bc45c6a225b1725edebfb52167dd61453c07af4fa11e895e9ce6fc | success | — |
-| TOOL-372 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 9f7a0a618ade830139e2a5cd89853a79598bbef8cf573869986355314aad5ce4 | success | — |
-| TOOL-373 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | eaabcc2edd94fefe2a9d9423980afc285b84e35105dd597f7944b55c99a638f8 | success | — |
-| TOOL-374 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 27e803e74db03d51a2cd814d505e16cd3ab1cf83e9e2abdc70b108eb8ce1c021 | success | — |
-| TOOL-375 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | a3fc2c5938b2c5c4a29705c05bc583afa9a5aab286f41da8341bd3bf6dd17b9a | success | — |
-| TOOL-376 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 548293a6c085c8a9ea1f6161c8a31742d9f389f198a81c0e7108e6c3e6a28e13 | success | — |
-| TOOL-377 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 1954e7574fed496c44df6debcd365c7c478fffd619c7b630cba176fd05c996ab | success | — |
-| TOOL-378 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c76ca4661f4e632404f25c823e12f9eb6adebcc28de203f256c153bb80cb11b9 | success | — |
-| TOOL-379 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c76ca4661f4e632404f25c823e12f9eb6adebcc28de203f256c153bb80cb11b9 | success | — |
-| TOOL-380 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | f56790557952521803357376efefa31714eb614c5191fc7c51d2dc84cfae966f | success | — |
-| TOOL-381 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | f589e3afebbe628a4efd75b7bf3f0212c556da702ad7cdcb8593a6ef44f94fc0 | success | — |
-| TOOL-382 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 346ac1e2eead3d2eca032a1308a6b68542eb5f45fe95eec9a5e060875744954b | success | — |
-| TOOL-383 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 259589c93038a546546689cada261652f993245dc5c264deba7e7a9e08dad6f4 | success | — |
-| TOOL-384 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 372dc1dd823e996836b07db7859fc7a10d682665897e9b513093cd4414cf256c | success | — |
-| TOOL-385 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 28477533b862fdfb406ab93eff90e86e7f26edeb14efc238f2f7b2f36e2da67a | success | — |
-| TOOL-386 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c41f76198dea32ff809e9f5cc957fdef6bfef97415f05ef06698460dad499e56 | success | — |
-| TOOL-387 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 9684caa93e2cada3b2f9919c54fcc2352ccaeb3a5b47a461ee8287214715ac0d | success | — |
-| TOOL-388 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 74d6d8c58d0beb0716eeecdc55366e193186924a616e057cd210f4104e5d85e9 | success | — |
-| TOOL-389 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 5190b7911a2f854d15971e3e2389dc6a131571cd2cf4f9a1c6e0359ee143e69a | success | — |
-| TOOL-390 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | e83400322f2752d51424680f30ca26d409a46213dc03d23c8959ee43ae864455 | success | — |
-| TOOL-391 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | ff0edb08d91e4abb20fcc2b1b114c29b4e804b5c1793a1a8892be386c83ba040 | success | — |
-| TOOL-392 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 1ea50957febf83b30ba2df406017c8f156421eabd3d8da3b207a034e06ea9217 | success | — |
-| TOOL-393 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | d0aac934b9ab60750f22d677f11373b92c826b989015d1dda17a14fd278d44a6 | success | — |
-| TOOL-394 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 9b38212273e36dcf085d710313222cd5c73f0c4cb5702d0615ad93159e7b6aeb | success | — |
-| TOOL-395 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | d0d57879e049382e8124ed553424404dfe9d44a152c1dba05f01d119dfe4f9b8 | success | — |
-| TOOL-396 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 7116ff028244a01f3d17f1d3bc2e1506bc9999c2e40e388458f0cccc4e117312 | success | — |
-| TOOL-397 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 90bf6baa6f968a285f88620fbf91e1f5aa3e66e2bad50fd16f37913280ad8228 | success | — |
-| TOOL-398 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 8e5986c317095fd30f568e22c3755287492c6ac6dce2694a7b81b041bf5bf98f | success | — |
-| TOOL-399 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | ee1431deded635ba2794c4510ed8599bbd6b50fd230c2654bf7b2f6a8ebe27e2 | success | — |
-| TOOL-400 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | fceb7136d3016847e74c0f47f84f6077d8b9754fa602f55794808de2d74e2beb | success | — |
-| TOOL-401 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | 20c907261028ae873f9da4d1b14a0dcd0751426c370ed51b6c04c3cafe65b51c | success | — |
-| TOOL-402 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | fc8b86cb75b74556e125bd8016681e0f1aab31edadd95c53172d5252eed0101a | success | — |
-| TOOL-403 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-404 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-405 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 40d7086245238b1af77edbf4819089d46bfa3e076a78bd642ca94a7e0e49082b | success | — |
-| TOOL-406 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 6fa63b57de55b6aa352509d0bcc1774eaf35904f464f62bc41931d510cf33304 | success | — |
-| TOOL-407 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | — |
-| TOOL-408 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | add21f3bf79c6c8479e9ce09d5f7126a59707ce589b9c808f85ad45e440089b8 | success | — |
-| TOOL-409 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 9b3ff2a9941d88fd2af86130f82ff4ec6a76589bc3990fed9c1448e6b25b5218 | success | — |
-| TOOL-410 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/B… | 0907f0fe023c17d84eb6278ba3143af86dabc68bbe5772444ee8056e62ca55e8 | success | — |
-| TOOL-411 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 7932ec4bc8b28d05dff1a708326d53a9f9306e15080a7c71550712095a7f85d2 | success | — |
-| TOOL-412 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 74d6d8c58d0beb0716eeecdc55366e193186924a616e057cd210f4104e5d85e9 | success | — |
-| TOOL-413 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | ff0edb08d91e4abb20fcc2b1b114c29b4e804b5c1793a1a8892be386c83ba040 | success | — |
-| TOOL-414 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 7116ff028244a01f3d17f1d3bc2e1506bc9999c2e40e388458f0cccc4e117312 | success | — |
-| TOOL-415 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 90bf6baa6f968a285f88620fbf91e1f5aa3e66e2bad50fd16f37913280ad8228 | success | — |
-| TOOL-416 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/H… | b200c8b3a549cae7f789eba7c2c20c1468210bb908ed9982fd06f06d478bcdaa | success | — |
-| TOOL-417 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/I… | d05ee13b3591a94469b02f6cb61e28eddd4c44dc7d091da5a112722dd2ab4432 | success | — |
-| TOOL-418 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/m… | b7d2024010549a7091fb4a422bc5783808f135ca097f123323091dd46c198b5c | success | — |
-| TOOL-419 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/P… | f1427e0b73115cbf3696fe452aad0385d5dafe45feddf803785e124459973b4c | success | — |
-| TOOL-420 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 926f613a962d71c93e09fce9a24b0d2b6a050f6b857ca456b7e70d6e26c6680b | success | — |
-| TOOL-421 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 317e0877eb42d36d446fbb623583896e233dea7b1c73948e779c07c3b59e46ae | success | — |
-| TOOL-422 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | dbc3c145520f48524ec7b67c0d2ef434df4811598f4dc40f6b1b19b7edd8eb81 | success | — |
-| TOOL-423 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 3b8c614a45d8033b5f612691ef780fca4fd1878fae0f8d4df2d0726e27b8e1df | success | — |
-| TOOL-424 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/T… | b68e121586ef846dc2be14897087566ac72f6e6339f193609a5fc6f766e5c4aa | success | — |
-| TOOL-425 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/U… | ebe6c7490297727a0a1ca8f37fe4e8fbda64bc135d8bd34773a1654fb0a8fb81 | success | — |
-| TOOL-426 | parse_amcache_shimcache | evidence/extracted/Amcache.hve | 144718b6ada866cecee150203fdf332294e1ffe01f78198f505e4eff648fe6c8 | success | — |
-| TOOL-427 | parse_usnjrnl | evidence/extracted/UsnJrnl.$J | e13df07525f5180a8e9fa08a6e27bbc6e0ac3bf7c6b10ff1b7609c52c44f5a58 | success | — |
-| TOOL-428 | parse_mft_filesystem | evidence/extracted/MFT | 007ba1e44dffcd43a330c4f0e5c031db5ad58e9ac1e8ab5b6610ad344099f634 | success | — |
-| TOOL-429 | build_super_timeline | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | success | — |
-| TOOL-430 | parse_usb_registry | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | — |
-| TOOL-431 | parse_amcache_shimcache | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | — |
-| TOOL-432 | parse_recentdocs_mru | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | — |
-| TOOL-433 | parse_usb_registry | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | — |
-| TOOL-434 | parse_shellbags | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | — |
-| TOOL-435 | parse_recentdocs_mru | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | — |
-| TOOL-436 | parse_usb_registry | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | — |
-| TOOL-437 | parse_shellbags | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | — |
+| TOOL-214 | analyze_prefetch | evidence/extracted/Prefetch/WUAPIHOST.EXE-7… | d5ffe6bd3a53d211d4ab07843f5938e979e3245814bfe534a6a382dfaf3e7b8f | success | - |
+| TOOL-215 | analyze_prefetch | evidence/extracted/Prefetch/WUAUCLT.EXE-5D5… | 4f0f5380529b0e02f3eac0a97c81111ff1cf2f3365b7e669afb696fc0b2c1ca0 | success | - |
+| TOOL-216 | analyze_prefetch | evidence/extracted/Prefetch/WUDFHOST.EXE-DE… | 56dba08259dbb49298a571d097302208292a7a5b5c4539b912ae4e74047da672 | success | - |
+| TOOL-217 | analyze_prefetch | evidence/extracted/Prefetch/WWAHOST.EXE-2A4… | af6cc02b240a933431a1c2be670ef69f626760bf86e1bb1be5c54c193dc04742 | success | - |
+| TOOL-218 | analyze_prefetch | evidence/extracted/Prefetch/WWAHOST.EXE-670… | 6ed89eb5aada80c91421b59c2d0d21a602ca04ca2cb5c89e4673d95f0c69b840 | success | - |
+| TOOL-219 | analyze_prefetch | evidence/extracted/Prefetch/ZOOM.EXE-8DBED8… | b26a5d09dbc7e0d4f85645d2ddee47d61e032b51a6244e8d246aa5d052ca4d94 | success | - |
+| TOOL-220 | parse_browser_history | evidence/extracted/chrome_history/fredr/His… | 21b7106fb67bf4e66c529b9a8ea9d3bef378885df3378f115a31b683c8644501 | success | - |
+| TOOL-221 | parse_browser_history | evidence/extracted/edge_history/fredr/Histo… | fe225e1b02f74e1cb69a7bd339de66709a808657b30bb8afa4c09df8c6aea019 | success | - |
+| TOOL-222 | parse_browser_history | evidence/extracted/firefox_history/fredr/pl… | c1fe0312b5566db1fab273e2d5e12abf1122ba778a9f4f610c5c004b980a27ee | success | - |
+| TOOL-223 | parse_shellbags | evidence/extracted/usrclass_hives/fredr/Usr… | ff30ae8beea42384a90d1fefb86f943b7342526c7aa213e03738fb9740ea2e87 | success | - |
+| TOOL-224 | parse_shellbags | evidence/extracted/usrclass_hives/srl-h/Usr… | 2b2108131ba93c08a6ecb6588448d7596822257ec66e43b57fd2114c5943493f | success | - |
+| TOOL-225 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/1… | 70e554423d6bc4692f8c965d6db4c158fa4a0942d181d3c1b0e4eff98553dacb | success | - |
+| TOOL-226 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | b1ce97466ba55bf6b24fbe1913d5e7b74a0d81cbf3fb46a3c4b6d056dd527d92 | success | - |
+| TOOL-227 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | 90d9e9468565ce03229d737db8fedbd1f3a9378b148c1526fc39d273293842eb | success | - |
+| TOOL-228 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | f960b6da362de412546556c51c49647c55c14079893a66703ebb787e585eeff8 | success | - |
+| TOOL-229 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/2… | a621c0ea3cbad71776c7d877b38ddc9e89dcbc95a8183c76176fc6ccf0a4c744 | success | - |
+| TOOL-230 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | dfc5118a590af939dff3b374f251b7a8bc38d8129f6bbdb55f4f0fad4e9e4aae | success | - |
+| TOOL-231 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | aa32f207db58ef1982f07a8363679df1e36305b5c8d2570ec79758d934ed6cfb | success | - |
+| TOOL-232 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 2aa27b3a8038964f538ce470f180bc8aaab0800e844331163e1193127e13754b | success | - |
+| TOOL-233 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 80333512cf497a92712ab131a69bd848b5b1072f5374561a70a38f6970b05118 | success | - |
+| TOOL-234 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/a… | 4f4008a3c34cbed4fc5dddc50842f6ac25faa3c17fa482f1ecac900f70e783fe | success | - |
+| TOOL-235 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 5ac73ce506f6b7be37c96fa95eda2c82ffa0da42e9b548216ac5db0694fcd486 | success | - |
+| TOOL-236 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 791133fc0766d186b18962800b8c00d89649a7f8d870a6e8b04bfe87a0cd2153 | success | - |
+| TOOL-237 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/a… | eb3ae5b4001e7bb76bcc826fb4e29f00ca1bd841d8ff056272e7ad4d15c9c93a | success | - |
+| TOOL-238 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | f1403277193641bce1fec5548a0049949df3a4c67db8902d204f342f6c75ab93 | success | - |
+| TOOL-239 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | ae6f24616e7ea093475c0595c827acacae56360866894c80c53b007342d86140 | success | - |
+| TOOL-240 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a72304304794764414a0cc9d166ec351522f10ace78f0b51c9c2eb2783f04102 | success | - |
+| TOOL-241 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-242 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 77bf39ee58666bab728e59fa99f86772a5b9c99f0eedcf772b8a131b1639f996 | success | - |
+| TOOL-243 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 60bd612500181549656d741600f41e2353eabd909786b24eef490bf65f0f934f | success | - |
+| TOOL-244 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 5c5cf6d0d25b55645ab24e2ea6c5002e140440adaea94119615660aa0b438f20 | success | - |
+| TOOL-245 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-246 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 004a277614b9fd5858c212c5ceb48f7b7d7f51294ed7dcf76f35e925a7435898 | success | - |
+| TOOL-247 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 2eba6d1aa410f35a905a817e24b2e9a746a638beb648dc4e5a613935ad4bb0d1 | success | - |
+| TOOL-248 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 6028642f84416ef19c34227c68263498c6c671fccb3ed064813d9559ec0a3d7c | success | - |
+| TOOL-249 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 938d1ce9c66495e227bccbd8046f0c761b9210e976ddc99fbd9b557db7424529 | success | - |
+| TOOL-250 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 26fcda25e3b8cf2bd4084c815e6f10d03a6a83a22dc4322f4970499cadf66014 | success | - |
+| TOOL-251 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-252 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | b62a5e8b86380d1cef3b05c4a4addb30a8929c21c743312c941a2fd7c933044a | success | - |
+| TOOL-253 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 55a5806e836fbfa11e5f167c2786ad181f295f45dcebe58036602eef9cd58f76 | success | - |
+| TOOL-254 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | d390d94f2ba8faa3875b686c394c472f031f1d9937d58de59f899e7461093c90 | success | - |
+| TOOL-255 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | bf18dbc262dd857010dc4229e347f060a9416d32b61f849076f1c2800cbecfba | success | - |
+| TOOL-256 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 785aa33e655032f01e75c24a43d52e5b91f1a119c672c50a54d80c92350fffb4 | success | - |
+| TOOL-257 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 1d30fd2f1c57e65781013676a8ec1fa5928fb684d2a3b25b7fc6ff1f354eb018 | success | - |
+| TOOL-258 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | c052659291293a7aa396c66018826a70058d848bc1ece293b741147f6587fd58 | success | - |
+| TOOL-259 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a372d6a5c91577421450a0c438d218d23107d95c855fe9d04854791e96eda7eb | success | - |
+| TOOL-260 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 4efbe563c9be61a66d21cdbc78380de558420083e9ad13f6008d78681e578d49 | success | - |
+| TOOL-261 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 4b1fc349d93996449af8733315916714fef041905d7675b35731fa1d8dbf3a2e | success | - |
+| TOOL-262 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 47e563c90ccd04bba8003c873b7a3e1b628115fb6b54bfd26a8ecec10531bd3d | success | - |
+| TOOL-263 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 3721153589ddd2e3e50b43ac6ee6ee9594cc9a3c75b5ada6c958259bcbd53710 | success | - |
+| TOOL-264 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 8da0c0d940e3104c4482535938c9b4e5a75bb2f98f3ba8bdcce0cc94f1c0b93c | success | - |
+| TOOL-265 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | a389b840cf233042efd6eb43d9e504c04509a9a24e08559885462a6e137c1ee1 | success | - |
+| TOOL-266 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 7998bb1efd7855d3285a1d9b0204cbbc8a84d178dacaf84066a0f46834c85d23 | success | - |
+| TOOL-267 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | cfcec1f79c3a35e672424295fb991d12a7d7a9d726374e7496c91425ac19407f | success | - |
+| TOOL-268 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 645283df42db309956660cdfc86e3bc8a468fa79e3db6aa8a5db256f8f100670 | success | - |
+| TOOL-269 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | c5433a8432286b6895ebe84b1a53be07292dfd58bf06278596a24296f13372f0 | success | - |
+| TOOL-270 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 061498578f3b21c24b976899ab917b0e112aa5656b6f6ad413729a04fd1be7d2 | success | - |
+| TOOL-271 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 59e7846f2d51b09f7456d29592896ee579e2ae09d2528096ffd26932c2466ac2 | success | - |
+| TOOL-272 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 758178290acbb57ffea516e43cf9dcffb19de78f9795ee14512c3a51bf28b87d | success | - |
+| TOOL-273 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | aec692cb17440be06ea59aaa9533faf0ad757ba01051045daff151965a1939ab | success | - |
+| TOOL-274 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | e713d156a8519bd4946359746426f1d422a605ed0f93155c30276e7b695a19f0 | success | - |
+| TOOL-275 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/N… | 2a39e1638fdbc3a490fab13392eabd2c8413dd3cbace6526574f652aa1b6ce7f | success | - |
+| TOOL-276 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | 0c94e286897ebbe48ba0751fe32f4e5934bef07bfe4b906a8a62089b96a22f49 | success | - |
+| TOOL-277 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | 07bae499309d9af7ffca5a8823950f6afe6107b9871735be74bab5668dcbf17a | success | - |
+| TOOL-278 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/h… | 98c8ecdf2aa1c94d2426156e2f4edb985bc8b43978b3ed408b7e6e8e7be16e11 | success | - |
+| TOOL-279 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | f57caefc9f0afececbb2e5df5539da966123db1f8560c761ad17f6be7c589a0a | success | - |
+| TOOL-280 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | a91349af19e01b19d4311eee43173adb524577d672336195d2cd394a1dcde176 | success | - |
+| TOOL-281 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | 43a2948d90bcbf544e297fcd3367c8cec86365895219b20cadad16d335175149 | success | - |
+| TOOL-282 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/f… | 4a069245d0bd1968d93daae3f7d5d84b242b473a425c75631aafc3790e62d342 | success | - |
+| TOOL-283 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/H… | ebce32615433989c79bdfbea74bbb37aa37d24457cae56d291f9d71862ea8f21 | success | - |
+| TOOL-284 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/i… | 7f04d8d0806223f9cfe8b8bbfc3dd67faab65fcec2cdf76ff698e0d8bc74a795 | success | - |
+| TOOL-285 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 5509a436e570e8037c8d5962e64537ccc2562ce058bc4f018bf5231b4e46d522 | success | - |
+| TOOL-286 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 2e18ee59acd20c00a02a84e2ecf190d94b1775491866ea26c20ea90ccd18ecbc | success | - |
+| TOOL-287 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/O… | 0e65d04c90dcf9eb50a81fded726498895b9d6cd8532ca49d816c4ba27fce375 | success | - |
+| TOOL-288 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/s… | 997f0f43d8910ba2fac551b9e1d8a55564b28b58a52140c8d3d4108669f72b33 | success | - |
+| TOOL-289 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/O… | 6ff85a13dd366220022323b4fe7816554700bc073d05c85b97b2cd48e2d200b4 | success | - |
+| TOOL-290 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/P… | beca798c2e4f2cbcc433d66021d4ad326816ac44b53a105ba7c21c2e1da40768 | success | - |
+| TOOL-291 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/Q… | fa00d11eee2f3f725cb81f99ed9a96377dc36311d64824de26fb0e4dd3553cb3 | success | - |
+| TOOL-292 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/r… | 5f9b6d35cb3ae48c36198f91fa96266c5ce7c7192c2d8adb6a982cbe18a7d197 | success | - |
+| TOOL-293 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | a7706f69286168c30067b7378d5a0aadf832a76ca0fc2289cca630637a768e77 | success | - |
+| TOOL-294 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 886e25f1bdf6411b8ca87f78af8e83a25b852bb15293fc9debb36ba0cdcef5c2 | success | - |
+| TOOL-295 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 1392f7903ab3611b758d055ef421f99e7de0c92b6d40eb92203bb34bf1d83d4a | success | - |
+| TOOL-296 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 170ebe9958f48b6d5649c99576aa6ad1693c7b4a475e4d14f58f06de9839892f | success | - |
+| TOOL-297 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | 90837e079617b3944007ccd0421d7eef6aca12a15441d2b44b5eb74f72fdf029 | success | - |
+| TOOL-298 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/R… | d066fc2235671d3c001381e8fb921aa27119ad39a4e67a40065c11a15efa5aa0 | success | - |
+| TOOL-299 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 55e4e5e5a302cd1b7f03a9785908e334b2c7539cb4e1529cd3325c63cbe04cb3 | success | - |
+| TOOL-300 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 4637c16decdf98c71e5698be97b6e3f9a537e851382610a2a1fc8ba9fccea45c | success | - |
+| TOOL-301 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 7713b779014f43a1a072815c0d37acc373c836f6be14329adb38d75990abf3ca | success | - |
+| TOOL-302 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/A… | 411e4b30473868afb4182bce0b0bcbd156a7ed849ee587271efe77e2599cea20 | success | - |
+| TOOL-303 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/b… | 0eac03b296acdefee5fce9aa2355eb15bd9c03384432ca08f503c3509c565124 | success | - |
+| TOOL-304 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 4e03273943ab5c5d94ea7c36349176f16b889779ca25ed96d9cb2cf63c288619 | success | - |
+| TOOL-305 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | fb38c1d255c13992c2aed8392d2b5d595bd6a2a4cd74ff4f89245b66a01005b2 | success | - |
+| TOOL-306 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 0709a63fb64b52cc13656b7d2225bf3717a45d36b0f2f0cf2f4b84dce10b1ef0 | success | - |
+| TOOL-307 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 89a29c9c73da42725ed31fc26b8213173c611a018dd4055fc470b1c827631bab | success | - |
+| TOOL-308 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/b… | d04bb84e5b4c981d7a9c25736848213f72cce11d329c46df23e3d9022036944b | success | - |
+| TOOL-309 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 6627028cb5a5f7ca54a909bb6f022d803c993db08a2c08ac8a49c0583a3a7561 | success | - |
+| TOOL-310 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/B… | 46826aa6548f7839f51e9c943b23d9304130934260755c7e2be17d7300ab701a | success | - |
+| TOOL-311 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | 72a54dc1bd5f344f2fab10e74031b61b573fa42de0af4ba0535394aba1da3c9a | success | - |
+| TOOL-312 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | 0f6d4c2987fb2d9e168a7617577b80c7ed95c347c1fa4bea396ab03c528ca35c | success | - |
+| TOOL-313 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | a1b9c59ab6525d5a379717a232ca00e165b4bf5b9bdf0f2c178720e3d8cf0f8d | success | - |
+| TOOL-314 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/E… | 6dc817f1e94af30de1fbf048a8efad575db1ac7128a8e7584b38caa2b216c2af | success | - |
+| TOOL-315 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 2215cdce515c5ccfec99c1ce1b1e00eda8c06c41133fbb2afa3726d18360f8d1 | success | - |
+| TOOL-316 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | f7ef66cf382e417619967ebe38922edd02174589a6c39dee594ccb57a9cdd7a7 | success | - |
+| TOOL-317 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | cb2663bd91c5aa17a4f939343a26e4eb90b6823c1852dd66396507e613b6a814 | success | - |
+| TOOL-318 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | c0b819a844cf8b524378854f13b25beb0ec89c5c000f0b51404f5d38de664734 | success | - |
+| TOOL-319 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 6e1df324da4ecb133e8d03022d0a3d552f684377a52a43f110e6bad310b88654 | success | - |
+| TOOL-320 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 86a17b3b023a370504f0003c32b3435f329f8b5767025b1c1ecd6309bedaf8f8 | success | - |
+| TOOL-321 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/f… | 5dc92b763f064c783ae496580b14676f0678adf029bbddd50fdc805204f4aacb | success | - |
+| TOOL-322 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 1af5c6f1bfbdb2298980bb05c5117c0a0086b7567a101ff3f5070bd0691d3ed0 | success | - |
+| TOOL-323 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 1af4897e2347dda5fa1a460d095b084747722e6b73099be4895123838eb6b906 | success | - |
+| TOOL-324 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 52594ba17b85dd0b3fdd9aecef3b4c22ca5109d5074455edbbecabe3484316c5 | success | - |
+| TOOL-325 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | b7d2024010549a7091fb4a422bc5783808f135ca097f123323091dd46c198b5c | success | - |
+| TOOL-326 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 5204b6b63789a4939bc96737c51441dd14aced90619d87dfd127ded799f25337 | success | - |
+| TOOL-327 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/m… | 6c8a99caf4f7be5177b5e1564399d38f6c610b11820e0d5eaa1f6b4288343a40 | success | - |
+| TOOL-328 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | bb9629390c6a1c443d7a7da6c8c0c937ec77f7ba2c0ea8b635045c9290aac429 | success | - |
+| TOOL-329 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | e3e4654d1e8cfd4c4bdad59c773974bbe867ca2ae0b142092e1534e5bda5cd81 | success | - |
+| TOOL-330 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | 64d4023b481c51a26d743821ff5539ea15dee5258b798150a4d1147d61f6b638 | success | - |
+| TOOL-331 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/t… | 7c8adb58da25b3b7241f44e58048b0c3a94f63ac7c24105fbdad760523fb13e8 | success | - |
+| TOOL-332 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | 07db6d5608afd31e4068fe8179dcf1749351f5036356728c672d545f3f955e42 | success | - |
+| TOOL-333 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/U… | b9855dd9390741ddc77d737eabe8fdfdd6f957ee2a5aa81708585e39b96653fb | success | - |
+| TOOL-334 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 480f2cd30d0469a3dd19d04e9c668f30df0948fac8ff6fb6769442898245c2fb | success | - |
+| TOOL-335 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 182cc89e0039cf3e6a46cf58338eb1957eba9f5aeeb3c62e98462da5031ac0a6 | success | - |
+| TOOL-336 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | b4a6a8d92f24df7ad1bcca24e2a1c46d0406ff1b6230f01d8fdfe5674448dfa0 | success | - |
+| TOOL-337 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/V… | 24366a77218e128717ee6678f3791a4110794325877ca71cc840d297ecebde6c | success | - |
+| TOOL-338 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/w… | ab4adedf4e95d9542aa99b235b06f6deb5e84ff05dd7fbee5558f128dab60521 | success | - |
+| TOOL-339 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | e9a8ab03f8e2c52f4e9de07efb33eb7d091d2ffeb138da662d1e56fd1d8d0b0d | success | - |
+| TOOL-340 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 6d11feffd0f3fe3ea8231b2693fab424802ff812c7ed443e624530c331baf683 | success | - |
+| TOOL-341 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 2aa4230b2e2d229551089dbc6bf8ec564829c3537593ef486ae6f222ec278d3d | success | - |
+| TOOL-342 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/W… | 315b37a74f7348d8f75b9974633cbaa53b4d36dff55ae3a1f7352a0d55fb2893 | success | - |
+| TOOL-343 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | 91fc0a26b466d04c6a5f1ad44744ff8a0489832e4706cf279582b6df50eafbe5 | success | - |
+| TOOL-344 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | adacfe10f597fb3419b5f4e4dd0d8b657174a712694c7d4e3e5121cf1559de5b | success | - |
+| TOOL-345 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | bb837d690f439a81f8e32f739222f729815ab1cdc741c694641856041d4258fd | success | - |
+| TOOL-346 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/I… | 1860c2cd7a5c160e561ce79cf1dc8ad2eee46f79ea10104ecab45b51178e30cd | success | - |
+| TOOL-347 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/K… | 22350c3ef4e6d6b65580a285923f5a6e4eb37ed820c085e3b991982d900c69f1 | success | - |
+| TOOL-348 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/K… | fc39a7d4dcbdd2e6e3527908bc831214f51b729213fa0ffbc7823f966a3a03a2 | success | - |
+| TOOL-349 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | f39316f98acf49ce33eeec0180c2f00d3a837720b9e9efb84a8361e8e1539c3d | success | - |
+| TOOL-350 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | e66dff66010e18dad6e0778947a130c3358ea7f9bde0141674675109cfb7edf5 | success | - |
+| TOOL-351 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 8803cee3ae9030a7e99f53d6f57886301e73bc852398c16bbdab8566fa63cc31 | success | - |
+| TOOL-352 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 9463a5b41f46474d37e026de1e1b599dd0c280bd5822fdc0a2683daa456854f6 | success | - |
+| TOOL-353 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 13809c951faf1381bc79a5deb7b210e7dedd55d21f14db9eac98bfa11196d66a | success | - |
+| TOOL-354 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | c1efabd53c3440ca3116e38fdd223e61eb61ece00b2b039dac9548ed3d48aa31 | success | - |
+| TOOL-355 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/M… | 60ad79499c8b7f467f20d162880ec22e9253458a2782e0c721b0be2a59e49f4f | success | - |
+| TOOL-356 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 5dc01a0576bcd0bb685b8c61e82186993068997112ab926d6cb1c95ac7bf29a1 | success | - |
+| TOOL-357 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 0fc919eb2031d7d42689ab0cb0f8f4335048324df8c4fde42fecc6b12baac430 | success | - |
+| TOOL-358 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 41face2cb1e3aa14e8dbf01888b12060521a60ec9c6a5b50fbf3a1523fa8b104 | success | - |
+| TOOL-359 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 6d8079c6f02c69e747fa11a23ba07b21f4ceead42a469e6c4bdf658b5e6e7e86 | success | - |
+| TOOL-360 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 5a398c9ebaf1172f2fc54d399f451f79c07fea0994539960072a4a9981fdd112 | success | - |
+| TOOL-361 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 009587a8a5f6a21917f50f9adeb91a8f04e0f3dbcc7cd871d79f77bd0edd7641 | success | - |
+| TOOL-362 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 59318bcfaab3589445c50e72b471aaba968734d21c121ebc24202e2513a2584b | success | - |
+| TOOL-363 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/s… | f586becc4cdd2df953bfda3ba61c05b43c51abf85ad9034fd3b8f6f5f99d4a82 | success | - |
+| TOOL-364 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | c9dbc942f9766b8da2abe474bcd5c3df4fda458df59337f027afd6b8694167da | success | - |
+| TOOL-365 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 7813cc347fe700bd85cdec63224862531689c41e77faa8ff46065b72e628dfe3 | success | - |
+| TOOL-366 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | d8df2417b6ec9d849c5f6ae3a2732a621b757e2a2c883c1cdefa1716fd0a9ad2 | success | - |
+| TOOL-367 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/S… | 29d855f3aa9eefa0f4198d63699dd24fa030c65e62185f842f530174a9a59af1 | success | - |
+| TOOL-368 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | ec45cf23445b7f47ebe8b18c8b632191f7aac5a615bd61ce1b4e6bf1a294751a | success | - |
+| TOOL-369 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | cd8ef187bc332ed018296219352182820d157b31c481b3b4d31f6e682e0b602c | success | - |
+| TOOL-370 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/T… | b68e121586ef846dc2be14897087566ac72f6e6339f193609a5fc6f766e5c4aa | success | - |
+| TOOL-371 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 27e31b0173bc45c6a225b1725edebfb52167dd61453c07af4fa11e895e9ce6fc | success | - |
+| TOOL-372 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/F… | 9f7a0a618ade830139e2a5cd89853a79598bbef8cf573869986355314aad5ce4 | success | - |
+| TOOL-373 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | eaabcc2edd94fefe2a9d9423980afc285b84e35105dd597f7944b55c99a638f8 | success | - |
+| TOOL-374 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 27e803e74db03d51a2cd814d505e16cd3ab1cf83e9e2abdc70b108eb8ce1c021 | success | - |
+| TOOL-375 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | a3fc2c5938b2c5c4a29705c05bc583afa9a5aab286f41da8341bd3bf6dd17b9a | success | - |
+| TOOL-376 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 548293a6c085c8a9ea1f6161c8a31742d9f389f198a81c0e7108e6c3e6a28e13 | success | - |
+| TOOL-377 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/G… | 1954e7574fed496c44df6debcd365c7c478fffd619c7b630cba176fd05c996ab | success | - |
+| TOOL-378 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c76ca4661f4e632404f25c823e12f9eb6adebcc28de203f256c153bb80cb11b9 | success | - |
+| TOOL-379 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c76ca4661f4e632404f25c823e12f9eb6adebcc28de203f256c153bb80cb11b9 | success | - |
+| TOOL-380 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | f56790557952521803357376efefa31714eb614c5191fc7c51d2dc84cfae966f | success | - |
+| TOOL-381 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | f589e3afebbe628a4efd75b7bf3f0212c556da702ad7cdcb8593a6ef44f94fc0 | success | - |
+| TOOL-382 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 346ac1e2eead3d2eca032a1308a6b68542eb5f45fe95eec9a5e060875744954b | success | - |
+| TOOL-383 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 259589c93038a546546689cada261652f993245dc5c264deba7e7a9e08dad6f4 | success | - |
+| TOOL-384 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 372dc1dd823e996836b07db7859fc7a10d682665897e9b513093cd4414cf256c | success | - |
+| TOOL-385 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 28477533b862fdfb406ab93eff90e86e7f26edeb14efc238f2f7b2f36e2da67a | success | - |
+| TOOL-386 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | c41f76198dea32ff809e9f5cc957fdef6bfef97415f05ef06698460dad499e56 | success | - |
+| TOOL-387 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 9684caa93e2cada3b2f9919c54fcc2352ccaeb3a5b47a461ee8287214715ac0d | success | - |
+| TOOL-388 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 74d6d8c58d0beb0716eeecdc55366e193186924a616e057cd210f4104e5d85e9 | success | - |
+| TOOL-389 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 5190b7911a2f854d15971e3e2389dc6a131571cd2cf4f9a1c6e0359ee143e69a | success | - |
+| TOOL-390 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | e83400322f2752d51424680f30ca26d409a46213dc03d23c8959ee43ae864455 | success | - |
+| TOOL-391 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | ff0edb08d91e4abb20fcc2b1b114c29b4e804b5c1793a1a8892be386c83ba040 | success | - |
+| TOOL-392 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 1ea50957febf83b30ba2df406017c8f156421eabd3d8da3b207a034e06ea9217 | success | - |
+| TOOL-393 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | d0aac934b9ab60750f22d677f11373b92c826b989015d1dda17a14fd278d44a6 | success | - |
+| TOOL-394 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 9b38212273e36dcf085d710313222cd5c73f0c4cb5702d0615ad93159e7b6aeb | success | - |
+| TOOL-395 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | d0d57879e049382e8124ed553424404dfe9d44a152c1dba05f01d119dfe4f9b8 | success | - |
+| TOOL-396 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 7116ff028244a01f3d17f1d3bc2e1506bc9999c2e40e388458f0cccc4e117312 | success | - |
+| TOOL-397 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 90bf6baa6f968a285f88620fbf91e1f5aa3e66e2bad50fd16f37913280ad8228 | success | - |
+| TOOL-398 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/C… | 8e5986c317095fd30f568e22c3755287492c6ac6dce2694a7b81b041bf5bf98f | success | - |
+| TOOL-399 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | ee1431deded635ba2794c4510ed8599bbd6b50fd230c2654bf7b2f6a8ebe27e2 | success | - |
+| TOOL-400 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | fceb7136d3016847e74c0f47f84f6077d8b9754fa602f55794808de2d74e2beb | success | - |
+| TOOL-401 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | 20c907261028ae873f9da4d1b14a0dcd0751426c370ed51b6c04c3cafe65b51c | success | - |
+| TOOL-402 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/fredr/D… | fc8b86cb75b74556e125bd8016681e0f1aab31edadd95c53172d5252eed0101a | success | - |
+| TOOL-403 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-404 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-405 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 40d7086245238b1af77edbf4819089d46bfa3e076a78bd642ca94a7e0e49082b | success | - |
+| TOOL-406 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 6fa63b57de55b6aa352509d0bcc1774eaf35904f464f62bc41931d510cf33304 | success | - |
+| TOOL-407 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 1dc0c8d7304c177ad0e74d3d2f1002eb773f4b180685a7df6bbe75ccc24b0164 | success | - |
+| TOOL-408 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | add21f3bf79c6c8479e9ce09d5f7126a59707ce589b9c808f85ad45e440089b8 | success | - |
+| TOOL-409 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/A… | 9b3ff2a9941d88fd2af86130f82ff4ec6a76589bc3990fed9c1448e6b25b5218 | success | - |
+| TOOL-410 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/B… | 0907f0fe023c17d84eb6278ba3143af86dabc68bbe5772444ee8056e62ca55e8 | success | - |
+| TOOL-411 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 7932ec4bc8b28d05dff1a708326d53a9f9306e15080a7c71550712095a7f85d2 | success | - |
+| TOOL-412 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 74d6d8c58d0beb0716eeecdc55366e193186924a616e057cd210f4104e5d85e9 | success | - |
+| TOOL-413 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | ff0edb08d91e4abb20fcc2b1b114c29b4e804b5c1793a1a8892be386c83ba040 | success | - |
+| TOOL-414 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 7116ff028244a01f3d17f1d3bc2e1506bc9999c2e40e388458f0cccc4e117312 | success | - |
+| TOOL-415 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/C… | 90bf6baa6f968a285f88620fbf91e1f5aa3e66e2bad50fd16f37913280ad8228 | success | - |
+| TOOL-416 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/H… | b200c8b3a549cae7f789eba7c2c20c1468210bb908ed9982fd06f06d478bcdaa | success | - |
+| TOOL-417 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/I… | d05ee13b3591a94469b02f6cb61e28eddd4c44dc7d091da5a112722dd2ab4432 | success | - |
+| TOOL-418 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/m… | b7d2024010549a7091fb4a422bc5783808f135ca097f123323091dd46c198b5c | success | - |
+| TOOL-419 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/P… | f1427e0b73115cbf3696fe452aad0385d5dafe45feddf803785e124459973b4c | success | - |
+| TOOL-420 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 926f613a962d71c93e09fce9a24b0d2b6a050f6b857ca456b7e70d6e26c6680b | success | - |
+| TOOL-421 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 317e0877eb42d36d446fbb623583896e233dea7b1c73948e779c07c3b59e46ae | success | - |
+| TOOL-422 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | dbc3c145520f48524ec7b67c0d2ef434df4811598f4dc40f6b1b19b7edd8eb81 | success | - |
+| TOOL-423 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/S… | 3b8c614a45d8033b5f612691ef780fca4fd1878fae0f8d4df2d0726e27b8e1df | success | - |
+| TOOL-424 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/T… | b68e121586ef846dc2be14897087566ac72f6e6339f193609a5fc6f766e5c4aa | success | - |
+| TOOL-425 | parse_lnk_jumplists | evidence/extracted/recent_jumplists/srl-h/U… | ebe6c7490297727a0a1ca8f37fe4e8fbda64bc135d8bd34773a1654fb0a8fb81 | success | - |
+| TOOL-426 | parse_amcache_shimcache | evidence/extracted/Amcache.hve | 144718b6ada866cecee150203fdf332294e1ffe01f78198f505e4eff648fe6c8 | success | - |
+| TOOL-427 | parse_usnjrnl | evidence/extracted/UsnJrnl.$J | e13df07525f5180a8e9fa08a6e27bbc6e0ac3bf7c6b10ff1b7609c52c44f5a58 | success | - |
+| TOOL-428 | parse_mft_filesystem | evidence/extracted/MFT | 007ba1e44dffcd43a330c4f0e5c031db5ad58e9ac1e8ab5b6610ad344099f634 | success | - |
+| TOOL-429 | build_super_timeline | rocba-cdrive.e01 | f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67 | success | - |
+| TOOL-430 | parse_usb_registry | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | - |
+| TOOL-431 | parse_amcache_shimcache | evidence/extracted/SYSTEM | f02157ae53e96f8335a5ced276d42bc570d4d2cacaeadca8bc1bd688ccf8b269 | success | - |
+| TOOL-432 | parse_recentdocs_mru | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | - |
+| TOOL-433 | parse_usb_registry | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | - |
+| TOOL-434 | parse_shellbags | evidence/extracted/user_hives/fredr_NTUSER.… | 2a7cdae909097c4c06af32e972645e5b6ebdb391759a49cc83d2c2216a99e427 | success | - |
+| TOOL-435 | parse_recentdocs_mru | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | - |
+| TOOL-436 | parse_usb_registry | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | - |
+| TOOL-437 | parse_shellbags | evidence/extracted/user_hives/srl-h_NTUSER.… | 66ca339018eaecec6e9fbe8cbc549861cd2e02ce47d8c9727f78aa34d541cf21 | success | - |
 
-## Appendix B — unsupported claims (rejected, NOT findings)
+## Appendix B - unsupported claims (rejected, NOT findings)
 
-None — every recorded claim was evidence-anchored.
+None - every recorded claim was evidence-anchored.
 
-## Appendix C — prompt-injection alerts (hostile-evidence handling)
+## Appendix C - prompt-injection alerts (hostile-evidence handling)
 
 _Evidence is treated as data, never instructions; these were logged, never executed._
 | alert_id | Source | Signature | Snippet |
@@ -4129,7 +4129,7 @@ _Evidence is treated as data, never instructions; these were logged, never execu
 | ALERT-3550 | critic | claim_injection_affected | `Browser history: 119 visit(s), 2 download(s); downloaded fi…` |
 | ALERT-3551 | critic | claim_injection_affected | `Browser history: 783 visit(s), 14 download(s); downloaded f…` |
 | ALERT-3552 | critic | claim_injection_affected | `Browser history: 181 visit(s), 0 download(s).` |
-| ALERT-3553 | critic | claim_injection_affected | `USN journal: 383915 record(s) — 149424 created, 47966 delet…` |
+| ALERT-3553 | critic | claim_injection_affected | `USN journal: 383915 record(s) - 149424 created, 47966 delet…` |
 | ALERT-3554 | critic | claim_injection_affected | `$MFT parsed: 479359 filesystem entries (371723 files, 10763…` |
 | ALERT-3555 | tool_result | base64_blob | `idence/extracted/recent_jumplists/fredr/AutomaticDestinatio…` |
 | ALERT-3556 | tool_result | base64_blob | `idence/extracted/recent_jumplists/fredr/AutomaticDestinatio…` |
@@ -4557,13 +4557,13 @@ _Evidence is treated as data, never instructions; these were logged, never execu
 | ALERT-394 | evidence_row | base64_blob | `history", "ntfs_path": "/Users/fredr/AppData/Local/Microsof…` |
 | ALERT-3940 | critic | claim_injection_affected | `Browser history: 783 visit(s), 14 download(s); downloaded f…` |
 | ALERT-3941 | critic | claim_injection_affected | `Browser history: 181 visit(s), 0 download(s).` |
-| ALERT-3942 | critic | claim_injection_affected | `USN journal: 383915 record(s) — 149424 created, 47966 delet…` |
+| ALERT-3942 | critic | claim_injection_affected | `USN journal: 383915 record(s) - 149424 created, 47966 delet…` |
 | ALERT-3943 | critic | claim_injection_affected | `$MFT parsed: 479359 filesystem entries (371723 files, 10763…` |
 | ALERT-3944 | critic | claim_injection_affected | `Extracted 428 curated artifact(s) from the disk image.` |
 | ALERT-3945 | critic | claim_injection_affected | `Browser history: 119 visit(s), 2 download(s); downloaded fi…` |
 | ALERT-3946 | critic | claim_injection_affected | `Browser history: 783 visit(s), 14 download(s); downloaded f…` |
 | ALERT-3947 | critic | claim_injection_affected | `Browser history: 181 visit(s), 0 download(s).` |
-| ALERT-3948 | critic | claim_injection_affected | `USN journal: 383915 record(s) — 149424 created, 47966 delet…` |
+| ALERT-3948 | critic | claim_injection_affected | `USN journal: 383915 record(s) - 149424 created, 47966 delet…` |
 | ALERT-3949 | critic | claim_injection_affected | `$MFT parsed: 479359 filesystem entries (371723 files, 10763…` |
 | ALERT-395 | evidence_row | base64_blob | `history", "ntfs_path": "/Users/fredr/AppData/Roaming/Mozill…` |
 | ALERT-396 | evidence_row | base64_blob | `s_hives", "ntfs_path": "/Users/fredr/AppData/Local/Microsof…` |

@@ -2,7 +2,7 @@ name: ci
 
 # NOTE: This pipeline config is intentionally kept OUT of `.github/workflows/` so it is NOT
 # executed as a GitHub Actions workflow. CI is deliberately not run for this project right now
-# (maintainer decision). It is preserved here as reference config — move it back under
+# (maintainer decision). It is preserved here as reference config - move it back under
 # `.github/workflows/` (and push with a `workflow`-scoped token) to re-enable CI.
 
 on:
@@ -68,13 +68,13 @@ jobs:
       - name: Type-check (mypy)
         run: uv run mypy siftmesh_core
 
-      - name: Bypass suite — security gates (Epic L / M4)
+      - name: Bypass suite - security gates (Epic L / M4)
         run: uv run pytest tests/EPIC_L_TESTS -q
 
       - name: Test (pytest + coverage)
         run: uv run pytest --cov --cov-report=term --cov-fail-under=90
 
-      - name: Coverage gate — governance core >= 95% (schemas/evidence/critic/registry)
+      - name: Coverage gate - governance core >= 95% (schemas/evidence/critic/registry)
         # image_access/memory_access are omitted: their sleuthkit/volatility subprocess
         # lanes require maintainer-provided real evidence (CLAUDE §2B human-gated).
         run: >

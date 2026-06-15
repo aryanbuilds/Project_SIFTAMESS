@@ -1,6 +1,6 @@
 """Re-critique must be idempotent (bug Project_SIFTAMESS-myl7).
 
-Running `critique` more than once (e.g. during judge debugging) must NOT duplicate promoted claims —
+Running `critique` more than once (e.g. during judge debugging) must NOT duplicate promoted claims -
 even when the two id schemes collide (floor ``TASK-CLAIM-NNN`` vs live ``TASK-A{n}-CLAIM-NNN``).
 The fix dedups on a content key (task + source_sha256 + tool_call_id + normalized text), not the id.
 """
@@ -23,7 +23,7 @@ def test_double_critique_promotes_no_duplicate_claims(make_real_run: MakeRealRun
     once = read_claims(run.root)
     assert once, "the floor run must promote real claims to critique"
 
-    # Re-critique twice more (idempotency under repeated passes — the myl7 scenario).
+    # Re-critique twice more (idempotency under repeated passes - the myl7 scenario).
     critique_run(run, settings=load_settings(), evidence_root=evidence)
     critique_run(run, settings=load_settings(), evidence_root=evidence)
     after = read_claims(run.root)

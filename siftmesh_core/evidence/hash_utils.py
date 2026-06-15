@@ -1,7 +1,7 @@
 """SHA-256 hashing + deterministic, symlink-loop-safe directory walk (B1).
 
 Streaming via :func:`hashlib.file_digest` (Python 3.11+) keeps memory constant
-regardless of file size — a 100GB artifact hashes in one read pass without OOM.
+regardless of file size - a 100GB artifact hashes in one read pass without OOM.
 The walk produces a stable, sorted ordering (reproducible manifests) and guards
 against symlink loops with a visited ``(st_dev, st_ino)`` set. Symlinks are not
 followed: SIFTMesh hashes only the real files inside the evidence tree, never an
@@ -69,7 +69,7 @@ def _iter_regular_files(base: Path) -> Iterator[tuple[Path, os.stat_result]]:
 
 
 def scan_totals(base: Path | str) -> tuple[int, int]:
-    """Cheap stat-only pre-scan: ``(file_count, total_bytes)`` — no hashing.
+    """Cheap stat-only pre-scan: ``(file_count, total_bytes)`` - no hashing.
 
     Used to drive the ingest progress/ETA counter without reading file bytes.
     """

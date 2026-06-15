@@ -1,8 +1,8 @@
-"""Tool-call request + critic verdict schemas (C4) — types only.
+"""Tool-call request + critic verdict schemas (C4) - types only.
 
 ``ToolCall`` is the typed request to run a tool; ``CriticVerdict`` is the
-deterministic Critic's ruling on a result. The engines that *produce* these — the
-audited executor (Epic D) and the Critic (Epic G) — live elsewhere.
+deterministic Critic's ruling on a result. The engines that *produce* these - the
+audited executor (Epic D) and the Critic (Epic G) - live elsewhere.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class CriticVerdict(StrictModel):
     verdict: CriticVerdictType
     reasons: list[str] = Field(default_factory=list)
     affected_claim_ids: list[str] = Field(default_factory=list)
-    # Epic G persistence — optional so the bare (verdict + reasons) form still validates.
+    # Epic G persistence - optional so the bare (verdict + reasons) form still validates.
     # The critic fills all three when it writes a verdict to audit/critic_verdicts.jsonl.
     task_id: str | None = None
     verdict_id: str | None = None  # deterministic VERDICT-NNN from ledger length

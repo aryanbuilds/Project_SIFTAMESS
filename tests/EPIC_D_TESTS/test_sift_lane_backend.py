@@ -1,6 +1,6 @@
 """SIFT-lane backend (D12): EZ-Tool JSON → RealBackend row shapes, fail-closed, fixed-argv.
 
-EZ Tools are not invoked here — ``subprocess.run`` is mocked to write synthetic (golden) EZ-tool
+EZ Tools are not invoked here - ``subprocess.run`` is mocked to write synthetic (golden) EZ-tool
 JSON output, so the normalization + safety contract is tested in CI without EZ Tools or evidence.
 Real EZ-Tool validation against the ROCBA artifacts is human-gated on the SIFT box.
 """

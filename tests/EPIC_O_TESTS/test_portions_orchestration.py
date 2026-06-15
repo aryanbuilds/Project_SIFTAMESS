@@ -1,4 +1,4 @@
-"""Portions→prune→merge orchestration (TUI low-disk path) — headless, deterministic floor.
+"""Portions→prune→merge orchestration (TUI low-disk path) - headless, deterministic floor.
 
 `actions.run_in_portions` curates each portion's subset, runs it to terminal, prunes its derived
 bulk, then merges the runs into one report. No Textual, no live agent, no keys.

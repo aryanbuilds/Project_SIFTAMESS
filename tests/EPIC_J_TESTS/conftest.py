@@ -1,4 +1,4 @@
-"""Epic J shared fixtures — thin wrappers over the root ``make_real_run`` factory (M1).
+"""Epic J shared fixtures - thin wrappers over the root ``make_real_run`` factory (M1).
 
 ``dispatched_run`` is a real planned + dispatched + critiqued run over the committed
 public fixtures (real Epic-D tools → real claims/tool_calls/verdicts), so reports

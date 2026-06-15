@@ -1,10 +1,10 @@
 # Forensic test fixtures (real upstream samples)
 
 These are **real** sample artifacts taken from the upstream parser projects' own
-public test suites — real input that produces real tool output. They are NOT
+public test suites - real input that produces real tool output. They are NOT
 fabricated/synthetic, and they are NOT the SANS hackathon evidence (that evidence
 is human-gated: never committed, never run in CI, parsed only on explicit
-maintainer command on the SIFT workstation — see CLAUDE.md §2B).
+maintainer command on the SIFT workstation - see CLAUDE.md §2B).
 
 | file | source repo | upstream path | used by |
 |------|-------------|---------------|---------|

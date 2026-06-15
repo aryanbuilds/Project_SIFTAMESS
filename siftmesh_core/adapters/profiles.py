@@ -22,7 +22,7 @@ def load_profiles(path: Path | str | None = None) -> dict[str, AgentProfile]:
     """Load + validate the agent profiles; return ``{profile_id: AgentProfile}``.
 
     Raises ``FileNotFoundError`` if the file is missing and ``pydantic.ValidationError`` /
-    ``ValueError`` on a malformed entry (fail closed — never a partial/typo'd profile set).
+    ``ValueError`` on a malformed entry (fail closed - never a partial/typo'd profile set).
     """
     target = Path(path) if path else DEFAULT_PROFILES_YAML
     if not target.is_file():

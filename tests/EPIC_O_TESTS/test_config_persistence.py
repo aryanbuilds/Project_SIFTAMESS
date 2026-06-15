@@ -1,4 +1,4 @@
-"""Epic O — global+project config persistence for the agent selection (save + loader precedence)."""
+"""Epic O - global+project config persistence for the agent selection (save + loader precedence)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def _isolate(monkeypatch, tmp_path: Path) -> tuple[Path, Path]:
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.chdir(cwd)
-    # the loader reads SIFTMESH_* env — clear any that would shadow the toml under test
+    # the loader reads SIFTMESH_* env - clear any that would shadow the toml under test
     for var in ("SIFTMESH_AGENT_PREFERENCE", "SIFTMESH_EXECUTOR_SELECTION"):
         monkeypatch.delenv(var, raising=False)
     return home, cwd

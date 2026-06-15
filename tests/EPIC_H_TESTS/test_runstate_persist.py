@@ -1,4 +1,4 @@
-"""H1 — RunState atomic persistence: round-trip, no temp leak, crash-safe replace."""
+"""H1 - RunState atomic persistence: round-trip, no temp leak, crash-safe replace."""
 
 from __future__ import annotations
 

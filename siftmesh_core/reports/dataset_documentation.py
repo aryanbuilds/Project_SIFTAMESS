@@ -1,4 +1,4 @@
-"""Dataset documentation generator (J5) — provenance + integrity of the ingested evidence.
+"""Dataset documentation generator (J5) - provenance + integrity of the ingested evidence.
 
 Pure function of the evidence manifest + the derived-artifacts registry. Degrades to a clear notice
 when no manifest exists (run not sealed).
@@ -18,7 +18,7 @@ def generate_dataset_documentation(
 ) -> Path:
     """Write ``reports/dataset_documentation.md``; return its path."""
     v = view or load_report_view(run, evidence_root=evidence_root)
-    md = MarkdownBuilder().h1(f"Dataset Documentation — {v.run_id}")
+    md = MarkdownBuilder().h1(f"Dataset Documentation - {v.run_id}")
     md.line(
         "Provenance and integrity of every ingested artifact, generated from the sealed manifest."
     )
@@ -54,7 +54,7 @@ def generate_dataset_documentation(
                     d.source_artifact,
                     d.source_sha256[:16] + "…",
                     d.tool_call_id,
-                    d.extraction_method or "—",
+                    d.extraction_method or "-",
                 ]
                 for d in v.derived
             ],

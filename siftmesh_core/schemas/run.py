@@ -1,4 +1,4 @@
-"""Run-state snapshot schema (C4) — the resumable orchestration state.
+"""Run-state snapshot schema (C4) - the resumable orchestration state.
 
 ``RunState`` is a typed, serializable snapshot of where a run is in the
 deterministic state machine (PROJECT_CONTEXT §7). The Epic-H state machine

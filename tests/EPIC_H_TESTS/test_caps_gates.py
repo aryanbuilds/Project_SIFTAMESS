@@ -1,4 +1,4 @@
-"""H4/H5 — caps stop the loop; approval gates block, approve continues, reject halts."""
+"""H4/H5 - caps stop the loop; approval gates block, approve continues, reject halts."""
 
 from __future__ import annotations
 

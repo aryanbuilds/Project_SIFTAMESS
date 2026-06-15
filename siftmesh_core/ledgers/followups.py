@@ -1,4 +1,4 @@
-"""Follow-up ledger (Epic G, G9) — coverage/corroboration gaps the critic raised.
+"""Follow-up ledger (Epic G, G9) - coverage/corroboration gaps the critic raised.
 
 Appends to ``audit/followups.jsonl``; ``next_followup_id`` mints a deterministic
 ``FOLLOWUP-NNN``.

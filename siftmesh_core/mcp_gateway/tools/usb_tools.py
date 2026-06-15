@@ -1,7 +1,7 @@
-"""USB / removable-media registry tool — exfil-channel evidence (real, in-process).
+"""USB / removable-media registry tool - exfil-channel evidence (real, in-process).
 
 Wraps ``regipy`` via the backend's ``extract_usb_devices`` to surface USBSTOR device enumeration
-(SYSTEM hive, active control set) and MountPoints2 (NTUSER.DAT) — removable drives + mounted
+(SYSTEM hive, active control set) and MountPoints2 (NTUSER.DAT) - removable drives + mounted
 volumes/UNC shares the host saw. A candidate "where transferred / how" (Q3/Q4) and "when" (Q5,
 device last-write) signal. Attachment is NOT proof of transfer; the claim layer keeps that inferred.
 Logs provenance to ``audit/tool_calls.jsonl``.

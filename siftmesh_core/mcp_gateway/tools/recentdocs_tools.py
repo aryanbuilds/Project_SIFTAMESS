@@ -1,4 +1,4 @@
-"""RecentDocs MRU tool — files the user recently opened (NTUSER.DAT, real, in-process).
+"""RecentDocs MRU tool - files the user recently opened (NTUSER.DAT, real, in-process).
 
 Wraps ``regipy`` via the backend's ``extract_recentdocs`` to surface the HKCU RecentDocs MRU (and
 its per-extension subkeys): the decoded filenames the user opened, with the key's last-write time.

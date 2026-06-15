@@ -3,7 +3,7 @@
 Task contracts and workflows are authored in YAML; these helpers parse YAML into
 a validated model (``model_validate``) and serialize a model back to YAML through
 its JSON-mode dump (so custom serializers like the UTC-``Z`` datetime serializer
-apply). Parsing uses ``yaml.safe_load`` — case data is never trusted to construct
+apply). Parsing uses ``yaml.safe_load`` - case data is never trusted to construct
 arbitrary Python objects.
 """
 

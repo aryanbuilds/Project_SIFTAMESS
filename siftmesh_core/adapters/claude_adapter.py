@@ -1,8 +1,8 @@
-"""Claude Code headless adapter (Epic F, F8) — the live autonomous executor (CORE).
+"""Claude Code headless adapter (Epic F, F8) - the live autonomous executor (CORE).
 
 Thin wrapper around ``claude -p`` in non-interactive JSON mode. The agent is SANDBOXED to
 SIFTMesh's typed tools: the FastMCP server is launched via ``python -m siftmesh_core.cli mcp-serve``
-(NOT bare ``siftmesh`` — not on the subprocess PATH), ``--strict-mcp-config`` ignores ambient MCP
+(NOT bare ``siftmesh`` - not on the subprocess PATH), ``--strict-mcp-config`` ignores ambient MCP
 servers, ``--allowedTools`` pre-approves only the contract's ``mcp__siftmesh__*`` tools,
 ``--disallowedTools`` denies the built-in shell/file/web/spawn tools, and ``--permission-mode
 dontAsk`` auto-denies anything else (no prompt/hang). So the agent cannot run raw shell or write
@@ -48,11 +48,11 @@ _MCP_TOOL_PREFIX = "mcp__siftmesh__"
 _AUTH_ENV = ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
 # Built-in Claude Code tools the SANDBOXED forensic agent must NOT have. `--allowedTools` is only
-# ADDITIVE (it does not exclude built-ins — confirmed via claude-code docs + issue #62608), so we
+# ADDITIVE (it does not exclude built-ins - confirmed via claude-code docs + issue #62608), so we
 # explicitly DENY raw shell / file-write / read / web / spawn tools. Combined with
 # `--permission-mode dontAsk` (auto-deny anything not explicitly allowed, no prompt, no hang) this
 # constrains the agent to ONLY the typed mcp__siftmesh__* tools (CLAUDE.md §3/§6 privilege
-# separation). Over-listing is harmless — denying an unknown tool name is a no-op.
+# separation). Over-listing is harmless - denying an unknown tool name is a no-op.
 _DISALLOWED_TOOLS = (
     "Bash",
     "BashOutput",
@@ -75,11 +75,11 @@ _DISALLOWED_TOOLS = (
 )
 
 # Hook isolation (Project_SIFTAMESS-gssw): the user's ambient ~/.claude (and project) lifecycle
-# HOOKS still fire during a headless `claude -p` run even with the tool sandbox — observed: a
+# HOOKS still fire during a headless `claude -p` run even with the tool sandbox - observed: a
 # Protocol SIFT Stop-hook appended to <repo>/analysis/forensic_audit.log on every live run. That is
 # a side-effect channel OUTSIDE the typed-tool sandbox. `disableAllHooks` is a scalar that, via
 # `--settings`, overrides the user/project hooks WHILE PRESERVING subscription auth (the OAuth
-# credentials in ~/.claude/.credentials.json are still read) — unlike `--bare`, which disables the
+# credentials in ~/.claude/.credentials.json are still read) - unlike `--bare`, which disables the
 # keychain and breaks subscription auth. This TIGHTENS containment (it removes an uncontained side
 # effect); every real guardrail (--permission-mode dontAsk / --disallowedTools /
 # --strict-mcp-config) is unchanged. Confirmed on claude v2.1.173: `--settings <file-or-json>`
@@ -94,7 +94,7 @@ def claude_sandbox_flags(
 
     Confirmed on claude v2.1.177: ``claude --help`` documents ``--tools <tools...>`` as *the list of
     AVAILABLE tools* ("'default' to use all tools, or specify tool names"). Passing ``--tools ""``
-    (empty) therefore sets the available universe to NOTHING — it disables the typed
+    (empty) therefore sets the available universe to NOTHING - it disables the typed
     ``mcp__siftmesh__*`` tools too, not just built-ins, so the agent gets zero tools, never calls a
     tool (it emits ``<invoke name="Bash">`` as plain text), and the critic rejects every empty
     result into a retry loop. NEVER pass an empty ``--tools`` on the executor path. We instead
@@ -102,7 +102,7 @@ def claude_sandbox_flags(
     pre-approves only the contract's typed tools (it is additive, not exclusive),
     ``--disallowedTools`` denies the built-in shell/file/web/spawn tools, and ``--permission-mode
     dontAsk`` auto-denies anything else (incl. new built-ins) with no prompt/hang. Wiring the typed
-    tools (``--mcp-config``) WITHOUT this block would leave native tools enabled — so the two must
+    tools (``--mcp-config``) WITHOUT this block would leave native tools enabled - so the two must
     never be separated.
     """
     tools = ",".join(f"{_MCP_TOOL_PREFIX}{t}" for t in allowed_tools)
@@ -122,7 +122,7 @@ def _claude_logged_in() -> bool:
     """True if the Claude Code CLI is already logged in (its own credential store exists).
 
     After ``claude setup-token`` / ``claude login`` the credentials live in
-    ``~/.claude/.credentials.json`` and ``claude -p`` authenticates from there with NO env var — so
+    ``~/.claude/.credentials.json`` and ``claude -p`` authenticates from there with NO env var - so
     a logged-in CLI is usable even when no ANTHROPIC_*/CLAUDE_CODE_* var is set. Existence is a
     best-effort signal; an expired token still fails closed at subprocess time (never faked).
     """
@@ -141,7 +141,7 @@ def invoke_claude_text(prompt: str, settings: object, *, timeout: int | None = N
     """Tool-LESS reasoning call: ``claude -p <prompt> --output-format json`` → the agent's text.
 
     For ADVISORY layers (Tier-2 judge, cross-run synthesis) that reason over already-collected text
-    and need NO forensic tools — so no MCP config and all built-in tools denied (sandboxed). Returns
+    and need NO forensic tools - so no MCP config and all built-in tools denied (sandboxed). Returns
     ``None`` on absence / timeout / error / unparseable output (callers fail soft; never fabricate).
     """
     cli = getattr(settings, "claude_cli_path", "claude")
@@ -317,7 +317,7 @@ class ClaudeHeadlessAdapter(ExecutorAdapter):
     def _write_mcp_config(self, ctx: AdapterContext) -> Path:
         """Write a per-run MCP config pointing at SIFTMesh's stdio FastMCP server.
 
-        The server is launched as ``<this interpreter> -m siftmesh_core.cli mcp-serve`` — NOT bare
+        The server is launched as ``<this interpreter> -m siftmesh_core.cli mcp-serve`` - NOT bare
         ``siftmesh`` (a uv/pip console script that is not on the agent subprocess's PATH), so the
         agent can actually reach the typed tools regardless of how SIFTMesh was invoked. Roots are
         written ABSOLUTE so the run-scoped server resolves them from any cwd.

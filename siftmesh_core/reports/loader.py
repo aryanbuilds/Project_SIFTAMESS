@@ -1,4 +1,4 @@
-"""Report data-loader (J1) — one frozen, deterministic view over every run-dir ledger.
+"""Report data-loader (J1) - one frozen, deterministic view over every run-dir ledger.
 
 ``load_report_view`` reads each ledger ONCE, validates it, stable-sorts it, and precomputes the
 joins the generators need, returning one immutable :class:`ReportView`. It is a pure function of
@@ -74,7 +74,7 @@ class ReportView:
     run_root: Path
     manifest: EvidenceManifest | None
     run_state: RunState | None
-    # claims partitioned by status — unsupported is segregated by construction (firewall):
+    # claims partitioned by status - unsupported is segregated by construction (firewall):
     confirmed: tuple[Claim, ...]
     inferred: tuple[Claim, ...]
     contradicted: tuple[Claim, ...]

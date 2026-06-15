@@ -1,6 +1,6 @@
 """Sleuthkit image-access layer (Epic D deepening): fixed-argv, fail-closed, parsing.
 
-All subprocess calls are mocked — no real TSK binaries or evidence are touched, so this
+All subprocess calls are mocked - no real TSK binaries or evidence are touched, so this
 runs unchanged in CI. The real run is validated separately (human-gated) on the SIFT host.
 """
 

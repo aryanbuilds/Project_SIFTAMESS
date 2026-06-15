@@ -1,4 +1,4 @@
-"""G2 — grade_claim_against_run matches the D9 tool and writes no tool_calls line."""
+"""G2 - grade_claim_against_run matches the D9 tool and writes no tool_calls line."""
 
 from __future__ import annotations
 

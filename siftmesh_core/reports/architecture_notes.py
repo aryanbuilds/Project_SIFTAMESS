@@ -20,7 +20,7 @@ def generate_architecture_notes(
 ) -> Path:
     """Write ``reports/architecture_notes.md``; return its path."""
     v = view or load_report_view(run, evidence_root=evidence_root)
-    md = MarkdownBuilder().h1(f"Run Architecture Notes — {v.run_id}")
+    md = MarkdownBuilder().h1(f"Run Architecture Notes - {v.run_id}")
 
     md.h2("Run mode & state")
     if v.run_state is not None:
@@ -66,7 +66,7 @@ def generate_architecture_notes(
     if gate_events:
         md.h2("Gate decisions (from the audit trail)")
         for e in gate_events:
-            md.bullet(f"{e.timestamp} — {e.event} {('· ' + str(e.extra)) if e.extra else ''}")
+            md.bullet(f"{e.timestamp} - {e.event} {('· ' + str(e.extra)) if e.extra else ''}")
 
     text = compose_report(
         run_id=v.run_id, run_root=v.run_root, body=md.build(), load_errors=v.load_errors

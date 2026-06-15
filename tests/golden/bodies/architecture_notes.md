@@ -1,4 +1,4 @@
-# Run Architecture Notes — RUN-GOLDEN
+# Run Architecture Notes - RUN-GOLDEN
 
 ## Run mode & state
 

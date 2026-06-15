@@ -49,7 +49,7 @@ def case(tmp_path: Path) -> tuple[RunPaths, Path]:
 def test_real_backend_is_in_process(
     case: tuple[RunPaths, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Criterion 4: the local real backend is 100% in-process — it spawns no subprocess."""
+    """Criterion 4: the local real backend is 100% in-process - it spawns no subprocess."""
     import subprocess
 
     _run, evidence = case

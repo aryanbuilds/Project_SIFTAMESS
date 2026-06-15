@@ -1,4 +1,4 @@
-"""New-run launcher (Epic O) — collect run params, then drive the governed engine in the cockpit."""
+"""New-run launcher (Epic O) - collect run params, then drive the governed engine in the cockpit."""
 
 from __future__ import annotations
 
@@ -21,10 +21,10 @@ _JUDGE_CHOICES = [
 _MODEL_AGENTS = ("claude", "gemini", "codex", "opencode")
 # One-line help for each mode (shown inline + as a tooltip; smooths the new-user choice).
 _MODE_HELP = {
-    "manual": "manual — one stage per command (max control / debugging)",
-    "review_only": "review_only — plan + recommend only; never dispatch tools or agents",
-    "auto_human_loop": "auto_human_loop — auto until a meaningful gate (approve/reject)",
-    "auto": "auto — run to completion; quarantine a flagged task instead of halting",
+    "manual": "manual - one stage per command (max control / debugging)",
+    "review_only": "review_only - plan + recommend only; never dispatch tools or agents",
+    "auto_human_loop": "auto_human_loop - auto until a meaningful gate (approve/reject)",
+    "auto": "auto - run to completion; quarantine a flagged task instead of halting",
 }
 
 

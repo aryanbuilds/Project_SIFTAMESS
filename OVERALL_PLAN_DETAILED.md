@@ -2,9 +2,9 @@
 
 # SIFTMesh Detailed Build Plan
 
-_Last updated: 2026-06-11 (Epics A–N core + L + M complete, **plus Epic Q** (agent-neutral connectors, `PLAN/13`) **and Epic O** (Textual cockpit + unified `setup`, `PLAN/14`)). Executed epic order: …H→I→K→J→L→M, then the maintainer-directed refinements. **ROCBA refinement:** autonomous objective-driven run in one command — `--brief`/`--objective` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting. **Agent neutrality (Epic Q):** one config-driven headless connector — `--agent claude|gemini|codex|opencode|deterministic` — with fail-closed sandboxing + onboarding (`agents list`/`doctor --agents`); ACP client + permission gate is round 2. **Cockpit + setup (Epic O):** `siftmesh tui` (Textual, read-only over run files) + `siftmesh setup` (install + probe + multi-agent pick + persist to global/project config). **Scale:** per-family task aggregation (~10 tasks for a disk image, not 200+), executor tiering, `heavy_tool_timeout_seconds`. **Orchestration ADR `PLAN/12`:** keep the native deterministic FSM — LangGraph + CAO evaluated and rejected; harvest only an advisory Tier-2 judge + Sigma. PLAN/11 (space estimator/prune/merge) + the Tier-2 judge shipped.)_
+_Last updated: 2026-06-11 (Epics A–N core + L + M complete, **plus Epic Q** (agent-neutral connectors, `PLAN/13`) **and Epic O** (Textual cockpit + unified `setup`, `PLAN/14`)). Executed epic order: …H→I→K→J→L→M, then the maintainer-directed refinements. **ROCBA refinement:** autonomous objective-driven run in one command - `--brief`/`--objective` ingests the incident document as the TRUSTED objective (threaded into planner/agent-prompt/report), `run --auto` auto-decompresses+ingests archive evidence and quarantines a single critic-flagged task instead of halting. **Agent neutrality (Epic Q):** one config-driven headless connector - `--agent claude|gemini|codex|opencode|deterministic` - with fail-closed sandboxing + onboarding (`agents list`/`doctor --agents`); ACP client + permission gate is round 2. **Cockpit + setup (Epic O):** `siftmesh tui` (Textual, read-only over run files) + `siftmesh setup` (install + probe + multi-agent pick + persist to global/project config). **Scale:** per-family task aggregation (~10 tasks for a disk image, not 200+), executor tiering, `heavy_tool_timeout_seconds`. **Orchestration ADR `PLAN/12`:** keep the native deterministic FSM - LangGraph + CAO evaluated and rejected; harvest only an advisory Tier-2 judge + Sigma. PLAN/11 (space estimator/prune/merge) + the Tier-2 judge shipped.)_
 
-> **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools — **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
+> **REAL-ONLY (FINAL):** SIFTMesh ships real, working tools - **no mocks, no placeholder backends, no synthetic/seeded outputs**. The "wrapper-or-placeholder / mock executor / scripted self-correction / failure-simulation" language below is **superseded** by the confirmed real stack in [`PLAN/08_REAL_TOOL_STACK.md`](PLAN/08_REAL_TOOL_STACK.md) and the rule in `CLAUDE.md §2B`. All 8 MVP tools have a real in-process backend buildable now; self-correction is a deterministic engine over **real** tool output (an under-specified first-pass contract makes a real claim fail the Critic; a tightened retry makes the 2nd real attempt pass). Real evidence + integration/e2e are maintainer-provided and human-gated.
 
 ## 1. Final product definition
 
@@ -133,7 +133,7 @@ Run Claude Code, OpenCode, Codex, Gemini, Kimi, Hermes, or other agents.
 Preferred harness:
 
 ```text
-CAO — EVALUATED AND NOT PURSUED (ADR 12, PLAN/12). CAO puts an LLM supervisor in the routing seat,
+CAO - EVALUATED AND NOT PURSUED (ADR 12, PLAN/12). CAO puts an LLM supervisor in the routing seat,
 which conflicts with "LLM proposes, code decides". The native deterministic FSM is kept; LangGraph
 was likewise evaluated and rejected (the FSM already provides its value). The simplest headless
 `claude -p` adapter is the live-agent path; cao_adapter (I5) is closed won't-do.
@@ -145,7 +145,7 @@ Fallback:
 Generic shell-agent adapter that writes task instructions and expects result files.
 ```
 
-Agent interoperability (optional, stretch — Epic P in /PLAN):
+Agent interoperability (optional, stretch - Epic P in /PLAN):
 
 ```text
 A2A (Agent2Agent, Apache 2.0) Agent Card discovery + remote delegation.
@@ -163,7 +163,7 @@ User-facing source of truth.
 Manual, guided, and automatic operation.
 ```
 
-### Layer 6: TUI cockpit — ✅ shipped (Epic O, `PLAN/14`)
+### Layer 6: TUI cockpit - ✅ shipped (Epic O, `PLAN/14`)
 
 Purpose:
 
@@ -174,7 +174,7 @@ Operator cockpit and demo visualization.
 Status:
 
 ```text
-SHIPPED as `siftmesh tui` using Textual (Python, MIT — chosen over the originally-planned Ratatui;
+SHIPPED as `siftmesh tui` using Textual (Python, MIT - chosen over the originally-planned Ratatui;
 reuses the existing readers, no Rust). READ-ONLY over the run files (renders run_state.json + the
 ledgers); launching a run reuses the governed engine in a worker thread. Contains no core logic.
 Optional `tui` extra; lazy-imported with an install hint.
@@ -300,7 +300,7 @@ siftmesh/
     test_cli_modes.py
     test_path_policy.py
 
-  siftmesh_core/tui/              # the TUI is PYTHON/Textual (Epic O) — NOT a separate Rust crate
+  siftmesh_core/tui/              # the TUI is PYTHON/Textual (Epic O) - NOT a separate Rust crate
     __init__.py                  # lazy launch + require_textual()
     snapshot.py                  # tested, Textual-free CockpitSnapshot builder (the data layer)
     app.py · cockpit.py · setup_screen.py · launcher_screen.py · widgets.py · runner.py
@@ -533,7 +533,7 @@ Tasks:
 - parse_evtx_security real backend: evtx (pyevtx-rs) in-process, pin evtx==0.11.1.
 - parse_evtx_powershell real backend: evtx (pyevtx-rs) in-process (4103/4104), pin evtx==0.11.1.
 - analyze_prefetch real backend: libscca-python (pyscca) in-process, pin 20250915.
-- extract_registry_run_keys real backend: regipy in-process, pin regipy==6.2.1 (`regipy[full]` is fine to add for shell-item parsing — license is not a blocker; see PLAN/08 §0.1, §3).
+- extract_registry_run_keys real backend: regipy in-process, pin regipy==6.2.1 (`regipy[full]` is fine to add for shell-item parsing - license is not a blocker; see PLAN/08 §0.1, §3).
 - build_timeline real: own merge over real rows + $MFT via mft==0.7.0 (Plaso optional gated).
 - validate_claim_evidence implementation.
 ```
@@ -686,7 +686,7 @@ SIFTMesh can assign TASK-002 to an external agent profile.
 Agent output is collected from the expected result path.
 ```
 
-## Phase 9.5: A2A interoperability (optional / stretch — Epic P)
+## Phase 9.5: A2A interoperability (optional / stretch - Epic P)
 
 Goal:
 
@@ -767,7 +767,7 @@ Prompt-Injection Guard flags it.
 Agent treats it as evidence only.
 ```
 
-## Phase 12: TUI cockpit — ✅ shipped (Epic O, `PLAN/14`; Textual, not Ratatui)
+## Phase 12: TUI cockpit - ✅ shipped (Epic O, `PLAN/14`; Textual, not Ratatui)
 
 Goal:
 
@@ -910,7 +910,7 @@ state is the Epic-J seam (forensic report deferred). `hth.2` (derived re-ingest)
 ### Day 9: Agent/CAO integration ✅ CORE COMPLETE (Epic I, 2026-06-09)
 
 > **Note:** per the bd graph (source of truth), Epic I runs **before** Epic K (K's self-correction
-> needs the live agent; PLAN/08 §6) — i.e. `…H → I → K → J …`, not the stale §spine text order.
+> needs the live agent; PLAN/08 §6) - i.e. `…H → I → K → J …`, not the stale §spine text order.
 
 Deliver:
 
@@ -923,7 +923,7 @@ output-schema enforcement      # malformed agent result -> retry_required (I4)
 ```
 
 Also delivered: `adapters/{profiles.py,prompt_builder.py}`. The live invocation is **human-gated**
-(CLI + key; CI mocks the subprocess). **I5 (CAO adapter) is optional/best-effort — left open.**
+(CLI + key; CI mocks the subprocess). **I5 (CAO adapter) is optional/best-effort - left open.**
 
 ### Day 10: Reports and replay ✅ COMPLETE (Epic J, 2026-06-10)
 
@@ -945,7 +945,7 @@ firewall, and REPORT-state auto-generation in `siftmesh run` auto modes (fail-so
 Deliver:
 
 ```text
-stable demo case (real maintainer-provided evidence; integration-gated — Epic K1 open)
+stable demo case (real maintainer-provided evidence; integration-gated - Epic K1 open)
 real EMERGENT self-correction ✅ (live agent + deterministic critic + retry feedback; Epic K3)
 prompt-injection alert ✅ (injection_alerts.jsonl + critic human-review consequence; bypass-tested in L)
 clean install instructions (Epic N)

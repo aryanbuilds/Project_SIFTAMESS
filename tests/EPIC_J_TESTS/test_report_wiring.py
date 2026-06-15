@@ -1,4 +1,4 @@
-"""J8 — wiring: `siftmesh report`/`replay` CLI + the engine REPORT state (auto writes reports)."""
+"""J8 - wiring: `siftmesh report`/`replay` CLI + the engine REPORT state (auto writes reports)."""
 
 from __future__ import annotations
 

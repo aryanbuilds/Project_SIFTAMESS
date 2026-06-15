@@ -1,7 +1,7 @@
-"""Cooperative pause hook (TUI) — run_engine should_stop stops at a safe checkpoint, then resumes.
+"""Cooperative pause hook (TUI) - run_engine should_stop stops at a safe checkpoint, then resumes.
 
 The pause must be graceful (state durable + consistent) and resumable to the SAME artifacts as an
-uninterrupted run. Default (no should_stop) is byte-identical to before — guarded by the rest of
+uninterrupted run. Default (no should_stop) is byte-identical to before - guarded by the rest of
 test_runner_engine.py.
 """
 

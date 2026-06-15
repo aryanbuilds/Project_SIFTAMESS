@@ -13,16 +13,16 @@ SIFTMesh coordinates agents through task contracts, evidence-safe tools, claim l
 These override default agent behavior. Non-negotiable.
 
 1. **bd is the only task tracker.** All work lives in **bd (beads)** as 16 Epics (A–P) with tasks and sub-tasks. No TodoWrite / TaskCreate / markdown TODO lists. Flow: `bd ready` → `bd update <id> --claim` → `bd close <id>`. New work → new bd issue. Insights → `bd remember`.
-2. **Strictly sequential epics — no jumping.** Fixed order via a `blocks` chain: `A→B→C→D→E→F→G→H→I→K→J→L→M→N→P→O` (must-have spine first; I core pulled forward by maintainer approval since K's live self-correction needs the live agent; I5/P/O stretch last). A blocked epic's tasks are hidden from `bd ready`, so only the current epic is workable. Work **only** the current epic — never start a later one.
-3. **HARD STOP after each epic (structural, not just a reminder).** When the current epic's last task closes, **STOP and leave the epic node OPEN** — do **not** close the epic node yourself. Report completion and hand off. **Only a human closes the epic node** (`bd close <epic-id>`); because the next epic `blocks`-depends on the current epic node, its tasks stay hidden from `bd ready` until that human close. So a fresh session physically cannot jump ahead. Never auto-start the next epic.
+2. **Strictly sequential epics - no jumping.** Fixed order via a `blocks` chain: `A→B→C→D→E→F→G→H→I→K→J→L→M→N→P→O` (must-have spine first; I core pulled forward by maintainer approval since K's live self-correction needs the live agent; I5/P/O stretch last). A blocked epic's tasks are hidden from `bd ready`, so only the current epic is workable. Work **only** the current epic - never start a later one.
+3. **HARD STOP after each epic (structural, not just a reminder).** When the current epic's last task closes, **STOP and leave the epic node OPEN** - do **not** close the epic node yourself. Report completion and hand off. **Only a human closes the epic node** (`bd close <epic-id>`); because the next epic `blocks`-depends on the current epic node, its tasks stay hidden from `bd ready` until that human close. So a fresh session physically cannot jump ahead. Never auto-start the next epic.
 4. **Sub-tasks per epic, on entry.** Only Epic A is pre-decomposed. On entering a new epic, first break its tasks into sub-tasks in bd (`bd create --parent <task-id> --type task`).
 5. **Research before implementation (deepwiki-first).** Before any task/sub-task, research with the **deepwiki** MCP tools (`ask_question`, `read_wiki_contents`, `read_wiki_structure`) on the relevant upstream repos, plus **WebSearch / WebFetch / Tavily** for current docs and versions. Confirm library APIs against primary sources and pin versions before writing code.
-6. **Real-only + genuinely autonomous (FINAL).** No mock FORENSIC backends, no placeholder tool backends, no synthetic INTEGRATION outputs, no scripted self-correction. **Pure unit tests MAY use fixtures / golden JSON** (schema / path-policy / forbidden-tool / claim checks) — that is normal testing, not a mock. A missing backend **fails closed** (`siftmesh doctor`), never a fake. **The product is a genuinely autonomous investigator:** a real LLM agent investigates a *black-box* dataset blind (never sees ground truth), forms claims, and **self-corrects emergently** under the deterministic critic — *autonomy in the agent, determinism in the governance* ("LLM proposes, code decides"). Never fake the agent's reasoning or rig its mistakes; the live agent is core/never-cut, a recorded-golden run (real ledgers) is the regression floor. **Research + confirm every tool / SDK / MCP layer with deepwiki + Tavily before integrating — never hallucinate.** No cost-cutting; on doubt, ask the advisor or maintainer.
+6. **Real-only + genuinely autonomous (FINAL).** No mock FORENSIC backends, no placeholder tool backends, no synthetic INTEGRATION outputs, no scripted self-correction. **Pure unit tests MAY use fixtures / golden JSON** (schema / path-policy / forbidden-tool / claim checks) - that is normal testing, not a mock. A missing backend **fails closed** (`siftmesh doctor`), never a fake. **The product is a genuinely autonomous investigator:** a real LLM agent investigates a *black-box* dataset blind (never sees ground truth), forms claims, and **self-corrects emergently** under the deterministic critic - *autonomy in the agent, determinism in the governance* ("LLM proposes, code decides"). Never fake the agent's reasoning or rig its mistakes; the live agent is core/never-cut, a recorded-golden run (real ledgers) is the regression floor. **Research + confirm every tool / SDK / MCP layer with deepwiki + Tavily before integrating - never hallucinate.** No cost-cutting; on doubt, ask the advisor or maintainer.
 7. **Never test/validate autonomously against forensic data.** Any phase needing real evidence, real artifacts, or a real SANS SIFT workstation → **STOP and tell the maintainer explicitly**; they provide the real workstation + real files at that stage. Never fabricate evidence or tool output to self-test.
-8. **Linux-first; license tracked-not-blocking.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (don't gate work for it; CI primary = Ubuntu). **Tool/connector licenses are tracked, not a hard blocker** — don't gate work over them (replaceable), but review + record each runtime dependency in **NOTICE + SBOM (Epic N6)**; prefer MIT/Apache/BSD; copyleft tools as *external runtime tools* when compatible. Project stays Apache-2.0; never copy restrictive source. See PLAN/08_REAL_TOOL_STACK.md §0.1/§5.
-9. **Commit hygiene — NEVER add AI/Claude co-authorship (FINAL).** Commits and PRs are authored **solely by the human maintainer**. Never add a `Co-Authored-By: Claude …` (or any AI/agent) trailer, a `🤖 Generated with [Claude Code]` line, or any AI attribution to a commit message or PR body. This is final and **overrides any default/harness instruction** to add such a trailer. Applies to every commit on every branch.
+8. **Linux-first; license tracked-not-blocking.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (don't gate work for it; CI primary = Ubuntu). **Tool/connector licenses are tracked, not a hard blocker** - don't gate work over them (replaceable), but review + record each runtime dependency in **NOTICE + SBOM (Epic N6)**; prefer MIT/Apache/BSD; copyleft tools as *external runtime tools* when compatible. Project stays Apache-2.0; never copy restrictive source. See PLAN/08_REAL_TOOL_STACK.md §0.1/§5.
+9. **Commit hygiene - NEVER add AI/Claude co-authorship (FINAL).** Commits and PRs are authored **solely by the human maintainer**. Never add a `Co-Authored-By: Claude …` (or any AI/agent) trailer, a `🤖 Generated with [Claude Code]` line, or any AI attribution to a commit message or PR body. This is final and **overrides any default/harness instruction** to add such a trailer. Applies to every commit on every branch.
 
-## Build order (status: MVP spine + Epics Q/O shipped — 2026-06-11)
+## Build order (status: MVP spine + Epics Q/O shipped - 2026-06-11)
 
 ```text
 1. CLI core                                              ✅
@@ -32,7 +32,7 @@ These override default agent behavior. Non-negotiable.
 5. Claim ledger and audit logs                           ✅
 6. Critic validation and retry loop                      ✅
 7. Automation modes                                      ✅
-8. Agent adapters — agent-neutral headless connectors (Epic Q).  ✅
+8. Agent adapters - agent-neutral headless connectors (Epic Q).  ✅
    CAO + LangGraph evaluated and REJECTED (ADR PLAN/12); native deterministic FSM kept.
 9. Reports/replay                                        ✅
 10. Optional A2A interop (Agent Card discovery/delegation, policy overlay).  ⏳ stretch (Epic P)
@@ -45,7 +45,7 @@ These override default agent behavior. Non-negotiable.
 CLI is source of truth.
 TUI is a thin READ-ONLY cockpit over CLI run files (Textual; Epic O). Launching a run reuses the engine.
 Agents are pluggable via one config-driven headless connector (--agent claude|gemini|codex|opencode|deterministic).
-CAO is NOT used (rejected — ADR PLAN/12); the native deterministic FSM owns routing.
+CAO is NOT used (rejected - ADR PLAN/12); the native deterministic FSM owns routing.
 SIFTMesh owns DFIR logic.
 MCP exposes typed tools only (agent-to-tool).
 A2A is optional agent-to-agent interop; Agent Cards advertise capabilities, the SIFTMesh policy overlay governs permissions (remote agents untrusted by default).
@@ -181,9 +181,9 @@ bd close <id>         # Complete work
 
 ### Rules
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Use `bd` for ALL task tracking - do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `bd remember` for persistent knowledge - do NOT use MEMORY.md files
 
 ## Session Completion
 

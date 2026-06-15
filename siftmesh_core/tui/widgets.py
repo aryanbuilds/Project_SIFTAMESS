@@ -1,7 +1,7 @@
-"""Pure rendering helpers for the cockpit (Epic O redesign) — content markup, no Textual import.
+"""Pure rendering helpers for the cockpit (Epic O redesign) - content markup, no Textual import.
 
 Kept Textual-free so they unit-test without a terminal. Colors are **theme tokens** (``$success``,
-``$primary``, …) that resolve against the active theme — so a theme switch re-colors everything.
+``$primary``, …) that resolve against the active theme - so a theme switch re-colors everything.
 Every status is doubled (a glyph AND a word) so it survives no-colour terminals + colour-blindness.
 """
 
@@ -40,7 +40,7 @@ def render_file(path: Path, *, limit: int = _FILE_VIEW_LIMIT) -> Any:
 
 # status → (glyph, colour). Semantic colours (green=good, red=bad) that are UNIVERSAL across themes.
 # These render inside BOTH a DataTable cell (Rich markup) and a Static (Textual content markup), so
-# they must be concrete Rich colour names — NOT `$theme` tokens (Rich's parser rejects those).
+# they must be concrete Rich colour names - NOT `$theme` tokens (Rich's parser rejects those).
 _STATUS_STYLE: dict[str, tuple[str, str]] = {
     "accepted": ("●", "green"),
     "accepted_with_downgrade": ("◍", "green"),

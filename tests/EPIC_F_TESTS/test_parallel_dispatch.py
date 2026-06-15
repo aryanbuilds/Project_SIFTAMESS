@@ -2,7 +2,7 @@
 
 Parallel dispatch executes tasks concurrently into per-task staging dirs, then commits in contract
 order with renumbered ids. The committed ledgers must be IDENTICAL to a sequential run in every
-order-dependent way (ids, references, order, file names + content) — only wall-clock timestamps may
+order-dependent way (ids, references, order, file names + content) - only wall-clock timestamps may
 differ. Proven over the deterministic floor (no keys), repeated to flush ordering races.
 """
 

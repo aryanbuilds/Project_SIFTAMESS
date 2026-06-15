@@ -5,7 +5,7 @@
 <!-- run_dir: rocba_full/case_runs/RUN-20260612-163324 -->
 <!-- load_mode: strict -->
 <!-- SIFTMESH-REPORT-BODY-BELOW -->
-# Run Architecture Notes — RUN-20260612-163324
+# Run Architecture Notes - RUN-20260612-163324
 
 ## Run mode & state
 

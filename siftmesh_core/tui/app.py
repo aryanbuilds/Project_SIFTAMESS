@@ -51,7 +51,7 @@ class HomeScreen(Screen):
         base = Path(DEFAULT_BASE)
         runs = sorted(base.glob("RUN-*"), reverse=True) if base.is_dir() else []
         if not runs:
-            lv.append(ListItem(Label("No runs yet — press n to start one.")))
+            lv.append(ListItem(Label("No runs yet - press n to start one.")))
             return
         from siftmesh_core.run_dir import RunPaths
         from siftmesh_core.tui.snapshot import run_badge
@@ -78,7 +78,7 @@ class HomeScreen(Screen):
         if cap.live_candidate:
             banner.display = False
             return
-        banner.update("[dim]No live agent ready — runs use the floor (T0). Press o to onboard.[/]")
+        banner.update("[dim]No live agent ready - runs use the floor (T0). Press o to onboard.[/]")
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         if getattr(event.item, "run_path", None) is not None:
@@ -94,7 +94,7 @@ class HomeScreen(Screen):
         from siftmesh_core.tui.snapshot import run_badge
 
         try:
-            detail.update(f"{path.name} — {run_badge(RunPaths(root=path))}")
+            detail.update(f"{path.name} - {run_badge(RunPaths(root=path))}")
         except Exception:
             detail.update(str(path.name))
 
@@ -136,7 +136,7 @@ class HomeScreen(Screen):
         from siftmesh_core.tui.snapshot import resumable
 
         if not resumable(RunPaths(root=path)):
-            self.notify("that run is terminal / has no state — press Enter to attach")
+            self.notify("that run is terminal / has no state - press Enter to attach")
             return
         self.app.push_screen(CockpitScreen(path, settings=self.settings, auto_resume=True))
 

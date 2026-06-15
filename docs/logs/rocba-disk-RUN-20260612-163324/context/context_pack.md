@@ -14,7 +14,7 @@ Investigate the artifacts below TOWARD this objective. (Full brief: context/inci
 
 ## Artifact families present
 
-### Disk image (disk_image) — 1 artifact
+### Disk image (disk_image) - 1 artifact
 Guidance: Recover loose triage artifacts (event logs, hives, prefetch, $MFT) from the disk image.
 - `rocba-cdrive.e01` · sha256 `f2eb856d6fb4…`
 

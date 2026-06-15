@@ -4,11 +4,11 @@ Every live agent subprocess (claude/opencode/headless) must run with three conta
 prompt-injected or misbehaving agent cannot touch evidence, escape the run dir, or exfiltrate the
 operator's credentials:
 
-- **cwd pinning** — launch the agent in a clean, run-scoped scratch dir, never the operator's CWD
+- **cwd pinning** - launch the agent in a clean, run-scoped scratch dir, never the operator's CWD
   (which may sit next to ``evidence/`` and from which these CLIs auto-load TRUSTED instruction files
-  like ``GEMINI.md`` / ``AGENTS.md`` / ``CLAUDE.md`` — a prompt-injection channel that bypasses the
+  like ``GEMINI.md`` / ``AGENTS.md`` / ``CLAUDE.md`` - a prompt-injection channel that bypasses the
   spotlighting design entirely).
-- **env minimization** — hand the child only an allowlisted base env plus the *one* agent's own
+- **env minimization** - hand the child only an allowlisted base env plus the *one* agent's own
   declared credentials, never the full orchestrator environment (which holds every other provider's
   API keys and cloud creds).
 
@@ -44,7 +44,7 @@ _ENV_ALLOWLIST: tuple[str, ...] = (
 def minimal_child_env(*, keep: tuple[str, ...] | list[str] = ()) -> dict[str, str]:
     """An allowlisted child environment: base vars + locale (LC_*) + only the named ``keep`` vars.
 
-    ``keep`` is the agent profile's own ``auth_env`` + ``env_passthrough`` — so a gemini subprocess
+    ``keep`` is the agent profile's own ``auth_env`` + ``env_passthrough`` - so a gemini subprocess
     sees GEMINI_API_KEY but never ANTHROPIC_API_KEY / OPENAI_API_KEY / cloud creds.
     """
     env = {k: os.environ[k] for k in (*_ENV_ALLOWLIST, *keep) if k in os.environ}

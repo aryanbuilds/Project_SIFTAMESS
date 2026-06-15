@@ -1,4 +1,4 @@
-"""Contradiction ledger (Epic G, G3) — claims that deterministically disagree.
+"""Contradiction ledger (Epic G, G3) - claims that deterministically disagree.
 
 Appends to ``claims/contradiction_ledger.jsonl``; ``next_contradiction_id`` mints a
 deterministic ``CONTRA-NNN``.

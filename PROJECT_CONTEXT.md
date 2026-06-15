@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-11 (Epics A–N core + L + M complete; **+ Epic Q** agent-neutral connectors and **+ Epic O** Textual cockpit & unified `setup`. ROCBA e2e refinement — autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run. **Agent neutrality (Epic Q, PLAN/13):** one config-driven headless connector — `--agent claude|gemini|codex|opencode|deterministic` — with fail-closed sandboxing + onboarding via `agents list`/`doctor --agents`. **Cockpit + setup (Epic O, PLAN/14):** `siftmesh tui` Textual cockpit (read-only over run files) + `siftmesh setup` one-command onboarding (install + probe + multi-agent pick + persist to global/project config). **Scale fixes:** per-family task aggregation (a disk image yields ~10 tasks, not 200+), executor tiering (heavy tool-bound tasks → deterministic floor; `--all-live` overrides; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM — no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. Pre-flight space estimator + partition plan + `prune` + cross-run `merge` (PLAN/11); advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; never promotes — Tier-1 stays sole promoter).)_
+_Last updated: 2026-06-11 (Epics A–N core + L + M complete; **+ Epic Q** agent-neutral connectors and **+ Epic O** Textual cockpit & unified `setup`. ROCBA e2e refinement - autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run. **Agent neutrality (Epic Q, PLAN/13):** one config-driven headless connector - `--agent claude|gemini|codex|opencode|deterministic` - with fail-closed sandboxing + onboarding via `agents list`/`doctor --agents`. **Cockpit + setup (Epic O, PLAN/14):** `siftmesh tui` Textual cockpit (read-only over run files) + `siftmesh setup` one-command onboarding (install + probe + multi-agent pick + persist to global/project config). **Scale fixes:** per-family task aggregation (a disk image yields ~10 tasks, not 200+), executor tiering (heavy tool-bound tasks → deterministic floor; `--all-live` overrides; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM - no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. Pre-flight space estimator + partition plan + `prune` + cross-run `merge` (PLAN/11); advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; never promotes - Tier-1 stays sole promoter).)_
 
 ## 1. Project identity
 
@@ -93,14 +93,14 @@ The product was built in this order (status as of 2026-06-11):
 ```text
 Priority 1: Fully working CLI engine.                                        ✅ shipped
 Priority 2: Evidence runtime, claim ledger, critic loop, and reports.        ✅ shipped
-Priority 3: Agent adapter integration — agent-neutral headless connectors (Epic Q).  ✅ shipped
-            CAO + LangGraph evaluated and REJECTED — native deterministic FSM kept (ADR PLAN/12).
+Priority 3: Agent adapter integration - agent-neutral headless connectors (Epic Q).  ✅ shipped
+            CAO + LangGraph evaluated and REJECTED - native deterministic FSM kept (ADR PLAN/12).
 Priority 4: Guided and full autonomous modes (one engine, four modes).       ✅ shipped
 Priority 5: Optional A2A Agent Card discovery + delegation (policy overlay).  ⏳ stretch (Epic P)
 Priority 6: Textual TUI cockpit after the CLI works (Epic O).                 ✅ shipped (Textual, not Ratatui)
 ```
 
-The TUI is optional and last, and never contains core investigation logic — it is a thin read-only
+The TUI is optional and last, and never contains core investigation logic - it is a thin read-only
 cockpit over the run files (launching a run reuses the governed engine). The CLI is the source of truth.
 
 ## 5. Final architectural principle
@@ -230,9 +230,9 @@ The LLM can recommend actions, but the deterministic Ultraworker state machine d
 
 ### Planner ✅ (Epic E, shipped 2026-06-08)
 
-Creates the investigation strategy, scope, constraints, expected artifacts, initial task graph, and evidence policy. Implemented deterministically in `siftmesh_core/orchestrator/planner.py` (+ `artifact_router.py`): `siftmesh plan` writes `context/{case_brief,context_pack,investigation_plan,tool_map,assumptions}` and `tasks/TASK-*.yaml` from manifest metadata only — it proposes, it never executes.
+Creates the investigation strategy, scope, constraints, expected artifacts, initial task graph, and evidence policy. Implemented deterministically in `siftmesh_core/orchestrator/planner.py` (+ `artifact_router.py`): `siftmesh plan` writes `context/{case_brief,context_pack,investigation_plan,tool_map,assumptions}` and `tasks/TASK-*.yaml` from manifest metadata only - it proposes, it never executes.
 
-**Incident objective (`--brief`).** A real engagement starts from an incident briefing (e.g. `ROCBA-BACKGROUND.pptx`) that states the TARGET. `--brief PATH` on `init-case`/`run` ingests that operator-designated document as **TRUSTED** context (`siftmesh_core/intake/brief.py` → `context/incident_brief.md` + manifest `incident_objective` metadata) — distinct from HOSTILE evidence: it is never in the evidence `files` set, never routed to a tool, never spotlighted. The objective is threaded into the case brief, the context pack, every executor task's prompt (so the live agent investigates *toward* it), and an "Answer to the incident objective" section in `final_report.md`. Designated explicitly only — a document merely found in the evidence dir is never auto-promoted to trusted instructions.
+**Incident objective (`--brief`).** A real engagement starts from an incident briefing (e.g. `ROCBA-BACKGROUND.pptx`) that states the TARGET. `--brief PATH` on `init-case`/`run` ingests that operator-designated document as **TRUSTED** context (`siftmesh_core/intake/brief.py` → `context/incident_brief.md` + manifest `incident_objective` metadata) - distinct from HOSTILE evidence: it is never in the evidence `files` set, never routed to a tool, never spotlighted. The objective is threaded into the case brief, the context pack, every executor task's prompt (so the live agent investigates *toward* it), and an "Answer to the incident objective" section in `final_report.md`. Designated explicitly only - a document merely found in the evidence dir is never auto-promoted to trusted instructions.
 
 ### Deep Context Agent ✅ (Epic E, deterministic)
 
@@ -244,15 +244,15 @@ The main controller. Chooses next task, chooses agent/tool, handles retries, tra
 
 ### Executor Agents ✅ (Epics F + I, deterministic floor + live agents)
 
-Do narrow artifact-specific work. They must not produce broad incident conclusions or final severity. They only extract, normalize, and summarize evidence for assigned tasks. Selected by `assigned_agent_profile` (Epic I: `adapters/profiles.py` + `agent_profiles.yaml`); each gets a spotlighted prompt from its task contract (`adapters/prompt_builder.py` — no raw evidence dump). The deterministic real-tool floor is the always-available default + fall-back; the live claude/opencode headless adapters are human-gated (CLI + key), and the registry audits an `adapter_unavailable` event whenever it falls closed.
+Do narrow artifact-specific work. They must not produce broad incident conclusions or final severity. They only extract, normalize, and summarize evidence for assigned tasks. Selected by `assigned_agent_profile` (Epic I: `adapters/profiles.py` + `agent_profiles.yaml`); each gets a spotlighted prompt from its task contract (`adapters/prompt_builder.py` - no raw evidence dump). The deterministic real-tool floor is the always-available default + fall-back; the live claude/opencode headless adapters are human-gated (CLI + key), and the registry audits an `adapter_unavailable` event whenever it falls closed.
 
-**Multi-agent selection + fallback chain (Epic I).** `resolve_profile(role, settings, cli_override)` picks the profile to attempt first — precedence: explicit `--agent` override → `executor_selection=deterministic` (the **default** → floor) → a per-role pin (`role_profiles`) → the head of `agent_preference` when live/auto. `get_adapter` then walks the chain (requested → rest of `agent_preference` → floor) and returns the first `available()`, auditing each skip. Each adapter pins its **model** from `agent_profiles.yaml` (claude/opencode `--model`). Claude supports **both auth modes** — subscription token (`claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN`/`ANTHROPIC_AUTH_TOKEN`) or `ANTHROPIC_API_KEY`. End-user entry point: `siftmesh run … --agent claude|opencode|deterministic` (reorders the chain; live is opt-in). Each agent uses **its own native CLI + auth** — the Claude subscription only ever drives the real `claude` binary; it is never proxied to another client.
+**Multi-agent selection + fallback chain (Epic I).** `resolve_profile(role, settings, cli_override)` picks the profile to attempt first - precedence: explicit `--agent` override → `executor_selection=deterministic` (the **default** → floor) → a per-role pin (`role_profiles`) → the head of `agent_preference` when live/auto. `get_adapter` then walks the chain (requested → rest of `agent_preference` → floor) and returns the first `available()`, auditing each skip. Each adapter pins its **model** from `agent_profiles.yaml` (claude/opencode `--model`). Claude supports **both auth modes** - subscription token (`claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN`/`ANTHROPIC_AUTH_TOKEN`) or `ANTHROPIC_API_KEY`. End-user entry point: `siftmesh run … --agent claude|opencode|deterministic` (reorders the chain; live is opt-in). Each agent uses **its own native CLI + auth** - the Claude subscription only ever drives the real `claude` binary; it is never proxied to another client.
 
-**Honest agent safety tiers (labels-only).** Every connector carries a `safety_tier` derived purely from the probed capability facts (so the label can never disagree with dispatch): **T0** `deterministic_floor` (real tools, no LLM execution — the safe default), **T1** `constrained_live` (sandboxed **and** typed tools via the strict-MCP boundary — Claude today), **T2** `unconstrained_live` (capable but unsandboxed or tool-reach unproven/native — opencode/gemini/codex; an explicit `--agent` opt-in, **never described as sandboxed**), **T3** `advisory_llm` (the tool-less Tier-2 judge — never promotes). The tier is surfaced in `agents list`/`agents inspect`/`doctor --agents`/the cockpit and written into `context/agent_capabilities.json`. It is a **label, not a gate** — `--agent opencode` runs exactly as before; the honesty is informational. The classification lives in `schemas/agent_capabilities.py` (`safety_tier` + `SAFETY_TIER_DESC`) and `doctor._agent_safety_tier`. This operationalizes the post-live-test posture: the deterministic floor is the safe default, Claude is the constrained live executor, opencode/codex/gemini are explicit unconstrained opt-ins, and LiteLLM is advisory-only.
+**Honest agent safety tiers (labels-only).** Every connector carries a `safety_tier` derived purely from the probed capability facts (so the label can never disagree with dispatch): **T0** `deterministic_floor` (real tools, no LLM execution - the safe default), **T1** `constrained_live` (sandboxed **and** typed tools via the strict-MCP boundary - Claude today), **T2** `unconstrained_live` (capable but unsandboxed or tool-reach unproven/native - opencode/gemini/codex; an explicit `--agent` opt-in, **never described as sandboxed**), **T3** `advisory_llm` (the tool-less Tier-2 judge - never promotes). The tier is surfaced in `agents list`/`agents inspect`/`doctor --agents`/the cockpit and written into `context/agent_capabilities.json`. It is a **label, not a gate** - `--agent opencode` runs exactly as before; the honesty is informational. The classification lives in `schemas/agent_capabilities.py` (`safety_tier` + `SAFETY_TIER_DESC`) and `doctor._agent_safety_tier`. This operationalizes the post-live-test posture: the deterministic floor is the safe default, Claude is the constrained live executor, opencode/codex/gemini are explicit unconstrained opt-ins, and LiteLLM is advisory-only.
 
-**Agent neutrality + onboarding (Epic Q, round 1; PLAN/13).** SIFTMesh is not Claude-only. A single config-driven `HeadlessAdapter` (`adapters/headless.py`) launches **any** CLI agent from its `agent_profiles.yaml` `launch_argv` recipe — `gemini_headless`/`codex_headless` ship alongside claude/opencode, so adding an agent is a **profile row, not a new adapter**. `--agent gemini|codex|opencode|claude|deterministic` selects one (its only fallback is the deterministic floor — never a *different* live agent; unknown values error). **Evidence safety (audit-corrected 2026-06-11):** a headless recipe must carry native-tool deny/sandbox flags or it **fails closed** (codex `--sandbox read-only`, gemini `--approval-mode default`); every agent subprocess runs with a pinned run-scoped cwd (never the operator CWD — which auto-loads TRUSTED `GEMINI.md`/`AGENTS.md`) and a minimized env (only its own credentials). `claude_flag` injects the full Claude sandbox block; the Claude adapter gained `--tools ""`. Codex `exec --json` is parsed as a JSONL event stream (the naive whole-stdout parse always failed). **Onboarding:** `siftmesh doctor --agents` / `siftmesh agents list` / `agents inspect <id>` run `probe_agents()` → a typed `AgentCapabilityMap` (`schemas/agent_capabilities.py`, optionally `context/agent_capabilities.json`) reporting per-agent present/authed/**sandboxed**/tool-reachable; the default mirrors real dispatch (the floor under the deterministic default) and the ready live agent is surfaced separately as the `--agent` opt-in. Only Claude (`mcp_strategy=claude_flag`) reaches the typed tools today; gemini/codex are `verify-live`. (OpenClaw was researched and **dropped** — a personal-assistant gateway, not a coding agent.) Decision is **headless-first, ACP second**: round 2 adds the ACP client + `session/request_permission` permission gate.
+**Agent neutrality + onboarding (Epic Q, round 1; PLAN/13).** SIFTMesh is not Claude-only. A single config-driven `HeadlessAdapter` (`adapters/headless.py`) launches **any** CLI agent from its `agent_profiles.yaml` `launch_argv` recipe - `gemini_headless`/`codex_headless` ship alongside claude/opencode, so adding an agent is a **profile row, not a new adapter**. `--agent gemini|codex|opencode|claude|deterministic` selects one (its only fallback is the deterministic floor - never a *different* live agent; unknown values error). **Evidence safety (audit-corrected 2026-06-11):** a headless recipe must carry native-tool deny/sandbox flags or it **fails closed** (codex `--sandbox read-only`, gemini `--approval-mode default`); every agent subprocess runs with a pinned run-scoped cwd (never the operator CWD - which auto-loads TRUSTED `GEMINI.md`/`AGENTS.md`) and a minimized env (only its own credentials). `claude_flag` injects the full Claude sandbox block; the Claude adapter gained `--tools ""`. Codex `exec --json` is parsed as a JSONL event stream (the naive whole-stdout parse always failed). **Onboarding:** `siftmesh doctor --agents` / `siftmesh agents list` / `agents inspect <id>` run `probe_agents()` → a typed `AgentCapabilityMap` (`schemas/agent_capabilities.py`, optionally `context/agent_capabilities.json`) reporting per-agent present/authed/**sandboxed**/tool-reachable; the default mirrors real dispatch (the floor under the deterministic default) and the ready live agent is surfaced separately as the `--agent` opt-in. Only Claude (`mcp_strategy=claude_flag`) reaches the typed tools today; gemini/codex are `verify-live`. (OpenClaw was researched and **dropped** - a personal-assistant gateway, not a coding agent.) Decision is **headless-first, ACP second**: round 2 adds the ACP client + `session/request_permission` permission gate.
 
-**Cockpit (TUI) + unified setup (Epic O; PLAN/14).** `siftmesh setup` is the one-command onboarding (install all extras + `probe_agents` + multi-agent pick + persist via `config.save_agent_selection`); config now loads **global** (`~/.config/siftmesh/siftmesh.toml`) **then project** (`./siftmesh.toml` overrides) — a TOML *writer* was added (tomlkit). `siftmesh tui [RUN]` launches a **Textual** cockpit (optional `tui` extra; pure-Python, chosen over the originally-planned Ratatui — reuses our readers, no Rust). The cockpit is a **read-only** layer: `tui/snapshot.build_snapshot()` is a tested, Textual-free function that turns a run dir into a `CockpitSnapshot` by reusing `read_run_state` + `load_report_view` (+ task contracts), deriving timers from `updated_utc` (stage) + first/last event (total, frozen when terminal) with **no schema change**; the four-zone screen + nav tree poll it on a 1 s interval. Launching a run from the TUI drives the SAME governed engine in a `@work(thread=True)` worker (`tui/runner.py` mirrors `cli.run`); evidence safety is unchanged (no new write paths/tools/shell; agent subprocesses keep the Epic-Q cwd/env sandbox). The deterministic CLI commands all remain for scripting.
+**Cockpit (TUI) + unified setup (Epic O; PLAN/14).** `siftmesh setup` is the one-command onboarding (install all extras + `probe_agents` + multi-agent pick + persist via `config.save_agent_selection`); config now loads **global** (`~/.config/siftmesh/siftmesh.toml`) **then project** (`./siftmesh.toml` overrides) - a TOML *writer* was added (tomlkit). `siftmesh tui [RUN]` launches a **Textual** cockpit (optional `tui` extra; pure-Python, chosen over the originally-planned Ratatui - reuses our readers, no Rust). The cockpit is a **read-only** layer: `tui/snapshot.build_snapshot()` is a tested, Textual-free function that turns a run dir into a `CockpitSnapshot` by reusing `read_run_state` + `load_report_view` (+ task contracts), deriving timers from `updated_utc` (stage) + first/last event (total, frozen when terminal) with **no schema change**; the four-zone screen + nav tree poll it on a 1 s interval. Launching a run from the TUI drives the SAME governed engine in a `@work(thread=True)` worker (`tui/runner.py` mirrors `cli.run`); evidence safety is unchanged (no new write paths/tools/shell; agent subprocesses keep the Epic-Q cwd/env sandbox). The deterministic CLI commands all remain for scripting.
 
 ### Live self-correction loop ✅ (Epic K, K3)
 
@@ -260,7 +260,7 @@ The hero loop, **emergent not scripted**. The live adapter drives the agent to i
 
 ### Reports & Replay ✅ (Epic J)
 
-Turns the run-dir ledgers into judge-ready, **byte-deterministic** artifacts — **no LLM at report time** (the replayable-audit differentiator, golden-tested). `siftmesh_core/reports/`: `loader.load_report_view` builds one frozen `ReportView` over every ledger (graceful-missing; corrupt line → `ReportLoadError`, `--tolerant` drops a trailing truncated line); `render.py` pins the Jinja env + a header/body sentinel split (`split_body()` so golden tests diff only the body) + a `MarkdownBuilder` (the markdown reports are code-built; only `replay.html` uses a template). Generators: `final_report.md` (confirmed/inferred findings each anchored to artifact+sha256+tool_call_id, MITRE ATT&CK table, contradictions, self-correction narrative, chain of custody, **complete** tool-execution appendix, **unsupported-only-in-appendix** firewall, mandatory "NOT court-ready" limitations), `accuracy_report.md` (honest self-assessment by default; precision/recall diff mode when `expected_findings.md` exists), `dataset_documentation.md`, `architecture_notes.md`, and a text + self-contained-HTML **replay**. Wired into `siftmesh report`/`replay` and the engine REPORT state (auto modes auto-generate, fail-soft — a report bug never strands a finished run). Every real-run edge case (failed tool, retry-only task, escalation, fell-back agent, empty/halted run, 400+ claims) degrades gracefully.
+Turns the run-dir ledgers into judge-ready, **byte-deterministic** artifacts - **no LLM at report time** (the replayable-audit differentiator, golden-tested). `siftmesh_core/reports/`: `loader.load_report_view` builds one frozen `ReportView` over every ledger (graceful-missing; corrupt line → `ReportLoadError`, `--tolerant` drops a trailing truncated line); `render.py` pins the Jinja env + a header/body sentinel split (`split_body()` so golden tests diff only the body) + a `MarkdownBuilder` (the markdown reports are code-built; only `replay.html` uses a template). Generators: `final_report.md` (confirmed/inferred findings each anchored to artifact+sha256+tool_call_id, MITRE ATT&CK table, contradictions, self-correction narrative, chain of custody, **complete** tool-execution appendix, **unsupported-only-in-appendix** firewall, mandatory "NOT court-ready" limitations), `accuracy_report.md` (honest self-assessment by default; precision/recall diff mode when `expected_findings.md` exists), `dataset_documentation.md`, `architecture_notes.md`, and a text + self-contained-HTML **replay**. Wired into `siftmesh report`/`replay` and the engine REPORT state (auto modes auto-generate, fail-soft - a report bug never strands a finished run). Every real-run edge case (failed tool, retry-only task, escalation, fell-back agent, empty/halted run, 400+ claims) degrades gracefully.
 
 ### Security & Threat Model ✅ (Epic L)
 
@@ -270,7 +270,7 @@ residual, with an **agentic overlay** (OWASP Top-10 for Agentic Apps ASI01–ASI
 ATLAS) and honest residuals (prompt injection is *contained + traceable, not prevented*; path policy
 is posture-level + TOCTOU-bounded). Paired with `docs/architecture.md` (inline mermaid
 security-boundary diagram) + `docs/evidence_integrity.md` (chain of custody). The proof is
-`tests/EPIC_L_TESTS/` — **80 effect-asserting tests** that feed each gate a hostile input and assert
+`tests/EPIC_L_TESTS/` - **80 effect-asserting tests** that feed each gate a hostile input and assert
 the *effect* (a raise / an appended injection alert / byte-identical originals / a critic verdict /
 the launched argv): path-escape (incl. a Hypothesis property + the NUL-byte/`target==run` fixes),
 forbidden-tool + live MCP surface-equality, injection (logged-not-executed → critic human-review,
@@ -283,18 +283,18 @@ or become a reported fact without passing the deterministic critic.
 ### Testing & CI ✅ (Epic M)
 
 **499 tests** (498 CI-run + 1 maintainer-gated live e2e), all real-fixture-driven. One consolidated
-run factory in the root `tests/conftest.py` (`make_real_run` — manifest/readonly → plan → dispatch →
+run factory in the root `tests/conftest.py` (`make_real_run` - manifest/readonly → plan → dispatch →
 critique over the committed public fixtures; per-epic conftests are thin wrappers). **Recorded-golden
 proof of Epic J's determinism** (`tests/golden/`): a REAL recorded run (real ledgers, §2B floor) +
 committed report bodies; tests assert render-from-recorded == committed **byte-for-byte**, double-render
 identity, and host-independence (regen only via `tests/golden/record.py --update`). **End-to-end**:
 the §8 MVP artifact checklist over the genuine `vault init-case → run_engine --auto` path, a
 subprocess smoke of the real module entrypoint, and a **skip-gated live property e2e**
-(`SIFTMESH_LIVE_E2E=1` + claude CLI; asserts emergent self-correction as a property, never bytes —
+(`SIFTMESH_LIVE_E2E=1` + claude CLI; asserts emergent self-correction as a property, never bytes -
 maintainer-run only, §2B). **CI** (`.github/workflows/ci.yml`): Ubuntu matrix py3.11+3.12,
 determinism env pins (TZ/LC_ALL/PYTHONHASHSEED), `uv sync --locked`, a **zizmor** Actions-security
 job (clean), the **bypass suite as a named gate**, coverage gates (**92% overall, ≥90 enforced;
-governance core schemas/evidence/critic/registry ≥95** — image/memory subprocess lanes honestly
+governance core schemas/evidence/critic/registry ≥95** - image/memory subprocess lanes honestly
 omitted: they need maintainer evidence), coverage in the job summary, failure-only artifact upload,
 every action SHA-pinned (verified live: checkout v6.0.3, setup-uv v8.2.0, upload-artifact v7.0.1).
 
@@ -302,7 +302,7 @@ every action SHA-pinned (verified live: checkout v6.0.3, setup-uv v8.2.0, upload
 
 Validates outputs, rejects unsupported claims, finds contradictions, lowers confidence, and recommends retry or escalation.
 
-**Provider-flexible Tier-2 judge (post-Epic-Q).** The advisory Tier-2 judge + the cross-run merge synthesis now route through `adapters/judge.invoke_judge_text(prompt, settings)` (was Claude-only). `settings.judge` selects the backend: `None`/`cli:claude` (back-compat), `cli:gemini|codex|opencode` (the vendor CLI in **tool-less** mode — subscription OR API via the agent's own auth), or `litellm:<model>` (the **LiteLLM SDK**, optional `llm` extra — Gemini API/Vertex, OpenAI, Anthropic, Kimi, MiniMax). It is **fail-SOFT**: a missing CLI/key/extra or any error → skip + log `tier2_judge_skipped`, the run continues on Tier-1 (the deterministic critic stays the **sole promoter**; the judge still never promotes). Per-purpose selection: `--agent` picks the executor, `--judge` picks the judge (or pick both in `siftmesh setup`/`agents list`); off by default (`llm_critic_enabled`). Subscription stays on the vendor CLIs — LiteLLM is API-key/cloud only and is used **only** for the tool-less judge/synthesis, never the live executor (ADR research in `PLAN/13`). Kimi/MiniMax are flagged data-residency (operator opt-in).
+**Provider-flexible Tier-2 judge (post-Epic-Q).** The advisory Tier-2 judge + the cross-run merge synthesis now route through `adapters/judge.invoke_judge_text(prompt, settings)` (was Claude-only). `settings.judge` selects the backend: `None`/`cli:claude` (back-compat), `cli:gemini|codex|opencode` (the vendor CLI in **tool-less** mode - subscription OR API via the agent's own auth), or `litellm:<model>` (the **LiteLLM SDK**, optional `llm` extra - Gemini API/Vertex, OpenAI, Anthropic, Kimi, MiniMax). It is **fail-SOFT**: a missing CLI/key/extra or any error → skip + log `tier2_judge_skipped`, the run continues on Tier-1 (the deterministic critic stays the **sole promoter**; the judge still never promotes). Per-purpose selection: `--agent` picks the executor, `--judge` picks the judge (or pick both in `siftmesh setup`/`agents list`); off by default (`llm_critic_enabled`). Subscription stays on the vendor CLIs - LiteLLM is API-key/cloud only and is used **only** for the tool-less judge/synthesis, never the live executor (ADR research in `PLAN/13`). Kimi/MiniMax are flagged data-residency (operator opt-in).
 
 ### Evidence Manager
 
@@ -319,7 +319,7 @@ Treats all case data as hostile. Detects instruction-like content inside logs, f
 ## 9. CAO role
 
 > **Decision (ADR 12, 2026-06-10): CAO evaluated and NOT pursued.** CAO puts an LLM supervisor in the
-> routing/delegation seat — the opposite of SIFTMesh's "LLM proposes, code decides" thesis (it would
+> routing/delegation seat - the opposite of SIFTMesh's "LLM proposes, code decides" thesis (it would
 > weaken the constraint + audit criteria). The deterministic native FSM is kept; the optional
 > `cao_adapter` (I5) is closed won't-do. The simplest headless `claude -p` adapter is the live-agent
 > path. LangGraph was also evaluated and rejected (the shipped FSM already provides its value). See
@@ -496,9 +496,9 @@ siftmesh approve RUN-001 --gate plan
 siftmesh reject RUN-001 --gate retry
 ```
 
-## 13. TUI status — ✅ shipped (Epic O, `PLAN/14`)
+## 13. TUI status - ✅ shipped (Epic O, `PLAN/14`)
 
-Built as a **Textual** cockpit (Python, MIT — chosen over the originally-penciled Ratatui; reuses the
+Built as a **Textual** cockpit (Python, MIT - chosen over the originally-penciled Ratatui; reuses the
 existing readers, no Rust). `siftmesh tui [RUN]` is **read-only** over the run files (it renders
 `run_state.json` + the ledgers on a 1 s poll via the tested, Textual-free `tui/snapshot.build_snapshot()`);
 launching a run reuses the governed engine in a worker thread. It contains no orchestration, evidence,
@@ -517,7 +517,7 @@ Cockpit zones (shipped):
 
 ## 14. License policy
 
-Project license (the one constraint that remains — a hackathon submission requirement: public repo under MIT or Apache-2.0):
+Project license (the one constraint that remains - a hackathon submission requirement: public repo under MIT or Apache-2.0):
 
 ```text
 Apache 2.0
@@ -528,7 +528,7 @@ Dependency / tool-backend license posture (see PLAN/08 §0.1):
 ```text
 License is NOT a blocker. Tool and connector licenses (e.g. LGPL libscca,
 VSL Volatility 3, regipy[full], libyal/TSK in Plaso's tree) are replaceable
-and not a gating concern — depend on the best real backend at runtime, and
+and not a gating concern - depend on the best real backend at runtime, and
 swap later only if a license ever actually matters.
 Do NOT COPY source code from restrictive projects (code-reuse rule, distinct
 from depending on them at runtime).
@@ -567,4 +567,4 @@ Do not do these in the MVP:
 - A2A GitHub (Linux Foundation / a2aproject): https://github.com/a2aproject/A2A
 - Textual (the shipped TUI framework, Epic O): https://textual.textualize.io/
 - Agent Client Protocol (ACP, Epic Q round 2): https://agentclientprotocol.com/
-- Ratatui (evaluated, not used — Textual chosen): https://github.com/ratatui/ratatui
+- Ratatui (evaluated, not used - Textual chosen): https://github.com/ratatui/ratatui

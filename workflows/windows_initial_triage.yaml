@@ -1,5 +1,5 @@
 # Canonical Windows initial-triage workflow (validates against the Epic-C Workflow
-# schema, siftmesh_core/schemas/workflow.py). This is the high-level run recipe —
+# schema, siftmesh_core/schemas/workflow.py). This is the high-level run recipe -
 # mode, caps, gates, safety posture, and coarse stage order. The per-run, per-artifact
 # task graph is generated separately by `siftmesh plan` (context/investigation_plan.yaml).
 # Epic H's state-machine runner will load this file; Epic E ships it as the reference.

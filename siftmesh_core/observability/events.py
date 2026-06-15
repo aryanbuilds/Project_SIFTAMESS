@@ -3,7 +3,7 @@
 Maps orchestration events (by name) and typed ledger records (by ledger path) to a tag in
 ``[info] [agent] [tool_log] [alert] [output] [result] [tasks]`` plus a one-line summary.
 Every value interpolated into a summary is **escaped** (``rich.markup.escape``) and control
-chars stripped — claim text, source artifacts and ``reason`` strings are evidence-derived
+chars stripped - claim text, source artifacts and ``reason`` strings are evidence-derived
 (a terminal-markup / ANSI injection surface), never trusted.
 """
 

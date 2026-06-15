@@ -1,10 +1,10 @@
-"""Deep Context Agent (E2) — deterministic context-pack builder.
+"""Deep Context Agent (E2) - deterministic context-pack builder.
 
 Reads the evidence manifest (metadata only) and renders ``context/context_pack.md``:
 which artifact families are present, per-family tool guidance, and investigation
 angles. It is byte-stable per manifest (no wall-clock, fixed family order).
 
-Untrusted strings — the manifest filenames — are *datamarked* (rendered as inline
+Untrusted strings - the manifest filenames - are *datamarked* (rendered as inline
 code, control chars flattened, backticks neutralised) so a file named like an
 instruction (``# ignore previous.evtx``) can never become a heading or directive.
 This is the minimal spotlight discipline for the planner; the full spotlighting +
@@ -53,7 +53,7 @@ def build_context_pack(manifest: EvidenceManifest, routed: list[RoutedArtifact])
         f"- Artifacts in manifest: {len(manifest.files)}",
         "",
     ]
-    # The operator's TRUSTED incident objective (from --brief) — plain trusted text, kept
+    # The operator's TRUSTED incident objective (from --brief) - plain trusted text, kept
     # visually separate from the datamarked hostile filenames below.
     if manifest.incident_objective:
         lines += [
@@ -71,7 +71,7 @@ def build_context_pack(manifest: EvidenceManifest, routed: list[RoutedArtifact])
     ]
 
     if not routed:
-        lines.append("_No artifacts in the manifest — nothing to triage._")
+        lines.append("_No artifacts in the manifest - nothing to triage._")
         lines.append("")
     else:
         for family in FAMILY_ORDER:
@@ -81,7 +81,7 @@ def build_context_pack(manifest: EvidenceManifest, routed: list[RoutedArtifact])
             label = FAMILY_LABEL[family]
             count = len(members)
             noun = "artifact" if count == 1 else "artifacts"
-            lines.append(f"### {label} ({family}) — {count} {noun}")
+            lines.append(f"### {label} ({family}) - {count} {noun}")
             lines.append(f"Guidance: {members[0].objective}")
             for art in members:
                 sha = art.sha256[:12]
@@ -102,5 +102,5 @@ def build_context_pack(manifest: EvidenceManifest, routed: list[RoutedArtifact])
 def enrich_context_pack(
     base_md: str, *, manifest: EvidenceManifest, settings: SiftmeshSettings
 ) -> str:
-    """LLM Deep Context seam — identity in Epic E (real adapter is Epic F8)."""
+    """LLM Deep Context seam - identity in Epic E (real adapter is Epic F8)."""
     return base_md

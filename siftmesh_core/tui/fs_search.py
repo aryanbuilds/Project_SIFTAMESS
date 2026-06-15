@@ -6,7 +6,7 @@ when present (fixed-argv, ``shell=False``) to enumerate subsequence-matching pat
 ``os.walk``; then rank every candidate with Textual's ``fuzzy.Matcher`` (score in ``[0, ∞)``, 0 = no
 match → keep ``>0``, sort DESC then by path for determinism).
 
-Read-only: only ``scandir``/``stat`` — never opens or mutates a candidate (evidence-safe). Bounded
+Read-only: only ``scandir``/``stat`` - never opens or mutates a candidate (evidence-safe). Bounded
 by ``max_depth`` + ``limit`` and a skip-list (dotdirs, ``node_modules``, ``/proc`` ``/sys`` ``/dev``
 ``/run``) so a search from ``$HOME`` or ``/`` stays responsive and skips pseudo-filesystems.
 """
@@ -23,7 +23,7 @@ Mode = Literal["file", "folder", "both"]
 
 # Directory names never worth walking for evidence (noise / huge / volatile).
 _NOISE_NAMES = frozenset({"node_modules", "__pycache__", ".git", ".cache", "snap", ".venv"})
-# Absolute prefixes that are pseudo/volatile filesystems — never recurse them.
+# Absolute prefixes that are pseudo/volatile filesystems - never recurse them.
 _SYSTEM_PREFIXES = ("/proc", "/sys", "/dev", "/run")
 _ENUM_TIMEOUT_S = 15
 

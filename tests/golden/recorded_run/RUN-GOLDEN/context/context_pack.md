@@ -8,15 +8,15 @@
 
 ## Artifact families present
 
-### Windows Security event log (evtx_security) — 1 artifact
+### Windows Security event log (evtx_security) - 1 artifact
 Guidance: Parse the Windows Security event log for logon, privilege, and account-management activity.
 - `Security.evtx` · sha256 `50c87926d2df…`
 
-### Prefetch (program execution) (prefetch) — 1 artifact
+### Prefetch (program execution) (prefetch) - 1 artifact
 Guidance: Analyse the prefetch artifact for program-execution evidence (run count, last-run times).
 - `CMD.EXE-89305D47.pf` · sha256 `6127d820b031…`
 
-### Windows registry hive (registry_hive) — 1 artifact
+### Windows registry hive (registry_hive) - 1 artifact
 Guidance: Extract autostart Run/RunOnce keys from the registry hive.
 - `NTUSER.DAT` · sha256 `6a38fcea9241…`
 

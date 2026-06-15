@@ -1,9 +1,9 @@
-"""Claim schema + evidence-discipline validators (C2) — the hallucination firewall.
+"""Claim schema + evidence-discipline validators (C2) - the hallucination firewall.
 
 A :class:`Claim` cannot be constructed with status ``confirmed`` / ``inferred`` /
 ``contradicted`` unless it carries its evidence anchor (``tool_call_id`` AND
 ``source_sha256``, plus ``source_artifact`` + ``tool_name``). The one exception is
-status ``unsupported`` — the explicit "agent said it, evidence is missing" record
+status ``unsupported`` - the explicit "agent said it, evidence is missing" record
 that is logged to its own ledger and never reported as fact. This encodes
 "log, don't delete, never report as fact" directly in the type system.
 """
@@ -62,8 +62,8 @@ def validate_claim_evidence(claim: Claim | Mapping[str, Any]) -> list[str]:
     """Return evidence-discipline violations for a claim (empty list = clean).
 
     The non-raising counterpart to the model validator: the Critic (Epic G) uses
-    this to *grade* a claim — including raw, not-yet-validated agent output passed
-    as a mapping — rather than reject it at parse time.
+    this to *grade* a claim - including raw, not-yet-validated agent output passed
+    as a mapping - rather than reject it at parse time.
     """
     if isinstance(claim, Claim):
         status: Any = claim.status

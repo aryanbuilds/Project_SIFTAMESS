@@ -46,7 +46,7 @@ def test_override_flows_into_headless_argv() -> None:
         settings=load_settings(agent_models={"gemini_headless": "gemini-3-pro"})
     )
     argv = adapter._build_argv(load_profiles()["gemini_headless"], "p", None)
-    # gemini has NO pinned model by default — the override both enables and sets it
+    # gemini has NO pinned model by default - the override both enables and sets it
     assert argv[argv.index("--model") + 1] == "gemini-3-pro"
 
 

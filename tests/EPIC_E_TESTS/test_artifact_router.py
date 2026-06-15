@@ -1,4 +1,4 @@
-"""Router unit tests — the DRY family->tool source of truth (Epic E core)."""
+"""Router unit tests - the DRY family->tool source of truth (Epic E core)."""
 
 from __future__ import annotations
 

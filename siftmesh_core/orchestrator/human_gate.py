@@ -1,4 +1,4 @@
-"""Approval-gate helpers (H5) — record a human approve/reject on a run.
+"""Approval-gate helpers (H5) - record a human approve/reject on a run.
 
 The engine (``workflow_runner``) halts on a pending meaningful gate in guided mode and persists
 ``RunState.blocked_gate``. The ``approve``/``reject`` CLI commands call :func:`set_gate` to record

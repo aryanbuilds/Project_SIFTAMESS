@@ -8,5 +8,5 @@ Artifact families present -> the typed, allowlisted tools that handle them. No r
 
 ## Cross-cutting
 
-- `build_timeline` — unified chronology across event-log / prefetch / $MFT artifacts.
-- `validate_claim_evidence` — deterministic claim-evidence validation (used by the critic).
+- `build_timeline` - unified chronology across event-log / prefetch / $MFT artifacts.
+- `validate_claim_evidence` - deterministic claim-evidence validation (used by the critic).

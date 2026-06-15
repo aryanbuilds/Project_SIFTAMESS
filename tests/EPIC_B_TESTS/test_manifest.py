@@ -51,7 +51,7 @@ def test_hashes_sha256_format(tmp_path: Path) -> None:
     write_hashes_sha256(manifest, rp.root, evidence_root=evi)
     assert rp.hashes_sha256.exists()
     raw = rp.hashes_sha256.read_bytes()
-    assert b"\r\n" not in raw  # LF only — required for sha256sum -c on Linux
+    assert b"\r\n" not in raw  # LF only - required for sha256sum -c on Linux
     lines = rp.hashes_sha256.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     golden = hashlib.sha256((evi / "a.txt").read_bytes()).hexdigest() + "  a.txt"

@@ -21,7 +21,7 @@ def test_sha256_streams_large_file(tmp_path: Path) -> None:
     chunk = b"x" * (1024 * 1024)
     expected = hashlib.sha256()
     with target.open("wb") as out:
-        for _ in range(20):  # 20 MiB — exercises the streaming read path
+        for _ in range(20):  # 20 MiB - exercises the streaming read path
             out.write(chunk)
             expected.update(chunk)
     assert sha256_file(target) == expected.hexdigest()

@@ -1,4 +1,4 @@
-"""Onboarding (Epic O, simplified) — pick agents + set up the Tier-2 judge, in two tabs.
+"""Onboarding (Epic O, simplified) - pick agents + set up the Tier-2 judge, in two tabs.
 
 Agents tab: a greyed-until-ready multiselect of the four live agents (claude/opencode/codex/gemini)
 with per-agent remediation, a **Launch auth** button (runs the vendor login on the real TTY via
@@ -113,7 +113,7 @@ class OnboardingScreen(Screen):
             with TabPane("Agents", id="agents-tab"):
                 yield Static(id="readiness")
                 yield Static(
-                    "Pick the live agents to use. Greyed = not installed/authed yet — fix it "
+                    "Pick the live agents to use. Greyed = not installed/authed yet - fix it "
                     "below, then it becomes selectable automatically. The deterministic floor "
                     "(T0) always works with no keys.",
                     id="intro",
@@ -147,7 +147,7 @@ class OnboardingScreen(Screen):
             with TabPane("Tier-2 judge", id="judge-tab"):
                 yield Static(
                     "An optional advisory second opinion. It can only lower confidence / "
-                    "annotate — the deterministic Tier-1 critic stays the sole promoter.",
+                    "annotate - the deterministic Tier-1 critic stays the sole promoter.",
                     id="judgeintro",
                 )
                 with RadioSet(id="judgeprov"):
@@ -210,7 +210,7 @@ class OnboardingScreen(Screen):
             badge.update(f"[$success]✓ live agent ready:[/] {cap.live_candidate} (T1/T2)")
         else:
             badge.update(
-                "[$warning]● floor only (T0):[/] no live agent ready — fix one below, or just Save "
+                "[$warning]● floor only (T0):[/] no live agent ready - fix one below, or just Save "
                 "and run on the deterministic real-tool floor (no keys needed)."
             )
 
@@ -220,13 +220,13 @@ class OnboardingScreen(Screen):
             lines.append("To make an agent ready:")
             lines += fix
             lines.append("")
-        lines.append("Safety tiers (labels only — never gate dispatch):")
+        lines.append("Safety tiers (labels only - never gate dispatch):")
         lines += [f"  {safety_tier_label(t)}" for t in SAFETY_TIER_DESC]
         self.query_one("#guidance", Static).update("\n".join(lines))
 
     @work(thread=True, exclusive=True)
     def _reprobe_tick(self) -> None:
-        cap = probe_agents(self.settings)  # shells `--version` — keep off the UI thread
+        cap = probe_agents(self.settings)  # shells `--version` - keep off the UI thread
         self.app.call_from_thread(self._apply_reprobe, cap)
 
     def _apply_reprobe(self, _cap: Any) -> None:
@@ -248,13 +248,13 @@ class OnboardingScreen(Screen):
             return
         cmd = auth_command(profile_id)
         if cmd is None:
-            self.notify(f"{profile_id}: no interactive login — set its API key (env/.env)")
+            self.notify(f"{profile_id}: no interactive login - set its API key (env/.env)")
             return
         try:
             with self.app.suspend():
                 subprocess.run(cmd, check=False)
         except (FileNotFoundError, OSError):
-            self.notify(f"could not launch — run it yourself: {' '.join(cmd)}")
+            self.notify(f"could not launch - run it yourself: {' '.join(cmd)}")
             return
         self.notify("re-probing after auth…")
         self._populate_agents()
@@ -405,7 +405,7 @@ class OnboardingScreen(Screen):
     @work(thread=True, exclusive=True)
     def _install(self) -> None:
         code = run_setup(self.settings)
-        msg = "install complete — re-probing." if code == 0 else "install FAILED (see terminal)."
+        msg = "install complete - re-probing." if code == 0 else "install FAILED (see terminal)."
         self.app.call_from_thread(self._after_install, msg, code)
 
     def _after_install(self, msg: str, code: int) -> None:

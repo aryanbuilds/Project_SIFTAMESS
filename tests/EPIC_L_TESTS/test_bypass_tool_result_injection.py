@@ -1,7 +1,7 @@
 """Bypass test (Project_SIFTAMESS-nkyo): a tool RESULT carrying instruction-like content is scanned.
 
 Tool outputs are hostile-evidence-derived and flow back into the agent context (indirect prompt
-injection). The guard must scan each tool result — not only the agent's final message — and log an
+injection). The guard must scan each tool result - not only the agent's final message - and log an
 InjectionAlert. It is logged-only: the scan never changes control flow (criterion 4).
 """
 
@@ -42,7 +42,7 @@ def test_tool_result_injection_is_logged(tmp_path: Path) -> None:
         evidence_root=evidence,
     )
 
-    # The tool still SUCCEEDS and returns its real result — the scan never changes control flow.
+    # The tool still SUCCEEDS and returns its real result - the scan never changes control flow.
     assert result.status == "success"
     alerts = read_injection_alerts(run.root)
     assert alerts, "an instruction-like tool result must raise an injection alert"

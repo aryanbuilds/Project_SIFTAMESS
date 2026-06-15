@@ -1,10 +1,10 @@
-"""F9 — genuine retry-trigger recording (no scripted failures).
+"""F9 - genuine retry-trigger recording (no scripted failures).
 
 A recoverable tool error (the real tool returns status="error") is *recorded* as
 ``retry_required`` + ``retry_cause``; a missing backend fails closed as ``error``.
-The retry DECISION is Epic G — Epic F only records the genuine cause. Here the tool
+The retry DECISION is Epic G - Epic F only records the genuine cause. Here the tool
 is swapped for a stub that *returns* an error / *raises* BackendUnavailableError,
-exercising the executor's handling — not faking forensic output.
+exercising the executor's handling - not faking forensic output.
 """
 
 from __future__ import annotations

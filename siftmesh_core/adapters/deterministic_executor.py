@@ -409,7 +409,7 @@ def _claims_usnjrnl(result: Any, task_id: str) -> list[Claim]:
     del_names = [r.get("file_name", "") for r in rows if _has(r.get("reason"), "FILE_DELETE")]
     shown, total_del = _dedupe(del_names, 20)
     text = (
-        f"USN journal: {len(rows)} record(s) — "
+        f"USN journal: {len(rows)} record(s) - "
         f"{created} created, {deleted} deleted, {renamed} renamed."
     )
     if total_del:

@@ -1,4 +1,4 @@
-"""F4/F5/F6 — dispatch + collect CLI/service + agent_calls audit."""
+"""F4/F5/F6 - dispatch + collect CLI/service + agent_calls audit."""
 
 from __future__ import annotations
 

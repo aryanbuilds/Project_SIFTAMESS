@@ -1,8 +1,8 @@
-"""Final forensic report generator (J3) — the headline evidence-anchored report.
+"""Final forensic report generator (J3) - the headline evidence-anchored report.
 
 Deterministic, code-built from the :class:`ReportView` (no LLM). Hard rules: every CONFIRMED finding
 cites artifact + sha256 + tool + tool_call_id + confidence; UNSUPPORTED claims appear ONLY in their
-appendix (never as fact — enforced by the view); the tool-execution appendix lists EVERY tool call
+appendix (never as fact - enforced by the view); the tool-execution appendix lists EVERY tool call
 (uncapped); the LIMITATIONS section is mandatory ("NOT court-ready"). Every real-run edge case
 (empty/halted run, retry-only tasks, escalations, failed tools, fell-back agents) degrades safely.
 """
@@ -30,7 +30,7 @@ def generate_final_report(
     """Write ``reports/final_report.md`` from the run-dir ledgers; return its path."""
     v = view or load_report_view(run, evidence_root=evidence_root)
     md = MarkdownBuilder()
-    md.h1(f"SIFTMesh Forensic Report — {v.run_id}")
+    md.h1(f"SIFTMesh Forensic Report - {v.run_id}")
 
     _exec_summary(md, v)
     _objective_answer(md, v)
@@ -116,7 +116,7 @@ def _objective_answer(md: MarkdownBuilder, v: ReportView) -> None:
         f"the highest-signal are listed here (full set under Findings):"
     )
     for c in findings:
-        md.blank().line(f"**{c.claim_id}** — {c.claim}")
+        md.blank().line(f"**{c.claim_id}** - {c.claim}")
         md.bullet(
             f"artifact `{c.source_artifact}` · sha256 `{(c.source_sha256 or '')[:_SHA_SHORT]}…` · "
             f"tool `{c.tool_name}` · call `{c.tool_call_id}` · confidence {_confidence(v, c)}"
@@ -153,7 +153,7 @@ def _methodology(md: MarkdownBuilder, v: ReportView) -> None:
         md.blank().line(f"**{len(failed)} tool invocation(s) failed** (partial coverage):")
         for t in failed:
             md.bullet(
-                f"`{t.tool_call_id}` {t.tool_name} on `{t.source_artifact}` — {t.status}"
+                f"`{t.tool_call_id}` {t.tool_name} on `{t.source_artifact}` - {t.status}"
                 f" ({t.error_code or 'no code'})"
             )
 
@@ -186,7 +186,7 @@ def _findings(
     if not shown:  # high_signal is confirmed+inferred ranked; fall back to head of this list
         shown = list(claims[:MAX_DETAILED_FINDINGS])
     for c in shown:
-        md.blank().line(f"**{c.claim_id}** — {c.claim}")
+        md.blank().line(f"**{c.claim_id}** - {c.claim}")
         atk = lookup_for_claim(c)
         anchor = (
             f"artifact `{c.source_artifact}` · sha256 `{(c.source_sha256 or '')[:_SHA_SHORT]}…` · "
@@ -198,7 +198,7 @@ def _findings(
         if atk:
             md.bullet(f"ATT&CK: {atk.tactic} / {atk.id_display} {atk.name}")
         if c.claim_id in v.claims_on_failed_tools:
-            md.bullet("⚠ anchored to a tool call that did not fully succeed — verify manually")
+            md.bullet("⚠ anchored to a tool call that did not fully succeed - verify manually")
         if c.requires_human_review:
             md.bullet("⚠ flagged for human review")
     if len(claims) > len(shown):
@@ -224,7 +224,7 @@ def _attack(md: MarkdownBuilder, v: ReportView) -> None:
     for etype, n in sorted(counts.items()):
         atk = lookup(etype)
         if atk is None:
-            rows.append([etype, "(unmapped)", "—", str(n)])
+            rows.append([etype, "(unmapped)", "-", str(n)])
         else:
             rows.append([etype, f"{atk.tactic} / {atk.id_display}", atk.name, str(n)])
     md.table(["Evidence type", "Tactic / Technique", "Name", "Claims"], rows)
@@ -304,7 +304,7 @@ def _custody(md: MarkdownBuilder, v: ReportView) -> None:
 
 
 def _tool_appendix(md: MarkdownBuilder, v: ReportView) -> None:
-    md.h2("Appendix A — tool-execution log (complete)")
+    md.h2("Appendix A - tool-execution log (complete)")
     if not v.tool_results:
         md.line("No tool calls.")
         return
@@ -317,17 +317,17 @@ def _tool_appendix(md: MarkdownBuilder, v: ReportView) -> None:
                 _truncate(t.source_artifact, 44),
                 t.source_sha256,
                 t.status,
-                t.error_code or "—",
+                t.error_code or "-",
             ]
             for t in v.tool_results
-        ],  # NEVER capped — full traceability
+        ],  # NEVER capped - full traceability
     )
 
 
 def _unsupported_appendix(md: MarkdownBuilder, v: ReportView) -> None:
-    md.h2("Appendix B — unsupported claims (rejected, NOT findings)")
+    md.h2("Appendix B - unsupported claims (rejected, NOT findings)")
     if not v.unsupported:
-        md.line("None — every recorded claim was evidence-anchored.")
+        md.line("None - every recorded claim was evidence-anchored.")
         return
     md.line("_These claims lacked a verifiable evidence anchor and are excluded from findings._")
     md.table(
@@ -337,7 +337,7 @@ def _unsupported_appendix(md: MarkdownBuilder, v: ReportView) -> None:
 
 
 def _injection(md: MarkdownBuilder, v: ReportView) -> None:
-    md.h2("Appendix C — prompt-injection alerts (hostile-evidence handling)")
+    md.h2("Appendix C - prompt-injection alerts (hostile-evidence handling)")
     if not v.injection_alerts:
         md.line("None.")
         return
@@ -368,7 +368,7 @@ def _limitations(md: MarkdownBuilder, v: ReportView) -> None:
     if v.claims_on_failed_tools:
         md.bullet(
             f"{len(v.claims_on_failed_tools)} finding(s) are anchored to a tool call that did not "
-            "fully succeed — verify manually."
+            "fully succeed - verify manually."
         )
     unmapped = sorted(
         {c.evidence_type for c in (*v.confirmed, *v.inferred) if lookup(c.evidence_type) is None}

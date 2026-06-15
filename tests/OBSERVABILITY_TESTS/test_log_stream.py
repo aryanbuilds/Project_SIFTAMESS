@@ -1,4 +1,4 @@
-"""Real-time log stream (observability) — unit tests, no TTY required.
+"""Real-time log stream (observability) - unit tests, no TTY required.
 
 Covers the load-bearing determinism invariant (the chokepoint edits never mutate run-dir
 bytes), tag classification, progress math, TTY gating, sink-exception swallowing, hostile
@@ -58,7 +58,7 @@ def test_append_record_noop_invariant(tmp_path: Path) -> None:
     run_b = tmp_path / "b"
     # (1) no sink registered
     p_a = append_record(run_a, "audit/agent_calls.jsonl", rec)
-    # (2) a capturing sink registered — the file output must be byte-identical
+    # (2) a capturing sink registered - the file output must be byte-identical
     captured: list[tuple[str, str]] = []
     sinks.register(
         SimpleNamespace(  # type: ignore[arg-type]

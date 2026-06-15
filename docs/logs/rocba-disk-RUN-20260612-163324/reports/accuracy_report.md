@@ -5,9 +5,9 @@
 <!-- run_dir: rocba_full/case_runs/RUN-20260612-163324 -->
 <!-- load_mode: strict -->
 <!-- SIFTMESH-REPORT-BODY-BELOW -->
-# Accuracy & False-Positive Report — RUN-20260612-163324
+# Accuracy & False-Positive Report - RUN-20260612-163324
 
-_No ground-truth baseline — honest self-assessment (no fabricated precision/recall)._
+_No ground-truth baseline - honest self-assessment (no fabricated precision/recall)._
 
 ## Results summary
 
@@ -33,7 +33,7 @@ _No ground-truth baseline — honest self-assessment (no fabricated precision/re
 
 ## False-positive control
 
-- Claims rejected by the critic for missing evidence: 0 (never reported as fact — Appendix B of the final report).
+- Claims rejected by the critic for missing evidence: 0 (never reported as fact - Appendix B of the final report).
 - Over-broad claims downgraded: 0.
 - Contradictions escalated rather than asserted: 0.
 

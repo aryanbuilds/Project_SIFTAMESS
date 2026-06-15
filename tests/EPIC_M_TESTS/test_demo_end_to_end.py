@@ -1,14 +1,14 @@
-"""M5 — end-to-end tests: full pipeline over real fixtures (criteria 1/2/5/6).
+"""M5 - end-to-end tests: full pipeline over real fixtures (criteria 1/2/5/6).
 
 Three layers:
-(a) deterministic in-process e2e — the REAL engine (`run_engine`, the same code behind
+(a) deterministic in-process e2e - the REAL engine (`run_engine`, the same code behind
     `siftmesh run --auto`) over the committed fixtures, asserting the FULL §8 MVP artifact
     checklist + traceability invariants;
-(b) one subprocess smoke of the real entrypoint (`python -m siftmesh_core.cli`) — catches
+(b) one subprocess smoke of the real entrypoint (`python -m siftmesh_core.cli`) - catches
     entrypoint/import/PATH-class failures the in-process layer can't (the 8tcx lesson);
 (c) a LIVE property e2e (skip-gated): genuine emergent self-correction is only producible
     by the live agent, so it is asserted as a PROPERTY, never bytes, and the test runs only
-    when the maintainer opts in (SIFTMESH_LIVE_E2E=1 + an available claude CLI) — CLAUDE
+    when the maintainer opts in (SIFTMESH_LIVE_E2E=1 + an available claude CLI) - CLAUDE
     §2B human-gating; CI and agent sessions always skip it.
 """
 
@@ -33,7 +33,7 @@ from siftmesh_core.schemas.run import RunState
 
 BuildEvidence = Callable[..., None]
 
-# CLAUDE §5 / OVERALL_PLAN §8 — the artifacts every completed auto run MUST produce.
+# CLAUDE §5 / OVERALL_PLAN §8 - the artifacts every completed auto run MUST produce.
 _MVP_MUST_EXIST = (
     "run_state.json",
     "evidence/evidence_manifest.json",
@@ -96,7 +96,7 @@ def test_e2e_unsupported_never_a_report_fact(tmp_path: Path, build_evidence: Bui
 def test_e2e_subprocess_smoke_real_entrypoint(
     tmp_path: Path, build_evidence: BuildEvidence
 ) -> None:
-    """One smoke of the REAL module entrypoint — import/entrypoint failures surface here.
+    """One smoke of the REAL module entrypoint - import/entrypoint failures surface here.
 
     Runs the exact §17 demo shape: `siftmesh run CASE --evidence EV --auto` in a child
     process (the CLI inits the case + creates the run itself), then asserts the run it
@@ -134,7 +134,7 @@ def test_e2e_subprocess_smoke_real_entrypoint(
 @pytest.mark.skipif(
     os.environ.get("SIFTMESH_LIVE_E2E") != "1",
     reason="live e2e is maintainer-gated: set SIFTMESH_LIVE_E2E=1 with a logged-in claude CLI "
-    "(CLAUDE §2B — never run autonomously; consumes the maintainer's Claude subscription)",
+    "(CLAUDE §2B - never run autonomously; consumes the maintainer's Claude subscription)",
 )
 def test_live_e2e_self_correction_property(tmp_path: Path, build_evidence: BuildEvidence) -> None:
     """LIVE property e2e (maintainer-run): emergent self-correction, asserted as a property.

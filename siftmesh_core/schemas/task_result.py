@@ -1,4 +1,4 @@
-"""Task-result envelope (Epic F) — an executor's per-task output.
+"""Task-result envelope (Epic F) - an executor's per-task output.
 
 A :class:`TaskResult` is what an adapter writes to ``results/TASK-XXX.result.json``
 (the ``output_required`` of every executor contract, CLAUDE.md §8). It carries the

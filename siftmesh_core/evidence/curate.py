@@ -2,12 +2,12 @@
 
 The TUI evidence picker lets the operator choose several files AND folders from the filesystem; the
 vault then ingests ONE evidence root. ``curate_evidence`` assembles that root by **hard-linking**
-the selected items into a destination dir (``os.link`` — same inode, zero extra disk, originals
+the selected items into a destination dir (``os.link`` - same inode, zero extra disk, originals
 untouched; falls back to ``shutil.copy2`` across filesystems). This is the programmatic form of the
 RUNBOOK §2a ``ln … || cp -n …`` step. Originals are NEVER written to.
 
 Single-folder shortcut: if exactly one directory is selected (and nothing else), it is used directly
-as the evidence root — no curation, no extra inodes.
+as the evidence root - no curation, no extra inodes.
 
 The destination MUST live under the case dir (not /tmp), because the run records the evidence root's
 absolute path in ``readonly_mounts.json`` and resume reads it back (``recover_evidence_root``).
@@ -78,6 +78,6 @@ def curate_evidence(selected_paths: Sequence[Path | str], dest_dir: Path | str) 
 
 def _place(src: Path, dest: Path, rel: Path, seen: set[Path]) -> None:
     if rel in seen:
-        raise CurateError(f"two selected sources collide on {rel} — rename or select one")
+        raise CurateError(f"two selected sources collide on {rel} - rename or select one")
     seen.add(rel)
     _link_or_copy(src, dest / rel)

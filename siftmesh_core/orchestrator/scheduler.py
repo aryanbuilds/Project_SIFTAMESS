@@ -5,7 +5,7 @@ runs each task contract through its resolved adapter (default = the deterministi
 floor) sequentially, recovering the evidence root from the run's
 ``readonly_mounts.json``. ``collect`` validates each task's result envelope and
 reports missing/malformed results without crashing. Parallelism, retries, and the
-state machine are Epic G/H — this layer just executes and records.
+state machine are Epic G/H - this layer just executes and records.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from siftmesh_core.schemas.task_result import TaskResult
 from siftmesh_core.schemas.yaml_io import read_yaml_model
 
 # Heavy, tool-bound tasks that add nothing under a live agent (the tool does the work) and time
-# out its wrapper — run on the deterministic floor even when a live agent is selected, unless the
+# out its wrapper - run on the deterministic floor even when a live agent is selected, unless the
 # operator forces `live_extraction` (`run --all-live`). Executor tiering (scale fixes).
 _HEAVY_TOOL_BOUND = frozenset({"extract_artifacts_from_image", "analyze_memory"})
 
@@ -160,19 +160,19 @@ def dispatch_run(
         n = len(contracts)
         raise CapError(
             f"{n} tasks exceeds max_agent_tasks={settings.caps.max_agent_tasks}. "
-            f"A real disk image yields 200+ derived tasks — raise the cap explicitly: "
+            f"A real disk image yields 200+ derived tasks - raise the cap explicitly: "
             f"`siftmesh run … --max-agent-tasks {n}` "
             f"(or export SIFTMESH_CAPS__MAX_AGENT_TASKS={n}), "
             f"or scope extraction with `extract-artifacts --keys …`."
         )
 
     # The operator's TRUSTED incident objective (from --brief), inlined into every agent prompt so
-    # the live agent investigates TOWARD it. Manifest metadata only — not the hostile evidence set.
+    # the live agent investigates TOWARD it. Manifest metadata only - not the hostile evidence set.
     incident_objective = _incident_objective(run)
 
     audit = open_orchestration_log(run.orchestration_events, run.run_id)
 
-    # Deterministic parallel dispatch (B5) — opt-in, byte-identical to sequential. Skipped when any
+    # Deterministic parallel dispatch (B5) - opt-in, byte-identical to sequential. Skipped when any
     # task has a derived-origin input (those resolve under the run dir, not staging).
     if (
         settings.parallel_dispatch

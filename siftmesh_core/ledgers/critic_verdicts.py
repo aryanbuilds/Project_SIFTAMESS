@@ -1,4 +1,4 @@
-"""Critic-verdict ledger (Epic G, G1) — one CriticVerdict per critiqued task.
+"""Critic-verdict ledger (Epic G, G1) - one CriticVerdict per critiqued task.
 
 Appends to ``audit/critic_verdicts.jsonl`` on the generic validate-before-write
 JSONL ledger; ``next_verdict_id`` mints a deterministic ``VERDICT-NNN``.

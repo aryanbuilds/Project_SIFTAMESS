@@ -1,8 +1,8 @@
-"""Pre-run readiness synthesis (TUI wizard, Textual-FREE) — verify host + estimate space → options.
+"""Pre-run readiness synthesis (TUI wizard, Textual-FREE) - verify host + estimate space → options.
 
-``build_readiness`` composes the EXISTING primitives — ``doctor.collect_checks`` (host/backends),
+``build_readiness`` composes the EXISTING primitives - ``doctor.collect_checks`` (host/backends),
 ``doctor.probe_agents`` (which agent will run), and ``evidence.space.estimate_required``
-(derived-data size vs free disk) — into one ``ReadinessReport`` the wizard's Verify+Space step
+(derived-data size vs free disk) - into one ``ReadinessReport`` the wizard's Verify+Space step
 renders. When the
 evidence won't fit, it carries the ``partition_plan`` portions (the run-in-portions path) using the
 SAME math as the CLI's ``_space_preflight_ok``. Pure → unit-tested without a terminal.
@@ -52,7 +52,7 @@ class ReadinessReport:
 
     @property
     def blocking(self) -> bool:
-        """A FAIL check means the host can't run (fail-closed) — the wizard must not launch."""
+        """A FAIL check means the host can't run (fail-closed) - the wizard must not launch."""
         return self.checks_fail > 0
 
 

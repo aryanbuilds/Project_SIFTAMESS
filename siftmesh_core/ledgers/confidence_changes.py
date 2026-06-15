@@ -1,7 +1,7 @@
-"""Confidence-change ledger (Epic G, G3) — audited claim downgrades.
+"""Confidence-change ledger (Epic G, G3) - audited claim downgrades.
 
 Appends to ``claims/confidence_changes.jsonl`` (append-only; the original claim line
-is never mutated — a reader joins claim + confidence_changes). ``next_confidence_change_id``
+is never mutated - a reader joins claim + confidence_changes). ``next_confidence_change_id``
 mints a deterministic ``CONF-NNN``.
 """
 

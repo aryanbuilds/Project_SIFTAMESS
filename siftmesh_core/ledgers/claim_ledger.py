@@ -1,7 +1,7 @@
 """Claim ledger (C7): route each claim to the correct run-dir ledger by status.
 
 Confirmed / inferred / contradicted claims land in ``claims/claim_ledger.jsonl``;
-``unsupported`` claims land in ``claims/unsupported_claims.jsonl`` — so an
+``unsupported`` claims land in ``claims/unsupported_claims.jsonl`` - so an
 unsupported assertion is logged but kept out of the findings ledger by
 construction ("log, don't delete, never report as fact"). Built on the generic
 validate-before-write JSONL ledger.

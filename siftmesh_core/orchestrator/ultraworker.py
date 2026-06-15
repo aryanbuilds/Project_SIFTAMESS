@@ -1,4 +1,4 @@
-"""Run-level decision aggregation (H3) — the Ultraworker's per-iteration choice.
+"""Run-level decision aggregation (H3) - the Ultraworker's per-iteration choice.
 
 After CRITIQUE the run has one persisted ``CriticVerdict`` per task. ``aggregate_decision`` maps
 each verdict through the pure :func:`decide` truth table and folds the per-task actions into one
@@ -57,7 +57,7 @@ def aggregate_decision(
 ) -> RunDecision:
     """Fold the per-task ``decide`` outcomes into one run-level :class:`RunDecision`.
 
-    ``exclude`` drops task_ids from the fold — full-auto passes the quarantined tasks so one
+    ``exclude`` drops task_ids from the fold - full-auto passes the quarantined tasks so one
     flagged task's ``human_review``/``escalate`` does not starve the others' retries/follow-ups.
     ``verdicts`` lets the caller pass a pre-read verdict map (B2): the quarantine loop calls this
     repeatedly and would otherwise re-read + re-validate ``critic_verdicts.jsonl`` each pass. The

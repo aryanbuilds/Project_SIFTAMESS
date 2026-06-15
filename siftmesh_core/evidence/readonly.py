@@ -1,7 +1,7 @@
 """Read-only posture recorder (B3).
 
 Records the original evidence location and the read-only *posture* SIFTMesh
-guarantees by construction — it opens originals read-only and never writes to a
+guarantees by construction - it opens originals read-only and never writes to a
 source. This is ``enforcement: posture_only``; it is **not** an OS-level
 read-only mount (``mount -o ro`` / ``blockdev --setro``), which is a documented
 Linux enhancement deferred to a later epic.

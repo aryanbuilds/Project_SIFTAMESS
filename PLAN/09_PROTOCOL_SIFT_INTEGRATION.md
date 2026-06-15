@@ -1,10 +1,10 @@
-# PLAN 09 — Protocol SIFT Integration (inspect & govern, don't black-box)
+# PLAN 09 - Protocol SIFT Integration (inspect & govern, don't black-box)
 
 _Authored 2026-06-04. **Authoritative for how SIFTMesh detects, inspects, and orchestrates Protocol SIFT.** Confirmed from the real `teamdfir/protocol-sift` repo (`install.sh`, `global/`, `skills/`) + the SANS blog. Re-confirm exact paths/versions on the live SANS SIFT VM at implementation time. Sources are listed at the bottom; do not add unsourced claims._
 
 ## 0. The one finding that changes our positioning
 
-**Protocol SIFT is NOT an MCP server.** It is a **Claude Code configuration + skill library + permission framework** that `install.sh` copies into the user's `~/.claude/` directory (it also installs Claude Code itself if missing). So SIFTMesh must **inspect and govern** this layer — not treat Protocol SIFT as an opaque box. This is a differentiator: most hackathon teams will *use* Protocol SIFT; SIFTMesh becomes a **Protocol SIFT readiness + control layer** that knows the actual environment.
+**Protocol SIFT is NOT an MCP server.** It is a **Claude Code configuration + skill library + permission framework** that `install.sh` copies into the user's `~/.claude/` directory (it also installs Claude Code itself if missing). So SIFTMesh must **inspect and govern** this layer - not treat Protocol SIFT as an opaque box. This is a differentiator: most hackathon teams will *use* Protocol SIFT; SIFTMesh becomes a **Protocol SIFT readiness + control layer** that knows the actual environment.
 
 SANS framing (quote): *"Under this protocol, AI acts strictly as a constrained workflow assistant… deterministic DFIR utilities remain the sole source of analytical output… human oversight remains central to interpretation."* Protocol SIFT is explicitly **"not validated for forensic soundness… not court-admissible… initial research stage."** SIFTMesh adopts the same humility (explicit non-goal: not court-ready) and **strengthens** the informal model: Protocol SIFT enforces constraints via *prompts + a permission allowlist*; SIFTMesh enforces them **architecturally** (typed tools, claim ledger, deterministic critic, custody log).
 
@@ -32,9 +32,9 @@ SANS framing (quote): *"Under this protocol, AI acts strictly as a constrained w
 
 **Expected tool paths (SANS SIFT host):** Volatility 3 = `python3 /opt/volatility3-2.20.0/vol.py` (NOT `/usr/local/bin/vol.py`, which is Vol2); EZ Tools = `dotnet /opt/zimmermantools/<Tool>.dll` (dotnet 6.0.x); YARA = `/usr/local/bin/yara`; Plaso/TSK/bulk_extractor on system PATH.
 
-## 2. `siftmesh protocol-sift inspect` — detection checklist (read-only, env-only)
+## 2. `siftmesh protocol-sift inspect` - detection checklist (read-only, env-only)
 
-This needs **no forensic evidence** and is buildable/demoable early — a safe differentiator. It writes a validated capability map under the run dir (via path policy). Checks:
+This needs **no forensic evidence** and is buildable/demoable early - a safe differentiator. It writes a validated capability map under the run dir (via path policy). Checks:
 
 | Check | Path / probe | Tells us |
 |---|---|---|
@@ -51,7 +51,7 @@ This needs **no forensic evidence** and is buildable/demoable early — a safe d
 | YARA | `/usr/local/bin/yara` | threat hunting |
 | WeasyPrint | `python3 -c "import weasyprint"` | PDF reporting dependency |
 
-Commands: `siftmesh doctor --protocol-sift` (summary, fail-closed for SIFTMesh's own backends), `siftmesh protocol-sift inspect` (full capability map → `context/protocol_sift_capabilities.json`), `siftmesh protocol-sift skills list`. (`case-template import` is a deeper, optional follow-on — not MVP.)
+Commands: `siftmesh doctor --protocol-sift` (summary, fail-closed for SIFTMesh's own backends), `siftmesh protocol-sift inspect` (full capability map → `context/protocol_sift_capabilities.json`), `siftmesh protocol-sift skills list`. (`case-template import` is a deeper, optional follow-on - not MVP.)
 
 ## 3. SIFT-lane mapping (SiftLaneBackend → Protocol SIFT skill + tool path)
 
@@ -63,11 +63,11 @@ The optional, gated `SiftLaneBackend` (PLAN/03 D3) orchestrates Protocol SIFT's 
 | `analyze_prefetch` | windows-artifacts | PECmd: `dotnet /opt/zimmermantools/PECmd.dll` |
 | `extract_registry_run_keys` | windows-artifacts | RECmd: `dotnet /opt/zimmermantools/RECmd.dll` |
 | `build_timeline` | plaso-timeline | `log2timeline.py` + `psort.py` (super-timeline); MFTECmd for `$MFT` |
-| (gap / future) memory | memory-analysis | `python3 /opt/volatility3-2.20.0/vol.py` (gated; VSL — subprocess only, never import) |
+| (gap / future) memory | memory-analysis | `python3 /opt/volatility3-2.20.0/vol.py` (gated; VSL - subprocess only, never import) |
 | (gap / future) filesystem/carving | sleuthkit | `fls`/`icat`/`mactime`/`tsk_recover` |
 | (gap / future) hunting | yara-hunting | `/usr/local/bin/yara` |
 
-**Note:** the **local real path stays the in-process Python libs** (PLAN/08 §3 — `evtx`/`regipy`/`pyscca`/`mft`); the SIFT-lane is the upgrade on the SANS host. Same typed interface, config flip.
+**Note:** the **local real path stays the in-process Python libs** (PLAN/08 §3 - `evtx`/`regipy`/`pyscca`/`mft`); the SIFT-lane is the upgrade on the SANS host. Same typed interface, config flip.
 
 ## 4. MVP coverage vs. known gaps (honest scope)
 
@@ -76,7 +76,7 @@ The optional, gated `SiftLaneBackend` (PLAN/03 D3) orchestrates Protocol SIFT's 
 
 ## 5. Integration principle (governance unchanged)
 
-**Inspect and govern Protocol SIFT; never blindly depend on it.** SIFTMesh detects the environment, maps capabilities, and — when on a SIFT host — drives Protocol SIFT's real tools through the SIFT-lane. But every output still passes SIFTMesh's typed-tool boundary, claim ledger, deterministic critic, custody log, and path policy. Protocol SIFT's `settings.json` allowlist/deny + Stop-hook audit is the *prompt/permission* version of this; SIFTMesh enforces it in **code**. SIFTMesh **improves** Protocol SIFT's "verify → retry" loop into a typed, evidence-anchored, replayably-governed self-correction.
+**Inspect and govern Protocol SIFT; never blindly depend on it.** SIFTMesh detects the environment, maps capabilities, and - when on a SIFT host - drives Protocol SIFT's real tools through the SIFT-lane. But every output still passes SIFTMesh's typed-tool boundary, claim ledger, deterministic critic, custody log, and path policy. Protocol SIFT's `settings.json` allowlist/deny + Stop-hook audit is the *prompt/permission* version of this; SIFTMesh enforces it in **code**. SIFTMesh **improves** Protocol SIFT's "verify → retry" loop into a typed, evidence-anchored, replayably-governed self-correction.
 
 ---
 

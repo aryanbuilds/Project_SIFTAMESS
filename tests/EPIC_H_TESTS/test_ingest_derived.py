@@ -1,4 +1,4 @@
-"""hth.2 — re-ingest extracted/decompressed derived artifacts into the plannable set.
+"""hth.2 - re-ingest extracted/decompressed derived artifacts into the plannable set.
 
 CI-safe: a real EVTX fixture is placed under the run's ``evidence/extracted/`` and registered as a
 derived artifact; ingest makes it a *derived* task that dispatch resolves against the run dir and
@@ -113,7 +113,7 @@ def _add_derived_ntuser(run: RunPaths) -> str:
 
 
 def test_derived_ntuser_emits_extra_tool_followups(built_run: BuiltRun) -> None:
-    # A carved NTUSER must yield its multi-tool-per-hive EXTRAS, not just the primary run-keys —
+    # A carved NTUSER must yield its multi-tool-per-hive EXTRAS, not just the primary run-keys -
     # the gap that silently dropped recentdocs/usb/shellbags on the --auto disk path.
     run, evidence = _prepared(built_run)
     rel = _add_derived_ntuser(run)

@@ -1,7 +1,7 @@
-"""Cockpit detail modals (Epic C full-console) — read-only drill-downs over run files.
+"""Cockpit detail modals (Epic C full-console) - read-only drill-downs over run files.
 
 `ModalScreen`s the cockpit pushes for task / claim / replay detail. Each renders straight from the
-run files + the tested `load_report_view` — no orchestration logic, no engine writes. Dismissed with
+run files + the tested `load_report_view` - no orchestration logic, no engine writes. Dismissed with
 `escape`.
 """
 
@@ -98,7 +98,7 @@ class TaskDetailScreen(ModalScreen[None]):
 
 
 class ClaimDetailScreen(ModalScreen[None]):
-    """Drill-down for one claim — the full claim JSON (mirrors `siftmesh claims show`)."""
+    """Drill-down for one claim - the full claim JSON (mirrors `siftmesh claims show`)."""
 
     BINDINGS = [("escape", "dismiss", "Close")]
 

@@ -3,5 +3,5 @@ tests/golden/** text eol=lf
 *.md text eol=lf
 *.jsonl text eol=lf
 *.yaml text eol=lf
-# Real forensic fixture binaries — never translate.
+# Real forensic fixture binaries - never translate.
 tests/fixtures/forensic/** -text

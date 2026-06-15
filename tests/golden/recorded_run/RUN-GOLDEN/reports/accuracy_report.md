@@ -6,9 +6,9 @@
 <!-- load_mode: strict -->
 <!-- load_error: no run_state.json (run driven by discrete commands; engine snapshot absent) -->
 <!-- SIFTMESH-REPORT-BODY-BELOW -->
-# Accuracy & False-Positive Report — RUN-GOLDEN
+# Accuracy & False-Positive Report - RUN-GOLDEN
 
-_No ground-truth baseline — honest self-assessment (no fabricated precision/recall)._
+_No ground-truth baseline - honest self-assessment (no fabricated precision/recall)._
 
 ## Results summary
 
@@ -34,7 +34,7 @@ _No ground-truth baseline — honest self-assessment (no fabricated precision/re
 
 ## False-positive control
 
-- Claims rejected by the critic for missing evidence: 0 (never reported as fact — Appendix B of the final report).
+- Claims rejected by the critic for missing evidence: 0 (never reported as fact - Appendix B of the final report).
 - Over-broad claims downgraded: 0.
 - Contradictions escalated rather than asserted: 0.
 

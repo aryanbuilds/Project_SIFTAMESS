@@ -1,4 +1,4 @@
-"""Retry ledger (Epic G, G5) — self-correction retries (tightened-contract re-dispatch).
+"""Retry ledger (Epic G, G5) - self-correction retries (tightened-contract re-dispatch).
 
 Appends to ``audit/retries.jsonl``; ``next_retry_id`` mints a deterministic ``RETRY-NNN``.
 """

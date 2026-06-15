@@ -1,6 +1,6 @@
 """Drive a full run for the TUI launcher (Epic O).
 
-A thin MIRROR of the core of the ``siftmesh run`` CLI command (cli.run) — init the case, write the
+A thin MIRROR of the core of the ``siftmesh run`` CLI command (cli.run) - init the case, write the
 initial RunState with the chosen mode/caps, then drive the deterministic engine. Kept here so the
 cockpit's background worker reuses the EXACT governed path (no parallel orchestration logic). If
 cli.run's core changes, update both. The space pre-flight is intentionally omitted (the TUI launcher
@@ -56,7 +56,7 @@ def drive_engine(
     on_error: Callable[[str], None] | None = None,
     should_stop: Callable[[], bool] | None = None,
 ) -> None:
-    """Run the deterministic engine to completion/halt (blocking — call from a worker thread).
+    """Run the deterministic engine to completion/halt (blocking - call from a worker thread).
 
     ``should_stop`` is forwarded to ``run_engine`` as the cooperative pause hook (TUI Pause button).
     """

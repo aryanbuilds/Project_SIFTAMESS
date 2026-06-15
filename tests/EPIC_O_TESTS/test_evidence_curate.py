@@ -1,4 +1,4 @@
-"""Curated-evidence assembly (TUI wizard picker) — hardlink, originals untouched, EXDEV fallback."""
+"""Curated-evidence assembly (TUI wizard picker) - hardlink, originals untouched, EXDEV fallback."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def test_files_and_folders_hardlinked_originals_untouched(tmp_path: Path) -> Non
     assert (dest / "Security.evtx").read_bytes() == b"evtx-bytes"
     assert (dest / "hives" / "SYSTEM").read_bytes() == b"hive"
     assert (dest / "hives" / "sub" / "NTUSER.DAT").read_bytes() == b"ntuser"
-    # hard links share the inode (same filesystem) — zero extra disk
+    # hard links share the inode (same filesystem) - zero extra disk
     assert (dest / "Security.evtx").stat().st_ino == f1.stat().st_ino
     # originals are byte-for-byte unchanged
     for p, data in before.items():

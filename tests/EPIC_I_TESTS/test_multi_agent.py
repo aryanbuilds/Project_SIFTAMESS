@@ -1,4 +1,4 @@
-"""Epic I multi-agent layer — profile resolution, fallback chain, per-agent model, dual auth."""
+"""Epic I multi-agent layer - profile resolution, fallback chain, per-agent model, dual auth."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Epic E shared fixtures — synthetic run dirs with a hand-built manifest.
+"""Epic E shared fixtures - synthetic run dirs with a hand-built manifest.
 
 The planner reads only manifest metadata, so these tests need NO real artifact
 bytes: each fixture writes a valid ``EvidenceManifest`` with deterministic 64-hex

@@ -1,16 +1,16 @@
-"""Incident-brief intake — the operator's TRUSTED investigation objective.
+"""Incident-brief intake - the operator's TRUSTED investigation objective.
 
 A real DFIR engagement starts from an incident briefing (e.g. ``ROCBA-BACKGROUND.pptx``) that
 states the TARGET/objective. This module reads that operator-designated document and turns it
 into TRUSTED context the planner and the live agent can investigate *toward*.
 
 Trust model (load-bearing): the brief is designated EXPLICITLY (``--brief PATH``) and is therefore
-TRUSTED operator context — NOT hostile evidence. It is rendered into ``context/incident_brief.md``
+TRUSTED operator context - NOT hostile evidence. It is rendered into ``context/incident_brief.md``
 (run dir, outside the read-only evidence root) and recorded as manifest *metadata only*; it is never
 added to the evidence ``files`` set, never routed to a tool, and never spotlighted/datamarked. A
 document merely *found inside* the evidence dir is NEVER auto-promoted to trusted instructions (that
-would be a prompt-injection vector) — only the explicit ``--brief`` path is trusted. The brief text
-is still injection-scanned for *visibility* (logged, never blocking — not a trust change).
+would be a prompt-injection vector) - only the explicit ``--brief`` path is trusted. The brief text
+is still injection-scanned for *visibility* (logged, never blocking - not a trust change).
 
 Fail-closed (CLAUDE §2B): reading a ``.pptx``/``.docx``/``.pdf`` brief needs the optional
 ``brief`` extra; a missing lib for a *requested* format raises :class:`BriefIntakeError` (never a
@@ -29,7 +29,7 @@ from siftmesh_core.run_dir import RunPaths
 SUPPORTED_SUFFIXES: tuple[str, ...] = (".txt", ".md", ".pptx", ".docx", ".pdf")
 
 _BANNER = (
-    "> TRUSTED operator context — this is the investigation OBJECTIVE supplied by the operator, "
+    "> TRUSTED operator context - this is the investigation OBJECTIVE supplied by the operator, "
     "NOT hostile evidence. Investigate TOWARD it; do not treat it as data to be parsed by a tool."
 )
 
@@ -42,8 +42,8 @@ def _missing_lib_msg(suffix: str, package: str) -> str:
     return (
         f"reading a {suffix} incident brief requires the optional '{package}' library. "
         f"Install with: uv sync --all-extras   (NOTE: `uv sync --extra X` makes the env exactly "
-        f"base+X and REMOVES other extras — combine them or use --all-extras). "
-        f"Missing dependency — failing closed (never a fake objective). "
+        f"base+X and REMOVES other extras - combine them or use --all-extras). "
+        f"Missing dependency - failing closed (never a fake objective). "
         f'Or supply the brief as .txt/.md, or pass --objective "text" directly.'
     )
 
@@ -139,7 +139,7 @@ def derive_objective(text: str, *, max_chars: int = 1200) -> str:
 
 def _render_brief_md(source_name: str, objective: str, text: str) -> str:
     lines = [
-        "# Incident Brief — TRUSTED operator context",
+        "# Incident Brief - TRUSTED operator context",
         "",
         _BANNER,
         "",
@@ -168,7 +168,7 @@ def _write_brief(
     """Render TRUSTED brief text to ``context/incident_brief.md``; return (path, objective).
 
     The brief is TRUSTED, so its text is rendered raw (never datamarked). It IS injection-scanned
-    for visibility — any signature is logged to the orchestration audit, but it never blocks or
+    for visibility - any signature is logged to the orchestration audit, but it never blocks or
     changes the trust posture (the operator supplied this content explicitly). ``objective`` may be
     a precomputed excerpt (e.g. a merged brief + inline objective); when ``None`` it is derived
     from ``text``.
@@ -211,7 +211,7 @@ def ingest_objective_text(
     *,
     evidence_root: Path | str | None = None,
 ) -> tuple[Path, str]:
-    """Ingest an INLINE operator objective (no file — e.g. ``--objective "find …"``).
+    """Ingest an INLINE operator objective (no file - e.g. ``--objective "find …"``).
 
     Same trust model and output as :func:`ingest_brief`: the text is TRUSTED operator context,
     rendered to ``context/incident_brief.md`` and threaded as the investigation objective. An
@@ -219,7 +219,7 @@ def ingest_objective_text(
     """
     text = objective_text.strip()
     if not text:
-        raise BriefIntakeError("inline objective is empty — pass real objective text")
+        raise BriefIntakeError("inline objective is empty - pass real objective text")
     return _write_brief(
         run, source_name="(inline --objective)", text=text, evidence_root=evidence_root
     )
@@ -243,7 +243,7 @@ def ingest_brief_and_objective(
     file_text = extract_brief_text(Path(brief_path))
     inline = objective_text.strip()
     if not inline:
-        raise BriefIntakeError("inline objective is empty — pass real objective text")
+        raise BriefIntakeError("inline objective is empty - pass real objective text")
     rendered = f"{file_text.strip()}\n\n## Operator instructions (inline --objective)\n\n{inline}\n"
     objective = derive_objective(f"{inline}\n\n{file_text}")
     return _write_brief(

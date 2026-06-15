@@ -3,7 +3,7 @@
 ``ToolResult`` is the single provenance base that every typed forensic tool
 return subclasses (Epic D). It carries the chain-of-custody fields CLAUDE.md §7
 requires on *every* tool output, so they are never re-enumerated per tool. Types
-only — the audited execution that populates these fields lands in Epic D.
+only - the audited execution that populates these fields lands in Epic D.
 """
 
 from __future__ import annotations

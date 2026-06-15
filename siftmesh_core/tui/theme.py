@@ -13,17 +13,17 @@ from textual.theme import Theme
 
 SIFTMESH_DARK = Theme(
     name="siftmesh-dark",
-    primary="#56b6c2",  # cyan — active / dispatched / primary borders
-    secondary="#c678dd",  # violet — human-review / side accents
-    accent="#e5c07b",  # amber — current stage / files / nav
-    success="#98c379",  # green — confirmed / accepted
-    warning="#d19a66",  # amber-orange — retry / blocked gate
-    error="#e06c75",  # red — rejected / error
+    primary="#56b6c2",  # cyan - active / dispatched / primary borders
+    secondary="#c678dd",  # violet - human-review / side accents
+    accent="#e5c07b",  # amber - current stage / files / nav
+    success="#98c379",  # green - confirmed / accepted
+    warning="#d19a66",  # amber-orange - retry / blocked gate
+    error="#e06c75",  # red - rejected / error
     foreground="#abb2bf",
     background="#1b1f24",
     surface="#22272e",
     panel="#2c313a",
-    boost="#0c3b3b",  # deep teal — the vitals bar
+    boost="#0c3b3b",  # deep teal - the vitals bar
     dark=True,
     variables={
         "footer-key-foreground": "#56b6c2",

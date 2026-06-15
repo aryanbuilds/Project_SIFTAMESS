@@ -1,4 +1,4 @@
-"""EVTX tools (D5) — Security + PowerShell event log parsing (real, in-process).
+"""EVTX tools (D5) - Security + PowerShell event log parsing (real, in-process).
 
 Both wrap ``evtx`` (pyevtx-rs) via the backend's ``parse_evtx``. ``parse_evtx_security``
 returns every Security-channel record; ``parse_evtx_powershell`` filters to the
@@ -22,7 +22,7 @@ from siftmesh_core.schemas.tool_result import ToolResult
 SECURITY_CHANNELS: frozenset[str] = frozenset({"Security"})
 POWERSHELL_CHANNELS: frozenset[str] = frozenset({"Microsoft-Windows-PowerShell/Operational"})
 
-# PowerShell script-block (4104) + module logging (4103) — the high-signal IDs.
+# PowerShell script-block (4104) + module logging (4103) - the high-signal IDs.
 POWERSHELL_EVENT_IDS: frozenset[int] = frozenset({4103, 4104})
 
 

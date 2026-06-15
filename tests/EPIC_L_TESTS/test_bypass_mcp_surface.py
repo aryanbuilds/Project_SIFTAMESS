@@ -1,8 +1,8 @@
-"""L5g — bypass test: MCP confused-deputy & single-server surface (threat T2 · LLM03 · ASI02/ASI03).
+"""L5g - bypass test: MCP confused-deputy & single-server surface (threat T2 · LLM03 · ASI02/ASI03).
 
 The 2025 MCP attack families (tool poisoning / line-jumping / cross-server shadowing / rug-pull /
 confused-deputy) are designed out by construction. This asserts the EFFECTS: (1) the agent-facing
-tools take ONLY artifact args — none accepts a run/evidence root, so a hostile prompt can't redirect
+tools take ONLY artifact args - none accepts a run/evidence root, so a hostile prompt can't redirect
 a tool at another case; (2) the server fails CLOSED when its run scope is unset; (3) a tool-arg path
 escaping the trusted roots is rejected; (4) exactly one first-party stdio server is configured, with
 --strict-mcp-config (no ambient server to shadow). Stdio-only => no OAuth/session/SSRF surface.

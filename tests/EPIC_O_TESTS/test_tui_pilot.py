@@ -1,6 +1,6 @@
-"""Epic O — drive the real Textual app headlessly (skipped if the tui extra is absent).
+"""Epic O - drive the real Textual app headlessly (skipped if the tui extra is absent).
 
-Uses Textual's `App.run_test()` pilot over the golden run — no real engine, no live agent, no SANS
+Uses Textual's `App.run_test()` pilot over the golden run - no real engine, no live agent, no SANS
 evidence (§2B). Proves the widgets mount and the cockpit renders a snapshot. The async pilot is run
 via `asyncio.run` inside sync tests so no pytest-asyncio plugin is needed.
 """

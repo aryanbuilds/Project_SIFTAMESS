@@ -1,7 +1,7 @@
 # SIFTMesh demo case (zero-keys, deterministic floor)
 
-A tiny, fully reproducible case that exercises the **whole** SIFTMesh pipeline — hash → plan →
-dispatch → real tool execution → claim ledger → critic → report → replay — **with no API keys and no
+A tiny, fully reproducible case that exercises the **whole** SIFTMesh pipeline - hash → plan →
+dispatch → real tool execution → claim ledger → critic → report → replay - **with no API keys and no
 live agent**. It runs on the deterministic real-tool floor (tier **T0**), so a judge can reproduce it
 on a fresh checkout in seconds.
 
@@ -10,7 +10,7 @@ on a fresh checkout in seconds.
 ```
 examples/demo_case/
   README.md            # this file
-  expected_findings.md # ground truth — what a correct investigation must surface
+  expected_findings.md # ground truth - what a correct investigation must surface
   evidence/
     Security.evtx      # a real Windows Security event log (7 records; public test fixture)
   run_demo.sh          # one command: siftmesh run … --auto
@@ -18,7 +18,7 @@ examples/demo_case/
 
 `evidence/Security.evtx` is the public `Security_short_selected.evtx` sample from
 [omerbenamram/evtx](https://github.com/omerbenamram/evtx) (7 records, EventIDs incl. 4625/4776/5152).
-It is **real** evidence parsed by the **real** `evtx` backend — nothing is mocked.
+It is **real** evidence parsed by the **real** `evtx` backend - nothing is mocked.
 
 ## Run it
 
@@ -40,12 +40,12 @@ cat "$RUN/reports/final_report.md"        # the deterministic, evidence-backed r
 
 ## What it proves
 
-- **Evidence safety** — `Security.evtx` is SHA-256 sealed at ingest; the original is never modified.
-- **Real tools** — `parse_evtx_security` + `build_timeline` run against the real log.
-- **Anchored claims** — every promoted claim cites a `tool_call_id` + `source_sha256`.
-- **The critic gate** — both task verdicts are `accepted`; an unanchored claim would be rejected and
+- **Evidence safety** - `Security.evtx` is SHA-256 sealed at ingest; the original is never modified.
+- **Real tools** - `parse_evtx_security` + `build_timeline` run against the real log.
+- **Anchored claims** - every promoted claim cites a `tool_call_id` + `source_sha256`.
+- **The critic gate** - both task verdicts are `accepted`; an unanchored claim would be rejected and
   kept out of the report (see `expected_findings.md`).
-- **Replayable audit** — the JSONL ledgers reconstruct the whole run.
+- **Replayable audit** - the JSONL ledgers reconstruct the whole run.
 
 ## Want the live, self-correcting agent?
 

@@ -1,4 +1,4 @@
-"""Memory-image acquisition (Epic D deepening) — unpack a compressed memory capture.
+"""Memory-image acquisition (Epic D deepening) - unpack a compressed memory capture.
 
 SANS memory captures arrive as ``Rocba-Memory.zip`` → ``.7z`` → a raw/crash/LiME image.
 This module unzips (stdlib) and 7z-decompresses (fixed-argv ``7z x``, ``shell=False``) the
@@ -74,7 +74,7 @@ def decompress(
     zip_path = Path(zip_path)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1) Unzip the outer .zip (stdlib) — guard against zip-slip (hostile member names).
+    # 1) Unzip the outer .zip (stdlib) - guard against zip-slip (hostile member names).
     extracted_members: list[Path] = []
     if zipfile.is_zipfile(zip_path):
         with zipfile.ZipFile(zip_path) as zf:
@@ -89,7 +89,7 @@ def decompress(
                     shutil.copyfileobj(src, dst)
                 extracted_members.append(target)
     else:
-        # Not a zip — treat the input itself as the (possibly .7z) capture.
+        # Not a zip - treat the input itself as the (possibly .7z) capture.
         local = dest_dir / zip_path.name
         if local.resolve() != zip_path.resolve():
             shutil.copyfile(zip_path, local)
@@ -112,7 +112,7 @@ def decompress(
 
     # 3) The memory image is the largest file that is not an intermediate archive.
     image = _largest_file(dest_dir, exclude=intermediate)
-    if image is None:  # only archives were present (or nothing) — fall back to the largest member
+    if image is None:  # only archives were present (or nothing) - fall back to the largest member
         image = _largest_file(dest_dir, exclude=set())
     if image is None:
         raise RuntimeError("no memory image found after decompression")

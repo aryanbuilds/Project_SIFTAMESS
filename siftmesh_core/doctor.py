@@ -139,7 +139,7 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
             "judge: LiteLLM (multi-provider)",
             "installed"
             if litellm_ok
-            else "absent: uv sync --extra llm (optional — for a litellm: Tier-2 judge)",
+            else "absent: uv sync --extra llm (optional - for a litellm: Tier-2 judge)",
         )
     )
     checks.append(Check(OK if _cwd_writable() else FAIL, "run-dir writable", "case_runs/ (cwd)"))
@@ -176,9 +176,9 @@ def collect_checks(settings: SiftmeshSettings | None = None) -> list[Check]:
         Check(
             OK if claude_ok else WARN,
             "live agent: Claude Code",
-            "available — for a live objective-driven run add `--agent claude`"
+            "available - for a live objective-driven run add `--agent claude`"
             if claude_ok
-            else "absent (CLI/auth) — runs use the deterministic floor",
+            else "absent (CLI/auth) - runs use the deterministic floor",
         )
     )
     checks.append(
@@ -229,7 +229,7 @@ def run_setup(settings: SiftmeshSettings) -> int:
     uv = shutil.which("uv")
     if uv is None:
         print(
-            f"{_MARK[FAIL]} setup: uv not found on PATH — install uv (https://docs.astral.sh/uv/)"
+            f"{_MARK[FAIL]} setup: uv not found on PATH - install uv (https://docs.astral.sh/uv/)"
         )
         return 1
     print("setup: uv sync --all-extras (installs forensic + brief + a2a backends)…")
@@ -435,12 +435,12 @@ def _format_agents(cap: AgentCapabilityMap) -> list[str]:
                 lines.append(f"      → {hint}")
     lines.append(f"  default agent (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        lines.append("  (a plain `siftmesh run` uses the deterministic real-tool floor — tier T0)")
+        lines.append("  (a plain `siftmesh run` uses the deterministic real-tool floor - tier T0)")
     if cap.live_candidate and cap.live_candidate != cap.chosen:
-        lines.append(f"  live agent ready — opt in with `--agent`: {cap.live_candidate}")
+        lines.append(f"  live agent ready - opt in with `--agent`: {cap.live_candidate}")
     else:
         lines.append(
-            "  no live agent is ready — runs use the deterministic floor (T0); "
+            "  no live agent is ready - runs use the deterministic floor (T0); "
             "onboard one above for T1/T2."
         )
     lines += _safety_tier_legend()
@@ -471,12 +471,12 @@ def agent_remediation(c: AgentCapability, prof: AgentProfile | None) -> list[str
         hints.append(_auth_hint(c, prof))
     if not c.sandboxed:
         hints.append(
-            "tier T2 — native tools are NOT denied; it reaches tools unsandboxed "
+            "tier T2 - native tools are NOT denied; it reaches tools unsandboxed "
             "(explicit `--agent` opt-in; never treated as constrained)"
         )
     elif c.tool_reachable != "yes":
         hints.append(
-            f"tier T2 — typed-tool reach is `{c.tool_reachable}` (sandboxed, but MCP wiring "
+            f"tier T2 - typed-tool reach is `{c.tool_reachable}` (sandboxed, but MCP wiring "
             "unproven; confirm with a live run before relying on it)"
         )
     return hints
@@ -506,7 +506,7 @@ def run_doctor(
 
     failures = [c for c in checks if c.status == FAIL]
     if failures:
-        print(f"\ndoctor: FAIL — {len(failures)} required check(s) failed (fails closed).")
+        print(f"\ndoctor: FAIL - {len(failures)} required check(s) failed (fails closed).")
         return 1
     print("\ndoctor: ok.")
     return 0

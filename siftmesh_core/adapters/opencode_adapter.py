@@ -1,9 +1,9 @@
-"""OpenCode headless adapter (Epic F, F8) — secondary live executor.
+"""OpenCode headless adapter (Epic F, F8) - secondary live executor.
 
 Thin wrapper around ``opencode run … --format json``. OpenCode DOES support MCP servers (via the
 ``mcp`` key in an ``opencode.json`` config), but SIFTMesh does not yet wire the run-scoped typed
 server for it (round-2 work), so today it cannot be constrained to the typed tools as tightly as the
-Claude adapter — it is the secondary path. Unavailable (→ floor) when the CLI is absent. Live
+Claude adapter - it is the secondary path. Unavailable (→ floor) when the CLI is absent. Live
 validation is HUMAN-GATED; unit tests mock the subprocess boundary only.
 """
 
@@ -44,8 +44,8 @@ def _collect_text(stdout: str) -> str:
 
     OpenCode streams ``{"type": <kind>, ..., "part": {"text": ...}}`` events; the assistant's answer
     arrives as ``type == "text"`` events. We take ``part.text`` ONLY from those (skipping
-    ``reasoning`` / ``tool_use`` / ``step_*`` events) so chain-of-thought — which may hold a draft
-    ``{claims:[…]}`` — never leaks into the parsed answer. If nothing parses, raw stdout is used.
+    ``reasoning`` / ``tool_use`` / ``step_*`` events) so chain-of-thought - which may hold a draft
+    ``{claims:[…]}`` - never leaks into the parsed answer. If nothing parses, raw stdout is used.
     """
     parts: list[str] = []
     for raw_line in stdout.splitlines():

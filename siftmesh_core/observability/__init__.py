@@ -3,7 +3,7 @@
 The two universal ledger chokepoints (``ledgers.audit_log.log_event`` and
 ``ledgers.jsonl_ledger.append_record``) call :func:`sinks.emit_event` /
 :func:`sinks.emit_record` *after* their durable write. With no sink registered both are a
-single empty-list check — files (and the golden bytes) are never touched. The CLI registers
+single empty-list check - files (and the golden bytes) are never touched. The CLI registers
 a :class:`stream.LogStreamer` (Rich, stderr-only, TTY-gated) so any command streams a
 scrolling tagged log with per-task separators and a completion percentage. The Textual TUI
 reads the same files by polling and never registers a sink (no conflict).

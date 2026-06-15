@@ -1,8 +1,8 @@
-"""L5e — bypass test: critic boundary (threat T6 · OWASP LLM09 · ASI-T7).
+"""L5e - bypass test: critic boundary (threat T6 · OWASP LLM09 · ASI-T7).
 
 Asserts the EFFECT: a claim with no real tool-call anchor is REJECTED by the deterministic
 critic (retry_required) and NEVER promoted to the claim ledger; and an unsupported claim surfaces in
-the report ONLY in the rejected appendix (Appendix B), never as a fact in the findings — the
+the report ONLY in the rejected appendix (Appendix B), never as a fact in the findings - the
 "checker-out-of-the-loop cannot pass" guarantee. Satisfies CLAUDE §14.
 """
 
@@ -43,7 +43,7 @@ def _write_result(run: RunPaths, task_id: str, claims: list[Claim]) -> None:
 
 def test_unanchored_claim_rejected_not_promoted(dispatched_case: DispatchedCase) -> None:
     # The Claim schema ITSELF refuses a 'confirmed' claim with no anchor (defense layer 1), so an
-    # under-anchored agent claim lands as 'unsupported' — which the critic then rejects (layer 2)
+    # under-anchored agent claim lands as 'unsupported' - which the critic then rejects (layer 2)
     # and never promotes to a fact. This asserts layer 2 (the realistic agent output).
     run, _ = dispatched_case()
     promoted_before = {c.claim_id for c in read_claims(run.root)}
@@ -72,7 +72,7 @@ def test_unanchored_claim_rejected_not_promoted(dispatched_case: DispatchedCase)
 
 def test_confirmed_claim_with_fake_anchor_rejected(dispatched_case: DispatchedCase) -> None:
     # A claim that LOOKS anchored (schema passes) but whose tool_call_id matches no real tool call
-    # is rejected by the critic — the anchor must resolve to a genuine audited tool run, not exist.
+    # is rejected by the critic - the anchor must resolve to a genuine audited tool run, not exist.
     run, _ = dispatched_case()
     forged = Claim.model_validate(
         {

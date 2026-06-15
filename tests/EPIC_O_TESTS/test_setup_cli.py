@@ -1,4 +1,4 @@
-"""Epic O — the `setup` and `tui` CLI commands (headless persistence + lazy-textual fallback)."""
+"""Epic O - the `setup` and `tui` CLI commands (headless persistence + lazy-textual fallback)."""
 
 from __future__ import annotations
 

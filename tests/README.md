@@ -1,4 +1,4 @@
-# Tests — organized by epic
+# Tests - organized by epic
 
 Test modules live under `EPIC_<X>_TESTS/`, matching the epic that owns the code under test
 (docstrings carry the exact task tag, e.g. `B1`, `C7`, `D12`). `conftest.py` (shared fixtures) and
@@ -21,25 +21,25 @@ Test modules live under `EPIC_<X>_TESTS/`, matching the epic that owns the code 
 | `EPIC_L_TESTS/` | L | the bypass suite: effect-asserting security tests for every guardrail |
 | `EPIC_M_TESTS/` | M | golden report bodies (recorded-golden run) + end-to-end (MVP artifact checklist, subprocess smoke, skip-gated live property test) |
 
-## Shared fixtures (M1 — one factory, no duplication)
+## Shared fixtures (M1 - one factory, no duplication)
 
 The root `conftest.py` owns the real-run builder; per-epic conftests are thin wrappers
 that keep their historical fixture names:
 
 ```python
 make_real_run(*, plan=True, review_only=False, dispatch=False, critique=False, with_mft=False)
-# -> (RunPaths, evidence_root)  — real fixtures, real manifest/readonly, real Epic-D tools
+# -> (RunPaths, evidence_root)  - real fixtures, real manifest/readonly, real Epic-D tools
 build_evidence(path, *, with_mft=False)   # just the evidence tree
 ```
 
 Wrappers: `real_case` (F), `dispatched_case` (G/L), `dispatched_run`/`planned_run` (J),
-`built_run`/`evidence_dir` (H — adds the persisted RunState). The Hypothesis profile
+`built_run`/`evidence_dir` (H - adds the persisted RunState). The Hypothesis profile
 `siftmesh` (derandomize) is registered + loaded here, so property tests are replayable.
 
 ## Golden / recorded-run regression (M3)
 
 `tests/golden/recorded_run/RUN-GOLDEN/` is a **real recorded run** (real ledgers from the
-real tools over the committed fixtures — the §2B recorded-golden floor) and
+real tools over the committed fixtures - the §2B recorded-golden floor) and
 `tests/golden/bodies/` holds the deterministic report bodies. Regen ONLY via:
 
 ```bash

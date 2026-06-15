@@ -1,4 +1,4 @@
-"""New-investigation wizard (hybrid 2-screen flow) — thin wiring over the governed engine.
+"""New-investigation wizard (hybrid 2-screen flow) - thin wiring over the governed engine.
 
 Screen 1 ``RunSetupScreen``: name the case + **browse the whole filesystem** for evidence (a
 re-rootable ``DirectoryTree`` reachable ABOVE the project dir + a ``#file`` / ``#folder`` fuzzy
@@ -45,10 +45,10 @@ from siftmesh_core.schemas.run import RunMode
 _MODES = ("manual", "review_only", "auto_human_loop", "auto")
 # Run-type choices shown as a labelled RadioSet (clearer than a bare dropdown). Order == _MODES.
 _MODE_LABELS = (
-    ("manual", "manual — one step per action"),
-    ("review_only", "review-only — plan, then stop"),
+    ("manual", "manual - one step per action"),
+    ("review_only", "review-only - plan, then stop"),
     ("auto_human_loop", "auto + human gates"),
-    ("auto", "auto — run end to end"),
+    ("auto", "auto - run end to end"),
 )
 _JUDGE_CHOICES = [
     ("(persisted default)", ""),
@@ -63,7 +63,7 @@ _MODEL_AGENTS = ("claude", "gemini", "codex", "opencode")
 
 @dataclass
 class WizardDraft:
-    """All wizard state (Textual-free) — the single source of truth shared across steps."""
+    """All wizard state (Textual-free) - the single source of truth shared across steps."""
 
     case_name: str = ""
     base_dir: str = "."
@@ -174,14 +174,14 @@ class RunSetupScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("New investigation — Setup (1/2): case · evidence · brief", id="wizstep")
+        yield Static("New investigation - Setup (1/2): case · evidence · brief", id="wizstep")
         with Horizontal(id="idrow"):
             yield Input(
                 value=self.draft.case_name, placeholder="case name (e.g. case_rocba)", id="case"
             )
             yield Input(value=self.draft.base_dir, placeholder="runs base dir (.)", id="base")
         with Horizontal(id="navrow"):
-            yield Input(value=str(Path.home()), placeholder="path to browse — Enter", id="evroot")
+            yield Input(value=str(Path.home()), placeholder="path to browse - Enter", id="evroot")
             yield Button("Up", id="up")
         with Horizontal(id="pickrow"):
             yield DirectoryTree(str(Path.home()), id="fstree")
@@ -194,14 +194,14 @@ class RunSetupScreen(Screen):
                     yield Button("Remove", id="remove")
         with Horizontal(id="searchrow"):
             yield Input(
-                placeholder="#file <name>   or   #folder <name>   — Enter to search "
+                placeholder="#file <name>   or   #folder <name>   - Enter to search "
                 "(then Add evidence or Set brief)",
                 id="evsearch",
             )
         yield OptionList(id="evhits")
         yield Input(
             value=self.draft.brief_path or "",
-            placeholder="brief file path (.pptx/.pdf/.md) — type a path, or pick + Set brief",
+            placeholder="brief file path (.pptx/.pdf/.md) - type a path, or pick + Set brief",
             id="brief",
         )
         yield Input(
@@ -292,7 +292,7 @@ class RunSetupScreen(Screen):
         for i, p in enumerate(hits):
             optlist.add_option(Option(matcher.highlight(str(p)), id=str(i)))
         self.query_one("#pickstatus", Static).update(
-            f"{len(hits)} match(es) for '{query}' — Enter on one to add"
+            f"{len(hits)} match(es) for '{query}' - Enter on one to add"
         )
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
@@ -424,7 +424,7 @@ class RunLaunchScreen(Screen):
             (p.removesuffix("_headless"), p.removesuffix("_headless")) for p in agents
         ]
         yield Header()
-        yield Static("New investigation — Launch (2/2): verify · options", id="wizstep")
+        yield Static("New investigation - Launch (2/2): verify · options", id="wizstep")
         yield LoadingIndicator(id="vloading")
         with VerticalScroll(id="newrun"):
             yield Static(id="vreport")
@@ -441,7 +441,7 @@ class RunLaunchScreen(Screen):
             yield Select(agent_opts, value=self.draft.agent, id="agent", allow_blank=False)
             yield Label("Tier-2 judge")
             yield Select(_JUDGE_CHOICES, value=self.draft.judge, id="judge", allow_blank=False)
-            with Collapsible(title="Advanced — caps · models · save", collapsed=True):
+            with Collapsible(title="Advanced - caps · models · save", collapsed=True):
                 yield Label("max iterations / max agent tasks (blank = default)")
                 yield Input(value=self.draft.max_iterations, placeholder="3", id="max-iterations")
                 yield Input(
@@ -495,7 +495,7 @@ class RunLaunchScreen(Screen):
             f"recommendation: {report.recommendation.upper()}",
         ]
         if report.blocking:
-            lines.append("host has FAIL checks — fix before running (see doctor).")
+            lines.append("host has FAIL checks - fix before running (see doctor).")
         if not report.fits:
             lines.append(f"portions plan: {len(report.portions)} portion(s)")
             for i, portion in enumerate(report.portions, 1):

@@ -1,22 +1,22 @@
-"""Deterministic parallel dispatch (Epic B5 / bd vd2t) — execute isolated, commit in contract order.
+"""Deterministic parallel dispatch (Epic B5 / bd vd2t) - execute isolated, commit in contract order.
 
 Naive parallelism would break the determinism guarantee (golden byte-identity + manual==auto):
 ``run_tool`` mints ``TOOL-NNN`` from the *current* ledger length and appends immediately, so two
 concurrent tools race on ids + interleave ``tool_calls.jsonl`` by completion order. The fix is to
 **decouple execution from commit**:
 
-1. **Isolate** — each task executes into a private staging run-dir
+1. **Isolate** - each task executes into a private staging run-dir
    (``run.root/.staging/<TASK-ID>/<RUN-ID>``; named with the real run-id so custody ``run_id`` stays
    correct). Its tools mint *local* ``TOOL-001…`` with zero cross-task contention; the live agent's
    MCP server is pointed at the staging root (``SIFTMESH_RUN_ROOT``) so concurrent ``claude -p``
    subprocesses never collide.
-2. **Barrier + commit-in-contract-order** — after all tasks finish, replay each task's staged
+2. **Barrier + commit-in-contract-order** - after all tasks finish, replay each task's staged
    records into the real run dir **in the contracts' sorted order**, renumbering the only
    order-dependent global ids (``TOOL-NNN`` / ``AGENT-NNN`` / ``ALERT-NNN``) through the real
    length-based allocators and remapping their references. Claim ids are task-scoped (no renumber);
    structured/raw result
    files are *renamed* not rewritten (content + ``derived_sha256`` unchanged). The committed ledgers
-   are therefore **byte-identical** to a sequential run — proven by ``test_parallel_dispatch.py``.
+   are therefore **byte-identical** to a sequential run - proven by ``test_parallel_dispatch.py``.
 
 Feature-gated OFF by default (``settings.parallel_dispatch``): a plain run stays strictly sequential
 and byte-identical. Tasks with a ``derived``-origin input fall back to sequential (their inputs live
@@ -90,7 +90,7 @@ def execute_parallel(
 ) -> list[_Staged]:
     """Run each (contract, profile, adapter) into its own staging dir concurrently; return outcomes.
 
-    The adapter writes ONLY into the staging run (ledgers, results, custody) — no shared-state
+    The adapter writes ONLY into the staging run (ledgers, results, custody) - no shared-state
     contention. Exceptions are captured per task; nothing is committed here.
     """
 
@@ -143,7 +143,7 @@ def commit_staged_task(run: RunPaths, staged: _Staged, *, evidence_root: Path) -
     src = staged.staging
     tool_remap: dict[str, str] = {}
 
-    # 1. Tool calls (staged order) — assign the real global TOOL id, rename result files (content
+    # 1. Tool calls (staged order) - assign the real global TOOL id, rename result files (content
     #    unchanged → derived_sha256 unchanged), re-append provenance with remapped paths.
     for tr in read_tool_results(src.root):
         new_id = _next_tool_call_id(run.root)
@@ -170,7 +170,7 @@ def commit_staged_task(run: RunPaths, staged: _Staged, *, evidence_root: Path) -
             evidence_root=evidence_root,
         )
 
-    # 2. Derived artifacts — remap tool_call_id + derived_path (file already moved; sha unchanged).
+    # 2. Derived artifacts - remap tool_call_id + derived_path (file already moved; sha unchanged).
     for d in read_derived(src.root):
         new_id = tool_remap.get(d.tool_call_id, d.tool_call_id)
         append_derived(
@@ -189,13 +189,13 @@ def commit_staged_task(run: RunPaths, staged: _Staged, *, evidence_root: Path) -
     for ev in _read_custody(src.root):
         append_event(run.root, ev, evidence_root=evidence_root)
 
-    # 4. Claims (claim_ledger then unsupported) — remap evidence refs; claim_id is task-scoped.
+    # 4. Claims (claim_ledger then unsupported) - remap evidence refs; claim_id is task-scoped.
     for c in read_claims(src.root):
         append_claim(run.root, _remap_refs(c, tool_remap), evidence_root=evidence_root)
     for c in read_unsupported_claims(src.root):
         append_claim(run.root, _remap_refs(c, tool_remap), evidence_root=evidence_root)
 
-    # 5. Injection alerts — new global ALERT id; remap task_id when it is a tool id (the run_tool
+    # 5. Injection alerts - new global ALERT id; remap task_id when it is a tool id (the run_tool
     #    tool-result scan stamps task_id = the producing tool_call_id).
     for a in read_injection_alerts(src.root):
         append_injection_alert(
@@ -209,7 +209,7 @@ def commit_staged_task(run: RunPaths, staged: _Staged, *, evidence_root: Path) -
             evidence_root=evidence_root,
         )
 
-    # 6. Agent call (one per task) — new global AGENT id.
+    # 6. Agent call (one per task) - new global AGENT id.
     for ac in read_agent_calls(src.root):
         append_agent_call(
             run.root,
@@ -217,7 +217,7 @@ def commit_staged_task(run: RunPaths, staged: _Staged, *, evidence_root: Path) -
             evidence_root=evidence_root,
         )
 
-    # 7. Result envelope — remap its claims' refs, write to the real results/.
+    # 7. Result envelope - remap its claims' refs, write to the real results/.
     from siftmesh_core.adapters.base import write_task_result
 
     env = TaskResult.model_validate_json(

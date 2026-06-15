@@ -1,4 +1,4 @@
-# PLAN 14 — Cockpit (Textual TUI) + unified setup/onboarding (Epic O)
+# PLAN 14 - Cockpit (Textual TUI) + unified setup/onboarding (Epic O)
 
 _Status: **SHIPPED** 2026-06-11. Maintainer-greenlit the TUI now (CLI is mature); supersedes the
 "Ratatui, last" framing in CLAUDE.md §13/§16 for the TUI layer._
@@ -6,17 +6,17 @@ _Status: **SHIPPED** 2026-06-11. Maintainer-greenlit the TUI now (CLI is mature)
 ## Goal
 
 Collapse the human surface to **setup → run → tui**: a one-command onboarding (install + probe agents
-+ pick a multi-agent set + remember it) and a live cockpit that shows a run as it happens — vitals,
++ pick a multi-agent set + remember it) and a live cockpit that shows a run as it happens - vitals,
 pipeline, per-task status, timers, audit ticker, and a file-navigation tree. The deterministic CLI
 commands stay for scripting; the cockpit is an additive, read-only layer.
 
-## ADR — Textual, not Ratatui
+## ADR - Textual, not Ratatui
 
 CLAUDE.md §13 pencilled in "Rust/Ratatui … later" for the TUI. We chose **Textual** (Python, MIT):
 it reuses our existing readers (`load_report_view`, `read_run_state`) with zero Rust toolchain, and
 the cockpit is a thin renderer over data we already write. A run executes synchronously but is
 **file-observable** (atomic `run_state.json` + append-only JSONL at every transition), so the app runs
-the engine in a `@work(thread=True)` worker and a `set_interval` poll renders from the files — no
+the engine in a `@work(thread=True)` worker and a `set_interval` poll renders from the files - no
 engine change, no shared mutable state. `textual` is an OPTIONAL extra (base install stays lean; the
 CLI lazy-imports it with an install hint).
 
@@ -55,7 +55,7 @@ CLI lazy-imports it with an install hint).
 ## Constraints honoured
 Deterministic governance untouched (read-only cockpit; launching reuses the governed engine; no new
 write paths, evidence access, MCP tools, or raw shell; agent subprocesses keep the Epic-Q cwd/env
-sandbox). All frozen commands intact. CI not a concern. Textual 8.2.7 (MIT) — re-confirm API on major
+sandbox). All frozen commands intact. CI not a concern. Textual 8.2.7 (MIT) - re-confirm API on major
 bumps (`@work`, `HORIZONTAL_BREAKPOINTS`, `SelectionList`).
 
 ## Verify

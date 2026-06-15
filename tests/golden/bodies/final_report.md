@@ -1,4 +1,4 @@
-# SIFTMesh Forensic Report — RUN-GOLDEN
+# SIFTMesh Forensic Report - RUN-GOLDEN
 
 ## Executive summary
 
@@ -42,33 +42,33 @@
 
 ## Confirmed findings
 
-**TASK-003-CLAIM-001** — Parsed 7 Security event(s).
+**TASK-003-CLAIM-001** - Parsed 7 Security event(s).
 - artifact `Security.evtx` · sha256 `50c87926d2dfed97…` · tool `parse_evtx_security` · call `TOOL-003` · confidence 0.950
 - ATT&CK: Execution / T1059 Command and Scripting Interpreter
 
-**TASK-001-CLAIM-001** — CMD.EXE executed 3 time(s).
+**TASK-001-CLAIM-001** - CMD.EXE executed 3 time(s).
 - artifact `CMD.EXE-89305D47.pf` · sha256 `6127d820b031cac7…` · tool `analyze_prefetch` · call `TOOL-001` · confidence 0.900
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-003-CLAIM-002** — Security EventID 4625 (failed logon) observed (event #4).
+**TASK-003-CLAIM-002** - Security EventID 4625 (failed logon) observed (event #4).
 - artifact `Security.evtx` · sha256 `50c87926d2dfed97…` · tool `parse_evtx_security` · call `TOOL-003` · confidence 0.900
 - ATT&CK: Execution / T1059 Command and Scripting Interpreter
 
-**TASK-002-CLAIM-001** — 1 autostart Run/RunOnce value(s) found.
+**TASK-002-CLAIM-001** - 1 autostart Run/RunOnce value(s) found.
 - artifact `NTUSER.DAT` · sha256 `6a38fcea92411396…` · tool `extract_registry_run_keys` · call `TOOL-002` · confidence 0.850
 - ATT&CK: Persistence / T1547.001 Registry Run Keys / Startup Folder
 
-**TASK-002-CLAIM-002** — Autostart Run key 'Sidebar' present under \Software\Microsoft\Windows\CurrentVersion\Run.
+**TASK-002-CLAIM-002** - Autostart Run key 'Sidebar' present under \Software\Microsoft\Windows\CurrentVersion\Run.
 - artifact `NTUSER.DAT` · sha256 `6a38fcea92411396…` · tool `extract_registry_run_keys` · call `TOOL-002` · confidence 0.850
 - ATT&CK: Persistence / T1547.001 Registry Run Keys / Startup Folder
 
 ## Inferred findings (lower confidence)
 
-**TASK-001-CLAIM-002** — 1 execution timestamp(s) recorded.
+**TASK-001-CLAIM-002** - 1 execution timestamp(s) recorded.
 - INFERRED · artifact `CMD.EXE-89305D47.pf` · sha256 `6127d820b031cac7…` · tool `analyze_prefetch` · call `TOOL-001` · confidence 0.700
 - ATT&CK: Execution / T1204 User Execution
 
-**TASK-004-CLAIM-001** — Unified timeline built: 8 events across 2 source(s).
+**TASK-004-CLAIM-001** - Unified timeline built: 8 events across 2 source(s).
 - INFERRED · artifact `timeline` · sha256 `4ad00a02214d95f6…` · tool `build_timeline` · call `TOOL-004` · confidence 0.600
 
 ## MITRE ATT&CK mapping
@@ -77,7 +77,7 @@
 | --- | --- | --- | --- |
 | program_execution | Execution / T1204 | User Execution | 2 |
 | registry_autostart | Persistence / T1547.001 | Registry Run Keys / Startup Folder | 2 |
-| timeline | (unmapped) | — | 1 |
+| timeline | (unmapped) | - | 1 |
 | windows_event_log | Execution / T1059 | Command and Scripting Interpreter | 2 |
 _ATT&CK reference: MITRE ATT&CK (https://attack.mitre.org/) (CC-BY-4.0)._
 
@@ -98,20 +98,20 @@ No self-correction events recorded.
 | Security.evtx | 50c87926d2dfed97… | parse_evtx_security | siftmesh | parse_evtx_security | success |
 | timeline | 4ad00a02214d95f6… | build_timeline | siftmesh | build_timeline | success |
 
-## Appendix A — tool-execution log (complete)
+## Appendix A - tool-execution log (complete)
 
 | tool_call_id | Tool | Source artifact | source_sha256 | Status | Code |
 | --- | --- | --- | --- | --- | --- |
-| TOOL-001 | analyze_prefetch | CMD.EXE-89305D47.pf | 6127d820b031cac7f5fb1e6d45e244aa48cbb7fa62910ad0317eacb71a0edcd0 | success | — |
-| TOOL-002 | extract_registry_run_keys | NTUSER.DAT | 6a38fcea924113963e4931725cc4c2f4f10e1240234cb1867d101a1cd92cd439 | success | — |
-| TOOL-003 | parse_evtx_security | Security.evtx | 50c87926d2dfed9776906ffbcc77e61577940910a71fb1c1871860a4e2213456 | success | — |
-| TOOL-004 | build_timeline | timeline | 4ad00a02214d95f6e8a449395f4ad99be293f7da1c76f3e22527afa8cb066033 | success | — |
+| TOOL-001 | analyze_prefetch | CMD.EXE-89305D47.pf | 6127d820b031cac7f5fb1e6d45e244aa48cbb7fa62910ad0317eacb71a0edcd0 | success | - |
+| TOOL-002 | extract_registry_run_keys | NTUSER.DAT | 6a38fcea924113963e4931725cc4c2f4f10e1240234cb1867d101a1cd92cd439 | success | - |
+| TOOL-003 | parse_evtx_security | Security.evtx | 50c87926d2dfed9776906ffbcc77e61577940910a71fb1c1871860a4e2213456 | success | - |
+| TOOL-004 | build_timeline | timeline | 4ad00a02214d95f6e8a449395f4ad99be293f7da1c76f3e22527afa8cb066033 | success | - |
 
-## Appendix B — unsupported claims (rejected, NOT findings)
+## Appendix B - unsupported claims (rejected, NOT findings)
 
-None — every recorded claim was evidence-anchored.
+None - every recorded claim was evidence-anchored.
 
-## Appendix C — prompt-injection alerts (hostile-evidence handling)
+## Appendix C - prompt-injection alerts (hostile-evidence handling)
 
 None.
 

@@ -2,7 +2,7 @@
 
 Dependency-light by design (stdlib only): this module is imported by the two ledger
 chokepoints, so the no-sink hot path must be a single empty-list check and add no import
-cost. Sinks are stored in a module-global list under a lock — NOT contextvars — because
+cost. Sinks are stored in a module-global list under a lock - NOT contextvars - because
 ``parallel_dispatch`` worker threads (which do not inherit contextvars) also call the
 chokepoints; the lock keeps iteration safe and the :class:`Sink` filters their staging
 writes out by ``run_root`` (see ``stream.LogStreamer``).

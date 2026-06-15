@@ -1,4 +1,4 @@
-"""H9 — static budget router: escalate cheap→strong on retry, graceful default."""
+"""H9 - static budget router: escalate cheap→strong on retry, graceful default."""
 
 from __future__ import annotations
 

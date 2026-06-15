@@ -1,4 +1,4 @@
-"""C2 — Claim firewall: evidence-anchored, or explicitly unsupported."""
+"""C2 - Claim firewall: evidence-anchored, or explicitly unsupported."""
 
 from __future__ import annotations
 

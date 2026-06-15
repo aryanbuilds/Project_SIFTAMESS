@@ -1,4 +1,4 @@
-"""E2 — Deep Context Agent: context_pack names every family; filenames are data."""
+"""E2 - Deep Context Agent: context_pack names every family; filenames are data."""
 
 from __future__ import annotations
 

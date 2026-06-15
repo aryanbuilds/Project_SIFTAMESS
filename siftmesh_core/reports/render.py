@@ -1,4 +1,4 @@
-"""Determinism harness (J2) — pinned Jinja2 env + header/body split + shared write helpers.
+"""Determinism harness (J2) - pinned Jinja2 env + header/body split + shared write helpers.
 
 Reports are **byte-deterministic functions of the ledgers**: the report *body* must be identical
 across two renders of the same run-dir (the golden-tested "replayable audit"). Two mechanisms:
@@ -57,7 +57,7 @@ def make_report_env() -> Environment:
     )
     env.filters["fmt_float"] = fmt_float
     env.filters["fmt_pct"] = fmt_pct
-    # NB: deliberately NO now()/today() global — a timestamp must never reach a body.
+    # NB: deliberately NO now()/today() global - a timestamp must never reach a body.
     return env
 
 

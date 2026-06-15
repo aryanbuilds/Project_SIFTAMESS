@@ -1,4 +1,4 @@
-"""Pre-run readiness synthesis (TUI wizard) — verify + space → recommendation/portions. Headless."""
+"""Pre-run readiness synthesis (TUI wizard) - verify + space → recommendation/portions. Headless."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def test_readiness_fits_recommends_full_or_single(tmp_path: Path) -> None:
     assert report.recommendation in ("full", "single")  # depends on whether a live agent is ready
     assert report.portions == ()  # no partitioning when it fits
     assert report.needed_human and report.free_human  # human-readable sizes present
-    # collect_checks ran — at least the core deps are OK on this dev box
+    # collect_checks ran - at least the core deps are OK on this dev box
     assert report.checks_ok >= 1
     assert any("gateway" in line.lower() or "python" in line.lower() for line in report.check_lines)
 

@@ -1,8 +1,8 @@
-"""Static budget router (H9, MVP-light) — escalate cheap→strong on retry/contradiction.
+"""Static budget router (H9, MVP-light) - escalate cheap→strong on retry/contradiction.
 
 A real, self-contained routing decision recorded to ``audit/token_budget.jsonl``. Until Epic I
 ships ``agent_profiles.yaml``, the tier map is a small static table: the deterministic floor maps
-to itself (escalation is a logged no-op there — honest, the executor stays the floor until the live
+to itself (escalation is a logged no-op there - honest, the executor stays the floor until the live
 agent is wired), and a documented cheap→strong pair applies once a live profile is configured.
 Absent a strong tier, it falls back to the base profile (graceful default).
 """

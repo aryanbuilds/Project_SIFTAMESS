@@ -1,9 +1,9 @@
-"""Timeline tool (D8) — deterministic merge of real rows into one ordered timeline.
+"""Timeline tool (D8) - deterministic merge of real rows into one ordered timeline.
 
 ``build_timeline`` parses each input artifact via the real backend (EVTX events,
 prefetch last-run times, ``$MFT`` standard-information times) and merges them into a
 single chronologically-sorted list of ``{timestamp_utc, source_kind, source_artifact,
-detail}`` rows. Own deterministic code — no external timeline engine (Plaso
+detail}`` rows. Own deterministic code - no external timeline engine (Plaso
 enrichment is out of scope for the MVP). Logs a provenance line.
 """
 

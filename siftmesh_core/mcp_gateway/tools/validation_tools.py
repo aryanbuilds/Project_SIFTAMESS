@@ -1,4 +1,4 @@
-"""Validation tool (D9) — the deterministic claim-evidence verifier (differentiator).
+"""Validation tool (D9) - the deterministic claim-evidence verifier (differentiator).
 
 ``validate_claim_evidence`` is the primitive the Critic (Epic G) consumes. Given a
 :class:`Claim` *or a raw mapping* (so malformed agent output can be graded, not
@@ -60,7 +60,7 @@ def grade_claim_against_run(
 ) -> list[str]:
     """Evidence-discipline violations for a claim vs the run's manifest + tool ledger.
 
-    Empty list = clean. This is the **non-audited** core the D9 tool wraps — the
+    Empty list = clean. This is the **non-audited** core the D9 tool wraps - the
     Critic (Epic G) calls it directly per claim so grading does NOT spam
     ``tool_calls.jsonl`` with a TOOL-NNN per claim. ``evidence_root`` is accepted for
     signature parity (the manifest already lives under the run dir).
@@ -68,7 +68,7 @@ def grade_claim_against_run(
     ``manifest_hashes`` / ``tool_results_by_id`` are an optional pre-loaded grading
     context: when grading many claims in one pass (the Critic), the caller builds these
     ONCE and threads them in, so this function does not re-read the whole manifest +
-    ``tool_calls.jsonl`` per claim. ``None`` (the default) builds them inline — then the
+    ``tool_calls.jsonl`` per claim. ``None`` (the default) builds them inline - then the
     result is byte-identical to reading them here, so every existing caller is unchanged.
     """
     problems = list(grade_claim_schema(claim))  # C2 grader: accepts Claim or mapping

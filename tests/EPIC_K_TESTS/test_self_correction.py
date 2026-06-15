@@ -1,6 +1,6 @@
-"""Epic K, K3 — live self-correction loop (claim capture + critic-feedback retry).
+"""Epic K, K3 - live self-correction loop (claim capture + critic-feedback retry).
 
-The live agent subprocess is ALWAYS mocked (CI-safe, no keys, §2B); the GOVERNANCE is real — a real
+The live agent subprocess is ALWAYS mocked (CI-safe, no keys, §2B); the GOVERNANCE is real - a real
 typed tool call seeds a real ``tool_call_id`` + manifest hash, and the real deterministic critic
 grades the agent's claims. The headline test proves the emergent loop end-to-end: the mocked agent
 over-claims without an anchor on the first attempt, the critic rejects it, the rejection feedback
@@ -186,7 +186,7 @@ def test_emergent_self_correction_loop(tmp_path: Path, monkeypatch: pytest.Monke
     adapter = ClaudeHeadlessAdapter(settings=load_settings())
     contract = _contract()
 
-    # Attempt 1 — no feedback -> agent under-anchors -> critic rejects.
+    # Attempt 1 - no feedback -> agent under-anchors -> critic rejects.
     adapter.run(contract, _ctx(run, evidence, attempt=1))
     v1 = critique_run(run, settings=load_settings(), evidence_root=evidence)
     task_v1 = next(v for v in v1 if v.task_id == "TASK-001")
@@ -194,7 +194,7 @@ def test_emergent_self_correction_loop(tmp_path: Path, monkeypatch: pytest.Monke
     assert read_unsupported_claims(run.root)  # the over-claim recorded honestly...
     assert not [c for c in read_claims(run.root) if c.status == "confirmed"]  # ...not as a finding
 
-    # Attempt 2 — critic feedback flows into the prompt -> agent revises with a real anchor.
+    # Attempt 2 - critic feedback flows into the prompt -> agent revises with a real anchor.
     adapter.run(contract, _ctx(run, evidence, attempt=2, feedback=tuple(task_v1.reasons)))
     v2 = critique_run(run, settings=load_settings(), evidence_root=evidence)
     task_v2 = next(v for v in v2 if v.task_id == "TASK-001")

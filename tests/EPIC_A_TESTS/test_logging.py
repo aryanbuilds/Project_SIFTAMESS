@@ -1,4 +1,4 @@
-"""A5: append-only JSONL logger — round-trips one valid JSON line per event."""
+"""A5: append-only JSONL logger - round-trips one valid JSON line per event."""
 
 from __future__ import annotations
 

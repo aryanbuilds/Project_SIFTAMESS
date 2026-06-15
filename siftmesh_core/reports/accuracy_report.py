@@ -1,8 +1,8 @@
-"""Accuracy / false-positive report generator (J4) — dual mode.
+"""Accuracy / false-positive report generator (J4) - dual mode.
 
 A blind investigation has no ground truth, so the DEFAULT is an honest **self-assessment**:
 confidence bands, corroboration counts, unsupported disclosure, critic-caught FPs, and coverage
-gaps — never a fabricated precision/recall number. When a ground-truth ``expected_findings.md`` is
+gaps - never a fabricated precision/recall number. When a ground-truth ``expected_findings.md`` is
 provided (``--expected`` or ``examples/demo_case/expected_findings.md``), a heuristic **diff mode**
 adds precision / recall / FP-rate and shows the planted FP as caught-by-critic.
 """
@@ -38,7 +38,7 @@ def generate_accuracy_report(
 ) -> Path:
     """Write ``reports/accuracy_report.md``; return its path."""
     v = view or load_report_view(run, evidence_root=evidence_root)
-    md = MarkdownBuilder().h1(f"Accuracy & False-Positive Report — {v.run_id}")
+    md = MarkdownBuilder().h1(f"Accuracy & False-Positive Report - {v.run_id}")
 
     expected = Path(expected_findings) if expected_findings else None
     if expected is not None and expected.is_file():
@@ -46,7 +46,7 @@ def generate_accuracy_report(
         _diff_mode(md, v, expected)
     else:
         md.line(
-            "_No ground-truth baseline — honest self-assessment (no fabricated precision/recall)._"
+            "_No ground-truth baseline - honest self-assessment (no fabricated precision/recall)._"
         )
         _self_assessment(md, v)
 
@@ -86,7 +86,7 @@ def _self_assessment(md: MarkdownBuilder, v: ReportView) -> None:
     md.h2("False-positive control")
     md.bullet(
         f"Claims rejected by the critic for missing evidence: {len(v.unsupported)} "
-        "(never reported as fact — Appendix B of the final report)."
+        "(never reported as fact - Appendix B of the final report)."
     )
     md.bullet(f"Over-broad claims downgraded: {len(v.confidence_changes)}.")
     md.bullet(f"Contradictions escalated rather than asserted: {len(v.contradictions)}.")

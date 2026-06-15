@@ -1,4 +1,4 @@
-"""B8: orchestration audit log — ordered, UTC, replayable JSONL."""
+"""B8: orchestration audit log - ordered, UTC, replayable JSONL."""
 
 from __future__ import annotations
 

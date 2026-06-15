@@ -1,10 +1,10 @@
 """Executor adapter base + registry (Epic F, F1).
 
-One uniform seam for every way a task contract can be executed — the deterministic
+One uniform seam for every way a task contract can be executed - the deterministic
 real-tool floor (F2), a generic shell agent (F7), or a live headless agent (F8).
 The ABC's concrete ``run()`` template owns the two cross-cutting obligations
-PLAN/04 attaches to F1 — "produce ``results/TASK-XXX.result.json`` and append one
-``agent_calls.jsonl`` line" — and the allowed-tools guard (C2 enforcement point 5),
+PLAN/04 attaches to F1 - "produce ``results/TASK-XXX.result.json`` and append one
+``agent_calls.jsonl`` line" - and the allowed-tools guard (C2 enforcement point 5),
 so a concrete adapter (which implements only ``_execute``/``available``) can never
 forget them. The registry resolves an adapter by ``assigned_agent_profile`` and
 falls **closed** to the deterministic floor when a profile is unknown or its
@@ -176,7 +176,7 @@ def get_adapter(
 
     Candidate order = the requested profile, then the rest of ``settings.agent_preference``, then
     the deterministic floor (always registered + available). Each skipped (unknown/unavailable)
-    candidate is audited as an ``adapter_unavailable`` orchestration event when a ``run`` is given —
+    candidate is audited as an ``adapter_unavailable`` orchestration event when a ``run`` is given -
     so a no-keys run records *why* it fell to the floor (e.g. claude→opencode→floor).
     """
     chain: list[str] = [profile_id]

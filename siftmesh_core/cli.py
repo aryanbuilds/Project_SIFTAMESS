@@ -43,7 +43,7 @@ app.add_typer(claims_app, name="claims")
 app.add_typer(audit_app, name="audit")
 
 # Protocol SIFT inspection (env-only). Protocol SIFT is a ~/.claude config/skill
-# layer, NOT an MCP server (PLAN/09) — SIFTMesh inspects and governs it.
+# layer, NOT an MCP server (PLAN/09) - SIFTMesh inspects and governs it.
 protocol_sift_app = typer.Typer(
     no_args_is_help=True, help="Inspect & govern the Protocol SIFT (~/.claude) layer."
 )
@@ -96,7 +96,7 @@ def main(
     """App-level options. `siftmesh --version` works with no subcommand."""
     # Load provider credentials (LiteLLM judge keys) from ~/.config/siftmesh/.env into the
     # environment before any command runs. A real shell export wins (override=False). Provider
-    # creds only — never SIFTMESH_* settings (those stay in TOML/env per config.py precedence).
+    # creds only - never SIFTMESH_* settings (those stay in TOML/env per config.py precedence).
     from siftmesh_core.secrets_env import load_secrets_into_env
 
     load_secrets_into_env()
@@ -118,7 +118,7 @@ def init_case(
         str | None,
         typer.Option(
             "--brief",
-            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective, "
+            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) - the TRUSTED objective, "
             "not evidence. Can be paired with --objective for extra steering.",
         ),
     ] = None,
@@ -126,7 +126,7 @@ def init_case(
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            help='Inline TRUSTED objective/steering text (no file needed) - e.g. --objective "was '
             'host X compromised?". COMBINES with --brief when both are given (more context = '
             "better).",
         ),
@@ -328,7 +328,7 @@ def critique(
         raise typer.Exit(code=1) from exc
     typer.echo(f"critique complete: {len(verdicts)} verdict(s)")
     for v in verdicts:
-        # The count is per-task FLAGGED claims (downgraded/unsupported/rejected/human) — not the
+        # The count is per-task FLAGGED claims (downgraded/unsupported/rejected/human) - not the
         # total; an "accepted (0 flagged)" task still contributed anchored claims to the ledger.
         typer.echo(f"  {v.task_id}: {v.verdict} ({len(v.affected_claim_ids)} flagged)")
     typer.echo(
@@ -458,7 +458,7 @@ _AGENT_ALIASES = {
 def _agent_overrides(agent: str | None) -> dict[str, object]:
     """Translate a friendly --agent choice into settings overrides (opt into the live chain).
 
-    The chosen agent is put first; the ONLY fallback is the deterministic floor — never another live
+    The chosen agent is put first; the ONLY fallback is the deterministic floor - never another live
     agent (an operator who explicitly chose the sandboxed Claude must not be silently downgraded to
     a different live agent with a different safety posture). ``deterministic`` pins the floor. An
     unknown value is a hard error (no silent passthrough that could dispatch the wrong agent).
@@ -527,7 +527,7 @@ def _hint_live_agent(settings: object) -> None:
     """Loud opt-in: when no --agent was chosen but claude is available, suggest the live path."""
     if _claude_available(settings):
         typer.echo(
-            "hint: the Claude live agent is available — add `--agent claude` for a live, "
+            "hint: the Claude live agent is available - add `--agent claude` for a live, "
             "objective-driven investigation (this run uses the deterministic floor).",
             err=True,
         )
@@ -549,7 +549,7 @@ def _space_preflight_ok(case_dir: str, evidence: str) -> bool:
         tag = " (some estimated)" if est.any_estimated else ""
         typer.echo(
             f"  space  : ~{human_bytes(est.needed_bytes)} derived needed{tag}; "
-            f"{human_bytes(est.free_bytes)} free — OK"
+            f"{human_bytes(est.free_bytes)} free - OK"
         )
         return True
 
@@ -572,7 +572,7 @@ def _space_preflight_ok(case_dir: str, evidence: str) -> bool:
         for n, portion in enumerate(portions, 1):
             files = " ".join(it.path for it in portion)
             typer.echo(
-                f"    portion {n}: run these in ev_p{n}/ then `siftmesh prune <run>` — {files}"
+                f"    portion {n}: run these in ev_p{n}/ then `siftmesh prune <run>` - {files}"
             )
         typer.echo("    finally: siftmesh merge ./case_merged --run <RUN_1> --run <RUN_2> …")
     typer.echo("  (or re-run with --force to proceed anyway)")
@@ -588,7 +588,7 @@ def _echo_run_state(run_paths: RunPaths, state: RunState) -> None:
     )
     if state.state == "done":
         typer.echo("  status : complete")
-        typer.echo("  report : reports/ written (auto modes) — or run `siftmesh report <run>`")
+        typer.echo("  report : reports/ written (auto modes) - or run `siftmesh report <run>`")
     elif state.terminal:
         typer.echo(f"  status : halted ({state.blocked_gate or 'rejected'})")
     elif state.blocked_gate:
@@ -655,7 +655,7 @@ def run(
         str | None,
         typer.Option(
             "--brief",
-            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) — the TRUSTED objective the "
+            help="Incident briefing (.pptx/.docx/.pdf/.txt/.md) - the TRUSTED objective the "
             "agent investigates toward. Can be paired with --objective for extra steering.",
         ),
     ] = None,
@@ -663,7 +663,7 @@ def run(
         str | None,
         typer.Option(
             "--objective",
-            help='Inline TRUSTED objective/steering text (no file needed) — e.g. --objective "was '
+            help='Inline TRUSTED objective/steering text (no file needed) - e.g. --objective "was '
             'host X compromised?". COMBINES with --brief when both are given (more context = '
             "better).",
         ),
@@ -688,8 +688,8 @@ def run(
         bool | None,
         typer.Option(
             "--parallel/--no-parallel",
-            help="Dispatch tasks concurrently (up to caps.max_parallel_tasks) — deterministic "
-            "(byte-identical to sequential). Default: AUTO — ON when a live --agent executor is "
+            help="Dispatch tasks concurrently (up to caps.max_parallel_tasks) - deterministic "
+            "(byte-identical to sequential). Default: AUTO - ON when a live --agent executor is "
             "used (slow live agents shouldn't run serially), OFF for the deterministic floor. "
             "--no-parallel forces sequential.",
         ),
@@ -718,7 +718,7 @@ def run(
             update={"agent_models": {**settings.agent_models, **model_over}}
         )
     if max_agent_tasks is not None:
-        # Caps stay enforced (CLAUDE §11) — the operator just sets the ceiling explicitly.
+        # Caps stay enforced (CLAUDE §11) - the operator just sets the ceiling explicitly.
         settings = settings.model_copy(
             update={"caps": settings.caps.model_copy(update={"max_agent_tasks": max_agent_tasks})}
         )
@@ -733,7 +733,7 @@ def run(
     elif live_executor:
         settings = settings.model_copy(update={"parallel_dispatch": True})
         typer.echo(
-            "note: live agent — parallel dispatch is ON (use --no-parallel for sequential)",
+            "note: live agent - parallel dispatch is ON (use --no-parallel for sequential)",
             err=True,
         )
     if agent is None:
@@ -963,7 +963,7 @@ def ingest_derived_cmd(
         str | None, typer.Option(help="Evidence root (else recovered from readonly_mounts.json).")
     ] = None,
 ) -> None:
-    """Make extracted/decompressed derived artifacts plannable — one derived task each (hth.2)."""
+    """Make extracted/decompressed derived artifacts plannable - one derived task each (hth.2)."""
     from pydantic import ValidationError
 
     from siftmesh_core.orchestrator.critic import ingest_derived
@@ -985,7 +985,7 @@ def ingest_derived_cmd(
         typer.echo(f"  next: siftmesh dispatch {run.root}")
 
 
-# Deprecated top-level aliases for the forensic specialists — now under `siftmesh evidence …`.
+# Deprecated top-level aliases for the forensic specialists - now under `siftmesh evidence …`.
 # Same functions, hidden from --help, kept so existing scripts / the RUNBOOK keep working.
 app.command("extract-artifacts", hidden=True)(extract_artifacts)
 app.command("analyze-memory", hidden=True)(analyze_memory_cmd)
@@ -1196,7 +1196,7 @@ def setup(
         typer.echo(f"  {safety_tier_label(tier)}")
     if not ready:
         typer.echo(
-            "\nno live agent is ready — runs use the deterministic floor (T0, no keys needed)."
+            "\nno live agent is ready - runs use the deterministic floor (T0, no keys needed)."
         )
     typer.echo(
         "\nnext: `siftmesh run ./examples/demo_case "
@@ -1263,11 +1263,11 @@ def agents_list() -> None:
     Console(width=100).print(table)
     typer.echo(f"\nexecutor default (this config): {cap.chosen}")
     if cap.chosen == "deterministic_executor":
-        typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor — tier T0)")
+        typer.echo("(a plain `siftmesh run` uses the deterministic real-tool floor - tier T0)")
     if cap.live_candidate and cap.live_candidate != cap.chosen:
-        typer.echo(f"live agent ready — opt in with `--agent`: {cap.live_candidate}")
+        typer.echo(f"live agent ready - opt in with `--agent`: {cap.live_candidate}")
     elif cap.chosen == "deterministic_executor":
-        typer.echo("no live agent is ready — onboard one (`siftmesh setup`) for tier T1/T2.")
+        typer.echo("no live agent is ready - onboard one (`siftmesh setup`) for tier T1/T2.")
     # Advisory Tier-2 judge (separate purpose from the executor; off unless llm_critic_enabled).
     from siftmesh_core.adapters.judge import judge_ready
 
@@ -1277,7 +1277,7 @@ def agents_list() -> None:
         "on" if settings.llm_critic_enabled else "off (set llm_critic_enabled / --judge to enable)"
     )
     state = "ready" if ready else "NOT ready"
-    typer.echo(f"tier-2 judge [T3]: {label} — {state}; advisory layer {gate}")
+    typer.echo(f"tier-2 judge [T3]: {label} - {state}; advisory layer {gate}")
     typer.echo("\nsafety tiers:")
     for tier in SAFETY_TIER_DESC:
         typer.echo(f"  {safety_tier_label(tier)}")
@@ -1326,7 +1326,7 @@ def agents_inspect(profile_id: str) -> None:
         recipe += [*prof.extra_argv, *prof.native_tool_argv]
         typer.echo(f"launch          : {' '.join(recipe)}")
         typer.echo(
-            f"native deny     : {' '.join(prof.native_tool_argv) or '(none — NOT dispatchable)'}"
+            f"native deny     : {' '.join(prof.native_tool_argv) or '(none - NOT dispatchable)'}"
         )
         typer.echo(f"auth_env        : {', '.join(prof.auth_env) or '(none)'}")
         typer.echo(f"auth_files      : {', '.join(prof.auth_files) or '(none)'}")
@@ -1385,7 +1385,7 @@ def retry(run_dir: str, task_id: str) -> None:
             max_iterations=settings.caps.max_iterations,
         )
         if decision.action != "retry":
-            typer.echo(f"retry refused for {task_id}: decide={decision.action} — {decision.reason}")
+            typer.echo(f"retry refused for {task_id}: decide={decision.action} - {decision.reason}")
             raise typer.Exit(code=1)
         write_retry(run, contract, from_attempt=result.attempt, cause=verdict.verdict)
         refs = dispatch_run(
@@ -1576,7 +1576,7 @@ def claims_show(run_dir: str, claim_id: str) -> None:
     for claim in read_unsupported_claims(run.root):
         if claim.claim_id == claim_id:
             typer.echo(claim.model_dump_json(indent=2))
-            typer.echo("status: UNSUPPORTED — rejected by the critic; never a report fact")
+            typer.echo("status: UNSUPPORTED - rejected by the critic; never a report fact")
             return
     typer.echo(f"no such claim: {claim_id}", err=True)
     raise typer.Exit(code=1)

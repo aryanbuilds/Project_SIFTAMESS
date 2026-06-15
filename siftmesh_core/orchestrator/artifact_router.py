@@ -107,7 +107,7 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "and account-management activity.",
     "evtx_powershell": "Parse PowerShell Operational logs (4103/4104) for script-block "
     "and module-logging activity.",
-    "evtx_other": "Other Windows event log — folded into the unified timeline; "
+    "evtx_other": "Other Windows event log - folded into the unified timeline; "
     "no dedicated parser task.",
     "prefetch": "Analyse the prefetch artifact for program-execution evidence "
     "(run count, last-run times).",
@@ -128,8 +128,8 @@ _FAMILY_OBJECTIVE: dict[FineFamily, str] = {
     "from the disk image.",
     "memory_image": "Triage the memory image for processes, network connections, "
     "command lines, and injected code.",
-    "archive": "Archive — expand and re-ingest; no in-place triage tool.",
-    "other": "Unrecognised artifact type — no automated triage tool.",
+    "archive": "Archive - expand and re-ingest; no in-place triage tool.",
+    "other": "Unrecognised artifact type - no automated triage tool.",
 }
 
 _DISK_IMAGE_SUFFIXES = frozenset({".e01", ".raw", ".dd", ".img", ".vmdk"})

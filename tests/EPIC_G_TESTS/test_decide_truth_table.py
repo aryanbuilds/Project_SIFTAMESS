@@ -1,4 +1,4 @@
-"""G4 — the pure decide() function: one assertion per CLAUDE §12 rule."""
+"""G4 - the pure decide() function: one assertion per CLAUDE §12 rule."""
 
 from __future__ import annotations
 

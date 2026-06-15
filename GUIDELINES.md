@@ -10,9 +10,9 @@ This document defines the rules for building SIFTMesh. Treat these as project co
 
 ```text
 Priority 1: Make the CLI fully working.                                  ✅ shipped
-Priority 2: Evidence vault, task contracts, claim ledger, critic loop, reports — reliable.  ✅ shipped
+Priority 2: Evidence vault, task contracts, claim ledger, critic loop, reports - reliable.  ✅ shipped
 Priority 3: Agent adapter integration (agent-neutral headless connectors; Epic Q).  ✅ shipped
-            NOTE: CAO + LangGraph evaluated and REJECTED — keep the native deterministic FSM (ADR PLAN/12).
+            NOTE: CAO + LangGraph evaluated and REJECTED - keep the native deterministic FSM (ADR PLAN/12).
 Priority 4: Guided and full automation modes.                            ✅ shipped (one engine, four modes)
 Priority 5: Optional A2A Agent Card discovery and delegation (governed by the policy overlay).  ⏳ stretch (Epic P)
 Priority 6: Textual TUI cockpit last.                                    ✅ shipped (Epic O; Textual, not Ratatui)
@@ -156,7 +156,7 @@ The LLM may propose actions. The state machine decides whether those actions are
 
 ## 7. Typed MCP tool guidelines
 
-Expose typed forensic functions, not raw shell. **Every tool is a real, working integration — no mock or placeholder backends (see §7a).**
+Expose typed forensic functions, not raw shell. **Every tool is a real, working integration - no mock or placeholder backends (see §7a).**
 
 Allowed MVP tool names:
 
@@ -197,11 +197,11 @@ curl_arbitrary()
 scp_arbitrary()
 ```
 
-## 7a. Real-only tool integration (no mocks/placeholders) — FINAL RULE
+## 7a. Real-only tool integration (no mocks/placeholders) - FINAL RULE
 
-1. Everything delivered is **real and working**: no mock FORENSIC backends, no placeholder tool backends, no synthetic INTEGRATION outputs, no scripted self-correction. **Pure unit tests MAY use fixtures / golden JSON** (schema / path-policy / forbidden-tool / claim checks) — normal testing, not a mock. A missing backend **fails closed** (`siftmesh doctor`), never a fake (*missing = OK; fake = not OK*). **The product is a genuinely autonomous investigator** — a real LLM agent investigates a *black-box* dataset blind (never sees ground truth), forms claims, and **self-corrects emergently** under the deterministic critic: *autonomy in the agent, determinism in the governance*. The live agent is core/never-cut; a recorded-golden run (real ledgers, not a mock) is the regression + demo safety-net floor (PLAN/08 §6, PLAN/01).
-2. The plan's "deterministic placeholder backend / mock executor / synthetic demo evidence" strategy is **rejected**; replace it with real tool integrations (e.g. EvtxECmd, PECmd, regipy, Plaso/log2timeline, MFTECmd, Volatility 3) — or honestly **gate** the environment-dependent ones on the real SIFT workstation (see §17).
-3. Research + confirm **every** tool, library, SDK, and the MCP/compatibility layer with **deepwiki + Tavily** (plus WebSearch/WebFetch) **before** integrating. Confirm the real API, flags, output shape, license, and cross-platform behavior yourself — **never hallucinate**. Pin versions.
+1. Everything delivered is **real and working**: no mock FORENSIC backends, no placeholder tool backends, no synthetic INTEGRATION outputs, no scripted self-correction. **Pure unit tests MAY use fixtures / golden JSON** (schema / path-policy / forbidden-tool / claim checks) - normal testing, not a mock. A missing backend **fails closed** (`siftmesh doctor`), never a fake (*missing = OK; fake = not OK*). **The product is a genuinely autonomous investigator** - a real LLM agent investigates a *black-box* dataset blind (never sees ground truth), forms claims, and **self-corrects emergently** under the deterministic critic: *autonomy in the agent, determinism in the governance*. The live agent is core/never-cut; a recorded-golden run (real ledgers, not a mock) is the regression + demo safety-net floor (PLAN/08 §6, PLAN/01).
+2. The plan's "deterministic placeholder backend / mock executor / synthetic demo evidence" strategy is **rejected**; replace it with real tool integrations (e.g. EvtxECmd, PECmd, regipy, Plaso/log2timeline, MFTECmd, Volatility 3) - or honestly **gate** the environment-dependent ones on the real SIFT workstation (see §17).
+3. Research + confirm **every** tool, library, SDK, and the MCP/compatibility layer with **deepwiki + Tavily** (plus WebSearch/WebFetch) **before** integrating. Confirm the real API, flags, output shape, license, and cross-platform behavior yourself - **never hallucinate**. Pin versions.
 4. **No cost-cutting.** On any doubt about correctness, feasibility, scope, or whether something is "real enough", call the advisor or ask the maintainer directly. Never substitute a fake to pass a step.
 5. **Do not run or validate against forensic data autonomously.** When a phase needs real evidence or a real SANS SIFT workstation, STOP and request it from the maintainer, who provides the real workstation + real files at that stage.
 6. **Linux-first.** Dev + target = **Linux (SANS SIFT / Ubuntu)**; Windows is not a constraint (the plan is authored on Windows, but code runs on Linux). CI primary runner = Ubuntu; keep `pathlib` as hygiene.
@@ -411,7 +411,7 @@ Rules:
 
 ## 13. CAO integration guidelines
 
-> **DECISION (ADR `PLAN/12`, 2026-06-10): CAO evaluated and NOT pursued** — it puts an LLM supervisor
+> **DECISION (ADR `PLAN/12`, 2026-06-10): CAO evaluated and NOT pursued** - it puts an LLM supervisor
 > in the routing/delegation seat, the opposite of "LLM proposes, code decides". The native
 > deterministic FSM is kept; the live-agent path is the agent-neutral headless connector (Epic Q,
 > `PLAN/13`). LangGraph was likewise rejected (the FSM already provides its value). The guidance below
@@ -443,7 +443,7 @@ Do not let CAO decide:
 
 ## 13a. A2A interoperability guidelines
 
-A2A (Agent2Agent, Apache 2.0) is the agent-to-agent layer. It is optional, ranks above the TUI but below CAO (Priority 5), and complements — never replaces — SIFTMesh governance.
+A2A (Agent2Agent, Apache 2.0) is the agent-to-agent layer. It is optional, ranks above the TUI but below CAO (Priority 5), and complements - never replaces - SIFTMesh governance.
 
 ```text
 MCP      = agent -> tool
@@ -471,7 +471,7 @@ SDK reference: `a2a-sdk` (Apache 2.0, Python 3.10+; transports JSON-RPC / HTTP+J
 
 ## 14. TUI guidelines
 
-TUI is optional and last. **Shipped as Epic O (`PLAN/14`) using Textual** (Python, MIT) — chosen over
+TUI is optional and last. **Shipped as Epic O (`PLAN/14`) using Textual** (Python, MIT) - chosen over
 the originally-penciled Ratatui: it reuses the existing readers (`load_report_view`/`read_run_state`),
 needs no Rust, and the cockpit is a thin renderer over data the CLI already writes. Built rules
 (honored):
@@ -480,11 +480,11 @@ needs no Rust, and the cockpit is a thin renderer over data the CLI already writ
 - Textual (pure-Python); optional `tui` extra, lazy-imported with an install hint.
 - READ-ONLY over the run dir: render run_state.json + the ledgers on a poll. The single, tested,
   Textual-free data source is tui/snapshot.build_snapshot() (no re-parsing).
-- Launching a run reuses the governed engine in a worker thread — no new write paths/tools/shell.
+- Launching a run reuses the governed engine in a worker thread - no new write paths/tools/shell.
 - Do NOT implement evidence or critic logic in the TUI.
 ```
 
-Cockpit panels (shipped — four zones + a nav tree):
+Cockpit panels (shipped - four zones + a nav tree):
 
 ```text
 Vitals (mode · stage · gate · agent · tasks done/total · total + current-stage timers)
@@ -554,7 +554,7 @@ test_guided_mode_requires_approval_at_plan_gate
 test_forbidden_tool_not_exposed
 ```
 
-**Test-execution gate (real-only).** Pure schema/safety unit tests that need **no** real evidence may be authored alongside the code, but **do not run or validate the pipeline against real forensic artifacts autonomously**, and never fabricate evidence/tool output to satisfy a test. Any test, validation, integration, or end-to-end phase that needs real evidence or a real SANS SIFT workstation is **human-gated**: STOP and tell the maintainer explicitly — they provide the real workstation + real files at that stage.
+**Test-execution gate (real-only).** Pure schema/safety unit tests that need **no** real evidence may be authored alongside the code, but **do not run or validate the pipeline against real forensic artifacts autonomously**, and never fabricate evidence/tool output to satisfy a test. Any test, validation, integration, or end-to-end phase that needs real evidence or a real SANS SIFT workstation is **human-gated**: STOP and tell the maintainer explicitly - they provide the real workstation + real files at that stage.
 
 ## 18. Demo guidelines
 

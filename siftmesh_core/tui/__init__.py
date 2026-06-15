@@ -1,9 +1,9 @@
-"""SIFTMesh Textual cockpit (Epic O) — optional, lazily imported.
+"""SIFTMesh Textual cockpit (Epic O) - optional, lazily imported.
 
 The base install stays lean; the CLI imports this only for `siftmesh tui` / `siftmesh setup`, and
 `require_textual()` prints a friendly install hint if the optional `textual` extra is absent. The
 cockpit is a READ-ONLY layer over the run dir (it renders `run_state.json` + the ledgers); launching
-a run uses the SAME governed engine — no new write paths, evidence access, MCP tools, or raw shell.
+a run uses the SAME governed engine - no new write paths, evidence access, MCP tools, or raw shell.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
-"""Static MITRE ATT&CK lookup (J3 support) — evidence_type → technique, degrade-safe.
+"""Static MITRE ATT&CK lookup (J3 support) - evidence_type → technique, degrade-safe.
 
 A small committed map (``attack_map.json``, CC-BY-4.0) keyed by the claim ``evidence_type``. Unknown
-types return ``None`` (the report renders "(unmapped)" + lists them under LIMITATIONS) — a new tool
+types return ``None`` (the report renders "(unmapped)" + lists them under LIMITATIONS) - a new tool
 emitting a new evidence_type can never raise a KeyError. PowerShell script-block claims
 (``windows_event_log`` whose text references EventID 4104/4103) are refined to T1059.001.
 """

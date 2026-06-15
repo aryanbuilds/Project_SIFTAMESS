@@ -1,4 +1,4 @@
-"""G1/G5 — critique + retry CLI commands."""
+"""G1/G5 - critique + retry CLI commands."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""F7/F8 — generic shell + live (claude/opencode) adapters (mocked; no live run)."""
+"""F7/F8 - generic shell + live (claude/opencode) adapters (mocked; no live run)."""
 
 from __future__ import annotations
 

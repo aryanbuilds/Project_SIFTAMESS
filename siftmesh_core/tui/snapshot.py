@@ -1,9 +1,9 @@
-"""Cockpit data layer (Epic O) — the single, tested, Textual-FREE snapshot of a run.
+"""Cockpit data layer (Epic O) - the single, tested, Textual-FREE snapshot of a run.
 
 ``build_snapshot(run)`` reads ``run_state.json`` (``read_run_state``) + every ledger
 (``load_report_view``) + the task contracts, derives the timers, and returns a frozen
 ``CockpitSnapshot`` holding exactly what the four cockpit zones render. The TUI is then a thin
-renderer over this — so the cockpit's correctness is unit-tested here (against the golden run),
+renderer over this - so the cockpit's correctness is unit-tested here (against the golden run),
 with no terminal. It NEVER raises on a half-written / not-yet-started run dir (returns an empty
 snapshot), so polling a live run is safe. Pure reads only; no engine state is mutated.
 """
@@ -43,9 +43,9 @@ class TaskRow:
     attempt: int
     max_attempts: int
     family: str  # human label derived from the contract role
-    agent: str  # profile/adapter that last ran it ("—" if not yet)
+    agent: str  # profile/adapter that last ran it ("-" if not yet)
     claims: int  # promoted (confirmed+inferred) claims anchored to this task
-    verdict: str  # latest critic verdict ("—" if none)
+    verdict: str  # latest critic verdict ("-" if none)
     claim_ids: tuple[str, ...] = ()  # claim ids anchored to this task (for drill-down)
 
 
@@ -136,10 +136,10 @@ def _empty(run_id: str) -> CockpitSnapshot:
     return CockpitSnapshot(
         run_id=run_id,
         exists=False,
-        mode="—",
+        mode="-",
         stage="init",
         blocked_gate=None,
-        current_agent="—",
+        current_agent="-",
         iteration=0,
         max_iterations=0,
         tasks_done=0,
@@ -260,7 +260,7 @@ def _entry_ts(events: tuple, stage: str) -> datetime | None:
 def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnapshot:
     """Build the cockpit snapshot from the run-dir files; safe on a not-yet-started run.
 
-    ``run_state.json`` is OPTIONAL — a completed run recorded without it (or a live run before its
+    ``run_state.json`` is OPTIONAL - a completed run recorded without it (or a live run before its
     first transition write) still renders from the ledgers (events/claims/agent_calls/verdicts).
     """
     now = now or datetime.now(UTC)
@@ -287,7 +287,7 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
         stage_entry = state.updated_utc
     else:
         stage, terminal = _stage_from_events(view.events)
-        mode, iteration, max_iterations = "—", 0, 0
+        mode, iteration, max_iterations = "-", 0, 0
         blocked_gate = None
         quarantined = ()
         per_task = {}
@@ -333,14 +333,14 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
                 attempt=per.attempt if per else 1,
                 max_attempts=per.max_attempts if per else c.retry_policy.max_attempts,
                 family=_family(c.role),
-                agent=f"{agent[0]}" if agent else "—",
+                agent=f"{agent[0]}" if agent else "-",
                 claims=promoted_by_task.get(c.task_id, 0),
-                verdict=verdict.verdict if verdict else "—",
+                verdict=verdict.verdict if verdict else "-",
                 claim_ids=tuple(claim_ids_by_task.get(c.task_id, ())),
             )
         )
 
-    current_agent = "—"
+    current_agent = "-"
     if view.agent_calls:
         last_call = view.agent_calls[-1]
         current_agent = last_call.profile
@@ -369,8 +369,8 @@ def build_snapshot(run: RunPaths, *, now: datetime | None = None) -> CockpitSnap
             claim_id=c.claim_id,
             status=c.status,
             confidence=c.confidence,
-            task_id=c.task_id or "—",
-            source_artifact=c.source_artifact or "—",
+            task_id=c.task_id or "-",
+            source_artifact=c.source_artifact or "-",
             text=c.claim,
         )
         for c in (*view.confirmed, *view.inferred, *view.contradicted, *view.unsupported)

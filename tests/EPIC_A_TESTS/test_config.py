@@ -1,4 +1,4 @@
-"""A3: config loader — precedence (init > env > toml > defaults) + fail-closed."""
+"""A3: config loader - precedence (init > env > toml > defaults) + fail-closed."""
 
 from __future__ import annotations
 

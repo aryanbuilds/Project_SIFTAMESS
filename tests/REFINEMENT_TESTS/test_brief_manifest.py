@@ -80,7 +80,7 @@ def test_init_case_merges_brief_and_objective(
     tmp_path: Path, build_evidence: Callable[..., None]
 ) -> None:
     # A brief FILE (case background) + an inline objective (operator steering) COMBINE into one
-    # trusted objective — more context is better; they are no longer mutually exclusive.
+    # trusted objective - more context is better; they are no longer mutually exclusive.
     evidence = tmp_path / "evidence"
     build_evidence(evidence)
     brief = tmp_path / "objective.md"

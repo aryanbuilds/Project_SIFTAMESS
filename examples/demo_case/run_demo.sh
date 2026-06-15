@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SIFTMesh demo — zero-keys, deterministic floor (tier T0). Pass --agent claude (etc.) to go live.
+# SIFTMesh demo - zero-keys, deterministic floor (tier T0). Pass --agent claude (etc.) to go live.
 #
 #   bash examples/demo_case/run_demo.sh                # deterministic floor (no keys)
 #   bash examples/demo_case/run_demo.sh --agent claude # live, self-correcting agent (needs auth)

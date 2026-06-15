@@ -1,4 +1,4 @@
-"""Cockpit governed-call wrappers (Epic C full-console) — Textual-FREE, no terminal.
+"""Cockpit governed-call wrappers (Epic C full-console) - Textual-FREE, no terminal.
 
 `tui/actions.py` must mirror the CLI's governed sequences exactly: retry only re-dispatches when
 DECIDE says retry; resolve_gate writes the gate via the governed `set_gate`. Tested headless over

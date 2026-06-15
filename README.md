@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  🎥 <b>Demo video:</b> <i>&lt;paste the recorded URL before submitting&gt;</i> &nbsp;·&nbsp;
+  🎥 <b>Demo video:</b> <a href="https://youtu.be/oVX59SM6AZQ">youtu.be/oVX59SM6AZQ</a> &nbsp;·&nbsp;
   📋 <b>Submission index (all 8 components):</b> <a href="docs/submission.md"><code>docs/submission.md</code></a>
 </p>
 

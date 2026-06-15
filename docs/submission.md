@@ -7,7 +7,7 @@ autonomous pass on the SANS SIFT workstation, not a demo fixture.
 | # | Component | Where it lives | Status |
 |---|---|---|---|
 | 1 | **Code repository + license** | Public GitHub repo · [`LICENSE`](../LICENSE) (Apache-2.0) · [`README.md`](../README.md) | ✅ |
-| 2 | **Demo video (≤5 min, narrated, real data + self-correction)** | **Link: _TODO - paste the recorded URL here and in the README_** | ⏳ record |
+| 2 | **Demo video (≤5 min, narrated, real data + self-correction)** | <https://youtu.be/oVX59SM6AZQ> | ✅ |
 | 3 | **Architecture diagram (pattern + boundaries + prompt-vs-architectural)** | [`architecture.md`](architecture.md) · [`threat_model.md`](threat_model.md) · [`diagrams/security_boundaries.mmd`](diagrams/security_boundaries.mmd) | ✅ |
 | 4 | **Written project description (Devpost story)** | [`project_story.md`](project_story.md) | ✅ |
 | 5 | **Dataset documentation** | [`dataset_documentation.md`](dataset_documentation.md) (sealed ROCBA hashes, source, reproduce) | ✅ |

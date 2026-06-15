@@ -1,11 +1,9 @@
 # ROCBA - Findings (live Claude-agent run)
 
-Output from running SIFTMesh against the provided ROCBA dataset on the SANS SIFT workstation. This was a
-**live Claude-agent run**: the agent (sandboxed `claude_headless`) drove the typed forensic tools and
-formed the claims; the heavy tools (disk extraction, memory triage) ran on the deterministic floor by
-policy; disk and memory were handled in **one autonomous pass**. Every finding below is anchored to a
-real tool call + the SHA-256 of its source artifact (chain of custody). This is an **automated triage to
-guide an analyst - not a court-ready conclusion.**
+Output from running SIFTMesh against the provided ROCBA dataset on the SANS SIFT workstation. A live Claude agent (sandboxed `claude_headless`) drove the typed forensic tools; the heavy tools (disk
+extraction, memory triage) ran on the deterministic floor by policy, and disk and memory were processed
+in one run. Every finding below is anchored to a real tool call and the SHA-256 of its source artifact
+(chain of custody). This is automated triage to guide an analyst, not a court-ready conclusion.
 
 | | |
 |---|---|
@@ -14,7 +12,7 @@ guide an analyst - not a court-ready conclusion.**
 | Memory | `Rocba-Memory.zip` -> `Rocba-Memory.raw` · sha256 `eb33bdf63730858a805463d171245b233335dd6d89ed458bc681f7d282e10563` |
 | Tools used (of 19 allowlisted) | Sleuth Kit extraction · `analyze_memory` (Volatility 3) · `analyze_prefetch` · `parse_lnk_jumplists` · `parse_usb_registry` · `parse_recentdocs_mru` · `parse_shellbags` · `parse_amcache_shimcache` · `parse_browser_history` · `extract_registry_run_keys` · `parse_evtx_powershell` (`parse_mft_filesystem` / `parse_usnjrnl` ran but were quarantined - see below) |
 | Critic | Tier-1 deterministic: **223 claims promoted (182 confirmed + 41 inferred), 0 unsupported**; 5 contradictions caught, 14 over-broad claims downgraded, 7 tasks quarantined |
-| Committed ledgers | [`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002) |
+| Committed ledgers | [`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002) |
 
 ## Objective (from the incident brief)
 
@@ -115,21 +113,19 @@ smartscreen, LockApp, RuntimeBroker). These are **review-only leads, not asserte
 critic actively pushed back: duplicated SearchApp (PID 8312/19436) claims tripped the contradiction rule
 (5 contradictions) and were confidence-downgraded (0.50 -> 0.25).
 
-## Self-correction (the critic catching the live agent)
+## Self-correction
 
-This run shows the governance working *against* the live LLM, not just rubber-stamping it:
+The governance acted against the live agent's output:
 
 - The agent **could not anchor the high-volume parses.** `$MFT` and USN-journal tasks
   (TASK-016/017/019) returned no parseable anchored claims on attempt 1; the critic forced a retry with
   tightened criteria; attempt 2 still failed; the tasks were escalated and **quarantined**. So
-  `parse_mft_filesystem` (22 calls) and `parse_usnjrnl` (15 calls) **executed but produced no promoted
-  findings** - the system refused to emit unsupported claims rather than guess.
+  `parse_mft_filesystem` (22 calls) and `parse_usnjrnl` (15 calls) executed but produced no promoted
+  findings; the system did not emit unsupported claims.
 - The memory injected-code over-claims were **downgraded and contradicted** (above).
 - 3 prompt-injection consequences routed `TASK-001` to human review.
 
-The honest cost: this run has **no MFT/USN findings** (the deterministic floor surfaces those
-mechanically; the live agent is more autonomous but less reliable on large tabular output). That trade
-is recorded faithfully in the ledgers rather than papered over.
+This run therefore has no MFT/USN findings; the deterministic floor surfaces those mechanically.
 
 ## Caveats
 
@@ -143,9 +139,9 @@ is recorded faithfully in the ledgers rather than papered over.
 ## Provenance & integrity
 
 - Evidence opened read-only; SHA-256 sealed at ingest (chain of custody) - see
-  [`evidence_integrity.md`](evidence_integrity.md) and [`dataset_documentation.md`](dataset_documentation.md).
+  [`evidence_integrity.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/evidence_integrity.md) and [`dataset_documentation.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/dataset_documentation.md).
 - Every claim cites `tool_call_id` + `source_sha256`; unsupported claims are excluded from the findings
   (Appendix B of the run's `reports/final_report.md`).
 - The full ledgers + `replay.html` are committed under
-  [`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002). Reproduce: see
-  [`complete_operation.md`](complete_operation.md).
+  [`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002). Reproduce: see
+  [`complete_operation.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/complete_operation.md).

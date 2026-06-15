@@ -2,7 +2,7 @@
 
 _Static architecture reference. The run-specific companion is the generated
 `reports/architecture_notes.md` (Epic J); the security detail is in
-[`threat_model.md`](threat_model.md) and [`evidence_integrity.md`](evidence_integrity.md)._
+[`threat_model.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/threat_model.md) and [`evidence_integrity.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/evidence_integrity.md)._
 
 ---
 
@@ -159,7 +159,7 @@ INIT
 ## 6. Security boundaries
 
 The five code-decided boundaries every byte of hostile input must cross. Source:
-[`diagrams/security_boundaries.mmd`](diagrams/security_boundaries.mmd) (render with
+[`diagrams/security_boundaries.mmd`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/diagrams/security_boundaries.mmd) (render with
 `mmdc -i security_boundaries.mmd -o security_boundaries.svg`). GitHub renders the inline copy:
 
 ```mermaid
@@ -217,7 +217,7 @@ tools never spawn a subprocess, so there is no command string to inject into at 
 heavy tools - image extraction (Sleuth Kit), memory triage (Volatility 3), and super-timeline
 (Plaso) - shell out, and those use **fixed-argv, `shell=False`** with no evidence string interpolated
 into a command (PLAN/08). See
-[`threat_model.md`](threat_model.md) §6 for the policy-layer comparison to CAO/Valhuntir.
+[`threat_model.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/threat_model.md) §6 for the policy-layer comparison to CAO/Valhuntir.
 
 ## 7. Key directories
 

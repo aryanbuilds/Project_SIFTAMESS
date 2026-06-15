@@ -4,11 +4,11 @@ This log records the run, its results, the findings, and the mapping to the brie
 Where the data does not answer a question, this document says so.
 
 > **Scope.** This is a **single live Claude-agent run** - `RUN-20260615-064002` (case `case_fast`) - that
-> investigated the disk image **and** the memory image in one autonomous pass. The LIVE executor is a
+> investigated the disk image **and** the memory image in one autonomous pass. The live executor is a
 > Claude agent driven through `claude_headless`; the two heaviest tools (disk extract and memory triage)
 > stay on the deterministic floor by policy. This run **replaces** the two earlier deterministic-floor
 > bundles; those are deleted. The committed logs for this operation are at
-> [`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002/).
+> [`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002).
 >
 > The run used SIFTMesh's **19-tool** governed allowlist (hash · vault · EVTX-security · EVTX-PowerShell ·
 > prefetch · registry-Run-keys · timeline · claim-validation · disk-image extraction · memory triage,
@@ -33,7 +33,7 @@ Where the data does not answer a question, this document says so.
 | SRL systems in scope | Office 365, SharePoint, OneDrive (personal + business), Exchange Online / local Outlook |
 | Evidence | `rocba-cdrive.e01` (~23.7 GB disk) · `Rocba-Memory.zip` (~5.7 GB, auto-decompressed to `Rocba-Memory.raw`) · `ROCBA-BACKGROUND.pptx` (trusted brief = objective) |
 
-Sealed hashes (chain of custody) are in [`dataset_documentation.md`](dataset_documentation.md). The four
+Sealed hashes (chain of custody) are in [`dataset_documentation.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/dataset_documentation.md). The four
 sealed files: `rocba-cdrive.e01` (23,678,691,658 bytes, sha256 `f2eb856d…`); `Rocba-Memory.zip`
 (5,682,814,481 bytes, sha256 `32cec940…`, decompressed to `Rocba-Memory.raw`, sha256 `eb33bdf6…`);
 `ROCBA-BACKGROUND.pptx` (40,148,560 bytes, sha256 `44a12c54…`, trusted brief, **not** hostile evidence);
@@ -43,7 +43,7 @@ and a partial download `standard_case_1/rocba-cdrive.e01.download` (2,605,550,88
 ## 2. The operation (one command + real results)
 
 Run from `~/projects/Project_SIFTAMESS`. The whole investigation - disk and memory - was one autonomous
-`siftmesh run` in `--auto` mode with a LIVE Claude executor.
+`siftmesh run` in `--auto` mode with a live Claude executor.
 
 ### 2.1 The command
 ```bash
@@ -55,8 +55,8 @@ SIFTMESH_CAPS__MAX_PARALLEL_TASKS=6 uv run siftmesh run ./case_fast \
 - Run id `RUN-20260615-064002`; case dir `case_fast`. Sealed `2026-06-15 06:40:02Z`, completed
   `2026-06-15 08:37:01Z` (about 1 h 57 m wall clock). Mode `auto`; final state `done`; terminal at
   iteration 2 of 3 (`max_iterations=3` in `run_state`; report iteration 2/3).
-- Executor: LIVE Claude agent via `claude_headless`. Tier-2 judge: `opencode` (advisory only - it ran,
-  it never promotes; Tier-1 stays the sole promoter).
+- Executor: live Claude agent via `claude_headless`. Tier-2 judge: `opencode` (advisory only; it never
+  promotes; Tier-1 stays the sole promoter).
 
 ### 2.2 Execution profile (what actually ran)
 - **Agent calls: 28** = 26 `claude_headless` (LIVE) + 2 `deterministic_executor` (the two heavy tools,
@@ -66,7 +66,7 @@ SIFTMESH_CAPS__MAX_PARALLEL_TASKS=6 uv run siftmesh run ./case_fast \
   mid-run (the plan re-sequenced on findings).
 - **Tool calls: 245** = 244 success + 1 error. Backends: 243 in-process "real" + 2 `sift_lane`
   subprocess (disk extract + memory). The single error is `TOOL-050` `analyze_prefetch` - a real
-  `parse_error` on `WMIPRVSE.EXE-E8B8DD29.pf` (an honestly-logged partial failure, not hidden).
+  `parse_error` on `WMIPRVSE.EXE-E8B8DD29.pf` (a partial failure).
 - **13 distinct tools exercised:** `analyze_memory` (1), `analyze_prefetch` (49),
   `extract_artifacts_from_image` (1), `extract_registry_run_keys` (4), `parse_amcache_shimcache` (3),
   `parse_browser_history` (3), `parse_evtx_powershell` (1), `parse_lnk_jumplists` (137),
@@ -97,23 +97,22 @@ SIFTMESH_CAPS__MAX_PARALLEL_TASKS=6 uv run siftmesh run ./case_fast \
 - **Quarantined tasks: 7** (`TASK-001, 002, 005, 013, 016, 017, 019`). Their claims are never promoted as
   facts; the run still completed to `done` (auto-mode quarantine policy).
 
-> **The honest self-correction story (real, not staged).** The live Claude agent genuinely **failed to
-> anchor three high-volume tasks** - `TASK-016`, `TASK-017`, `TASK-019` (the `$MFT` and USN-journal
-> parses). On attempt 1 it returned no parseable anchored claims (`agent_produced_no_claims` /
-> `agent_output_not_parseable_as_claims`). The deterministic critic forced a retry with tightened
-> criteria; attempt 2 still failed; the tasks were escalated and quarantined. So `parse_mft_filesystem`
-> (22 calls) and `parse_usnjrnl` (15 calls) **ran**, but produced **no promoted claims** this run - the
-> governance correctly refused to let unsupported claims through rather than emit them. This is a genuine
-> "the critic caught the agent" case, not a contrived demo. Separately, the memory "possible injected
-> code" claims are **system** processes (MsMpEng, SearchApp, dllhost, Teams, smartscreen, LockApp,
-> RuntimeBroker) flagged by Volatility `malfind`; the critic downgraded the duplicated `SearchApp` claims
-> (the contradiction) and they remain inferred / low-confidence - correctly **not** asserted as malware.
+> **Self-correction in this run.** The live Claude agent failed to anchor three high-volume tasks -
+> `TASK-016`, `TASK-017`, `TASK-019` (the `$MFT` and USN-journal parses). On attempt 1 it returned no
+> parseable anchored claims (`agent_produced_no_claims` / `agent_output_not_parseable_as_claims`). The
+> deterministic critic forced a retry with tightened criteria; attempt 2 still failed; the tasks were
+> escalated and quarantined. So `parse_mft_filesystem` (22 calls) and `parse_usnjrnl` (15 calls) ran,
+> but produced no promoted claims this run - the governance did not let unsupported claims through.
+> Separately, the memory "possible injected code" claims are system processes (MsMpEng, SearchApp,
+> dllhost, Teams, smartscreen, LockApp, RuntimeBroker) flagged by Volatility `malfind`; the critic
+> downgraded the duplicated `SearchApp` claims (the contradiction) and they remain inferred /
+> low-confidence - not asserted as malware.
 
-### 2.4 Prompt-injection handling (fail-safe, noisy - disclosed honestly)
+### 2.4 Prompt-injection handling
 - **11,628 prompt-injection alerts logged** (never executed) = 11,625 `base64_blob` + 3
   `claim_injection_affected`; 3 injection consequences applied (`TASK-001` routed to `human_review`).
 - The 11,625 `base64_blob` alerts are an **over-trigger** on base64-like hash fragments in tool output:
-  this fails safe (over- not under-flag) but is noisy. Disclosed plainly; not hidden.
+  this fails safe (over- not under-flag) but is noisy.
 
 ### 2.5 Audit trail
 - `orchestration_events`: 213, monotonic; 17 transitions carry `duration_ms`.
@@ -125,7 +124,7 @@ SIFTMESH_CAPS__MAX_PARALLEL_TASKS=6 uv run siftmesh run ./case_fast \
 ## 3. Findings (evidence-anchored; full set in the run ledgers)
 
 The headline question-by-question answers + per-artifact detail are in
-[`findings_rocba.md`](findings_rocba.md). In brief, anchored by the live agent:
+[`findings_rocba.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/findings_rocba.md). In brief, anchored by the live agent:
 - **IP staged to a removable F: volume** - e.g. `F:\Files of interest\SRL-Projects - Megaforce\
   Megaforce\Megaforce Specs & Research.docx`, `F:\Key Data\SRL-Projects - Blue Thunder\…`,
   `F:\Files from SRL system`, and `F:\Files of interest\Recovered Documents\Wolves_Lair_Tech_Specs.pptx`.
@@ -171,17 +170,16 @@ The headline question-by-question answers + per-artifact detail are in
 | **How was it stolen?** | Answered (lead) | Cloud-sync clients **executed** - Google Drive File Stream, the Backup-and-Sync installer (twice), iCloud (59 runs) (`parse_amcache_shimcache`) + Run-key persistence; USB attachment; **SDelete** + `vssadmin`/`wevtutil` anti-forensics. |
 | **When did the activity occur?** | Answered (lead) | Activity window 2020-10-21 to 2020-11-16 UTC; SDelete downloaded `2020-11-14T13:37:51Z`; `FTK IMAGER.EXE` ran `2020-11-16T02:43:57Z`; Amcache first-run timestamps span `2020-10-21T03:44:22Z`-`2020-11-14T13:50:48Z` (`parse_amcache_shimcache`, `analyze_prefetch`). |
 
-## 5. Remaining honest gaps (documented, fail-closed - not invented)
+## 5. Remaining gaps
 
 - **`$MFT` inventory and USN change-journal findings are NOT in the promoted findings.** The tools ran
   (`parse_mft_filesystem` 22 calls, `parse_usnjrnl` 15 calls) but the **live agent failed to anchor
   them** - `TASK-016/017/019` were retried, then escalated and quarantined. The deterministic floor
-  surfaces these mechanically; the live agent is more autonomous but less reliable on huge tabular
-  output - the critic caught it rather than emitting unsupported claims.
+  surfaces these mechanically.
 - **Plaso super-timeline not run this pass** - the fast command omitted `SIFTMESH_ENABLE_SUPER_TIMELINE`.
   It is available behind that flag; it is simply absent from this run's findings.
 - **`Security.evtx`** - genuine TSK LZNT1 corruption on this image (per prior runs); recorded as a
-  failure, never faked.
+  failure.
 - **Per-agent LLM token accounting not recorded** - `agent_calls` carry no token field.
 - This is **investigative triage to guide a human examiner, not a court-ready conclusion.**
 
@@ -190,4 +188,4 @@ The headline question-by-question answers + per-artifact detail are in
 Evidence opened read-only; SHA-256 sealed at ingest; every one of the **223 promoted claims** cites
 `tool_call_id` + `source_sha256` (0 dangling references); unsupported claims are firewalled out of the
 findings. The committed ledgers, audit trail, and self-contained `replay.html` for this run live at
-[`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002/).
+[`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002).

@@ -3,7 +3,7 @@
 _Epic L (supports L2 path-policy + L4 evidence-as-hostile). The integrity boundary keeps
 originals hashed before analysis, opened read-only, and never written back, and it records
 every derived artifact and tool read so a finding traces to exact bytes. Read with
-[`threat_model.md`](threat_model.md)._
+[`threat_model.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/threat_model.md)._
 
 ---
 
@@ -76,7 +76,7 @@ sits outside SIFTMesh's scope. We do not claim court-ready forensic soundness.
 
 When a live LLM agent is in the loop, and only then, SIFTMesh hands evidence over as inert,
 spotlighted DATA, never as raw bytes and never as instructions. The full spec lives in
-[`threat_model.md`](threat_model.md) §5.3. In short, the prompt carries only `{path,
+[`threat_model.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/threat_model.md) §5.3. In short, the prompt carries only `{path,
 sha256}` rows, wrapped with a per-run delimiter sentinel, a "DATA, not instructions"
 banner, and interleaved datamarking (Microsoft spotlighting, arXiv:2403.14720). SIFTMesh
 logs instruction-like content to `injection_alerts.jsonl` and the critic acts on it

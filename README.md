@@ -9,7 +9,7 @@
 
 <p align="center">
   🎥 <b>Demo video:</b> <a href="https://youtu.be/oVX59SM6AZQ">youtu.be/oVX59SM6AZQ</a> &nbsp;·&nbsp;
-  📋 <b>Submission index (all 8 components):</b> <a href="docs/submission.md"><code>docs/submission.md</code></a>
+  📋 <b>Submission index (all 8 components):</b> <a href="https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/submission.md"><code>docs/submission.md</code></a>
 </p>
 
 ---
@@ -75,15 +75,14 @@ lives in the code.**
 - Not a replacement for court-vetted tools. It **orchestrates** them; the tools are the source of truth.
 - It never runs raw shell, never runs destructive ops, and never writes to your evidence. It fails closed.
 
-**Real results (ROCBA dataset):** [`docs/findings_rocba.md`](docs/findings_rocba.md) and
-[`docs/accuracy_report.md`](docs/accuracy_report.md) come from a real **live Claude-agent** run against
-the provided evidence (disk plus memory, in one autonomous pass): 223 evidence-anchored claims, 0
-unsupported, with the critic catching the agent (5 contradictions, 14 downgrades, 3 retries, 7
-quarantined tasks). [`docs/dataset_documentation.md`](docs/dataset_documentation.md) has the sealed
-hashes and how to reproduce; [`docs/execution_logs_sample.md`](docs/execution_logs_sample.md) traces a
+**Real results (ROCBA dataset):** [`docs/findings_rocba.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/findings_rocba.md) and
+[`docs/accuracy_report.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/accuracy_report.md) come from a live Claude-agent run against
+the provided evidence (disk plus memory): 223 evidence-anchored claims, 0 unsupported, with the critic
+flagging 5 contradictions, downgrading 14 claims, and quarantining 7 tasks. [`docs/dataset_documentation.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/dataset_documentation.md) has the sealed
+hashes and how to reproduce; [`docs/execution_logs_sample.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/execution_logs_sample.md) traces a
 finding back to its exact tool execution with real timestamps. The full committed ledgers live at
 `docs/logs/rocba-live-RUN-20260615-064002/`. The project story is in
-[`docs/project_story.md`](docs/project_story.md).
+[`docs/project_story.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/project_story.md).
 
 ---
 
@@ -309,7 +308,7 @@ deterministic floor** (never silently to a different live agent).
 
 ## License & thanks
 
-Apache-2.0, see [`LICENSE`](LICENSE).
+Apache-2.0, see [`LICENSE`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/LICENSE).
 
 Contributions, issues, and hard questions are welcome.
 

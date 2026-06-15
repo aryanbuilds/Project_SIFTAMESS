@@ -7,26 +7,25 @@ memory triage), which are pinned to the floor by policy. Disk and memory were ha
 autonomous pass** (the memory `.zip` was auto-decompressed and re-ingested mid-run). We committed the
 ledgers so a judge can inspect any finding and trace it back to the exact tool execution without the
 workstation. See a guided walkthrough of one trace in
-[`../execution_logs_sample.md`](../execution_logs_sample.md).
+[`../execution_logs_sample.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/execution_logs_sample.md).
 
 | Bundle | Run | Evidence (sealed) | Result |
 |---|---|---|---|
 | `rocba-live-RUN-20260615-064002/` | disk + memory, live Claude agent | `rocba-cdrive.e01` (sha256 `f2eb856d...`, 23.7 GB) + `Rocba-Memory.raw` (sha256 `eb33bdf6...`) | 223 claims, all anchored; 0 unsupported |
 
-## What this run shows (live self-correction, in the ledgers)
+## What this run shows
 
 - **Live executor:** `audit/agent_calls.jsonl` - 26 `claude_headless` dispatches, 2 `deterministic_executor`
   (the tier-floor-forced heavy tools), 0 fall-backs.
-- **Critic actually fired:** `audit/critic_verdicts.jsonl` - 51 verdicts: 34 accepted, 2
-  accepted_with_downgrade, 4 retry_required, 8 escalation_required, 3 human_review_required (not a flat
-  all-accepted pass).
+- **Critic fired:** `audit/critic_verdicts.jsonl` - 51 verdicts: 34 accepted, 2 accepted_with_downgrade,
+  4 retry_required, 8 escalation_required, 3 human_review_required.
 - **Genuine retries:** `audit/retries.jsonl` - 3 critic-driven retries (TASK-016/017/019) with the
   tightened criteria written back into the contract.
 - **Honest failure:** the live agent could not anchor the `$MFT` / USN-journal tasks (TASK-016/017/019);
   attempt 1 produced no parseable anchored claims, the critic forced a retry, attempt 2 still failed, and
   the tasks were escalated and **quarantined** - so those tools ran (`parse_mft_filesystem` x22,
-  `parse_usnjrnl` x15) but produced **no promoted claims**. The governance refused to emit unsupported
-  findings rather than fabricate them.
+  `parse_usnjrnl` x15) but produced **no promoted claims**. The governance did not emit unsupported
+  findings.
 - **Contradictions + downgrades:** `claims/contradiction_ledger.jsonl` (5) and
   `claims/confidence_changes.jsonl` (14) - the critic caught and downgraded over-broad memory claims.
 - **Dynamic re-planning:** `audit/followups.jsonl` - 24 derived-gap follow-up tasks generated mid-run.

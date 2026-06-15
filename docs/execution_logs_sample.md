@@ -7,9 +7,9 @@ demo. Every line below is copied from the run's append-only ledgers. This was a 
 run** (the agent drove the typed tools; heavy tools ran on the floor; disk + memory in one pass).
 
 > The **complete ledgers are committed** under
-> [`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002): the full `audit/`,
+> [`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002): the full `audit/`,
 > `claims/`, `reports/`, `context/`, `tasks/`, and chain-of-custody ledgers (see
-> [`logs/README.md`](logs/README.md)). This file walks through one trace. Only the heavy *derived* trees
+> [`logs/README.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/logs/README.md)). This file walks through one trace. Only the heavy *derived* trees
 > (per-tool `results/`, the carved `evidence/extracted/`) and the raw evidence images stay off-repo, for
 > size and chain of custody.
 
@@ -79,10 +79,10 @@ hash, so this is chain of custody back to the raw `.E01`:
 {"tool_call_id":"TOOL-001","tool_name":"extract_artifacts_from_image","source_artifact":"rocba-cdrive.e01","source_sha256":"f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67","status":"success","backend":"sift_lane","tool_version":"0.1.0","structured_result_path":"results/TOOL-001.structured.json"}
 ```
 
-## 2. The self-correction arc (the critic catching the live agent)
+## 2. The self-correction arc
 
-The most important thing in these ledgers is where the governance disagreed with the LLM. The agent
-**could not anchor** the `$MFT` / USN-journal tasks. Watch TASK-016 across the ledgers:
+Where governance disagreed with the agent: it could not anchor the `$MFT` / USN-journal tasks. Watch
+TASK-016 across the ledgers:
 
 **Attempt 1** - the live agent runs but returns no parseable anchored claims, so the dispatch is
 recorded `retry_required` (not "success", not faked):
@@ -105,11 +105,10 @@ into the next prompt:
 {"agent_call_id":"AGENT-026","task_id":"TASK-016","profile":"claude_headless","adapter":"claude_headless","backend":"claude_headless","attempt":2,"start_time_utc":"2026-06-15T08:08:50.665516Z","end_time_utc":"2026-06-15T08:18:50.693376Z","status":"error","fell_back_from":null}
 ```
 
-This is genuine, un-staged self-correction: the live agent failed on the largest tabular outputs
-(`parse_mft_filesystem` and `parse_usnjrnl` ran, but produced no promoted findings), and the
-deterministic engine refused to emit unsupported claims rather than guess. The honest cost is recorded,
-not hidden. Across the run: **3 retries, 8 escalations, 3 human-review gates, 7 quarantined tasks, 5
-contradictions, 14 confidence downgrades.**
+The live agent failed on the largest tabular outputs (`parse_mft_filesystem` and `parse_usnjrnl` ran,
+but produced no promoted findings), and the deterministic engine did not emit unsupported claims. Across
+the run: 3 retries, 8 escalations, 3 human-review gates, 7 quarantined tasks, 5 contradictions, 14
+confidence downgrades.
 
 ## 3. Evidence-as-hostile, logged not executed
 
@@ -150,11 +149,11 @@ escalation policy), not LLM tokens:
 {"base_profile": "deterministic_executor", "selected_profile": "deterministic_executor", "escalated": false, "reason": "critic_retry", "recorded_utc": "2026-06-15T08:08:50.551647Z"}
 ```
 
-The deterministic floor remains the reproducible, no-keys baseline; the live agent is the opt-in hero.
+The deterministic floor remains the reproducible, no-keys baseline; the live agent is an opt-in alternative.
 
 ---
 
 *Provenance: every record above is from the committed run ledgers
-([`logs/rocba-live-RUN-20260615-064002/`](logs/rocba-live-RUN-20260615-064002)). Findings narrative:
-[`findings_rocba.md`](findings_rocba.md); accuracy: [`accuracy_report.md`](accuracy_report.md); dataset +
-reproduce: [`dataset_documentation.md`](dataset_documentation.md).*
+([`logs/rocba-live-RUN-20260615-064002/`](https://github.com/aryanbuilds/Project_SIFTMESH/tree/mvp_phase_1/docs/logs/rocba-live-RUN-20260615-064002)). Findings narrative:
+[`findings_rocba.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/findings_rocba.md); accuracy: [`accuracy_report.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/accuracy_report.md); dataset +
+reproduce: [`dataset_documentation.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/dataset_documentation.md).*

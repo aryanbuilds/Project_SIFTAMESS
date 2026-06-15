@@ -1,8 +1,8 @@
 # SIFTMesh Threat Model
 
 _Epic L · primary artifact for hackathon criterion 4 (architectural, bypass-tested
-controls). Pairs with [`evidence_integrity.md`](evidence_integrity.md) (chain of
-custody) and [`architecture.md`](architecture.md) (security-boundary diagram). Every
+controls). Pairs with [`evidence_integrity.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/evidence_integrity.md) (chain of
+custody) and [`architecture.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/architecture.md) (security-boundary diagram). Every
 control named here is a **deterministic gate in code** with a **bypass test** in
 `tests/EPIC_L_TESTS/` - not a prompt that asks the model nicely._
 
@@ -117,8 +117,8 @@ memory/context manipulation → `test_bypass_memory_poisoning`; checker-out-of-t
 
 ## 4. The five security boundaries (criterion 4)
 
-These are the boundaries drawn in [`architecture.md`](architecture.md) and the
-[security-boundaries diagram](diagrams/security_boundaries.mmd). Crossing any of them is a
+These are the boundaries drawn in [`architecture.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/architecture.md) and the
+[security-boundaries diagram](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/diagrams/security_boundaries.mmd). Crossing any of them is a
 code-decided gate:
 
 1. **Evidence-vault boundary** - originals are read-only; integrity hashed before

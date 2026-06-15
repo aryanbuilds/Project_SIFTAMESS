@@ -1,9 +1,9 @@
 # Dataset Documentation
 
 This documents the dataset SIFTMesh investigates and how to reproduce a run against it. The
-committed execution logs for this dataset are a single LIVE Claude-agent run
-(`docs/logs/rocba-live-RUN-20260615-064002/`) that investigated the disk and memory evidence in one
-autonomous pass on the SANS SIFT workstation. SIFTMesh never self-tests against real forensic
+committed execution logs for this dataset are a single live Claude-agent run
+(`docs/logs/rocba-live-RUN-20260615-064002/`) that investigated the disk and memory evidence on the
+SANS SIFT workstation. SIFTMesh never self-tests against real forensic
 evidence (CLAUDE.md §2B); the maintainer runs the pipeline on the box and the committed bundle is
 the resulting real ledgers, audit trail, and report.
 
@@ -32,7 +32,7 @@ emits all timestamps in UTC.
 
 - **Hashed + sealed at ingest** - each file gets a SHA-256 into `evidence_manifest.json` +
   `hashes.sha256` before any analysis; the chain of custody starts there (see
-  [`evidence_integrity.md`](evidence_integrity.md)).
+  [`evidence_integrity.md`](https://github.com/aryanbuilds/Project_SIFTMESH/blob/mvp_phase_1/docs/evidence_integrity.md)).
 - **Read-only** - originals are opened read-only and never modified; derived artifacts (extracted
   files, decompressed memory) are written only under the run dir.
 - **Real, fail-closed tools** - the `.E01` is carved with **Sleuth Kit**
@@ -43,7 +43,7 @@ emits all timestamps in UTC.
 ## What the run found
 
 `RUN-20260615-064002` ran in `--auto` mode and reached the `done` terminal state in about 1 h 57 m
-wall clock (sealed 2026-06-15 06:40:02Z, completed 2026-06-15 08:37:01Z). The executor was a LIVE
+wall clock (sealed 2026-06-15 06:40:02Z, completed 2026-06-15 08:37:01Z). The executor was a live
 Claude agent via `claude_headless`; the two heavy tools (disk extract, memory triage) ran on the
 deterministic floor by policy. An advisory `opencode` Tier-2 judge ran but never promotes.
 
@@ -66,20 +66,19 @@ distinct USBSTOR devices; cloud sync via Google Drive File Stream, Dropbox, OneD
 517 Amcache program-presence entries; and memory triage over 2,186 processes / 430 network
 endpoints. ATT&CK coverage: T1005, T1547.001, and (low-confidence) T1055.
 
-### Honest gaps in this run
+### Limitations of this run
 
 - **`$MFT` and USN change-journal findings are not in the promoted findings.** The live agent failed
   to anchor TASK-016/017/019 on attempt 1, the deterministic critic forced a retry with tightened
   criteria, attempt 2 still failed, and the tasks were escalated and quarantined. `parse_mft_filesystem`
-  (22 calls) and `parse_usnjrnl` (15 calls) RAN, but produced no promoted claims this pass - the
-  governance refused to emit unsupported claims rather than fake them. This is a genuine
-  "the critic caught the agent" case, not a staged demo.
+  (22 calls) and `parse_usnjrnl` (15 calls) ran, but produced no promoted claims this pass; the
+  governance did not emit unsupported claims for them.
 - **Plaso super-timeline was not run this pass** (the fast command omitted
   `SIFTMESH_ENABLE_SUPER_TIMELINE`); it is available behind that flag.
 - **Security.evtx was not parsed** (genuine TSK LZNT1 corruption on this image).
 - **Prompt-injection alerts are noisy**: 11,628 alerts were logged (never executed), of which 11,625
   are `base64_blob` over-triggers on base64-like hash fragments in tool output - a fail-safe that
-  over-flags rather than under-flags. Disclosed here honestly.
+  over-flags rather than under-flags.
 - **Per-agent LLM token accounting is not recorded** (`agent_calls` carry no token field;
   `token_budget.jsonl` logs profile-routing decisions only).
 

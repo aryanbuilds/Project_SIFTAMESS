@@ -11,7 +11,7 @@
 - CLI-first, evidence-safe controller for autonomous DFIR. Give it evidence and a question; it does the work and shows its receipts.
 - Seals evidence read-only (SHA-256), plans, sends an agent in, and a **deterministic critic** fact-checks every claim against real tool output before it's allowed to be a "finding."
 - Drives **19 real forensic tools** (Sleuth Kit, Volatility 3, Plaso, evtx, regipy, prefetch, `$MFT`, registry, browser, LNK, shellbags, Amcache/ShimCache, USN). No mocks, no vibes.
-- On the real ROCBA evidence: **634 findings, 0 unsupported, 0 contradictions.** It basically caught the guy: ADAMANTIUM research siphoned to a personal Google Drive and a USB, then SDelete and ~48K USN deletions to cover the tracks, all on a 5.7M-event timeline.
+- On the real ROCBA evidence (a live Claude agent run, disk + memory in one auto pass): **223 claims promoted, 0 unsupported, 0 contradicted-status** - and along the way the critic caught **5 contradictions** and **downgraded 14** over-broad claims. It basically caught the guy: research siphoned to a personal Google Drive (G:) and a removable F: volume, an SRL email export (.pst) staged to the cloud, then SDelete downloaded and `wevtutil` / `vssadmin` fired to cover the tracks.
 - Every finding links back to the exact tool call and the hash of the bytes it came from. Trust, but verify - and here you can actually verify.
 
 ## How we built it
@@ -26,16 +26,17 @@
 
 ## Challenges we ran into
 
-- **Plaso refused to cooperate.** The disk is a partial acquisition whose shadow-copy header points 81 GB into a 23 GB file (sure). It crashed even when told to skip VSS. I ran it over the extracted artifacts instead and still got 5.7M events.
+- **Plaso refused to cooperate.** The disk is a partial acquisition whose shadow-copy header points 81 GB into a 23 GB file (sure). It crashed even when told to skip VSS. The super-timeline is gated behind `SIFTMESH_ENABLE_SUPER_TIMELINE` and this fast pass deliberately left it off - so it's honestly absent from this run's findings, not faked.
 - **A genuinely corrupt event log.** `Security.evtx` died in three different NTFS readers at the same spot. For once, not my bug. I made it fail closed and say so instead of faking it.
 - **The agent went rogue and the critic caught it red-handed.** Testing parallel `claude_headless` plus an OpenCode judge, every run came back unparseable. I opened the raw output and the agent had wandered into a *different conversation*: reaching for Bash, hitting "Request interrupted by user," and literally echoing my own "wait, is this prompt injection?" rant back at me. I thought the evidence had pwned it. Nope. The critic had already thrown the whole mess out; the real bug was session isolation (headless Claude inherited my env with no pinned session, so a live session bled in). Fixed with a fresh session id, no persistence, and a minimal env.
-- **Evidence is hostile.** 3,949 strings tried to look like instructions. I log all of them and run none. Honest pitch: containment, not "we solved prompt injection" (nobody has).
+- **The agent choked on the boring big tables, and the critic refused to bluff.** On this run the live agent genuinely failed to anchor three high-volume parses - the `$MFT` inventory and the USN change journal (TASK-016/017/019). The tools *ran* (22 `parse_mft_filesystem` calls, 15 `parse_usnjrnl`), but attempt one came back with no parseable anchored claims. The critic forced a retry with tightened criteria; attempt two still failed; the tasks were escalated and quarantined. So those findings are simply **not** in the report - the governance chose "no claim" over an unsupported one. Not a staged demo; the agent really fumbled, and the floor caught it.
+- **Evidence is hostile.** 11,628 strings got logged as injection alerts and exactly zero were executed. Full honesty: 11,625 of those are an over-trigger on base64-looking hash fragments in tool output - noisy, but fail-safe (over-flag, never under-flag); only 3 were real claim-injection consequences (TASK-001 routed to human review). The pitch is containment, not "we solved prompt injection" (nobody has).
 - **The small, real, dumb ones:** the brief field kept only a filename instead of the full path; my workstation hit 94% disk and started gasping (freed ~61 GB with prune / portions / merge); and I found my own GitHub token loitering in the git remote URL and rotated it before it caused trouble.
 
 ## Accomplishments that we're proud of
 
-- A real autonomous run that answered all 5 questions: **634 findings, none unsupported, none contradictory**, every one traceable to a tool call and a hash.
-- A critic that actually did its job and tossed a misbehaving live agent instead of trusting it.
+- A real autonomous run that answered all 5 questions: **223 promoted claims, none unsupported, none left in a contradicted status**, every one traceable to a tool call and a hash.
+- A critic that actually did its job: it tossed a misbehaving live agent, caught 5 contradictions, downgraded 14 over-broad claims, and quarantined the `$MFT`/USN tasks the agent couldn't anchor rather than letting them through.
 - I left the failures **in** (corrupt log, partial timeline). Honesty over polish.
 - Evidence came out untouched: the end hash matched the ingest seal.
 - Determinism I can prove: parallel == sequential, byte for byte, and a golden run reproduces it with zero keys.

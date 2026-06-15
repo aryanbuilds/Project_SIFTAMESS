@@ -1,8 +1,0 @@
-{"run_id": "RUN-20260612-082630", "case": "case_mem", "evidence": "/home/sansforensics/projects/ev_mem", "event": "init_case_start", "level": "info", "timestamp": "2026-06-12T08:26:30.182998Z"}
-{"run_id": "RUN-20260612-082630", "file_count": 1, "total_bytes": 5682814481, "event": "hashing_complete", "level": "info", "timestamp": "2026-06-12T08:26:41.360948Z"}
-{"run_id": "RUN-20260612-082630", "files": 1, "event": "manifest_written", "level": "info", "timestamp": "2026-06-12T08:26:41.362048Z"}
-{"run_id": "RUN-20260612-082630", "events": 1, "event": "custody_recorded", "level": "info", "timestamp": "2026-06-12T08:26:41.364675Z"}
-{"run_id": "RUN-20260612-082630", "run": "RUN-20260612-082630", "event": "init_case_done", "level": "info", "timestamp": "2026-06-12T08:26:41.364698Z"}
-{"run_id": "RUN-20260612-082630", "archive": "Rocba-Memory.zip", "decomp_id": "DECOMP-001", "event": "decompress_start", "level": "info", "timestamp": "2026-06-12T08:27:11.895955Z"}
-{"run_id": "RUN-20260612-082630", "decomp_id": "DECOMP-001", "derived_path": "evidence/extracted/Rocba-Memory.raw", "image_format": "raw", "size_bytes": 19050528768, "sha256": "eb33bdf63730858a805463d171245b233335dd6d89ed458bc681f7d282e10563", "event": "decompress_done", "level": "info", "timestamp": "2026-06-12T08:30:24.188691Z"}
-{"run_id": "RUN-20260612-082630", "files_removed": 1, "bytes_freed": 19050528768, "event": "derived_pruned", "level": "info", "timestamp": "2026-06-12T08:40:53.722118Z"}

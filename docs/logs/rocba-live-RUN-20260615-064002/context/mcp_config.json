@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "siftmesh": {
+      "command": "/home/sansforensics/projects/Project_SIFTAMESS/.venv/bin/python3",
+      "args": [
+        "-m",
+        "siftmesh_core.cli",
+        "mcp-serve"
+      ],
+      "env": {
+        "SIFTMESH_RUN_ROOT": "/home/sansforensics/projects/Project_SIFTAMESS/case_fast/case_runs/RUN-20260615-064002",
+        "SIFTMESH_EVIDENCE_ROOT": "/home/sansforensics/projects/data"
+      }
+    }
+  }
+}

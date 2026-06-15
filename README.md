@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  🎥 <b>Demo video:</b> <i>&lt;TODO: paste the recorded URL&gt;</i> &nbsp;·&nbsp;
+  🎥 <b>Demo video:</b> <i>&lt;paste the recorded URL before submitting&gt;</i> &nbsp;·&nbsp;
   📋 <b>Submission index (all 8 components):</b> <a href="docs/submission.md"><code>docs/submission.md</code></a>
 </p>
 
@@ -76,12 +76,13 @@ lives in the code.**
 - It never runs raw shell, never runs destructive ops, and never writes to your evidence. It fails closed.
 
 **Real results (ROCBA dataset):** [`docs/findings_rocba.md`](docs/findings_rocba.md) and
-[`docs/accuracy_report.md`](docs/accuracy_report.md) come from a real run against the provided
-evidence (disk image plus memory); [`docs/dataset_documentation.md`](docs/dataset_documentation.md) has
-the sealed hashes and how to reproduce; [`docs/execution_logs_sample.md`](docs/execution_logs_sample.md)
-traces a finding back to its exact tool execution with real timestamps. The full committed ledgers
-for both runs live at `docs/logs/rocba-disk-RUN-20260612-163324/` and
-`docs/logs/rocba-memory-RUN-20260612-082630/`. The project story is in
+[`docs/accuracy_report.md`](docs/accuracy_report.md) come from a real **live Claude-agent** run against
+the provided evidence (disk plus memory, in one autonomous pass): 223 evidence-anchored claims, 0
+unsupported, with the critic catching the agent (5 contradictions, 14 downgrades, 3 retries, 7
+quarantined tasks). [`docs/dataset_documentation.md`](docs/dataset_documentation.md) has the sealed
+hashes and how to reproduce; [`docs/execution_logs_sample.md`](docs/execution_logs_sample.md) traces a
+finding back to its exact tool execution with real timestamps. The full committed ledgers live at
+`docs/logs/rocba-live-RUN-20260615-064002/`. The project story is in
 [`docs/project_story.md`](docs/project_story.md).
 
 ---
@@ -218,8 +219,10 @@ No. They are stages of a **deterministic state machine**, not LLMs. Only the **e
 agent, and only if you opt in with `--agent`. With no `--agent`, the whole pipeline runs as plain code
 over the real forensic tools (the "deterministic floor") with **no AI at all**. The **planner**,
 **critic** and **ultraworker** are always deterministic code; the optional Tier-2 judge is advisory
-and can never promote a finding. (Your committed ROCBA results came out this way: real tools, no
-AI executor.)
+and can never promote a finding. (The committed ROCBA results are a **live
+Claude executor** run - the agent fills only the executor seat; the planner, critic, and ultraworker
+stayed deterministic code, and the no-keys deterministic floor remains the default when you omit
+`--agent`.)
 
 **Q2 · Does the ultraworker dispatch every executor in parallel?**
 No, and the ultraworker doesn't dispatch at all. The `decide` stage folds the critic's
@@ -238,7 +241,7 @@ live agents are slow and brittle across many tasks; use `--no-parallel` to force
 the executor seat. If you name a live agent that isn't installed/authenticated, it **falls back to the
 deterministic floor** (never silently to a different live agent).
 
-**Q4 · Is the disk-then-memory, run-in-portions space optimization autonomous?** Within one run, yes: a single `siftmesh run --auto` over an evidence set hashes, plans, extracts, auto-decompresses any archive, re-ingests the carved artifacts, parses, critiques, and reports with no intervention. Across separate evidence sets with space optimization, it is auto-detected but operator-driven on the CLI. `run` estimates the derived-data size against free disk; if it will not fit it refuses and prints a portion plan. The TUI runs that plan for you (curate a portion, run it, prune the bulky derived data, repeat) then merges. On the CLI you run the portions and combine them with `siftmesh merge`, which is its own command. The committed ROCBA result was two separate runs, disk and memory, combined in `findings_rocba.md`.
+**Q4 · Is the disk-then-memory, run-in-portions space optimization autonomous?** Within one run, yes: a single `siftmesh run --auto` over an evidence set hashes, plans, extracts, auto-decompresses any archive, re-ingests the carved artifacts, parses, critiques, and reports with no intervention. Across separate evidence sets with space optimization, it is auto-detected but operator-driven on the CLI. `run` estimates the derived-data size against free disk; if it will not fit it refuses and prints a portion plan. The TUI runs that plan for you (curate a portion, run it, prune the bulky derived data, repeat) then merges. On the CLI you run the portions and combine them with `siftmesh merge`, which is its own command. The committed ROCBA result is a single live-agent run that handled disk and memory in one autonomous pass (`docs/logs/rocba-live-RUN-20260615-064002/`).
 
 ---
 

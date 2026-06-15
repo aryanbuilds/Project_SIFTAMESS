@@ -20,7 +20,7 @@ from siftmesh_core.mcp_gateway.registry import (
 from siftmesh_core.mcp_gateway.server import build_server, registered_tool_names, tool_adapters
 
 
-def test_allowlist_is_exactly_ten() -> None:
+def test_allowlist_is_exactly_nineteen() -> None:
     assert len(ALLOWED_TOOLS) == 19
     assert len(FORBIDDEN_TOOLS) == 7
 

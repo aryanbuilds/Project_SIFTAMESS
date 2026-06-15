@@ -1,0 +1,51 @@
+{"verdict":"human_review_required","reasons":["injection-affected claim requires human review"],"affected_claim_ids":["TASK-001-CLAIM-001"],"task_id":"TASK-001","verdict_id":"VERDICT-001","decided_utc":"2026-06-15T06:49:14.501824Z"}
+{"verdict":"human_review_required","reasons":["injection-affected claim requires human review"],"affected_claim_ids":["TASK-001-CLAIM-001"],"task_id":"TASK-001","verdict_id":"VERDICT-002","decided_utc":"2026-06-15T08:08:47.665738Z"}
+{"verdict":"escalation_required","reasons":["a claim contradicts another"],"affected_claim_ids":["TASK-002-CLAIM-008","TASK-002-CLAIM-009","TASK-002-CLAIM-010","TASK-002-CLAIM-011","TASK-002-CLAIM-015","TASK-002-CLAIM-016"],"task_id":"TASK-002","verdict_id":"VERDICT-003","decided_utc":"2026-06-15T08:08:47.676847Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-003","verdict_id":"VERDICT-004","decided_utc":"2026-06-15T08:08:47.681327Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-004","verdict_id":"VERDICT-005","decided_utc":"2026-06-15T08:08:47.685866Z"}
+{"verdict":"escalation_required","reasons":["success"],"affected_claim_ids":[],"task_id":"TASK-005","verdict_id":"VERDICT-006","decided_utc":"2026-06-15T08:08:47.686667Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-006","verdict_id":"VERDICT-007","decided_utc":"2026-06-15T08:08:47.705727Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-007","verdict_id":"VERDICT-008","decided_utc":"2026-06-15T08:08:47.723410Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-008","verdict_id":"VERDICT-009","decided_utc":"2026-06-15T08:08:47.739128Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-009","verdict_id":"VERDICT-010","decided_utc":"2026-06-15T08:08:47.743591Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-010","verdict_id":"VERDICT-011","decided_utc":"2026-06-15T08:08:47.750839Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-011","verdict_id":"VERDICT-012","decided_utc":"2026-06-15T08:08:47.770712Z"}
+{"verdict":"accepted_with_downgrade","reasons":["a claim was downgraded (over-broad)"],"affected_claim_ids":["TASK-012-A1-CLAIM-062"],"task_id":"TASK-012","verdict_id":"VERDICT-013","decided_utc":"2026-06-15T08:08:47.820233Z"}
+{"verdict":"escalation_required","reasons":["success"],"affected_claim_ids":[],"task_id":"TASK-013","verdict_id":"VERDICT-014","decided_utc":"2026-06-15T08:08:47.820827Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-014","verdict_id":"VERDICT-015","decided_utc":"2026-06-15T08:08:47.825755Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-015","verdict_id":"VERDICT-016","decided_utc":"2026-06-15T08:08:47.829321Z"}
+{"verdict":"retry_required","reasons":["agent_produced_no_claims"],"affected_claim_ids":[],"task_id":"TASK-016","verdict_id":"VERDICT-017","decided_utc":"2026-06-15T08:08:47.829837Z"}
+{"verdict":"retry_required","reasons":["agent_produced_no_claims"],"affected_claim_ids":[],"task_id":"TASK-017","verdict_id":"VERDICT-018","decided_utc":"2026-06-15T08:08:47.830352Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-018","verdict_id":"VERDICT-019","decided_utc":"2026-06-15T08:08:47.838215Z"}
+{"verdict":"retry_required","reasons":["agent_produced_no_claims"],"affected_claim_ids":[],"task_id":"TASK-019","verdict_id":"VERDICT-020","decided_utc":"2026-06-15T08:08:47.838821Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-020","verdict_id":"VERDICT-021","decided_utc":"2026-06-15T08:08:47.845078Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-021","verdict_id":"VERDICT-022","decided_utc":"2026-06-15T08:08:47.849599Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-022","verdict_id":"VERDICT-023","decided_utc":"2026-06-15T08:08:47.851121Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-023","verdict_id":"VERDICT-024","decided_utc":"2026-06-15T08:08:47.857602Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-024","verdict_id":"VERDICT-025","decided_utc":"2026-06-15T08:08:47.859050Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-025","verdict_id":"VERDICT-026","decided_utc":"2026-06-15T08:08:47.862474Z"}
+{"verdict":"human_review_required","reasons":["injection-affected claim requires human review"],"affected_claim_ids":["TASK-001-CLAIM-001"],"task_id":"TASK-001","verdict_id":"VERDICT-027","decided_utc":"2026-06-15T08:36:58.486190Z"}
+{"verdict":"escalation_required","reasons":["a claim contradicts another"],"affected_claim_ids":["TASK-002-CLAIM-008","TASK-002-CLAIM-009","TASK-002-CLAIM-010","TASK-002-CLAIM-011","TASK-002-CLAIM-015","TASK-002-CLAIM-016"],"task_id":"TASK-002","verdict_id":"VERDICT-028","decided_utc":"2026-06-15T08:36:58.508034Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-003","verdict_id":"VERDICT-029","decided_utc":"2026-06-15T08:36:58.512182Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-004","verdict_id":"VERDICT-030","decided_utc":"2026-06-15T08:36:58.515551Z"}
+{"verdict":"escalation_required","reasons":["success"],"affected_claim_ids":[],"task_id":"TASK-005","verdict_id":"VERDICT-031","decided_utc":"2026-06-15T08:36:58.516535Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-006","verdict_id":"VERDICT-032","decided_utc":"2026-06-15T08:36:58.525933Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-007","verdict_id":"VERDICT-033","decided_utc":"2026-06-15T08:36:58.535440Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-008","verdict_id":"VERDICT-034","decided_utc":"2026-06-15T08:36:58.547337Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-009","verdict_id":"VERDICT-035","decided_utc":"2026-06-15T08:36:58.550431Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-010","verdict_id":"VERDICT-036","decided_utc":"2026-06-15T08:36:58.554675Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-011","verdict_id":"VERDICT-037","decided_utc":"2026-06-15T08:36:58.566673Z"}
+{"verdict":"accepted_with_downgrade","reasons":["a claim was downgraded (over-broad)"],"affected_claim_ids":["TASK-012-A1-CLAIM-062"],"task_id":"TASK-012","verdict_id":"VERDICT-038","decided_utc":"2026-06-15T08:36:58.594305Z"}
+{"verdict":"escalation_required","reasons":["success"],"affected_claim_ids":[],"task_id":"TASK-013","verdict_id":"VERDICT-039","decided_utc":"2026-06-15T08:36:58.595428Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-014","verdict_id":"VERDICT-040","decided_utc":"2026-06-15T08:36:58.598965Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-015","verdict_id":"VERDICT-041","decided_utc":"2026-06-15T08:36:58.601860Z"}
+{"verdict":"escalation_required","reasons":["agent_failed_or_timeout"],"affected_claim_ids":[],"task_id":"TASK-016","verdict_id":"VERDICT-042","decided_utc":"2026-06-15T08:36:58.602722Z"}
+{"verdict":"escalation_required","reasons":["agent_failed_or_timeout"],"affected_claim_ids":[],"task_id":"TASK-017","verdict_id":"VERDICT-043","decided_utc":"2026-06-15T08:36:58.603393Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-018","verdict_id":"VERDICT-044","decided_utc":"2026-06-15T08:36:58.608132Z"}
+{"verdict":"retry_required","reasons":["agent_output_not_parseable_as_claims"],"affected_claim_ids":[],"task_id":"TASK-019","verdict_id":"VERDICT-045","decided_utc":"2026-06-15T08:36:58.610118Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-020","verdict_id":"VERDICT-046","decided_utc":"2026-06-15T08:36:58.615510Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-021","verdict_id":"VERDICT-047","decided_utc":"2026-06-15T08:36:58.619525Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-022","verdict_id":"VERDICT-048","decided_utc":"2026-06-15T08:36:58.620925Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-023","verdict_id":"VERDICT-049","decided_utc":"2026-06-15T08:36:58.623731Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-024","verdict_id":"VERDICT-050","decided_utc":"2026-06-15T08:36:58.625285Z"}
+{"verdict":"accepted","reasons":["all claims evidence-anchored"],"affected_claim_ids":[],"task_id":"TASK-025","verdict_id":"VERDICT-051","decided_utc":"2026-06-15T08:36:58.628916Z"}

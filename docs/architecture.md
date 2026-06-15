@@ -20,7 +20,7 @@ Layer 5  CLI (siftmesh …)                  source of truth - every stage calla
 Layer 4  Terminal-agent adapters           claude / opencode / headless (gemini,codex) / generic shell / deterministic floor
 Layer 3  Orchestration core                planner · ultraworker state machine · critic · budget router
 Layer 2  Filesystem investigation bus      case_runs/RUN-*/ (context, tasks, results, claims, audit, reports)
-Layer 1  Typed SIFT MCP gateway            10 allowlisted forensic tools (in-process service + thin MCP adapter)
+Layer 1  Typed SIFT MCP gateway            19 allowlisted forensic tools (in-process service + thin MCP adapter)
 Layer 0  SANS SIFT / Protocol SIFT host    real DFIR tooling (TSK, Volatility, evtx/regipy/scca, …)
 ```
 
@@ -174,7 +174,7 @@ flowchart TB
         direction TB
         B1{{"① Evidence-vault boundary<br/>read-only · hash-before-analysis"}}
         B4{{"④ Evidence-as-hostile boundary<br/>spotlight DATA · injection ledger"}}
-        B2{{"② Typed-tool (MCP) boundary<br/>allowlist of 10 · no raw shell"}}
+        B2{{"② Typed-tool (MCP) boundary<br/>allowlist of 19 · no raw shell"}}
         B3{{"③ Run-dir write boundary<br/>safe_write_path · canonicalize"}}
         B5{{"⑤ Critic boundary<br/>anchor-or-reject · no exec severity"}}
         HG["Human approval gates<br/>plan · dispatch · retry · report"]
@@ -190,7 +190,7 @@ flowchart TB
     AG -->|"spotlighted DATA, never instructions"| B4
     A2A -.->|"x_siftmesh overlay + conformance gate"| B4
     B4 --> B2
-    B2 -->|"only the 10 typed tools"| B3
+    B2 -->|"only the 19 typed tools"| B3
     B3 --> B5
     HG -.->|"guided mode"| B5
     B5 -->|"anchored facts only"| LED
@@ -207,15 +207,16 @@ flowchart TB
 | # | Boundary | Control | Module | Bypass test |
 |---|---|---|---|---|
 | ① | Evidence vault | read-only + hash-before-analysis | `evidence/readonly.py`, `manifest.py` | `test_bypass_evidence_readonly.py` |
-| ② | Typed-tool (MCP) | allowlist of 10, no raw shell | `mcp_gateway/registry.py` | `test_bypass_forbidden_tool.py` |
+| ② | Typed-tool (MCP) | allowlist of 19, no raw shell | `mcp_gateway/registry.py` | `test_bypass_forbidden_tool.py` |
 | ③ | Run-dir write | `safe_write_path` canonicalize | `evidence/path_policy.py` | `test_bypass_path_escape.py` |
 | ④ | Evidence-as-hostile | spotlight + injection ledger | `adapters/spotlight.py` | `test_bypass_injection.py` |
 | ⑤ | Critic | anchor-or-reject | `orchestrator/critic.py` | `test_bypass_claim_no_toolcall.py` |
 
-**Why boundary ② is strong:** the core path is **in-process typed Python lib calls** - 8 of the 10
-tools never spawn a subprocess, so there is no command string to inject into at all. Only image
-extraction (Sleuth Kit) and memory triage (Volatility 3) shell out, and those use **fixed-argv,
-`shell=False`** with no evidence string interpolated into a command (PLAN/08). See
+**Why boundary ② is strong:** the core path is **in-process typed Python lib calls** - 16 of the 19
+tools never spawn a subprocess, so there is no command string to inject into at all. Only the three
+heavy tools - image extraction (Sleuth Kit), memory triage (Volatility 3), and super-timeline
+(Plaso) - shell out, and those use **fixed-argv, `shell=False`** with no evidence string interpolated
+into a command (PLAN/08). See
 [`threat_model.md`](threat_model.md) §6 for the policy-layer comparison to CAO/Valhuntir.
 
 ## 7. Key directories

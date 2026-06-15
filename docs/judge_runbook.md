@@ -63,7 +63,7 @@ step-by-step in `docs/demo_script.md`.
 
 ## 5. Honesty notes (please read)
 
-- **Tiers are informational, not gatekeeping.** `siftmesh agents list` labels each agent T0–T3.
+- **Tiers are informational, not gatekeeping.** `siftmesh agents list` labels each agent T0-T3.
   Only Claude reaches the typed tools through the strict-MCP boundary (T1); opencode/gemini/codex
   are unconstrained opt-ins (T2). LiteLLM is advisory-only (T3, tool-less judge).
 - **Real-only.** No mock tool backends; a missing backend fails closed, never fakes output.

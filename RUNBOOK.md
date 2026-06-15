@@ -251,7 +251,7 @@ Volatility JSON is preserved in the tool-call audit; the typed summary is in the
 ## 4 - Live Claude self-correction (subscription or API)
 
 The live agent works on the **extracted** artifacts from §2 (it calls the typed tools, not the raw
-e01). Do §2a–2d first, reusing that `$RUN`.
+e01). Do §2a-2d first, reusing that `$RUN`.
 
 **4a. Authenticate Claude's own CLI** (the subscription only ever drives the real `claude` binary; it
 is never proxied to another client):
@@ -349,7 +349,7 @@ a new one, or onboard agents. The cockpit is read-only; launching a run reuses t
 - **Per-provider model:** add `--model gemini=gemini-3-pro --model codex=gpt-5.5` to `run`/`setup`
   to override a provider's model (or set it once in the `siftmesh setup` onboarding TUI).
 - **Cost/time:** hashing 22.6 GB ≈ ~1 min; Sleuthkit extraction = minutes; Volatility
-  `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`–`2` and a narrow set of
+  `netscan`/`malfind` = slow. For live runs start with `--max-iterations 1`-`2` and a narrow set of
   extracted artifacts.
 - **Real-time logs:** every long-running command (`run`/`dispatch`/`critique`/`report`/`evidence …`)
   streams a tagged, scrolling log to **stderr** as it works - `[info] [agent] [tool_log] [alert]

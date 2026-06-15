@@ -1,0 +1,38 @@
+{
+  "case_id": "case_fast",
+  "run_id": "RUN-20260615-064002",
+  "created_utc": "2026-06-15T06:40:02.460911Z",
+  "tool_version": "0.1.0",
+  "files": [
+    {
+      "path": "ROCBA-BACKGROUND.pptx",
+      "sha256": "44a12c54d13243397803e6e44112fa7bc365ed7f9bcb48e6769d7e91d8980834",
+      "size_bytes": 40148560,
+      "mtime_utc": "2026-06-08T06:03:41.011221Z",
+      "evidence_type": "unknown"
+    },
+    {
+      "path": "Rocba-Memory.zip",
+      "sha256": "32cec94018051f6ce20ec75f1b7b53ad2f6eb5e8bbaec7b402e30409af552b09",
+      "size_bytes": 5682814481,
+      "mtime_utc": "2026-06-08T06:04:49.836914Z",
+      "evidence_type": "archive"
+    },
+    {
+      "path": "rocba-cdrive.e01",
+      "sha256": "f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67",
+      "size_bytes": 23678691658,
+      "mtime_utc": "2026-06-08T06:07:24.794173Z",
+      "evidence_type": "disk_image"
+    },
+    {
+      "path": "standard_case_1/rocba-cdrive.e01.download",
+      "sha256": "c8710c72a094eff10f9fd18744ac89d018dc8953199a5f688bea1a0d09ae2020",
+      "size_bytes": 2605550889,
+      "mtime_utc": "2026-06-07T14:49:56.299836Z",
+      "evidence_type": "unknown"
+    }
+  ],
+  "incident_objective": "What key projects did Fred Rocba have access to? What was stolen, where to, how, and when? The Fred Rocba Case 1 2 Fred Rocba is a victim of a Break-In and IP Theft 3 Fred Rocba and SRL Victim of Break-In and IP Theft: Background 4 Why Stark Research Labs? 5 System and Setup Information 6 Fred is on vacation – Pictures synced to Fred’s home system 7 The Game is Afoot! Key Questions to Answer",
+  "incident_brief_path": "context/incident_brief.md"
+}

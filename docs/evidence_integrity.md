@@ -95,7 +95,6 @@ prompt at all, so it has no injection surface.
 - A reviewer can replay `orchestration_events.jsonl` to see every transition, dispatch,
   tool call, and verdict in order, giving reproducible run history.
 
-The committed full ledgers for the reference runs live at
-`docs/logs/rocba-disk-RUN-20260612-163324/` and
-`docs/logs/rocba-memory-RUN-20260612-082630/`, so a reviewer can trace these invariants
-against the real recorded audit trail.
+The committed full ledgers for the reference run live at
+`docs/logs/rocba-live-RUN-20260615-064002/` (the live Claude-agent run, disk plus memory in one
+autonomous pass), so a reviewer can trace these invariants against the real recorded audit trail.

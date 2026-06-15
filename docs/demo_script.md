@@ -4,6 +4,12 @@ A shot list + narration for the submission video. Two acts: **(A)** the zero-key
 (reliable, always works), then **(B)** the live self-correction demo (Claude). If recording time is
 tight, Act A alone satisfies criteria 2/4/5; add Act B for criterion 1.
 
+The committed reference run is a single REAL LIVE Claude-agent pass over the ROCBA case - disk + memory
+in one autonomous run, `RUN-20260615-064002` (case `case_fast`, ~1 h 57 m wall clock, final state
+`done`). Its sealed ledgers and `replay.html` ship under
+`docs/logs/rocba-live-RUN-20260615-064002/` for anyone who wants the full audit trail without keys.
+For the video itself, record against the public demo case so each take is fast and identical.
+
 Record a real terminal. Pre-stage the repo (`uv sync`) so the camera starts on the run.
 Target ≈4:30 to leave buffer.
 
@@ -69,23 +75,38 @@ claims/agents/budget, audit ticker.)
 ## 3:15 - Act B: live self-correction hero (75s)
 
 ```bash
-bash examples/demo_case/run_demo.sh --agent claude
+bash examples/demo_case/run_demo.sh --agent claude --judge opencode
 RUNL=$(ls -dt examples/demo_case/case_runs/RUN-* | head -1)
-cat "$RUNL/audit/agent_calls.jsonl"            # attempt 1 … then attempt 2
-cat "$RUNL/audit/critic_verdicts.jsonl"        # retry_required → accepted
-cat "$RUNL/claims/unsupported_claims.jsonl"    # the rejected, under-anchored attempt-1 over-claim
-cat "$RUNL/claims/claim_ledger.jsonl"          # the corrected, anchored attempt-2 claim
+cat "$RUNL/audit/agent_calls.jsonl"            # attempt 1 … then the forced retry
+cat "$RUNL/audit/critic_verdicts.jsonl"        # retry_required → escalation_required
+```
+
+The committed reference for this act is the live ROCBA run - the exact command, for the record:
+
+```bash
+SIFTMESH_CAPS__MAX_PARALLEL_TASKS=6 uv run siftmesh run ./case_fast \
+  --evidence ~/projects/data --brief ~/projects/data/ROCBA-BACKGROUND.pptx \
+  --objective "What key projects did Fred Rocba have access to? What was stolen, where to, how, and when?" \
+  --auto --agent claude --judge opencode --parallel \
+  --max-agent-tasks 400 --max-iterations 2
 ```
 
 > "Now the live agent - Claude, restricted to typed tools via strict-MCP, tier T1. It investigates
-> on its own. When it over-claims without an anchor, the deterministic critic returns
-> `retry_required`; the rejection reasons are fed back into the prompt; the agent revises against the
-> real tool output; and the corrected, anchored claim is accepted on attempt 2. The mistake and the
-> correction are both in the audit log - self-correction, not scripted."
+> on its own. On the committed ROCBA run it produced 223 anchored claims - 182 confirmed, 41 inferred,
+> zero unsupported - across 245 tool calls. opencode runs as an advisory Tier-2 judge; it never
+> promotes."
+
+> "The honest part: on three heavy tasks - the $MFT and USN-journal parses, TASK-016/017/019 - the
+> tools *ran* but the live agent failed to return anchored claims. The deterministic critic returned
+> `retry_required`, the rejection reasons were fed back into the prompt, attempt 2 still failed, so
+> those tasks were escalated and quarantined - their claims never reached the findings. That's the
+> critic catching the agent, not a scripted win. Three real self-correction retries are in the audit
+> log; the run still reached `done` because governance refused to promote unsupported claims."
 
 > "Crucially: even a successful prompt injection can't exfiltrate (no network tool), can't write
-> outside the run dir, and can't become a reported fact without passing the critic. LLM proposes,
-> code decides."
+> outside the run dir, and can't become a reported fact without passing the critic. This run logged
+> 11,628 injection alerts - none executed - and most are an honest over-trigger on base64-like hash
+> fragments in tool output: fail-safe, noisy, disclosed. LLM proposes, code decides."
 
 ## 4:30 - Close (15s)
 

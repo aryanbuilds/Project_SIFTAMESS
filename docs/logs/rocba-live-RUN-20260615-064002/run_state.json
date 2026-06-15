@@ -1,0 +1,153 @@
+{
+  "run_id": "RUN-20260615-064002",
+  "state": "done",
+  "mode": "auto",
+  "iteration": 2,
+  "max_iterations": 3,
+  "agent_tasks_completed": 28,
+  "per_task": {
+    "TASK-001": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-002": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-003": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-004": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-005": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "error"
+    },
+    "TASK-006": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-007": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-008": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-009": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-010": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-011": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-012": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-013": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "error"
+    },
+    "TASK-014": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-015": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-016": {
+      "attempt": 2,
+      "max_attempts": 2,
+      "status": "error"
+    },
+    "TASK-017": {
+      "attempt": 2,
+      "max_attempts": 2,
+      "status": "error"
+    },
+    "TASK-018": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-019": {
+      "attempt": 2,
+      "max_attempts": 2,
+      "status": "retry_required"
+    },
+    "TASK-020": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-021": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-022": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-023": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-024": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    },
+    "TASK-025": {
+      "attempt": 1,
+      "max_attempts": 2,
+      "status": "success"
+    }
+  },
+  "pending_dispatch": [],
+  "quarantined_tasks": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-005",
+    "TASK-013",
+    "TASK-016",
+    "TASK-017",
+    "TASK-019"
+  ],
+  "gates": {
+    "plan": "pending",
+    "retry": "pending",
+    "report": "pending"
+  },
+  "blocked_gate": null,
+  "terminal": true,
+  "updated_utc": "2026-06-15T08:37:01.568934Z"
+}

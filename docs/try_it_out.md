@@ -30,7 +30,7 @@ uv run siftmesh doctor            # host + each tool backend; non-zero exit if a
 uv run siftmesh doctor --agents   # which coding agents are installed / authed / sandboxed + tier
 ```
 
-`doctor --agents` prints the honest **safety tiers** (T0–T3) and, for any not-ready agent, the exact
+`doctor --agents` prints the honest **safety tiers** (T0-T3) and, for any not-ready agent, the exact
 fix (install / authenticate). A missing backend fails *closed* when invoked - never a fake result.
 
 ## 4. Run the zero-keys demo

@@ -2,7 +2,7 @@
 
 # SIFTMesh Project Context
 
-_Last updated: 2026-06-11 (Epics A–N core + L + M complete; **+ Epic Q** agent-neutral connectors and **+ Epic O** Textual cockpit & unified `setup`. ROCBA e2e refinement - autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run. **Agent neutrality (Epic Q, PLAN/13):** one config-driven headless connector - `--agent claude|gemini|codex|opencode|deterministic` - with fail-closed sandboxing + onboarding via `agents list`/`doctor --agents`. **Cockpit + setup (Epic O, PLAN/14):** `siftmesh tui` Textual cockpit (read-only over run files) + `siftmesh setup` one-command onboarding (install + probe + multi-agent pick + persist to global/project config). **Scale fixes:** per-family task aggregation (a disk image yields ~10 tasks, not 200+), executor tiering (heavy tool-bound tasks → deterministic floor; `--all-live` overrides; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM - no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. Pre-flight space estimator + partition plan + `prune` + cross-run `merge` (PLAN/11); advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; never promotes - Tier-1 stays sole promoter).)_
+_Last updated: 2026-06-15 (committed live-agent run **RUN-20260615-064002** - case `case_fast`, disk + memory in one autonomous `--auto` pass on the ROCBA evidence: a LIVE Claude executor via `claude_headless` with the opencode advisory Tier-2 judge, exercising genuine self-correction (the critic forced retries on the `$MFT`/USN tasks, which then escalated and were quarantined rather than emit unsupported claims); 223 anchored claims promoted (182 confirmed + 41 inferred), 0 unsupported; committed log bundle `docs/logs/rocba-live-RUN-20260615-064002/`. Epics A-N core + L + M complete; **+ Epic Q** agent-neutral connectors and **+ Epic O** Textual cockpit & unified `setup`. ROCBA e2e refinement - autonomous, objective-driven, one command: `--brief` ingests the incident document as the TRUSTED objective and threads it into the planner/agent-prompt/report; `run --auto` auto-decompresses archives (the memory zip) + auto-ingests the derived image, and quarantines a single critic-flagged task instead of halting the whole run. **Agent neutrality (Epic Q, PLAN/13):** one config-driven headless connector - `--agent claude|gemini|codex|opencode|deterministic` - with fail-closed sandboxing + onboarding via `agents list`/`doctor --agents`. **Cockpit + setup (Epic O, PLAN/14):** `siftmesh tui` Textual cockpit (read-only over run files) + `siftmesh setup` one-command onboarding (install + probe + multi-agent pick + persist to global/project config). **Scale fixes:** per-family task aggregation (a disk image yields ~10 tasks, not 200+), executor tiering (heavy tool-bound tasks → deterministic floor; `--all-live` overrides; `heavy_tool_timeout_seconds=1800`). Orchestration engine: **keep the native FSM - no LangGraph, no CAO** (ADR `PLAN/12`); harvest only an advisory Tier-2 LLM judge + Sigma breadth. Pre-flight space estimator + partition plan + `prune` + cross-run `merge` (PLAN/11); advisory Tier-2 LLM judge on the G8 seam (`run_tier2_judge`; never promotes - Tier-1 stays sole promoter).)_
 
 ## 1. Project identity
 
@@ -265,12 +265,12 @@ Turns the run-dir ledgers into judge-ready, **byte-deterministic** artifacts - *
 ### Security & Threat Model ✅ (Epic L)
 
 The constraints are **architectural and bypass-tested** (judged criterion 4), not prose.
-`docs/threat_model.md` maps threats T1–T9 → OWASP LLM Top-10 2025 → real module → bypass test →
-residual, with an **agentic overlay** (OWASP Top-10 for Agentic Apps ASI01–ASI10, MAESTRO, MITRE
+`docs/threat_model.md` maps threats T1-T9 → OWASP LLM Top-10 2025 → real module → bypass test →
+residual, with an **agentic overlay** (OWASP Top-10 for Agentic Apps ASI01-ASI10, MAESTRO, MITRE
 ATLAS) and honest residuals (prompt injection is *contained + traceable, not prevented*; path policy
 is posture-level + TOCTOU-bounded). Paired with `docs/architecture.md` (inline mermaid
 security-boundary diagram) + `docs/evidence_integrity.md` (chain of custody). The proof is
-`tests/EPIC_L_TESTS/` - **80 effect-asserting tests** that feed each gate a hostile input and assert
+`tests/EPIC_L_TESTS/` - **60 effect-asserting tests** that feed each gate a hostile input and assert
 the *effect* (a raise / an appended injection alert / byte-identical originals / a critic verdict /
 the launched argv): path-escape (incl. a Hypothesis property + the NUL-byte/`target==run` fixes),
 forbidden-tool + live MCP surface-equality, injection (logged-not-executed → critic human-review,
@@ -282,7 +282,7 @@ or become a reported fact without passing the deterministic critic.
 
 ### Testing & CI ✅ (Epic M)
 
-**499 tests** (498 CI-run + 1 maintainer-gated live e2e), all real-fixture-driven. One consolidated
+**681 tests** (maintainer-gated live e2e included), all real-fixture-driven. One consolidated
 run factory in the root `tests/conftest.py` (`make_real_run` - manifest/readonly → plan → dispatch →
 critique over the committed public fixtures; per-epic conftests are thin wrappers). **Recorded-golden
 proof of Epic J's determinism** (`tests/golden/`): a REAL recorded run (real ledgers, §2B floor) +
